@@ -58,6 +58,7 @@ use App\Http\Controllers\ZoomWebhookController;
 use App\Http\Controllers\TelnyxWebhookController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Front\PublicWebsiteController;
 use App\Http\Controllers\Admin\AdminJobClientNoteController;
 
 /*
@@ -82,9 +83,11 @@ Route::get('assistmyday/job/{slug}/{location?}', [FrontJobsController::class, 'a
 Route::get('/consortium-registration', [ConsortiumRegistrationController::class, 'create'])->name('consortium-registration.create');
 Route::post('/consortium-registration', [ConsortiumRegistrationController::class, 'store'])->middleware('throttle:10,1')->name('consortium-registration.store');
 // ── Front public job board ─────────────────────────────────────────────────
+Route::get('/', [PublicWebsiteController::class, 'index'])->name('home');
+
 Route::name('jobs.')
     ->group(function () {
-        Route::get('/', [FrontJobsController::class, 'jobOpenings'])
+        Route::get('/jobs', [FrontJobsController::class, 'jobOpenings'])
             ->name('jobOpenings')
             ->middleware('disable-frontend');
 
@@ -131,6 +134,8 @@ Route::middleware('auth')->group(function () {
     Route::name('admin.')
         ->prefix('admin')
         ->group(function () { 
+
+            Route::redirect('/', '/admin/dashboard');
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 

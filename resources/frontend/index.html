@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AssistMyHR – Applicant Tracking System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/png" href="/fab.webp">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Brand tokens – swap these to match virtualtecsolutions.com exactly */
+  --font:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--fh:'Sora','Figtree',system-ui,sans-serif;
+  --bg:#f7f7fc;--surface:#fff;--text:#0f1a3a;--muted:#5b6788;--line:#e3e8f7;
+  --primary:#5b4bff;--primary2:#a78bfa;--green:#0d9f6e;--gold:#f5c76b;--amber:#f59e0b;--dark:#0d1030;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#070a1f;--surface:#12163a;--text:#eef1ff;--muted:#9aa6cf;--line:#232752;--dark:#050919}}
+:root[data-theme="dark"]{--bg:#070a1f;--surface:#12163a;--text:#eef1ff;--muted:#9aa6cf;--line:#232752;--dark:#050919}
+html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1140px;margin:auto;padding:0 22px}
+h1,h2,h3,h4,h5,.logo,.stat b,.tl b,footer h6{font-family:var(--fh)}
+.grad{background:linear-gradient(90deg,var(--primary),var(--primary2));-webkit-background-clip:text;background-clip:text;color:transparent}
+/* nav */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 80%,transparent);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{font-weight:800;font-size:1.3rem;display:flex;gap:9px;align-items:center}
+.logo i{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:grid;place-items:center;color:#fff;font-style:normal;font-size:.95rem}
+nav ul{display:flex;gap:28px;list-style:none;font-weight:500;color:var(--muted);font-size:.95rem}
+nav ul a:hover{color:var(--primary)}
+.btn{display:inline-block;padding:12px 24px;border-radius:12px;font-weight:600;transition:.25s;border:1px solid transparent}
+.btn.p{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;box-shadow:0 10px 26px -8px var(--primary)}
+.btn.p:hover{transform:translateY(-3px);box-shadow:0 16px 30px -8px var(--primary)}
+.btn.o{border-color:var(--line);background:var(--surface)}.btn.o:hover{border-color:var(--primary);color:var(--primary)}
+/* hero */
+.hero{position:relative;padding:84px 0 70px;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.35;animation:float 12s ease-in-out infinite}
+.b1{width:380px;height:380px;background:var(--primary);top:-120px;left:-100px}
+.b2{width:320px;height:320px;background:var(--primary2);right:-80px;top:80px;animation-delay:-5s}
+@keyframes float{50%{transform:translate(40px,30px) scale(1.12)}}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center}
+.tag{display:inline-flex;gap:8px;align-items:center;padding:7px 15px;border:1px solid var(--line);background:var(--surface);border-radius:99px;font-size:.82rem;font-weight:600;color:var(--primary)}
+.tag b{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #22c55e88}100%{box-shadow:0 0 0 10px #22c55e00}}
+h1{font-weight:800;letter-spacing:-.035em}
+.hero p{color:var(--muted);font-size:1.1rem;max-width:520px}
+.cta{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+/* mock dashboard */
+.mock{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 40px 80px -30px #5b4bff55;animation:bob 6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-12px)}}
+.dots{display:flex;gap:6px;margin-bottom:14px}.dots i{width:10px;height:10px;border-radius:50%;background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.col h6{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;font-size:.78rem;font-weight:600;animation:drop .8s both}
+.card small{display:block;color:var(--muted);font-weight:400}
+.card span{display:inline-block;height:6px;border-radius:9px;background:linear-gradient(90deg,var(--primary),var(--primary2));margin-top:6px}
+.col:nth-child(2) .card{animation-delay:.3s}.col:nth-child(3) .card{animation-delay:.6s}
+@keyframes drop{from{opacity:0;transform:translateY(-16px)}}
+.chip{position:absolute;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:.8rem;font-weight:600;box-shadow:0 14px 30px -12px #0003;animation:bob 5s ease-in-out infinite reverse}
+/* hero v2 */
+.hx{position:relative;background:#070a1f;color:#eef1ff;padding:96px 0 0;text-align:center}
+.hxbg{position:absolute;inset:0;overflow:hidden}
+.hxbg:after{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff12 1px,transparent 1px),linear-gradient(90deg,#ffffff12 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse at 50% 25%,#000 20%,transparent 72%);mask-image:radial-gradient(ellipse at 50% 25%,#000 20%,transparent 72%)}
+.hx .b1{left:8%;top:-140px;width:420px;height:420px;opacity:.5}.hx .b2{right:6%;top:40px;background:#0d9f6e;opacity:.3}
+.hxc{position:relative;z-index:1}
+.hx .tag{background:#ffffff12;border-color:#ffffff26;color:#c7d2fe}
+.hx h1{font-size:clamp(2.4rem,6vw,4.5rem);line-height:1.08;margin:24px auto 20px;max-width:880px;color:#fff}
+.rot{display:inline-block;height:1.2em;overflow:hidden;vertical-align:top;line-height:1.2}
+.rot i{display:block;font-style:normal;animation:rw 9s cubic-bezier(.7,0,.2,1) infinite}
+.rot span{display:block;height:1.2em;background:linear-gradient(90deg,#c7d2fe,#a78bfa,#f5c76b);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes rw{0%,25%{transform:translateY(0)}33%,58%{transform:translateY(-1.2em)}66%,91%{transform:translateY(-2.4em)}100%{transform:translateY(-3.6em)}}
+.hx p{color:#aab6e0;font-size:1.15rem;max-width:620px;margin:0 auto}
+.btn.ghost{background:#ffffff12;border-color:#ffffff30;color:#fff}.btn.ghost:hover{background:#ffffff22;transform:translateY(-3px)}
+.trust{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;list-style:none;padding:0;margin-top:26px;font-size:.88rem;color:#9fb0e6;font-weight:500}
+.hxm{position:relative;max-width:960px;margin:64px auto -120px;perspective:1400px;z-index:2}
+.hm{text-align:left;transform:rotateX(9deg);transform-origin:top center;transition:transform .6s;animation:none;box-shadow:0 60px 100px -30px #5b4bff99,0 0 0 1px #ffffff22}
+.hxm:hover .hm{transform:rotateX(0)}
+.hm .cols{grid-template-columns:repeat(4,1fr)}
+.hm .card{animation-delay:.2s}.hm .col:nth-child(3) .card{animation-delay:.5s}.hm .col:nth-child(4) .card{animation-delay:.8s}
+.hxm .chip{z-index:3;color:var(--text)}.c1{top:-24px;right:2%}.c2{top:46%;left:-4%;animation-delay:-2s}.c3{bottom:-20px;right:6%;animation-delay:-3s}
+.hx+.wrap .stats{margin-top:170px}
+@media(max-width:860px){.hxm .chip{display:none}.hm .cols{grid-template-columns:1fr 1fr}.hm .col:nth-child(n+3){display:none}.hxm{margin-bottom:-90px}.hx+.wrap .stats{margin-top:130px}.hm{transform:none}}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:-10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;text-align:center}
+.stat b{font-size:2.2rem;font-weight:800}.stat span{display:block;color:var(--muted);font-size:.9rem}
+section{padding:90px 0}
+.head{text-align:center;max-width:620px;margin:0 auto 52px}
+.head small{color:var(--primary);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.78rem}
+h2{font-size:clamp(1.8rem,3.6vw,2.6rem);font-weight:700;letter-spacing:-.03em;line-height:1.2;margin:10px 0}
+.head p{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.f{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;transition:.3s;position:relative;overflow:hidden}
+.f:hover{transform:translateY(-8px);border-color:var(--primary);box-shadow:0 24px 44px -24px var(--primary)}
+.ic{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.4rem;background:linear-gradient(135deg,#5b4bff22,#a78bfa22);margin-bottom:16px;transition:.3s}
+.f:hover .ic{transform:rotate(-8deg) scale(1.1)}
+.f h3{font-size:1.1rem;margin-bottom:6px}.f p{color:var(--muted);font-size:.93rem}
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;position:relative}
+.steps:before{content:"";position:absolute;top:30px;left:10%;right:10%;height:2px;background:repeating-linear-gradient(90deg,var(--primary) 0 8px,transparent 8px 16px);opacity:.4}
+.s{text-align:center;position:relative}
+.s i{width:60px;height:60px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;font-style:normal;font-weight:800;font-size:1.2rem;box-shadow:0 0 0 8px var(--bg)}
+.s p{color:var(--muted);font-size:.9rem}
+/* AI band */
+.ai{background:var(--dark);color:#eef1ff;border-radius:28px;padding:56px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;position:relative;overflow:hidden}
+.ai:before{content:"";position:absolute;width:340px;height:340px;background:var(--primary);filter:blur(110px);opacity:.4;right:-80px;top:-100px}
+.ai p{color:#a9b4de;margin-top:10px}
+.ai ul{list-style:none;padding:0;margin-top:20px;display:grid;gap:10px}.ai li:before{content:"✓ ";color:var(--primary2);font-weight:800}
+.scan{position:relative;background:#ffffff10;border:1px solid #ffffff22;border-radius:18px;padding:22px;overflow:hidden}
+.scan div{height:9px;border-radius:9px;background:#ffffff26;margin:10px 0}
+.scan .k{background:linear-gradient(90deg,var(--primary),var(--primary2));animation:glow 3s infinite}
+@keyframes glow{50%{opacity:.4}}
+.scan:after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--primary2);box-shadow:0 0 22px 6px var(--primary2);animation:scan 3.2s ease-in-out infinite}
+@keyframes scan{0%,100%{top:0}50%{top:100%}}
+.scan em{position:relative;z-index:1;font-style:normal;font-size:.75rem;background:var(--primary2);color:#06202a;font-weight:700;padding:3px 10px;border-radius:99px}
+/* cta */
+.final{text-align:center;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border-radius:28px;padding:64px 24px}
+.final p{opacity:.9;margin:8px 0 26px}.final .btn{background:#fff;color:var(--primary)}
+
+.app{display:grid;grid-template-columns:210px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -40px #5b4bff66}
+.app aside{background:var(--dark);padding:20px 14px}.app aside ul{list-style:none;padding:0;display:grid;gap:3px}
+.app aside li{color:#aeb9e0;font-size:.8rem;padding:8px 12px;border-radius:9px;transition:.25s;cursor:default}
+.app aside li:hover{background:#ffffff14;color:#fff;transform:translateX(4px)}.app aside li.on{background:var(--primary);color:#fff}
+.app main{padding:22px;background:var(--bg);min-width:0}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.top h4{font-size:1.25rem}.top em{color:var(--primary);font-family:Georgia,serif;font-weight:400}.top small{color:var(--muted)}
+.note{margin:14px 0;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:12px;padding:11px 14px;font-size:.82rem;font-weight:500}
+.body{display:grid;grid-template-columns:1fr 210px;gap:14px}.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-content:start}
+.tl{border-radius:14px;padding:14px;background:var(--surface);border:1px solid var(--line);transition:.3s}.tl:hover{transform:translateY(-5px) scale(1.03)}
+.tl small{display:block;text-align:right;font-size:.6rem;font-weight:700;letter-spacing:.06em;opacity:.7}.tl b{font-size:1.6rem;font-weight:800;display:block}.tl span{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
+.tl.nv{background:#0d1030;color:#fff}.tl.bl{background:#5b4bff;color:#fff;border:0}.tl.gr{background:var(--green);color:#fff;border:0}
+.tms{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}.tms h5{font-size:.85rem;margin-bottom:10px}
+.tm{display:flex;align-items:center;gap:9px;font-size:.78rem;font-weight:600;padding:6px 0}.tm small{display:block;color:var(--muted);font-weight:400;font-size:.68rem}
+.tm i{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;display:grid;place-items:center;font-style:normal;font-size:.75rem}
+.tm u,.tms h5 u{margin-left:auto;width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1.6s infinite}
+@media(max-width:860px){.app{grid-template-columns:1fr}.app aside{display:none}.body{grid-template-columns:1fr}.tiles{grid-template-columns:1fr 1fr}}
+/* footer */
+footer{position:relative;background:#070a1f;color:#aeb9e0;margin-top:90px;padding:0;text-align:left;font-size:.92rem;border:0}
+footer:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#5b4bff,#a78bfa,#0d9f6e,#5b4bff);background-size:200% 100%;animation:slide 6s linear infinite}
+@keyframes slide{to{background-position:200% 0}}
+.fg{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:36px;padding:64px 0 44px}
+footer .logo{color:#fff}footer p{margin:14px 0 20px;max-width:320px}
+footer h6{color:#fff;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+footer li{list-style:none;margin:9px 0}footer ul{padding:0}footer li a{transition:.25s;display:inline-block}footer li a:hover{color:#fff;transform:translateX(5px)}
+.soc{display:flex;gap:10px}.soc a{width:38px;height:38px;border-radius:50%;background:#ffffff12;display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;transition:.3s}
+.soc a:hover{background:var(--primary);transform:translateY(-5px) rotate(8deg)}
+.fb{border-top:1px solid #ffffff1c;padding:22px 0;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:.85rem}
+.up{width:40px;height:40px;border-radius:12px;background:var(--primary);color:#fff;display:grid;place-items:center;animation:bob 3s ease-in-out infinite}
+@media(max-width:860px){.fg{grid-template-columns:1fr 1fr}}@media(max-width:520px){.fg{grid-template-columns:1fr}}
+/* premium stats */
+.stats{gap:18px}
+.stat{position:relative;overflow:hidden;text-align:left;padding:26px 24px;border-radius:20px;background:linear-gradient(165deg,var(--surface),color-mix(in srgb,var(--surface) 88%,#5b4bff));transition:.35s}
+.stat:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,#a78bfa,var(--gold),transparent);opacity:.9}
+.stat:hover{transform:translateY(-6px);border-color:#a78bfa;box-shadow:0 26px 50px -26px #5b4bff}
+.si{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-style:normal;background:linear-gradient(135deg,#5b4bff33,#f5c76b33);margin-bottom:16px}
+.stat .sn{display:flex;align-items:baseline;gap:2px}
+.stat .sn b{font-size:2.7rem;line-height:1;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,var(--text),color-mix(in srgb,var(--text) 55%,#a78bfa));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .sn em{font-style:normal;font-family:var(--fh);font-size:1.6rem;font-weight:800;color:var(--gold)}
+.stat>span{margin-top:8px;font-size:.88rem;letter-spacing:.01em}
+/* contact */
+.ct{display:grid;grid-template-columns:.9fr 1.1fr;gap:26px;align-items:stretch}
+.ci{background:linear-gradient(150deg,#0d1030,#3b2fc9);color:#eef1ff;border-radius:26px;padding:40px;position:relative;overflow:hidden}
+.ci:before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:var(--primary2);filter:blur(90px);opacity:.45;right:-70px;bottom:-80px;animation:float 10s ease-in-out infinite}
+.ci h3{font-size:1.7rem;line-height:1.25;position:relative}.ci p{color:#b9c5ee;margin:12px 0 26px;position:relative}
+.ci a.em{position:relative;display:inline-flex;gap:10px;align-items:center;background:#ffffff18;border:1px solid #ffffff30;padding:12px 18px;border-radius:14px;font-weight:600;transition:.3s;word-break:break-all}
+.ci a.em:hover{background:#ffffff28;transform:translateY(-3px)}
+.ci ul{list-style:none;padding:0;margin-top:26px;display:grid;gap:12px;position:relative;font-size:.92rem}.ci li:before{content:"✓ ";color:#34d399;font-weight:800}
+.cf{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:34px}
+.cf .r{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cf label{display:block;font-size:.8rem;font-weight:600;margin-bottom:14px;color:var(--muted)}
+.cf input,.cf select,.cf textarea{display:block;width:100%;margin-top:6px;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;font-size:.95rem;transition:.25s}
+.cf input:focus,.cf select:focus,.cf textarea:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px #5b4bff22}
+.cf textarea{min-height:120px;resize:vertical}.cf button{width:100%;cursor:pointer;font:inherit;font-weight:700;border:0}
+#cs{display:none;margin-top:16px;padding:14px 16px;border-radius:12px;background:#0d9f6e1f;color:var(--green);font-size:.88rem;font-weight:600;animation:drop .6s both}
+#cs a,#cs button{color:inherit;text-decoration:underline;background:none;width:auto;display:inline;padding:0;font-weight:700}
+@media(max-width:860px){.ct{grid-template-columns:1fr}.cf .r{grid-template-columns:1fr}.ci,.cf{padding:26px}}
+/* reveal */
+.rv{opacity:0;transform:translateY(34px);transition:opacity .8s,transform .8s}.rv.in{opacity:1;transform:none}
+@media(max-width:860px){.hero .wrap,.ai{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.stats,.steps{grid-template-columns:1fr 1fr}.steps:before{display:none}nav ul{display:none}.ai{padding:32px}.chip{display:none}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+/* AssistMyHR — refined visual system */
+:root,:root[data-theme="dark"]{--font:'Figtree',system-ui,sans-serif;--fh:'Manrope',system-ui,sans-serif;--bg:#f8f8f4;--surface:#fff;--text:#202322;--muted:#747873;--line:#e3e5de;--primary:#6954d6;--primary2:#8c78e6;--green:#39765d;--gold:#6954d6;--dark:#202923;color-scheme:light}
+html{scroll-padding-top:100px}body{font-size:16px}::selection{background:#e3dbfb}a:focus-visible,button:focus-visible{outline:3px solid #8c78e6;outline-offset:5px}.wrap{max-width:1240px;padding:0 40px}.grad{background:none;color:var(--primary)}
+nav{background:#f8f8f4ed;border-bottom:1px solid #e3e5de;backdrop-filter:blur(18px)}nav .wrap{height:84px}nav ul{gap:26px;font-size:16px;color:#555b55}.logo{font-size:20px;gap:9px;letter-spacing:-.8px}.logo i{background:#6954d6;border-radius:10px;width:34px;height:34px;font-size:18px}.btn{border-radius:8px;padding:13px 22px;font-size:14px;font-weight:600;display:inline-flex;gap:10px;align-items:center;justify-content:center}.btn.p{background:#6954d6;box-shadow:0 4px 10px #6954d61a}.btn.p:hover{transform:translateY(-2px);background:#5944c0;box-shadow:0 8px 18px #6954d627}nav .btn{font-size:12px;padding:11px 17px}.btn.o{background:transparent;border-color:#d5d8cf}.btn.o:hover{background:white}
+.hx{background:var(--bg);color:var(--text);padding:76px 0 0;text-align:left;overflow:hidden}.hxbg{display:none}.hxc>.hero-intro{display:grid;grid-template-columns:1.25fr .75fr;gap:80px;align-items:end}.hx .tag{background:#efecfa;border-color:#e4def7;color:#6552b7;font-size:11px;font-weight:600;padding:6px 11px}.tag b{width:6px;height:6px;background:#6954d6;animation:none}.hx h1{font-size:clamp(42px,5.2vw,68px);line-height:1.08;letter-spacing:-3.8px;color:#252923;margin:23px 0 0;font-weight:700;max-width:760px}.hx h1 em{font-style:normal;color:#6954d6}.hx p{color:#747873;font-size:16px;line-height:1.8;margin:0;max-width:390px}.hx .cta{margin-top:24px;gap:10px}.trust{justify-content:flex-start;font-size:15px;gap:15px;margin-top:17px;color:#737a71}.hero-caption{display:flex;justify-content:space-between;align-items:center;margin:48px 0 12px;color:#8b8f87;font-size:10px;letter-spacing:1.7px;text-transform:uppercase}.hero-caption span:last-child{letter-spacing:0;text-transform:none;font-size:18px}.hxm{max-width:none;margin:0;perspective:none}.hm{transform:none;border-radius:14px 14px 0 0;animation:none;box-shadow:0 14px 60px #2029230b;border:1px solid #d9dcd3;padding:0;overflow:hidden;color:#252923;background:#fff}.hxm:hover .hm{transform:none}.hxm .chip{display:none}.product-preview{display:grid;grid-template-columns:180px 1fr;min-height:380px}.preview-sidebar{background:#f0f1eb;border-right:1px solid #e2e4da;padding:24px 16px;font-size:11px}.preview-sidebar .logo{font-size:14px;margin-bottom:30px}.preview-sidebar .logo i{width:25px;height:25px;font-size:13px;border-radius:7px}.side-label{font-size:8px;letter-spacing:1.6px;color:#999f92;margin:21px 10px 10px}.side-item{padding:9px 10px;color:#7a8172;display:flex;gap:10px;border-radius:6px;margin:3px 0}.side-item.active{background:#e2dced;color:#6750bb;font-weight:600}.side-user{display:flex;gap:9px;align-items:center;margin-top:45px;padding-top:16px;border-top:1px solid #dfe2d5;color:#3e4539}.side-user small{display:block;font-size:9px;color:#999}.preview-main{padding:22px 25px;background:#fcfcfa;min-width:0}.preview-top{display:flex;justify-content:space-between;align-items:center}.preview-top h3{font-size:19px;letter-spacing:-.7px}.preview-top p{font-size:10px;line-height:1.6}.preview-top .btn{font-size:9px;padding:8px 11px;border-radius:5px}.preview-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.mini-metric{background:#fff;border:1px solid #e8e9e1;padding:12px;border-radius:7px}.mini-metric small{font-size:9px;color:#8d9285;display:block}.mini-metric strong{font-size:22px;letter-spacing:-1px;font-weight:600}.mini-metric em{font-style:normal;font-size:8px;color:#628a63;margin-left:7px}.pipeline-heading{display:flex;justify-content:space-between;align-items:center;margin:16px 0 10px;font-size:11px;font-weight:600}.pipeline-heading span{font-size:9px;color:#94998d;font-weight:400}.hm .cols{grid-template-columns:repeat(4,1fr);gap:11px}.hm .col{background:#f0f2eb;border-radius:7px;padding:9px}.hm .col h6{font-size:8px;letter-spacing:0;font-weight:500;text-transform:none;display:flex;align-items:center;gap:5px;color:#686f61}.stage-dot{height:5px;width:5px;border-radius:50%;background:#979f8a}.col:nth-child(2) .stage-dot{background:#bba5d4}.col:nth-child(3) .stage-dot{background:#d5b477}.col:nth-child(4) .stage-dot{background:#78a88d}.hm .card{animation:none;background:#fff;border:1px solid #e4e7dc;border-radius:6px;padding:10px;font-size:9px;font-weight:600;margin:6px 0;box-shadow:0 2px 3px #00000002}.candidate-row{display:flex;align-items:center;gap:7px}.avatar{height:24px;width:24px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;font-size:8px;background:#ede8f3;color:#806699;font-weight:600}.avatar.sage{background:#e3ece0;color:#6a8460}.avatar.sand{background:#f1eadd;color:#a08457}.hm .card small{font-size:8px;color:#979c90}.candidate-meta{display:flex;justify-content:space-between;font-size:7px;font-weight:400;color:#969c8d;border-top:1px solid #f1f2ed;margin-top:9px;padding-top:7px}.candidate-meta b{background:#edf3e8;color:#769162;padding:1px 4px;border-radius:3px;font-size:7px;font-weight:500}.preview-foot{display:flex;justify-content:center;padding:10px;font-size:9px;color:#9ca38e;gap:7px;background:#f4f5f0;border-top:1px solid #e2e4d9}
+.hx+.wrap .stats{margin-top:0}.stats{gap:0;padding:34px 0 40px;border-bottom:1px solid var(--line)}.stat{background:none;border:0;border-radius:0;padding:0 28px;text-align:center;overflow:visible}.stat+.stat{border-left:1px solid #dedfd7}.stat:before,.si{display:none}.stat:hover{transform:none;box-shadow:none;border-color:#dedfd7}.stat .sn{justify-content:center;gap:3px}.stat .sn b{background:none;color:#333b30;font-weight:600;font-size:35px}.stat .sn em{color:#817a8b;font-size:25px;font-weight:500}.stat>span{font-size:16px;margin-top:8px;color:#8a9082}
+section{padding:88px 0}.head{text-align:left;max-width:none;margin:0 0 36px;display:grid;grid-template-columns:1.2fr 1fr;column-gap:80px}.head small{grid-column:1/-1;font-size:10px;font-weight:600;color:#8c937f;letter-spacing:1.8px;margin-bottom:12px}.head h2{margin:0;font-size:34px;line-height:1.2;max-width:550px;font-weight:600;letter-spacing:-1.5px}.head p{font-size:19px;line-height:1.8;max-width:385px;align-self:center;justify-self:end}.grid{gap:0;border-top:1px solid #dde1d4;border-left:1px solid #dde1d4}.f{border:0;border-right:1px solid #dde1d4;border-bottom:1px solid #dde1d4;border-radius:0;padding:27px;background:transparent}.f:hover{transform:none;background:#fff;box-shadow:none}.ic{background:#eeeaf6;border-radius:8px;height:34px;width:34px;font-size:16px;color:#7f6abb;margin-bottom:23px}.f:hover .ic{transform:none}.f h3{font-size:24px;font-weight:600;margin-bottom:8px;letter-spacing:-.2px}.f p{font-size:17px;color:#858d7d;line-height:1.75;max-width:270px}.app{border-radius:12px;box-shadow:0 20px 60px #343e2a08;border-color:#dce0d5;grid-template-columns:195px 1fr}.app aside{background:#e9ede2;padding:22px 15px}.app aside .logo{color:#414a36!important;font-size:15px}.app aside .logo i{width:25px;height:25px;font-size:12px}.app aside li{color:#7c876c;font-size:11px;padding:9px 11px}.app aside li.on{background:#ded8ee;color:#6b52b2}.app aside li:hover{background:#dfe5d6;color:#566345;transform:none}.app main{padding:26px;background:#fcfcfa}.top{margin-bottom:24px}.top h4{font-size:20px;font-weight:600}.top em{font:inherit;color:#7c876c}.top small{font-size:11px}.body{grid-template-columns:1fr 180px}.tl,.tl.nv,.tl.bl,.tl.gr{background:#fff;color:#4c5840;border:1px solid #e1e6d8;border-radius:7px;padding:14px 12px}.tl.gr{background:#eaf0e4}.tl small{font-size:8px}.tl b{font-weight:600;font-size:27px;letter-spacing:-1px;margin:6px 0}.tl span{font-size:8px;letter-spacing:0;text-transform:none}.tl:hover{transform:none}.tms{border-radius:8px;border-color:#e1e6d8}.tms h5{font-size:10px}.tm{font-size:10px;padding:8px 0}.tm small{font-size:8px}.tm i{background:#ede8f3;color:#8469a0;width:25px;height:25px;font-size:10px}.tm u,.tms h5 u{width:5px;height:5px;background:#82a86c;animation:none}.steps{gap:30px}.steps:before{display:none}.s{text-align:left;border-top:1px solid #daddd0;padding-top:22px}.s i{background:none;box-shadow:none;color:#9aa18f;font-size:22px;width:auto;height:auto;display:block;margin:0 0 20px}.s h3{font-size:26px;font-weight:600;margin-bottom:9px}.s p{font-size:17px;line-height:1.7;max-width:220px}.ai{background:#253329;border-radius:14px;padding:55px;gap:60px}.ai:before{display:none}.ai h2{font-size:35px;font-weight:500;letter-spacing:-1.5px}.ai .grad{color:#c3b7eb}.ai p{font-size:17px;color:#aab6a6;line-height:1.8}.ai ul{font-size:17px;color:#d2dace;gap:13px}.ai li:before{color:#bcacdf}.scan{background:#ffffff09;border-color:#ffffff12;border-radius:10px;padding:25px}.scan:after{display:none}.scan em{color:#e2d7ff;background:#ffffff14;font-size:10px}.scan .k{animation:none;background:#a28acb}.scan div{height:7px;background:#ffffff12;margin:15px 0}
+.ci{background:#edece4;color:#37412e;border:1px solid #dedfd2;border-radius:12px;padding:36px}.ci:before{display:none}.ci h3{font-size:26px;letter-spacing:-1px;font-weight:600;max-width:350px}.ci p{color:#858b7b;font-size:17px;line-height:1.8;margin:18px 0 32px}.ci a.em{background:#ffffff70;border-color:#dcded3;color:#59674a;font-size:13px;padding:12px}.ci ul{font-size:17px;color:#7a856c;gap:16px;margin-top:34px}.ci li:before{color:#7a9360}.cf{border-radius:12px;padding:30px;border-color:#e0e2d7}.cf label{font-size:17px;color:#768368}.cf input,.cf select,.cf textarea{border-radius:6px;background:#fafbf7;border-color:#e2e6db;font-size:13px;padding:11px 12px}.cf textarea{min-height:90px}.cf button{font-size:13px}.final{background:#eae6f3;color:#4a3d6b;border:1px solid #dfd8ed;border-radius:12px;padding:48px 30px;text-align:center}.final h2{font-size:31px;letter-spacing:-1px;font-weight:600}.final p{font-size:17px;color:#9283a5;margin:12px 0 24px}.final .btn{background:#6954d6;color:white}.final .btn:hover{background:#5944c0}footer{background:#f8f8f4;color:#929986;margin-top:65px;border-top:1px solid #dfe3d5;font-size:12px}footer:before{display:none}footer .logo{color:#4a563c}footer p{font-size:17px;line-height:1.9;max-width:280px}footer h6{font-size:19px;color:#596749;letter-spacing:.8px;font-weight:600}footer li{margin:10px 0;font-size:17px}footer li a:hover{color:#6954d6;transform:none}.fg{padding:46px 0 30px;grid-template-columns:1.8fr 1fr 1fr .8fr}.fb{border-color:#dfe3d5;font-size:18px;padding:20px 0}.up{background:#eaece4;color:#7d8b69;border-radius:6px;width:30px;height:30px;animation:none}.rv{opacity:1;transform:none}.soc{display:none}
+@media(min-width:1100px){.grid .f:nth-child(6){background:#eeebf7}.grid .f:nth-child(6) .ic{background:#dfd5f2}}
+@media(max-width:1000px){.hxc>.hero-intro{gap:35px;grid-template-columns:1.15fr .85fr}.hx h1{font-size:53px;letter-spacing:-2.6px}.preview-sidebar{display:none}.product-preview{grid-template-columns:1fr}nav ul{gap:14px}.head{column-gap:35px}.body{grid-template-columns:1fr}.tms{display:none}}
+@media(max-width:860px){.wrap{padding:0 24px}nav .wrap{height:72px}.hx{padding-top:50px}.hxc>.hero-intro{grid-template-columns:1fr;gap:25px}.hx h1{max-width:610px}.hx p{max-width:520px}.hero-caption{margin-top:35px}.hm .cols{grid-template-columns:repeat(4,1fr)}.hm .col:nth-child(n+3){display:block}.stats{grid-template-columns:repeat(4,1fr);padding:28px 0}.stat{padding:0 10px}.stat .sn b{font-size:28px}.stat>span{font-size:10px}.head{grid-template-columns:1fr;gap:16px}.head p{justify-self:start;max-width:480px}.head small{margin:0}.grid{grid-template-columns:repeat(2,1fr)}section{padding:65px 0}.ai{padding:35px;gap:35px}.app{grid-template-columns:1fr}.ct{gap:18px}.steps{grid-template-columns:repeat(4,1fr);gap:20px}.fg{grid-template-columns:1.3fr 1fr;gap:30px}}
+@media(max-width:560px){.wrap{padding:0 20px}.logo{font-size:17px}.logo i{width:29px;height:29px;font-size:15px}nav .btn{font-size:11px;padding:9px 12px}.hx h1{font-size:44px;letter-spacing:-2.5px}.hx p{font-size:14px}.trust{gap:12px;font-size:9px}.hero-caption{font-size:8px;letter-spacing:1px}.hero-caption span:last-child{font-size:9px}.preview-main{padding:16px 12px}.preview-top h3{font-size:17px}.preview-top p{font-size:9px}.preview-metrics{gap:6px;margin:16px 0}.mini-metric{padding:8px}.mini-metric small{font-size:7px}.mini-metric strong{font-size:19px}.mini-metric em{display:none}.hm .cols{grid-template-columns:repeat(2,1fr)}.hm .col:nth-child(n+3){display:none}.product-preview{min-height:0}.stats{grid-template-columns:1fr 1fr;row-gap:24px}.stat:nth-child(3){border-left:0}.stat .sn b{font-size:30px}.stat .sn em{font-size:22px}.stat>span{font-size:10px;max-width:145px;margin:8px auto 0}.head h2{font-size:29px;letter-spacing:-1.2px}.head p{font-size:13px}.grid{grid-template-columns:1fr 1fr}.f{padding:22px 15px}.f h3{font-size:12px}.f p{font-size:11px}.ic{margin-bottom:18px}.app main{padding:18px}.tiles{grid-template-columns:1fr 1fr}.top .btn{font-size:10px!important;padding:8px 10px!important}.steps{grid-template-columns:1fr 1fr;gap:28px}.ai{padding:28px}.ai h2{font-size:30px}.ci,.cf{padding:24px}.ci a.em{font-size:12px}.final{padding:35px 20px}.final h2{font-size:27px}.fg{grid-template-columns:1fr 1fr;gap:25px}.fg>div:first-child{grid-column:1/-1}.fb{align-items:center}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+/* Modern animated hero */
+.hx{padding-top:68px;background:linear-gradient(180deg,#f8f8f4 0%,#f0edf9 68%,#f8f8f4 100%);isolation:isolate;overflow:hidden;position:relative}
+.hx:before,.hx:after{content:"";position:absolute;z-index:-1;pointer-events:none;border-radius:50%;filter:blur(70px);animation:hero-orbit 16s ease-in-out infinite alternate}
+.hx:before{width:560px;height:420px;top:10px;left:calc(50% - 440px);background:#ddd2ff80}.hx:after{width:360px;height:360px;right:4%;top:180px;background:#d6e9dd80;animation-delay:-7s}
+.hxc:before{content:"";position:absolute;inset:0 0 220px;z-index:-1;pointer-events:none;background-image:radial-gradient(#85739f25 1px,transparent 1px);background-size:24px 24px;mask-image:linear-gradient(transparent,#000 35%,transparent 95%)}
+.hxc>.hero-intro{display:flex;flex-direction:column;align-items:center;text-align:center;gap:25px}.hero-intro>div{width:100%;min-width:0}.hx .tag{background:#ffffffb0;backdrop-filter:blur(12px);box-shadow:0 3px 20px #7764990b;padding:8px 15px;font-size:12px;border-color:#d9d0ed;animation:hero-enter .8s both}.hx .tag b{position:relative;box-shadow:0 0 0 4px #6954d618;animation:hero-dot 3s ease-in-out infinite}
+.hx h1{font-size:clamp(45px,6.2vw,80px);max-width:980px;letter-spacing:-4.5px;margin:24px auto 0;line-height:1.06;animation:hero-enter .9s .12s both}.hx h1 em{display:inline-block;background:linear-gradient(110deg,#6954d6 15%,#a471d3 45%,#4e78b5 70%,#6954d6 95%);padding-bottom: 15px;background-size:240% 100%;color:transparent;background-clip:text;-webkit-background-clip:text;animation:hero-gradient 9s ease-in-out infinite}
+.hx p{font-size:16px;max-width:580px;margin:0 auto;line-height:1.8;color:#78718b;animation:hero-enter .9s .24s both}.hx .cta{justify-content:center;margin-top:25px;animation:hero-enter .9s .35s both}.hx .btn{border-radius:10px;padding:14px 24px}.hx .btn.p{box-shadow:0 8px 25px #6954d62b}.hx .btn.p span{transition:transform .2s}.hx .btn.p:hover span{transform:translate(2px,-2px)}.hx .btn.o{background:#ffffff75;border-color:#d7d0e3}.trust{justify-content:center;color:#8d829c;margin-top:20px;animation:hero-enter .9s .45s both}
+.hero-caption{margin-top:52px;position:relative;z-index:3}.hero-caption span:last-child{display:flex;align-items:center;gap:14px}.motion-control{border:1px solid #dcd5e7;border-radius:50px;background:#ffffff80;color:#827291;padding:5px 10px;cursor:pointer;font:inherit;font-size:10px;letter-spacing:0;text-transform:none}.motion-control:hover{background:white}.hxm{padding:0 24px;animation:hero-enter 1.2s .5s both}.hm{border-radius:14px;border-color:#dcd4ec;box-shadow:0 25px 75px -30px #6f579648;animation:hero-float 8s ease-in-out infinite 1.7s;transform-origin:center}.hxm:hover .hm{animation-play-state:paused}.hx{padding-bottom:40px}.preview-main{background:#ffffff}.preview-foot{background:#f7f6fa}.preview-sidebar{background:#f3f1f8;border-color:#e5dfef}.preview-metrics{margin:18px 0}.side-user{margin-top:28px}.product-preview{min-height:340px}.hm .col{background:#f6f5f9}.hm .card{transition:transform .25s,box-shadow .25s}.hm .card:hover{transform:translateY(-3px);box-shadow:0 6px 16px #6954d616}
+.hero-notice{position:absolute;z-index:4;display:flex;gap:12px;align-items:center;border:1px solid #e6dfef;border-radius:12px;background:#fffffff0;backdrop-filter:blur(12px);padding:13px 17px;box-shadow:0 12px 35px #6954d619;text-align:left;pointer-events:none}.hero-notice strong{font-size:12px;color:#494055;display:block;font-weight:600}.hero-notice small{font-size:10px;color:#9a8ca8;display:block;margin-top:2px}.notice-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#eae3f8;color:#8061c0;font-size:17px}.hero-notice.match{right:0;top:-20px;animation:notice-float 7s ease-in-out infinite .4s}.hero-notice.hired{left:0;bottom:26px;animation:notice-float 8s ease-in-out infinite -2s}.hired .notice-icon{background:#e4efe6;color:#5e8c6a}.hero-notice .sample-label{font-size:8px;color:#aa9cb6;letter-spacing:.3px}
+@keyframes hero-enter{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hero-orbit{from{transform:translate(-25px,-20px) scale(.9)}to{transform:translate(60px,45px) scale(1.15)}}
+@keyframes hero-gradient{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes hero-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes notice-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes hero-dot{0%,100%{box-shadow:0 0 0 4px #6954d618}50%{box-shadow:0 0 0 7px #6954d606}}
+.hx.motion-paused *,.hx.motion-paused:before,.hx.motion-paused:after{animation-play-state:paused!important}
+@media(max-width:860px){.hx{padding-top:50px}.hx h1{font-size:60px;letter-spacing:-3.5px}.hxm{padding:0 12px}.hero-notice{padding:10px 12px}.hero-notice.hired{bottom:12px}.hero-caption{margin-top:45px}.hero-notice strong{font-size:11px}}
+@media(max-width:560px){.hx{padding-top:40px;padding-bottom:25px}.hx h1{font-size:44px;letter-spacing:-2.7px;line-height:1.1}.hx .tag{font-size:10px;padding:7px 12px}.hx p{font-size:13px;max-width:335px}.hxc>.hero-intro{gap:20px}.hx .cta{gap:8px;margin-top:20px}.hx .btn{font-size:11px;padding:12px 14px}.trust{font-size:9px;gap:14px;margin-top:17px}.hxm{padding:0}.hero-notice{display:none}.hero-caption{margin-top:35px;gap:10px}.hero-caption>span:first-child{font-size:7px;letter-spacing:.8px}.hero-caption span:last-child{gap:6px;font-size:8px}.motion-control{font-size:8px;padding:4px 7px}.hm{border-radius:10px}.hx:before{width:350px;height:350px;left:-60px}.hx:after{width:220px;height:220px;right:-100px}.preview-top .btn{padding:7px 9px;font-size:9px}.hx .preview-top p{font-size:9px;text-align:left}.hx .preview-top .btn{white-space:nowrap}}
+@media(prefers-reduced-motion:reduce){.hx *,.hx:before,.hx:after{animation:none!important}.motion-control{display:none}}
+#cs.error{color:#a33838;background:#fbeeee}#cs.pending{color:#6954d6;background:#efecfa}.cf button:disabled{opacity:.65;cursor:wait}
+.logo-img {
+  display: block;
+  max-width: 180px;
+  height: auto;
+}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a href="#top" class="logo">  <img src="/logo.webp" alt="AssistMyHR" class="logo-img"></a>
+  <ul><li><a href="#dashboard">Dashboard</a></li><li><a href="#features">Modules</a></li><li><a href="#how">How it works</a></li><li><a href="#ai">AI Screening</a></li><li><a href="#contact">Contact</a></li></ul>
+  <a class="btn p" href="#contact">Let&#8217;s talk <span aria-hidden="true">↗</span></a>
+</div></nav>
+
+<header class="hx" id="top">
+ <div class="wrap hxc">
+  <div class="hero-intro"><div>
+   <span class="tag"><b></b> Your hiring workspace. Reimagined. <span aria-hidden="true">↗</span></span>
+   <h1>Less busywork.<br><em>More great hires.</em></h1>
+  </div><div>
+   <p>A clear pipeline. A connected team. AI that helps you find the right people. Meet the workspace that moves hiring forward.</p>
+   <div class="cta"><a class="btn p" href="#contact">Book a free demo <span aria-hidden="true">↗</span></a><a class="btn o" href="#dashboard">Explore the platform</a></div>
+   <ul class="trust"><li>✓ AI-powered search</li><li>✓ Built for teams</li></ul>
+  </div></div>
+  <div class="hero-caption"><span>Your next great hire starts here</span></div>
+  <div class="hxm"><div class="hero-notice match"><span class="notice-icon" aria-hidden="true">✧</span><div><strong>Your next great match</strong><small>AI found a 94% candidate match</small><span class="sample-label">ILLUSTRATIVE PREVIEW</span></div></div><div class="hero-notice hired"><span class="notice-icon" aria-hidden="true">✓</span><div><strong>From possibility to hired.</strong><small>Priya accepted her offer</small><span class="sample-label">ILLUSTRATIVE PREVIEW</span></div></div><div class="mock hm" aria-label="Illustrative hiring dashboard with sample candidate data">
+   <div class="product-preview"><aside class="preview-sidebar">
+    <div class="logo"><i>A</i> AssistMyHR</div><div class="side-label">WORKSPACE</div>
+    <div class="side-item">▦ &nbsp; Overview</div><div class="side-item active">▤ &nbsp; Hiring pipeline</div><div class="side-item">♧ &nbsp; Candidates</div><div class="side-item">▣ &nbsp; Interviews</div><div class="side-item">⌕ &nbsp; AI search</div>
+    <div class="side-label">ORGANIZATION</div><div class="side-item">⊞ &nbsp; Team members</div><div class="side-item">⚙ &nbsp; Settings</div>
+    <div class="side-user"><span class="avatar sage">JD</span><div>Jamie Davis<small>Hiring manager</small></div></div>
+   </aside><div class="preview-main">
+    <div class="preview-top"><div><h3>Your hiring, in focus.</h3><p>Good morning, Jamie. Let’s find your next great hire.</p></div><a href="#contact" class="btn p">+ Create a job</a></div>
+    <div class="preview-metrics"><div class="mini-metric"><small>Active jobs</small><strong>10</strong><em>+2 this week</em></div><div class="mini-metric"><small>Total candidates</small><strong>3,174</strong><em>+12.8%</em></div><div class="mini-metric"><small>Interviews</small><strong>12</strong><em>This week</em></div><div class="mini-metric"><small>People hired</small><strong>17</strong><em>This month</em></div></div>
+    <div class="pipeline-heading">Hiring pipeline <span>All positions &nbsp;⌄</span></div>
+    <div class="cols">
+     <div class="col"><h6><i class="stage-dot"></i> Applied &nbsp; 88</h6><div class="card"><div class="candidate-row"><i class="avatar sage">AS</i><div>Aarav Sharma<small>Laravel Developer</small></div></div><div class="candidate-meta">Applied today <b>86% match</b></div></div><div class="card"><div class="candidate-row"><i class="avatar sand">NP</i><div>Neha Patel<small>UI Designer</small></div></div><div class="candidate-meta">Applied yesterday <b>89% match</b></div></div></div>
+     <div class="col"><h6><i class="stage-dot"></i> Screening &nbsp; 34</h6><div class="card"><div class="candidate-row"><i class="avatar">RK</i><div>Rohit Kumar<small>QA Engineer</small></div></div><div class="candidate-meta">Under review <b>94% match</b></div></div><div class="card"><div class="candidate-row"><i class="avatar sage">SM</i><div>Sara Miller<small>Recruiter</small></div></div><div class="candidate-meta">Under review <b>91% match</b></div></div></div>
+     <div class="col"><h6><i class="stage-dot"></i> Interview &nbsp; 12</h6><div class="card"><div class="candidate-row"><i class="avatar sand">KJ</i><div>Kabir Joshi<small>DevOps Engineer</small></div></div><div class="candidate-meta">Tomorrow, 10:00 <b>96% match</b></div></div><div class="card"><div class="candidate-row"><i class="avatar">AR</i><div>Anita Rao<small>HR Manager</small></div></div><div class="candidate-meta">Tomorrow, 14:30 <b>92% match</b></div></div></div>
+     <div class="col"><h6><i class="stage-dot"></i> Hired &nbsp; 17</h6><div class="card"><div class="candidate-row"><i class="avatar sage">PD</i><div>Priya Desai<small>Product Manager</small></div></div><div class="candidate-meta">Offer accepted <b>✓ Hired</b></div></div></div>
+    </div>
+   </div></div><div class="preview-foot">◇ &nbsp; Product preview · illustrative data</div>
+  </div></div>
+ </div>
+</header>
+
+<div class="wrap"><div class="stats rv"><div class="stat"><i class="si">⚡</i><div class="sn"><b data-n="70">70</b><em>%</em></div><span>Less time spent screening CVs</span></div><div class="stat"><i class="si">🔍</i><div class="sn"><b data-n="10">10</b><em>s</em></div><span>To find the right CV with AI search</span></div><div class="stat"><i class="si">📅</i><div class="sn"><b data-n="3">3</b><em>x</em></div><span>Faster interview scheduling</span></div><div class="stat"><i class="si">📊</i><div class="sn"><b data-n="100">100</b><em>%</em></div><span>Hiring data in one dashboard</span></div></div></div>
+
+<section id="features"><div class="wrap">
+  <div class="head rv"><small>The thoughtful hiring toolkit</small><h2>Everything you need.<br>All working together.</h2><p>Twelve connected modules that take you from job posting to hired, with no spreadsheets.</p></div>
+  <div class="grid"><div class="f rv"><div class="ic" aria-hidden="true">▤</div><h3>Jobs</h3><p>Post, edit and track every opening across companies from one list.</p></div><div class="f rv"><div class="ic" aria-hidden="true">◈</div><h3>ATS Overview</h3><p>A live bird’s-eye view of jobs, stages and hiring progress.</p></div><div class="f rv"><div class="ic" aria-hidden="true">▧</div><h3>Job Applications</h3><p>Every new application lands in one inbox, ready to review.</p></div><div class="f rv"><div class="ic" aria-hidden="true">▦</div><h3>Candidate Database</h3><p>Thousands of searchable profiles with notes, files and history.</p></div><div class="f rv"><div class="ic" aria-hidden="true">↗</div><h3>Candidate Marketing</h3><p>Run marketing pipelines to place your bench candidates faster.</p></div><div class="f rv"><div class="ic" aria-hidden="true">✧</div><h3>AI Search</h3><p>Ask in plain words and find the right CV by skill or experience.</p></div><div class="f rv"><div class="ic" aria-hidden="true">▣</div><h3>Interview Schedule</h3><p>Book interviews, see today’s calls and never double-book.</p></div><div class="f rv"><div class="ic" aria-hidden="true">♧</div><h3>Team</h3><p>Manage recruiters and admins, and see who is online right now.</p></div><div class="f rv"><div class="ic" aria-hidden="true">☷</div><h3>Internal Messages</h3><p>Chat with your team inside the ATS without switching apps.</p></div><div class="f rv"><div class="ic" aria-hidden="true">◇</div><h3>Temp Staffing</h3><p>Handle temporary placements and assignments end to end.</p></div><div class="f rv"><div class="ic" aria-hidden="true">▢</div><h3>Registrations</h3><p>Capture and review new candidate and company sign-ups.</p></div><div class="f rv"><div class="ic" aria-hidden="true">✓</div><h3>ToDos</h3><p>Daily task lists so no follow-up slips through the cracks.</p></div></div>
+</div></section>
+
+<section id="dashboard" style="padding-top:20px"><div class="wrap">
+  <div class="head rv"><small>One connected workspace</small><h2>A little clarity.<br>A lot more possibility.</h2><p>Live counts, online teammates and quick actions the moment you sign in.</p></div>
+  <div class="app rv">
+    <aside><div class="logo" style="color:#fff;margin-bottom:16px"><i>A</i>AssistMyHR</div><ul><li class=on>Dashboard</li><li>Jobs</li><li>ATS Overview</li><li>Job Applications</li><li>Candidate Database</li><li>Candidate Marketing</li><li>AI Search</li><li>Interview Schedule</li><li>Team</li><li>Internal Messages</li><li>Temp Staffing</li><li>ToDos</li></ul></aside>
+    <main><div class="top"><div><h4>Dashboard <em>Overview</em></h4><small>Welcome back! Here’s what’s happening today.</small></div><span class="btn p" style="padding:9px 16px;font-size:.8rem">+ New Job Post</span></div>
+  
+    <div class="body"><div class="tiles"><div class="tl nv"><small>Total</small><b data-n="16">16</b><span>Total Companies</span></div><div class="tl bl"><small>Live</small><b data-n="10">10</b><span>Total Openings</span></div><div class="tl bl"><small>ATS</small><b data-n="0">0</b><span>ATS Jobs</span></div><div class="tl wh"><small>All</small><b data-n="3174">3,174</b><span>Candidate Database</span></div><div class="tl gr"><small>Hired</small><b data-n="17">17</b><span>Total Hired</span></div><div class="tl wh"><small>Closed</small><b data-n="217">217</b><span>Total Rejected</span></div><div class="tl wh"><small>New</small><b data-n="88">88</b><span>New Applications</span></div><div class="tl wh"><small>Pipeline</small><b data-n="12">12</b><span>Candidate Marketing</span></div></div><div class="tms"><h5>Online Team Members <u style="float:right"></u></h5><div class="tm"><i>D</i><div>Dennis<small>Recruiter</small></div><u></u></div><div class="tm"><i>K</i><div>Khushman<small>Recruiter</small></div><u></u></div><div class="tm"><i>K</i><div>Kollins<small>App Administrator</small></div><u></u></div><div class="tm"><i>R</i><div>Rimple<small>Recruiter</small></div><u></u></div></div></div></main>
+  </div></div></section>
+
+<section id="how" style="padding-top:20px"><div class="wrap">
+  <div class="head rv"><small>How it works</small><h2>From opening to offer in four steps</h2></div>
+  <div class="steps">
+    <div class="s rv"><i>1</i><h3>Post</h3><p>Publish a job in minutes.</p></div>
+    <div class="s rv"><i>2</i><h3>Collect</h3><p>Applications and CVs flow in automatically.</p></div>
+    <div class="s rv"><i>3</i><h3>Shortlist</h3><p>AI ranks and filters the best fits.</p></div>
+    <div class="s rv"><i>4</i><h3>Hire</h3><p>Interview, decide and send the offer.</p></div>
+  </div>
+</div></section>
+
+<section id="ai" style="padding-top:20px"><div class="wrap"><div class="ai rv">
+  <div style="position:relative">
+    <h2>Let AI read <span class="grad">thousands of CVs</span> for you</h2>
+    <p>Stop scrolling through resumes. AssistMyHR indexes every CV and lets you search by skill, experience or role.</p>
+    <ul><li>Instant keyword and skill extraction</li><li>Smart candidate-to-job matching</li><li>Searchable talent pool that grows with you</li></ul>
+  </div>
+  <div class="scan"><em>Scanning CV…</em><div class="k" style="width:80%"></div><div style="width:95%"></div><div class="k" style="width:60%"></div><div style="width:88%"></div><div class="k" style="width:72%"></div><div style="width:50%"></div></div>
+</div></div></section>
+
+<section id="contact" style="padding-top:20px"><div class="wrap">
+  <div class="head rv"><small>Contact</small><h2>Talk to us about your hiring needs</h2><p>Send an enquiry and our team will get back to you soon.</p></div>
+  <div class="ct">
+    <div class="ci rv"><h3>Let’s build a faster hiring process together</h3><p>Ask about features, a live demo or getting your team onboarded to AssistMyHR.</p>
+      <a class="em" href="mailto:assistmyday@gmail.com">✉️ assistmyday@gmail.com</a>
+      <p style="margin:16px 0 0"><a href="tel:+14372199151">Call +1 (437) 219-9151 ↗</a></p><ul><li>Free demo of the dashboard</li><li>Help with setup and onboarding</li><li>Custom requirements welcome</li></ul></div>
+    <form class="cf rv" id="cform" action="contact.php" method="post"><p style="font-size:24px;color:var(--muted);margin-bottom:18px">Send your enquiry directly to our team.</p>
+      <div class="r"><label>Full name<input name="name" maxlength="150" autocomplete="name" required placeholder="Your name"></label><label>Email<input name="email" type="email" maxlength="254" autocomplete="email" required placeholder="you@company.com"></label></div>
+      <div class="r"><label>Phone<input name="phone" type="tel" maxlength="60" autocomplete="tel" placeholder="+91 …"></label><label>Company<input name="company" maxlength="200" autocomplete="organization" placeholder="Company name"></label></div>
+      <label>I’m interested in<select name="topic"><option>Live demo</option><option>Pricing</option><option>AI CV Search</option><option>Temp Staffing</option><option>Something else</option></select></label>
+      <label>Message<textarea name="message" maxlength="10000" required placeholder="Tell us about your hiring needs…"></textarea></label>
+      <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"><label>Leave this field empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <button class="btn p" type="submit">Send enquiry →</button>
+      <div id="cs" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="final rv">
+  <h2>Your next chapter starts with great people.</h2><p>Sign in to your AssistMyHR dashboard and start hiring smarter today.</p>
+ 
+</div></div>
+
+<footer><div class="wrap">
+  <div class="fg">
+    <div><a href="#top" class="logo"> <img src="/logo.webp" alt="AssistMyHR" class="logo-img"></a><p>The applicant tracking system that helps recruiting teams post jobs, manage candidates and hire faster with AI.</p>
+    <div class="soc"><a href="#top">in</a><a href="#top">f</a><a href="#top">X</a><a href="#top">ig</a></div></div>
+    <div><h6>Product</h6><ul><li><a href="#dashboard">Dashboard</a></li><li><a href="#features">Modules</a></li><li><a href="#how">How it works</a></li><li><a href="#ai">AI Screening</a></li></ul></div>
+    <div><h6>Modules</h6><ul><li><a href="#features">Jobs</a></li><li><a href="#features">Job Applications</a></li><li><a href="#features">Candidate Database</a></li><li><a href="#features">AI Search</a></li><li><a href="#features">Interview Schedule</a></li><li><a href="#features">Temp Staffing</a></li></ul></div>
+    <div><h6>Get started</h6><ul><li><a href="#contact">Contact us</a></li></ul></div>
+  </div>
+  <div class="fb"><span>© 2026 AssistMyHR. Built by AssistMyDay.</span><a class="up" href="#top" aria-label="Back to top">↑</a></div>
+</div></footer>
+
+<script>
+const motionControl=document.querySelector('.motion-control');
+motionControl.addEventListener('click',()=>{
+ const paused=document.getElementById('top').classList.toggle('motion-paused');
+ motionControl.setAttribute('aria-pressed',String(paused));
+ motionControl.textContent=paused?'Resume motion':'Pause motion';
+});
+document.querySelectorAll('.rv').forEach(el=>el.classList.add('in'));
+const contactForm=document.getElementById('cform');
+contactForm.addEventListener('submit',async event=>{
+ event.preventDefault();
+ const button=contactForm.querySelector('button[type="submit"]');
+ if(button.disabled)return;
+ const status=document.getElementById('cs');
+ const show=(message,state)=>{status.textContent=message;status.className=state;status.style.display='block';};
+ if(location.protocol==='file:'){
+  show('Please open the hosted website to send an enquiry, or email assistmyday@gmail.com.','error');return;
+ }
+ const payload=Object.fromEntries(new FormData(contactForm));
+ button.disabled=true;button.textContent='Sending…';contactForm.setAttribute('aria-busy','true');
+ show('Sending your enquiry…','pending');
+ const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),20000);
+ try{
+  const response=await fetch(contactForm.action,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:controller.signal,credentials:'same-origin'});
+  const result=await response.json();
+  if(!response.ok||result.success!==true)throw new Error(result.message||'Unable to send your enquiry. Please try again.');
+  show(result.message,'');contactForm.reset();
+ }catch(error){
+  const message=error.name==='AbortError'?'The request timed out. Delivery could not be confirmed; please email assistmyday@gmail.com before submitting again.':error instanceof SyntaxError||error instanceof TypeError?'Unable to reach the contact service. Your message is still in the form. Please try again or email assistmyday@gmail.com.':error.message;
+  show(message,'error');
+ }finally{
+  clearTimeout(timer);button.disabled=false;button.textContent='Send enquiry →';contactForm.removeAttribute('aria-busy');
+ }
+});
+</script>
+</body>
+</html>
