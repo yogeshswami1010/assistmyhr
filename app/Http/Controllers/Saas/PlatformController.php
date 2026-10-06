@@ -18,7 +18,15 @@ use Illuminate\Validation\Rule;
 
 class PlatformController extends Controller
 {
-    public function loginForm() { abort_unless(config('saas.enabled'), 404); return view('saas.platform-login'); }
+    private function platformView(string $view, array $data = [])
+    {
+        $brand = (object) ['company_name' => 'AssistMyHR', 'logo_url' => asset('logo.webp'), 'favicon_url' => asset('favicon/apple-icon-72x72.png')];
+        $titles = ['saas.platform-dashboard' => 'Client overview', 'saas.platform-plans' => 'Subscription plans', 'saas.platform-settings' => 'Signup and trial settings', 'saas.platform-tenant' => $data['tenant']->name ?? 'Client details'];
+        return view($view, $data + ['platformLayout' => true, 'platformAdmin' => Auth::guard('platform')->user(),
+            'pageTitle' => $titles[$view] ?? 'Super admin login', 'companyName' => 'AssistMyHR',
+            'companySetting' => $brand, 'setting' => $brand, 'frontTheme' => (object) ['primary_color' => '#2563eb']]);
+    }
+    public function loginForm() { abort_unless(config('saas.enabled'), 404); return $this->platformView('saas.platform-login'); }
     public function login(Request $request)
     {
         abort_unless(config('saas.enabled'), 404);
@@ -37,7 +45,7 @@ class PlatformController extends Controller
     }
     public function dashboard()
     {
-        return view('saas.platform-dashboard', [
+        return $this->platformView('saas.platform-dashboard', [
             'total' => Tenant::count(), 'active' => Tenant::where('status', 'active')->count(),
             'suspended' => Tenant::where('status', 'suspended')->count(),
             'expired' => Subscription::whereNotNull('expires_at')->where('expires_at', '<=', now())->count(),
@@ -52,7 +60,7 @@ class PlatformController extends Controller
         try { $context->activate($tenant); $usage = app(QuotaService::class)->usage(); }
         catch (\Throwable $e) { report($e); }
         finally { $context->reset(); }
-        return view('saas.platform-tenant', ['tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get()]);
+        return $this->platformView('saas.platform-tenant', ['tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get()]);
     }
     public function updateTenant(Request $request, Tenant $tenant)
     {
@@ -96,7 +104,7 @@ class PlatformController extends Controller
         } finally { $context->reset(); }
         return back()->with('status', 'Owner email verification approved.');
     }
-    public function plans() { return view('saas.platform-plans', ['plans' => Plan::orderBy('id')->get()]); }
+    public function plans() { return $this->platformView('saas.platform-plans', ['plans' => Plan::orderBy('id')->get()]); }
     public function savePlan(Request $request, ?Plan $plan = null)
     {
         $data = $request->validate([
@@ -114,7 +122,7 @@ class PlatformController extends Controller
     }
     public function settings()
     {
-        return view('saas.platform-settings', ['settings' => PlatformSetting::pluck('value', 'key'), 'plans' => Plan::where('enabled', true)->where('public', true)->get()]);
+        return $this->platformView('saas.platform-settings', ['settings' => PlatformSetting::pluck('value', 'key'), 'plans' => Plan::where('enabled', true)->where('public', true)->get()]);
     }
     public function saveSettings(Request $request)
     {

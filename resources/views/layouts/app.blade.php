@@ -1,6 +1,8 @@
+@if(!($platformLayout ?? false))
 @section('candidate-communication-popup')
     @include('admin.partials.candidate-communications', ['showCommunicationToolbar' => false])
 @endsection
+@endif
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -132,11 +134,18 @@
 </head>
 <body class="ra-admin-body">
 <div id="ra-app" class="ra-app" style="--ra-accent: {{ isset($adminTheme) ? $adminTheme->primary_color : '#2563eb' }};">
+@if($platformLayout ?? false)
+    @include('saas.platform-sidebar')
+@else
 @auth
     @include('sections.left-sidebar')
 @endauth
+@endif
 
 <div class="ra-main">
+    @if($platformLayout ?? false)
+    @include('saas.platform-topbar')
+@else
     <header class="ra-topbar">
         <div class="flex items-center gap-2 min-w-0">
             @auth
@@ -217,6 +226,7 @@
             @endauth
         </div>
     </header>
+@endif
 
     <div class="ra-scroll">
         @include('sections.breadcrumb')
@@ -226,6 +236,7 @@
         </footer>
     </div>
 
+    @if(!($platformLayout ?? false))
     @auth
         @include('sections.sticky-notes-sidebar')
         {{--sticky note modal--}}
@@ -241,9 +252,14 @@
         </div>
         {{--sticky note modal ends--}}
     @endauth
+    @endif
 
 </div>
 {{-- /.ra-main --}}
+@if($platformLayout ?? false)
+</div>
+@include('saas.platform-sidebar-script')
+@else
 
     {{--Ajax Modal (lg) — Tailwind-centered overlay --}}
     <div class="hidden fixed inset-0 z-50 overflow-y-auto" id="application-lg-modal" role="dialog" aria-labelledby="myModalLabel" aria-modal="true" aria-hidden="true">
@@ -955,6 +971,7 @@
     if (contentAutoRefreshEnabled) setTimeout(checkForChanges, 1200);
 })();
 </script>
+@endif
 @stack('footer-script')
 
 </body>
