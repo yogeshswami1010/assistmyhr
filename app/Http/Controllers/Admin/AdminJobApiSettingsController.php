@@ -33,14 +33,22 @@ class AdminJobApiSettingsController extends AdminBaseController
 
     public function store(Request $request)
     {
+        $allJobs = $request->input('feed_scope') === 'all';
         $data = $request->validate([
+            'feed_scope' => ['sometimes', Rule::in(['all', 'company'])],
             'company_id' => [
-                'required', 'integer', Rule::exists('companies', 'id')->where('status', 'active'),
+                $allJobs ? 'prohibited' : 'required', 'integer', Rule::exists('companies', 'id')->where('status', 'active'),
                 Rule::unique('job_api_integrations', 'company_id'),
             ],
         ]);
+        if ($allJobs && JobApiIntegration::where('feed_scope', 'all')->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'feed_scope' => 'An all-jobs key already exists. Regenerate or enable it below.',
+            ]);
+        }
         $integration = new JobApiIntegration;
-        $integration->company_id = $data['company_id'];
+        $integration->company_id = $allJobs ? null : $data['company_id'];
+        $integration->feed_scope = $allJobs ? 'all' : 'company:'.$data['company_id'];
         $integration->enabled = true;
 
         return $this->tokenResponse($integration);
@@ -73,7 +81,7 @@ class AdminJobApiSettingsController extends AdminBaseController
 
         return redirect()->route('admin.job-api-settings.index')
             ->with('new_job_api_token', $token)
-            ->with('new_job_api_company', $integration->company->company_name)
+            ->with('new_job_api_company', $integration->feed_scope === 'all' ? 'All ATS jobs' : $integration->company->company_name)
             ->with('status', 'API key created. Copy it now; it will not be shown again.');
     }
 }

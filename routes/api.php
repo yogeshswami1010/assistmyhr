@@ -8,3 +8,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/jobs', [JobController::class, 'index'])
     ->middleware(AuthenticateJobApi::class)
     ->name('api.jobs.index');
+
+Route::get('/jobs/{id}', [JobController::class, 'show'])
+    ->whereNumber('id')
+    ->middleware(AuthenticateJobApi::class)
+    ->name('api.jobs.show');

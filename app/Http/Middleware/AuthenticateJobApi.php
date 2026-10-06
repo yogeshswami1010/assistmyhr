@@ -15,13 +15,15 @@ class AuthenticateJobApi
             ? JobApiIntegration::with('company')->where('token_hash', hash('sha256', $token))->first()
             : null;
 
-        if (!$integration || !$integration->enabled || $integration->company?->status !== 'active') {
+        $allJobs = $integration?->feed_scope === 'all' && $integration->company_id === null;
+        if (!$integration || !$integration->enabled || (!$allJobs && $integration->company?->status !== 'active')) {
             return response()->json(['status' => false, 'message' => 'Invalid or disabled jobs API key.'], 401)
                 ->header('Cache-Control', 'no-store')
                 ->header('WWW-Authenticate', 'Bearer');
         }
 
-        // Company scope is resolved from the key, never from a caller-supplied ID.
+        // Feed scope is resolved from the key, never from caller-supplied parameters.
+        $request->attributes->set('job_api_all_jobs', $allJobs);
         $request->attributes->set('job_api_company_id', $integration->company_id);
 
         return $next($request)->header('Cache-Control', 'no-store, private');

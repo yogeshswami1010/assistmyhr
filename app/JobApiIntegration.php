@@ -17,6 +17,9 @@ class JobApiIntegration extends Model
 
     public function regenerateToken(): string
     {
+        if ($this->feed_scope === null && $this->company_id !== null) {
+            $this->feed_scope = 'company:'.$this->company_id;
+        }
         $token = 'jobs_'.bin2hex(random_bytes(32));
         $this->token_hash = hash('sha256', $token);
         $this->token_suffix = substr($token, -8);

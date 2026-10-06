@@ -89,6 +89,8 @@ namespace {
     });
     $migration = require $root.'/database/migrations/2026_10_06_000001_create_job_api_integrations.php';
     $migration->up();
+    $allJobsMigration = require $root.'/database/migrations/2026_10_06_000002_add_all_jobs_api_feed.php';
+    $allJobsMigration->up();
     DB::table('companies')->insert([
         ['id' => 1, 'company_name' => 'Client One', 'status' => 'active', 'show_in_frontend' => 'true'],
         ['id' => 2, 'company_name' => '<script>Client Two</script>', 'status' => 'active', 'show_in_frontend' => 'false'],
@@ -120,6 +122,7 @@ namespace {
     $router->aliasMiddleware('test-auth', fn ($request, $next) => $request->user() ? $next($request) : response()->json([], 401));
     $router->prefix('api')->group($root.'/routes/api.php');
     $router->get('job/{slug}/{location?}', fn () => 'Public job')->name('jobs.jobDetail');
+    $router->get('jobapply/{slug}/{location?}', fn () => 'Application form')->name('jobs.jobApply');
     $router->middleware(['test-auth', 'bindings'])->prefix('admin/settings')->name('admin.')->group(function ($router) {
         $controller = App\Http\Controllers\Admin\AdminJobApiSettingsController::class;
         $router->get('jobs-api', [$controller, 'index'])->name('job-api-settings.index');
@@ -145,6 +148,7 @@ namespace {
         $app->instance('request', $request);
         try { return $app['router']->dispatch($request); }
         catch (ValidationException $e) { return response()->json(['errors' => $e->errors()], 422); }
+        catch (Illuminate\Database\Eloquent\ModelNotFoundException $e) { return response()->json([], 404); }
         catch (Symfony\Component\HttpKernel\Exception\HttpException $e) { return response()->json([], $e->getStatusCode()); }
     }
 
@@ -165,7 +169,8 @@ namespace {
     check(array_column($feed['jobs'], 'id') === [2, 1], 'Key fixes company scope and stable order');
     check($feed['jobs'][0]['salary'] === null && $feed['jobs'][1]['salary'] === '50,000 - 70,000 / year', 'Hidden salaries withheld and public salary formatted');
     check($feed['jobs'][0]['end_date'] === null, 'Open-ended job included');
-    check($feed['jobs'][1]['apply_url'] === 'https://ats.example.test/job/job-1/9', 'Apply URL points to the matching job location');
+    check($feed['jobs'][1]['apply_url'] === 'https://ats.example.test/jobapply/job-1/9', 'Apply URL opens the ATS form for the matching job location');
+    check($feed['jobs'][1]['detail_url'] === 'https://ats.example.test/job/job-1/9', 'Detail URL opens the ATS job page');
     check(!str_contains($response->getContent(), 'PRIVATE ATS NOTE') && !isset($feed['jobs'][0]['company_id']), 'Internal fields excluded');
     check($feed['jobs'][0]['description'] === 'Public description', 'Description returned as text');
     check(str_contains($response->headers->get('Cache-Control'), 'no-store'), 'Keyed responses not cached');
@@ -185,7 +190,7 @@ namespace {
     check(callEndpoint('POST', '/admin/settings/jobs-api', ['company_id' => 3], null, true)->getStatusCode() === 422, 'Inactive company cannot get a key');
     check(callEndpoint('POST', '/admin/settings/jobs-api', ['company_id' => 1], null, true)->getStatusCode() === 422, 'Duplicate company key rejected');
     $response = callEndpoint('GET', '/admin/settings/jobs-api', [], null, true);
-    check($response->getStatusCode() === 200 && str_contains($response->getContent(), 'Company integrations'), 'Settings page renders');
+    check($response->getStatusCode() === 200 && str_contains($response->getContent(), 'Website integrations'), 'Settings page renders');
     check(str_contains($response->getContent(), '&lt;script&gt;Client Two&lt;/script&gt;') && !str_contains($response->getContent(), $key), 'Settings escapes company names and masks saved keys');
     callEndpoint('POST', '/admin/settings/jobs-api/'.$integration->id.'/regenerate', [], null, true);
     $replacement = $session->get('new_job_api_token');
@@ -215,8 +220,35 @@ namespace {
     $session->ageFlashData();
     check(!str_contains(callEndpoint('GET', '/admin/settings/jobs-api', [], null, true)->getContent(), $newKey), 'Fresh key disappears after flash expiry');
     check(callEndpoint('GET', '/api/jobs', [], $newKey)->getStatusCode() === 200, 'New company key works');
+    $allCreated = callEndpoint('POST', '/admin/settings/jobs-api', ['feed_scope' => 'all'], null, true);
+    $allKey = $session->get('new_job_api_token');
+    check($allCreated->getStatusCode() === 302 && $session->get('new_job_api_company') === 'All ATS jobs', 'All-jobs key can be created without selecting a company');
+    $allFeed = json_decode(callEndpoint('GET', '/api/jobs', ['company_id' => 1], $allKey)->getContent(), true);
+    check($allFeed['total_jobs'] === 2, 'All-jobs feed spans currently active jobs');
+    DB::table('jobs')->where('id', 6)->update(['status' => 'active', 'company_id' => 4]);
+    $allFeed = json_decode(callEndpoint('GET', '/api/jobs', [], $allKey)->getContent(), true);
+    check($allFeed['total_jobs'] === 3 && in_array(6, array_column($allFeed['jobs'], 'id')), 'Single key includes jobs from multiple companies');
+    $detail = json_decode(callEndpoint('GET', '/api/jobs/6', [], $allKey)->getContent(), true);
+    check($detail['job']['id'] === 6 && str_contains($detail['job']['apply_url'], '/jobapply/job-6'), 'Single job API supports third-party detail pages and ATS Apply link');
+    check(callEndpoint('GET', '/api/jobs/1', [], $newKey)->getStatusCode() === 404, 'Company key cannot read another company single job');
+    check(callEndpoint('GET', '/api/jobs/5', [], $allKey)->getStatusCode() === 404, 'All-jobs detail excludes expired jobs');
+    check(callEndpoint('GET', '/api/jobs/6')->getStatusCode() === 401, 'Single job API requires a key');
+    check(callEndpoint('POST', '/admin/settings/jobs-api', ['feed_scope' => 'all'], null, true)->getStatusCode() === 422, 'Duplicate all-jobs key rejected');
+    $restricted = json_decode(callEndpoint('GET', '/api/jobs', ['feed_scope' => 'all'], $newKey)->getContent(), true);
+    check($restricted['total_jobs'] === 1 && $restricted['jobs'][0]['id'] === 6, 'Company key cannot request all-jobs scope');
+    $allIntegration = JobApiIntegration::where('feed_scope', 'all')->firstOrFail();
+    callEndpoint('PUT', '/admin/settings/jobs-api/'.$allIntegration->id, ['enabled' => 0], null, true);
+    check(callEndpoint('GET', '/api/jobs', [], $allKey)->getStatusCode() === 401, 'Disabled all-jobs key rejected');
+    callEndpoint('PUT', '/admin/settings/jobs-api/'.$allIntegration->id, ['enabled' => 1], null, true);
+    check(callEndpoint('GET', '/api/jobs/6', [], $allKey)->getStatusCode() === 200, 'Re-enabled all-jobs key works');
     check(callEndpoint('GET', '/api/assistmyday/jobs', [], $key)->getStatusCode() === 404, 'Legacy branded API retired');
     check(callEndpoint('POST', '/api/consortium-registration', [], $key)->getStatusCode() === 404, 'Legacy registration API retired');
+    $allJobsMigration->down();
+    check(!Schema::hasColumn('job_api_integrations', 'feed_scope'), 'All-jobs migration rollback succeeds');
+    $allJobsMigration->up();
+    check(JobApiIntegration::where('company_id', 4)->first()->feed_scope === 'company:4', 'Upgrade backfills existing company key scope');
+    check(callEndpoint('GET', '/api/jobs', [], $newKey)->getStatusCode() === 200, 'Upgrade preserves existing company key');
+    $allJobsMigration->down();
     $migration->down();
     check(!Schema::hasTable('job_api_integrations'), 'Migration rollback succeeds');
     Carbon::setTestNow();

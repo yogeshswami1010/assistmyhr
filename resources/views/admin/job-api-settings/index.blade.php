@@ -26,16 +26,25 @@
     @endif
 
     <section class="rounded-2xl border border-[#E8E6E1] bg-white p-6">
-        <h2 class="text-lg font-bold">Publish jobs on a client website</h2>
-        <p class="mt-2 text-sm text-slate-600">Create a separate read-only key for each company. Its feed includes only active jobs whose start date has arrived and whose closing date has not passed. Jobs with no closing date remain available.</p>
+        <h2 class="text-lg font-bold">Publish all ATS jobs on another website</h2>
+        <p class="mt-2 text-sm text-slate-600">Use one all-jobs key to display currently open jobs across all active companies. Your website can show a job list and its own job detail pages, then send applicants to the ATS application form. Jobs with no closing date remain available.</p>
         <label for="api-endpoint" class="mt-5 block text-sm font-semibold">API endpoint</label>
         <div class="mt-2 flex flex-wrap gap-3">
             <input id="api-endpoint" readonly value="{{ $endpoint }}" class="min-w-0 flex-1 rounded-lg border p-3 font-mono text-sm">
             <button type="button" data-copy="api-endpoint" class="rounded-lg border px-4 py-2 font-semibold">Copy endpoint</button>
         </div>
         <p class="mt-3 text-sm text-slate-600">Call this API from the client's server using <code>Authorization: Bearer YOUR_API_KEY</code>. Keep the key on the server; do not put it in public HTML or browser JavaScript.</p>
+        @unless($integrations->contains('feed_scope', 'all'))
+            <form method="POST" action="{{ route('admin.job-api-settings.store') }}" class="mt-5">
+                @csrf
+                <input type="hidden" name="feed_scope" value="all">
+                <button type="submit" class="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white">Create all-jobs API key</button>
+            </form>
+        @endunless
+        <h3 class="mt-7 font-semibold">Optional: restrict a feed to one company</h3>
         <form method="POST" action="{{ route('admin.job-api-settings.store') }}" class="mt-6 flex flex-wrap items-end gap-3">
             @csrf
+            <input type="hidden" name="feed_scope" value="company">
             <div class="min-w-[220px] flex-1">
                 <label for="company-id" class="block text-sm font-semibold">Company</label>
                 <select id="company-id" name="company_id" required class="mt-2 w-full rounded-lg border bg-white p-3">
@@ -55,16 +64,16 @@
     </section>
 
     <section class="overflow-hidden rounded-2xl border border-[#E8E6E1] bg-white">
-        <h2 class="p-6 text-lg font-bold">Company integrations</h2>
+        <h2 class="p-6 text-lg font-bold">Website integrations</h2>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50"><tr><th class="p-4">Company</th><th class="p-4">Key</th><th class="p-4">Status</th><th class="p-4">Actions</th></tr></thead>
                 <tbody>
                 @forelse($integrations as $integration)
                     <tr class="border-t">
-                        <td class="p-4">{{ $integration->company?->company_name ?? 'Deleted company' }}</td>
+                        <td class="p-4">{{ $integration->feed_scope === 'all' ? 'All ATS jobs' : ($integration->company?->company_name ?? 'Deleted company') }}</td>
                         <td class="p-4 font-mono">••••{{ $integration->token_suffix }}</td>
-                        <td class="p-4">{{ $integration->enabled ? 'Enabled' : 'Disabled' }}@if($integration->company?->status !== 'active') · Company inactive @endif</td>
+                        <td class="p-4">{{ $integration->enabled ? 'Enabled' : 'Disabled' }}@if($integration->feed_scope !== 'all' && $integration->company?->status !== 'active') · Company inactive @endif</td>
                         <td class="p-4">
                             <div class="flex flex-wrap gap-3">
                                 <form method="POST" action="{{ route('admin.job-api-settings.update', $integration) }}">
@@ -84,7 +93,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="p-6 text-slate-500">No API keys yet. Select a company above to create one.</td></tr>
+                    <tr><td colspan="4" class="p-6 text-slate-500">No API keys yet. Create an all-jobs key above to publish your ATS jobs.</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -99,6 +108,7 @@
   --data-urlencode 'per_page=20' \
   --data-urlencode 'page=1'</pre>
         <p class="mt-3 text-sm text-slate-600">The response contains <code>jobs</code>, <code>total_jobs</code>, and <code>pagination</code>. Display text fields as text and use <code>apply_url</code> for the Apply button. Increase <code>page</code> while <code>pagination.has_more</code> is true. Maximum 100 jobs per page and 60 API requests per minute per IP.</p>
+        <p class="mt-3 text-sm text-slate-600">For a single job page, request <code>{{ $endpoint }}/JOB_ID</code> from your server with the same key. It returns <code>job</code>. Link your Apply button to <code>job.apply_url</code> to open the ATS application form. Use <code>detail_url</code> if you prefer the ATS-hosted job detail page.</p>
         <p class="mt-3 text-sm text-slate-600">Candidate details, resumes, recruiter notes, and hidden salaries are never included.</p>
     </section>
 </div>
