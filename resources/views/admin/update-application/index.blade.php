@@ -9,14 +9,10 @@
 
 @section('content')
 <div class="flex w-full flex-col">
-    @php($updateVersionInfo = \Froiden\Envato\Functions\EnvatoUpdate::updateVersionInfo())
-    @include('vendor.froiden-envato.update.update_blade')
-    @include('vendor.froiden-envato.update.version_info')
-    @include('vendor.froiden-envato.update.changelog')
+    <div class="rounded-xl bg-white p-6">
+        <h2 class="text-lg font-semibold">GitHub deployment</h2>
+        <p class="mt-3">Application updates are deployed from the AssistMyHR GitHub repository through the VPS terminal.</p>
+        <p class="mt-3">Back up the database before deploying updates. Contact your server administrator to deploy the latest release.</p>
+    </div>
 </div>
 @endsection
-
-@push('footer-script')
-    @include('vendor.froiden-envato.update.update_script')
-@endpush
-

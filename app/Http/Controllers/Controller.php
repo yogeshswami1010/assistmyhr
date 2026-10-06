@@ -7,7 +7,7 @@ use App\SmsSetting;
 use App\CompanySetting;
 use Illuminate\Support\Arr;
 use App\GoogleCaptchaSetting;
-use Froiden\Envato\Traits\AppBoot;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -17,10 +17,10 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests,AppBoot;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     public function __construct() {
-        $this->showInstall();
+        DB::connection()->getPdo();
         $this->checkMigrateStatus();
         $this->global = CompanySetting::first();
         $this->smsSettings = SmsSetting::first();

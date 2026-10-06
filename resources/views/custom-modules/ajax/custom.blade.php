@@ -734,7 +734,6 @@
 <script src="{{ asset('vendor/jquery.min.js') }}"></script>
 <script src="{{ asset('vendor/froiden-helper/helper.js') }}"></script>
 
-@include('vendor.froiden-envato.update.update_script')
 
 <script>
     $('body').on('click', '.show-hide-purchase-code', function () {
@@ -861,6 +860,3 @@
     });
 }
 </script>
-
-@includeIf('vendor.froiden-envato.update.update_module')
-

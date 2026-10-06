@@ -92,7 +92,7 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": ["froiden/envato"]
         }
     },
     "scripts": {

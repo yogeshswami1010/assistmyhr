@@ -7,7 +7,6 @@ use App\ThemeSetting;
 use GuzzleHttp\Client;
 use App\CompanySetting;
 use Illuminate\Http\Request;
-use Froiden\Envato\Traits\AppBoot;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
@@ -25,7 +24,7 @@ class LoginController extends Controller
     |
     */
 
-    use AuthenticatesUsers, AppBoot;
+    use AuthenticatesUsers;
 
     /**
      * Where to redirect users after login.
@@ -47,9 +46,6 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
-        if (!$this->isLegal()) {
-            return redirect('verify-purchase');
-        }
         $setting = CompanySetting::first();
         $frontTheme = ThemeSetting::first();
         return view('auth.login', compact('setting', 'frontTheme'));

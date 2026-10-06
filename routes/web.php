@@ -124,6 +124,9 @@ Route::middleware(['signed', 'throttle:60,1'])->prefix('candidate-review')->name
 
 Auth::routes();
 
+// Old bookmarks go to login; purchase verification is no longer registered.
+Route::redirect('/verify-purchase', '/login');
+
 // ── Authenticated routes ───────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
 

@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // Keep the database migration check without vendor purchase or updater routes.
+        $this->commands([\Froiden\Envato\Commands\MigrateCheckCommand::class]);
     }
 }
