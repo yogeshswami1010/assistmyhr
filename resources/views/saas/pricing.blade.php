@@ -1,6 +1,7 @@
-@extends('saas.layout')
+@extends('saas.public-layout')
+@section('title', 'Pricing | AssistMyHR')
 @section('content')
-<h1>Plans for your recruiting team</h1><p class="muted">Start with a {{ $trialDays }} day trial. Contact the administrator to activate or renew a paid subscription.</p>
-<div class="grid">@foreach($plans as $plan)<div class="card"><h2>{{ $plan->name }}</h2><p class="metric">{{ $plan->currency }} {{ number_format($plan->price, 2) }}</p><p class="muted">Monthly reference price. Subscription activation is handled by the administrator.</p>
-<p>{{ $plan->max_users ?? 'Unlimited' }} team members<br>{{ $plan->max_jobs ?? 'Unlimited' }} stored jobs<br>{{ $plan->max_candidates ?? 'Unlimited' }} candidates<br>{{ $plan->storage_mb ? $plan->storage_mb.' MB' : 'Unlimited' }} storage</p><a class="button" href="{{ route('register') }}">Start trial</a></div>@endforeach</div>
+<div class="hero"><span class="eyebrow">Simple plans. Better hiring.</span><h1>Plans for your recruiting team</h1><p class="muted">Keep your jobs, candidates and team together in one dedicated workspace. Choose the capacity that fits your company.</p><span class="trial-note">Start with a {{ $trialDays }} day trial</span></div>
+<div class="plans">@forelse($plans as $plan)<article class="plan"><h2>{{ $plan->name }}</h2><p class="muted">Your recruitment workspace, ready to grow.</p><div class="price"><small>{{ $plan->currency }}</small> {{ number_format($plan->price, 2) }}</div><p class="hint">Monthly reference price</p><ul class="features"><li>{{ $plan->max_users ?? 'Unlimited' }} team members</li><li>{{ $plan->max_jobs ?? 'Unlimited' }} stored jobs</li><li>{{ $plan->max_candidates ?? 'Unlimited' }} candidates</li><li>{{ $plan->storage_mb ? number_format($plan->storage_mb).' MB' : 'Unlimited' }} storage</li></ul><a class="button" href="{{ route('register') }}">Start trial <span aria-hidden="true">&nbsp;→</span></a></article>@empty<div class="empty"><h2>Plans are being prepared</h2><p class="muted">Contact the platform administrator for subscription details.</p></div>@endforelse</div>
+<p class="muted fineprint">Trials use the platform's configured trial plan. Contact the administrator to activate or renew a paid subscription.</p>
 @endsection
