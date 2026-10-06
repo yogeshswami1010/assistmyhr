@@ -20,7 +20,7 @@ class PlatformController extends Controller
 {
     private function platformView(string $view, array $data = [])
     {
-        $brand = (object) ['company_name' => 'AssistMyHR', 'logo_url' => asset('logo.webp'), 'favicon_url' => asset('favicon/apple-icon-72x72.png')];
+        $brand = (object) ['company_name' => 'AssistMyHR', 'logo_url' => asset('logo.webp'), 'favicon_url' => asset('favicon/assistmyhr.svg')];
         $titles = ['saas.platform-dashboard' => 'Client overview', 'saas.platform-plans' => 'Subscription plans', 'saas.platform-settings' => 'Signup and trial settings', 'saas.platform-tenant' => $data['tenant']->name ?? 'Client details'];
         return view($view, $data + ['platformLayout' => true, 'platformAdmin' => Auth::guard('platform')->user(),
             'pageTitle' => $titles[$view] ?? 'Super admin login', 'companyName' => 'AssistMyHR',

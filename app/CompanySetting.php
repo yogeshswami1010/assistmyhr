@@ -42,8 +42,8 @@ class CompanySetting extends Model
 
     public function getFaviconUrlAttribute()
     {
-        if (is_null($this->favicon)) {
-            return asset('/favicon/apple-icon-72x72.png');
+        if (empty($this->favicon)) {
+            return asset('favicon/assistmyhr.svg');
         }
 
         return asset_url('favicon/' . $this->favicon);

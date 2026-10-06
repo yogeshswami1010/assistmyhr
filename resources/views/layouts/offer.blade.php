@@ -25,7 +25,7 @@
     <link href="{{ asset('front/assets/css/custom.css') }}" rel="stylesheet">
 
     <!-- Favicons -->
-    <link rel="icon" href="{{$companySetting->favicon_url}}" type="image/x-icon" />
+    <link rel="icon" href="{{$companySetting->favicon_url}}"  />
     <link rel="manifest" href="{{ asset('favicon/manifest.json') }}">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{{ asset('favicon/ms-icon-144x144.png') }}">
