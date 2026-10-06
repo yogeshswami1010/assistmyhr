@@ -52,9 +52,11 @@ class CandidateClientReviewController extends AdminBaseController
             'client_email' => ['required', 'email:rfc', 'max:255'],
             'subject' => ['required', 'string', 'max:191'],
             'message_payload' => ['required', 'string', 'max:70000'],
+            'client_message' => ['nullable', 'string', 'max:10000'],
             'submission_id' => ['required', 'uuid'],
         ]);
         $bodyHtml = ClientReviewContent::decode($data['message_payload']);
+        $clientMessage = isset($data['client_message']) ? trim($data['client_message']) : null;
         $candidate = $this->candidate($application);
         $document = $candidate->resumeDocument;
         if (!$document || !Storage::exists('documents/'.$candidate->id.'/'.basename($document->hashname))) {
@@ -65,7 +67,8 @@ class CandidateClientReviewController extends AdminBaseController
             'client_email' => strtolower(trim($data['client_email'])), 'subject' => $data['subject'],
             'candidate_name' => $candidate->full_name, 'job_title' => $candidate->job?->title,
             'resume_hashname' => basename($document->hashname), 'resume_original_name' => $document->original_name ?: $document->hashname,
-            'body_html' => $bodyHtml, 'expires_at' => now()->addDays(30),
+            'body_html' => $bodyHtml, 'client_message' => $clientMessage !== '' ? $clientMessage : null,
+            'expires_at' => now()->addDays(30),
         ]);
         abort_unless((int) $review->job_application_id === $application && (int) $review->user_id === (int) $this->user->id
             && $review->client_email === strtolower(trim($data['client_email'])), 409);

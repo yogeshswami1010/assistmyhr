@@ -10,6 +10,7 @@ require_once $root.'/app/Services/CandidateClientReviewService.php';
 require_once $root.'/app/CandidateClientReview.php';
 require_once $root.'/app/CandidateClientReviewMessage.php';
 require_once $root.'/app/Exceptions/Handler.php';
+require_once $root.'/app/Http/Controllers/Admin/CandidateClientReviewController.php';
 
 use Illuminate\Foundation\Application;
 use Illuminate\Config\Repository;
@@ -81,6 +82,8 @@ $migration = require $root.'/database/migrations/2026_10_05_000001_create_candid
 $migration->up();
 $skipMigration = require $root.'/database/migrations/2026_10_05_000002_add_notification_skip_to_client_reviews.php';
 $skipMigration->up();
+$clientMessageMigration = require $root.'/database/migrations/2026_10_05_000003_add_client_message_to_candidate_client_reviews.php';
+$clientMessageMigration->up();
 DB::table('users')->insert(['id' => 1, 'name' => 'Team Member', 'email' => 'team@example.test', 'email_signature_html' => '<strong>Team signature</strong>']);
 DB::table('jobs')->insert(['id' => 1, 'title' => 'Developer']);
 DB::table('job_applications')->insert(['id' => 42, 'full_name' => 'Sample Candidate', 'job_id' => 1]);
@@ -107,6 +110,7 @@ function invitation(int $candidate, string $email): CandidateClientReview {
 }
 $review = invitation(42, 'client@example.test');
 $other = invitation(43, 'other@example.test');
+check($review->fresh()->client_message === null, 'Reviews without a client message remain compatible');
 $outgoing = $review->messages()->create(['submission_id' => $review->public_id, 'user_id' => 1, 'direction' => 'outbound', 'body_html' => $review->body_html, 'body_text' => 'Our introduction']);
 $sender = App\User::findOrFail(1);
 class FakeReviewMailer {
@@ -141,7 +145,8 @@ check(!URL::hasValidSignature(Request::create(str_replace($review->public_id, $o
 check(URL::hasValidSignature(Request::create($service->url($review, 'resume'))), 'The CV has its own valid signed route');
 $controller = new App\Http\Controllers\ClientCandidateReviewController();
 $page = $controller->show($review, $service)->getContent();
-check(str_contains($page, 'Our introduction') && str_contains($page, 'Candidate CV') && str_contains($page, 'Send review'), 'Show CV, introduction, and feedback form');
+check(str_contains($page, 'Candidate CV') && str_contains($page, 'Send review'), 'Existing links still show the CV and feedback form');
+check(!str_contains($page, 'Our introduction') && !str_contains($page, 'Message from the recruitment team') && !str_contains($page, '<h2>Client message</h2>'), 'Remove the recruitment introduction and hide blank client-message cards');
 check(!str_contains($page, 'other@example.test') && !str_contains($page, 'Applicant Notes'), 'Do not expose other clients or internal profile tabs');
 
 $incoming = $review->messages()->firstOrCreate(['submission_id' => (string) Str::uuid()], ['direction' => 'inbound', 'body_text' => 'Please arrange an interview.', 'mail_status' => 'received']);
@@ -171,11 +176,18 @@ $actor = new class {
     public function cans($permission) { return $this->allowed; }
 };
 (new ReflectionProperty(App\Http\Controllers\Admin\AdminBaseController::class, 'user'))->setValue($admin, $actor);
-$sendData = ['client_email' => 'Second.Client@example.test', 'subject' => 'Please review', 'message_payload' => base64_encode('<p><b>Qualified candidate</b></p>'), 'submission_id' => (string) Str::uuid()];
+$clientInstructions = "Please review José’s experience.\nConfirm availability <script>alert('x')</script>";
+$sendData = ['client_email' => 'Second.Client@example.test', 'subject' => 'Please review', 'message_payload' => base64_encode('<p><b>Qualified candidate</b></p>'), 'client_message' => $clientInstructions, 'submission_id' => (string) Str::uuid()];
 $sendRequest = Request::create('https://ats.example.test/admin/send', 'POST', $sendData);
 $result = $admin->send($sendRequest, 43, $service)->getData(true);
 $sentReview = CandidateClientReview::findOrFail($result['review_id']);
 check($sentReview->client_email === 'second.client@example.test' && $sentReview->job_application_id === 43 && $sentReview->resume_hashname === 'shared.pdf', 'Admin send stores the correct client, candidate and shared CV');
+check($sentReview->client_message === $clientInstructions, 'Store the client message separately from the email body');
+$clientPage = $controller->show($sentReview, $service)->getContent();
+check(strpos($clientPage, '<h2>Client message</h2>') > strpos($clientPage, '<aside>') && strpos($clientPage, '<h2>Client message</h2>') < strpos($clientPage, '<h2>Reply with your review</h2>'), 'Client instructions appear above the reply section in the right column');
+check(str_contains($clientPage, htmlspecialchars($clientInstructions, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')) && !str_contains($clientPage, '<script>'), 'Render client instructions safely with Unicode and line breaks intact');
+check(!str_contains($clientPage, 'Message from the recruitment team') && !str_contains($clientPage, 'Qualified candidate'), 'The invitation email body is not displayed as a recruitment message on the review page');
+check(str_contains(end($transport->sent)['html'], 'Qualified candidate') && !str_contains(end($transport->sent)['html'], 'Confirm availability'), 'The invitation email retains its own message rather than the private-page instructions');
 $admin->send($sendRequest, 43, $service);
 check(count($transport->sent) === 4, 'Double-clicking the send endpoint cannot send the invitation twice');
 $actor->allowed = false;
@@ -183,6 +195,8 @@ rejected(fn () => $admin->send($sendRequest, 43, $service), Symfony\Component\Ht
 $actor->allowed = true;
 rejected(fn () => $admin->send(Request::create('/send', 'POST', $sendData + ['unused' => true]), 42, $service), Illuminate\Validation\ValidationException::class);
 rejected(fn () => $admin->send(Request::create('/send', 'POST', array_replace($sendData, ['client_email' => 'invalid'])), 43, $service), Illuminate\Validation\ValidationException::class);
+rejected(fn () => $admin->send(Request::create('/send', 'POST', array_replace($sendData, ['client_message' => str_repeat('x', 10001)])), 43, $service), Illuminate\Validation\ValidationException::class);
+rejected(fn () => $admin->send(Request::create('/send', 'POST', array_replace($sendData, ['client_message' => ['invalid']])), 43, $service), Illuminate\Validation\ValidationException::class);
 $clientData = ['message' => 'Client approved this candidate.', 'submission_id' => (string) Str::uuid()];
 $clientRequest = Request::create($service->url($sentReview, 'reply'), 'POST', $clientData);
 $controller->reply($clientRequest, $sentReview, $service);
@@ -310,6 +324,8 @@ foreach (array_merge(glob($root.'/resources/views/client-reviews/*.blade.php'), 
     exec(escapeshellarg(PHP_BINARY).' -l '.escapeshellarg($compiled), $output, $status);
     check($status === 0, 'Blade must compile: '.$path);
 }
+$clientMessageMigration->down();
+check(!Schema::hasColumn('candidate_client_reviews', 'client_message'), 'The client-message migration rolls back cleanly');
 $skipMigration->down();
 $migration->down();
 check(!Schema::hasTable('candidate_client_reviews'), 'Migration rollback handles the foreign-key order');

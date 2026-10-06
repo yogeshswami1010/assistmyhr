@@ -114,7 +114,7 @@
         var clipboard = event.originalEvent.clipboardData;
         if (clipboard) document.execCommand('insertText', false, clipboard.getData('text/plain'));
     });
-    $(document).on('input.jaClientReviews', '#ja-client-reviews-panel input, #ja-client-review-modal input, .ja-review-editor', function () {
+    $(document).on('input.jaClientReviews', '#ja-client-reviews-panel input, #ja-client-review-modal input, #ja-client-review-modal textarea, .ja-review-editor', function () {
         var form = this.closest('form');
         if (form && form.dataset.busy !== '1') delete form.dataset.submissionId;
         if (this.classList.contains('ja-review-editor')) this.dataset.reviewDirty = '1';
@@ -132,10 +132,14 @@
         var url = replyId ? config.replyUrl.replace('__REVIEW__', replyId) : config.sendUrl;
         form.dataset.submissionId = form.dataset.submissionId || uuid();
         var data = {_token: config.token, message_payload: encoded(editor.innerHTML), submission_id: form.dataset.submissionId};
-        if (!replyId) { data.client_email = form.elements.client_email.value; data.subject = form.elements.subject.value; }
+        if (!replyId) {
+            data.client_email = form.elements.client_email.value;
+            data.subject = form.elements.subject.value;
+            data.client_message = form.elements.client_message.value;
+        }
         form.dataset.busy = '1';
         editor.contentEditable = 'false';
-        form.querySelectorAll('button,input,select').forEach(function (control) { control.disabled = true; });
+        form.querySelectorAll('button,input,select,textarea').forEach(function (control) { control.disabled = true; });
         feedback(output, 'Sending…', false);
         $.ajax({url: url, type: 'POST', data: data}).done(function (response) {
             if (!panel.isConnected) return;
@@ -166,7 +170,7 @@
         }).always(function () {
             form.dataset.busy = '0';
             editor.contentEditable = 'true';
-            form.querySelectorAll('button,input,select').forEach(function (control) { control.disabled = false; });
+            form.querySelectorAll('button,input,select,textarea').forEach(function (control) { control.disabled = false; });
         });
     });
     $(document).on('click.jaClientReviews', '[data-client-review-retry], [data-client-review-revoke]', function () {

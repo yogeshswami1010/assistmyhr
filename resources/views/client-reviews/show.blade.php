@@ -18,10 +18,12 @@
 <header><div class="eyebrow">CANDIDATE REVIEW</div><h1>{{ $review->candidate_name }}</h1>@if($review->job_title)<p>{{ $review->job_title }}</p>@endif</header>
 <main>
     <section>
-        <div class="card"><h2>Message from the recruitment team</h2><div class="formatted">{!! \App\Services\ClientReviewContent::clean($review->body_html) !!}</div></div>
         <div class="card"><div class="cv-head"><h2>Candidate CV</h2><a class="button secondary" href="{{ $resumeUrl }}" target="_blank" rel="noreferrer">Open CV</a></div><iframe src="{{ $resumeUrl }}" title="CV for {{ $review->candidate_name }}"></iframe><p class="muted">If the CV does not display, use Open CV to view or download it.</p></div>
     </section>
     <aside>
+        @if(filled($review->client_message))
+        <div class="card"><h2>Client message</h2><div class="plain">{{ $review->client_message }}</div></div>
+        @endif
         <div class="card">
             <h2>Reply with your review</h2>
             @if(session('review_sent'))<div class="notice" role="status">{{ session('review_sent') }}</div>@endif
