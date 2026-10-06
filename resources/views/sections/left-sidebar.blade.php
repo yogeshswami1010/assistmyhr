@@ -213,15 +213,6 @@
                         </a>
                     </li>
 
-                    @if($global->system_update == 1)
-                        <li>
-                            <a href="{{ route('admin.update-application.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/update-application') ? 'on' : '' }}">
-                                <span class="ra-sublink-dot" aria-hidden="true"></span>
-                                <span>@lang('menu.updateApplication')</span>
-                            </a>
-                        </li>
-                    @endif
-
 
                 @endif
             </ul>

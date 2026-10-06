@@ -22,24 +22,6 @@
 @endpush
 
 @section('content')
-    @if($global->system_update == 1)
-        @php($updateVersionInfo = \Froiden\Envato\Functions\EnvatoUpdate::updateVersionInfo())
-        @if(isset($updateVersionInfo['lastVersion']))
-            <div class="rd-a rd-a1 mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex items-center gap-2">
-                        <i class="ti-gift text-blue-600 text-xl"></i>
-                        <span class="text-sm font-medium text-blue-900">@lang('modules.update.newUpdate')</span>
-                    </div>
-                    <a href="{{ route('admin.update-application.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--ra-accent,#2563eb)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95">
-                        @lang('modules.update.updateNow')
-                        <i class="fa fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-            </div>
-        @endif
-    @endif
-
     @if (!$user->mobile_verified && $smsSettings->nexmo_status == 'active')
         <div id="verify-mobile-info" class="rd-a rd-a1 mb-4">
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4" role="alert">

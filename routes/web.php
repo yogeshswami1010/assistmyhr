@@ -46,7 +46,6 @@ use App\Http\Controllers\Admin\InterviewScheduleController;
 use App\Http\Controllers\Admin\LanguageSettingsController;
 use App\Http\Controllers\Admin\ManageRolePermissionController;
 use App\Http\Controllers\Admin\StorageController;
-use App\Http\Controllers\Admin\UpdateApplicationController;
 use App\Http\Controllers\Admin\ZoomMeetingSettingController;
 use App\Http\Controllers\Front\FrontJobOfferController;
 use App\Http\Controllers\Front\FrontJobsController;
@@ -250,8 +249,6 @@ Route::middleware('auth')->group(function () {
 
                 Route::post('footer-settings/bulk-destroy', [FooterSettingController::class, 'bulkDestroy'])->name('footer-settings.bulk-destroy');
                 Route::resource('footer-settings', FooterSettingController::class);
-
-                Route::get('update-application', [UpdateApplicationController::class, 'index'])->name('update-application.index');
             });
 
             // Zoom Meetings
