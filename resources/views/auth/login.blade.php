@@ -12,8 +12,7 @@
     <form action="{{ route('login') }}" id="loginform" method="post" class="flex flex-col gap-4">
         @csrf
         @if(config('saas.enabled'))
-        <label class="text-sm">Company workspace</label>
-        <input name="workspace" value="{{ old('workspace', app(\App\Saas\TenantContext::class)->current()?->slug) }}" required pattern="[a-z0-9][a-z0-9-]{1,49}" class="{{ $authField }}" placeholder="your-company">
+        <input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">
         <a href="{{ route('register') }}" class="text-sm text-blue-600">Create a company account</a>
         @endif
 
@@ -95,7 +94,7 @@
 
     <form class="hidden flex flex-col gap-4" method="post" id="recoverform" action="{{ route('password.email') }}">
         @csrf
-        @if(config('saas.enabled'))<label>Company workspace</label><input name="workspace" required value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}" class="{{ $authField }}">@endif
+        @if(config('saas.enabled'))<input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">@endif
 
         <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
             <h2 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">@lang('app.recoverPassword')</h2>
