@@ -15,7 +15,7 @@ Route::get('/saas-files/{workspace}/{path}', [FileController::class, 'show'])->w
 Route::middleware('auth')->group(function () {
     Route::get('/account/integrations', [AccountController::class, 'integrations'])->name('saas.integrations');
     Route::post('/account/integrations', [AccountController::class, 'saveIntegrations'])->name('saas.integrations.save');
-    Route::get('/account/subscription', [AccountController::class, 'subscription'])->name('saas.subscription');
+    Route::get('/account/subscription', [\App\Http\Controllers\Saas\SubscriptionController::class, 'index'])->name('saas.subscription');
     Route::post('/account/subscription/request-plan', [AccountController::class, 'requestPlan'])->middleware('throttle:5,60')->name('saas.request-plan');
     Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
