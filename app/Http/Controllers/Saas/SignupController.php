@@ -29,11 +29,14 @@ class SignupController extends Controller
     public function store(Request $request)
     {
         abort_unless(config('saas.enabled') && PlatformSetting::valueFor('signup_enabled', '0') === '1', 403);
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:150'], 'name' => ['required', 'string', 'max:150'],
-            'slug' => ['required', 'string', 'max:50', 'regex:/\A[a-z0-9][a-z0-9-]{1,49}\z/', Rule::notIn(['main', 'admin', 'superadmin', 'api', 'login', 'register']), Rule::unique('saas_landlord.saas_tenants', 'slug')],
-            'email' => ['required', 'email', 'max:254'], 'password' => ['required', 'string', 'min:12', 'max:200', 'confirmed'],
+            'email' => ['required', 'email', 'max:254', Rule::unique('saas_landlord.saas_tenants', 'owner_email')], 'password' => ['required', 'string', 'min:12', 'max:200', 'confirmed'],
         ]);
+        do {
+            $data['slug'] = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['company_name'])), '-') ?: 'company', 0, 32).'-'.strtolower(\Illuminate\Support\Str::random(10));
+        } while (\App\Saas\Tenant::where('slug', $data['slug'])->exists());
         $tenant = app(TenantProvisioner::class)->create($data);
         app(TenantContext::class)->activate($tenant);
         $request->session()->forget(['user', 'storage_setting', 'url.intended']);

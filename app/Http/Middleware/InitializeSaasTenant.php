@@ -29,6 +29,21 @@ class InitializeSaasTenant
             $tenant = $token ? ApiKey::where('token_hash', hash('sha256', $token))->first()?->tenant : null;
             if (!$tenant || !$tenant->hasAccess()) { return response()->json(['status' => false, 'message' => 'Invalid key or unavailable subscription.'], 401); }
         } else {
+            // Resolve the registered company before controllers read tenant-specific settings.
+            if ($request->is('login') && $request->isMethod('POST') && is_string($request->input('email'))) {
+                $email = strtolower(trim($request->input('email')));
+                $request->merge(['email' => $email]);
+                $matches = Tenant::whereRaw('LOWER(owner_email) = ?', [$email])->whereNotIn('status', ['provisioning', 'failed'])->limit(2)->get();
+                if ($matches->count() === 1) {
+                    $request->merge(['workspace' => $matches->first()->slug]);
+                } elseif ($matches->count() > 1) {
+                    // Existing duplicate owners can still sign in through their company link.
+                    $selected = $request->input('workspace');
+                    if (!$matches->contains('slug', $selected)) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(['email' => 'Please use your company sign-in link to access this account.']);
+                    }
+                }
+            }
             $slug = $request->is('saas-files/*') ? $request->segment(2) : $request->input('workspace');
             if ($slug !== null && (!is_string($slug) || !preg_match('/\A[a-z0-9][a-z0-9-]{1,49}\z/', $slug))) { abort(404); }
             $tenant = $slug !== null ? Tenant::where('slug', $slug)->first() : Tenant::find($request->session()->get('saas_tenant_id'));
