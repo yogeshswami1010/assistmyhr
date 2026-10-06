@@ -13,7 +13,7 @@ Route::post('/register', [SignupController::class, 'store'])->middleware('thrott
 Route::get('/saas/workspace/{slug}', [SignupController::class, 'workspace'])->name('saas.workspace');
 Route::get('/saas-files/{workspace}/{path}', [FileController::class, 'show'])->where('path', '.*')->name('saas.files');
 Route::middleware('auth')->group(function () {
-    Route::get('/account/integrations', [AccountController::class, 'integrations'])->name('saas.integrations');
+    Route::get('/account/integrations', [\App\Http\Controllers\Saas\IntegrationsController::class, 'index'])->name('saas.integrations');
     Route::post('/account/integrations', [AccountController::class, 'saveIntegrations'])->name('saas.integrations.save');
     Route::get('/account/subscription', [\App\Http\Controllers\Saas\SubscriptionController::class, 'index'])->name('saas.subscription');
     Route::post('/account/subscription/request-plan', [AccountController::class, 'requestPlan'])->middleware('throttle:5,60')->name('saas.request-plan');

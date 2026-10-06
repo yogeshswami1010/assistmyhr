@@ -204,7 +204,7 @@ check(App\User::find(1)->cans('manage_settings'),'Seeded owner has settings perm
 $request=middlewareRequest('/account/subscription?workspace=alpha',$session);$request->setUserResolver(fn()=>Auth::guard('web')->user());
 $account=new App\Http\Controllers\Saas\AccountController;
 check(str_contains(view('saas.subscription-content', $account->subscription()->getData())->render(),'Request a plan or renewal'),'Client billing page renders with renewal form');
-check(str_contains($account->integrations($request)->render(),'Candidate reply inbox'),'Client integrations page renders');
+check(str_contains(view('saas.integrations-content', $account->integrations($request)->getData())->render(),'Candidate reply inbox'),'Client integrations page renders');
 $request->merge(['imap_host'=>'imap.client.example.test','imap_port'=>993]);$account->saveIntegrations($request);
 $context->activate($alpha);check(config('services.candidate_email_imap.host')==='imap.client.example.test','Own IMAP setting loaded in own workspace');
 $integration=new App\JobApiIntegration;$integration->token_hash=hash('sha256','ROTATED-KEY');$integration->save();
