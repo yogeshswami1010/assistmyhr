@@ -32,12 +32,19 @@ class SignupController extends Controller
         $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:150'], 'name' => ['required', 'string', 'max:150'],
-            'email' => ['required', 'email', 'max:254', Rule::unique('saas_landlord.saas_tenants', 'owner_email')], 'password' => ['required', 'string', 'min:12', 'max:200', 'confirmed'],
+            'email' => ['required', 'email', 'max:254', Rule::unique('saas_landlord.saas_tenants', 'owner_email')->where(fn ($query) => $query->where('status', '!=', 'failed'))], 'password' => ['required', 'string', 'min:12', 'max:200', 'confirmed'],
         ]);
         do {
             $data['slug'] = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['company_name'])), '-') ?: 'company', 0, 32).'-'.strtolower(\Illuminate\Support\Str::random(10));
         } while (\App\Saas\Tenant::where('slug', $data['slug'])->exists());
-        $tenant = app(TenantProvisioner::class)->create($data);
+        try {
+            $tenant = app(TenantProvisioner::class)->create($data);
+        } catch (\Throwable $e) {
+            report($e);
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'company_name' => 'We could not create your workspace. Contact the platform administrator and try again once the server setup is corrected.',
+            ]);
+        }
         app(TenantContext::class)->activate($tenant);
         $request->session()->forget(['user', 'storage_setting', 'url.intended']);
         $request->session()->regenerate();
