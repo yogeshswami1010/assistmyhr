@@ -34,8 +34,8 @@ class CompanySetting extends Model
 
     public function getLogoUrlAttribute()
     {
-        if (is_null($this->logo)) {
-            return asset('app-logo.png');
+        if (empty($this->logo)) {
+            return asset('assishrlogo.webp');
         }
         return asset_url('app-logo/' . $this->logo);
     }

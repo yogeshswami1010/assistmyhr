@@ -1,7 +1,7 @@
 <aside id="ra-sidebar" class="ra-sidebar" aria-label="@lang('app.adminPanel')">
     <a href="{{ route('admin.dashboard') }}" class="ra-logo-wrap">
         @if(!empty($global->logo_url))
-            <img src="{{ $global->logo_url }}" alt="{{ $companyName ?? 'Logo' }}" class="ra-logo-img h-6">
+            <img src="{{ $global->logo_url }}" alt="{{ $companyName ?? 'Logo' }}" class="ra-logo-img h-6" @if(empty($global->logo)) style="height:36px;max-width:180px;background:#fff;border-radius:6px;padding:4px 8px;object-fit:contain" @endif>
 
         @else
             <div class="ra-logo-icon" aria-hidden="true">
