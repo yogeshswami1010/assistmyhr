@@ -50,7 +50,7 @@ use App\Http\Controllers\Admin\UpdateApplicationController;
 use App\Http\Controllers\Admin\ZoomMeetingSettingController;
 use App\Http\Controllers\Front\FrontJobOfferController;
 use App\Http\Controllers\Front\FrontJobsController;
-use App\Http\Controllers\Front\ConsortiumRegistrationController;
+use App\Http\Controllers\Admin\AdminJobApiSettingsController;
 use App\Http\Controllers\Admin\AdminConsortiumRegistrationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\VerifyMobileController;
@@ -73,15 +73,6 @@ Route::post('/zoom-webhook', [ZoomWebhookController::class, 'index'])
 Route::post('/telnyx-webhook', TelnyxWebhookController::class)
     ->name('telnyx-webhook');
 
-// ── AssistMyDay public pages (standalone, outside all groups) ──────────────
-Route::get('assistmyday', [FrontJobsController::class, 'assistMyDay'])
-    ->name('assistmyday');
-
-Route::get('assistmyday/job/{slug}/{location?}', [FrontJobsController::class, 'assistMyDayJobDetail'])
-    ->name('jobs.assistmyday.jobDetail');
-
-Route::get('/consortium-registration', [ConsortiumRegistrationController::class, 'create'])->name('consortium-registration.create');
-Route::post('/consortium-registration', [ConsortiumRegistrationController::class, 'store'])->middleware('throttle:10,1')->name('consortium-registration.store');
 // ── Front public job board ─────────────────────────────────────────────────
 Route::get('/', [PublicWebsiteController::class, 'index'])->name('home');
 
@@ -214,6 +205,12 @@ Route::middleware('auth')->group(function () {
 
             // Settings
             Route::prefix('settings')->group(function () {
+
+                Route::get('jobs-api', [AdminJobApiSettingsController::class, 'index'])->name('job-api-settings.index');
+                Route::post('jobs-api', [AdminJobApiSettingsController::class, 'store'])->name('job-api-settings.store');
+                Route::post('jobs-api/{integration}/regenerate', [AdminJobApiSettingsController::class, 'regenerate'])->name('job-api-settings.regenerate');
+                Route::put('jobs-api/{integration}', [AdminJobApiSettingsController::class, 'update'])->name('job-api-settings.update');
+                Route::delete('jobs-api/{integration}', [AdminJobApiSettingsController::class, 'destroy'])->name('job-api-settings.destroy');
 
                 Route::resource('settings', CompanySettingsController::class)->only(['edit', 'update', 'index']);
                 Route::resource('application-setting', ApplicationSettingsController::class);

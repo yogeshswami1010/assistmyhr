@@ -45,6 +45,17 @@ class Job extends Model
         return $this->belongsTo(Company::class, 'company_id');
     }
 
+    public function scopePublished($query)
+    {
+        $today = Carbon::today()->toDateString();
+
+        return $query->where('status', 'active')
+            ->whereDate('start_date', '<=', $today)
+            ->where(function ($query) use ($today) {
+                $query->whereNull('end_date')->orWhereDate('end_date', '>=', $today);
+            });
+    }
+
     public function sluggable(): array
     {
         return [

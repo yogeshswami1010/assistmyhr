@@ -177,7 +177,7 @@
             $.easyAjax({
                 url:"{{ route('jobs.more-data') }}",
                 type:'POST',
-                data: {'_token':token, 'totalCurrentData':totalCurrentData,'location_id':location_id, 'category':category, 'skill':skill, 'company':company, page_source: 'consortium'},
+                data: {'_token':token, 'totalCurrentData':totalCurrentData,'location_id':location_id, 'category':category, 'skill':skill, 'company':company},
                 success:function(response) {
                     $('#jobList').append(response.view);
                     totalCurrentData = response.data.job_current_count;
@@ -204,7 +204,7 @@
             $.easyAjax({
                 url:"{{ route('jobs.search-job') }}",
                 type:'POST',
-                data: {'_token':token, location_id:location_id, category:category, skill:skill, company:company, page_source: 'consortium'},
+                data: {'_token':token, location_id:location_id, category:category, skill:skill, company:company},
                 success:function(response){
                     $('#jobList').html(response.view);
                     totalCurrentData = response.data.job_current_count;

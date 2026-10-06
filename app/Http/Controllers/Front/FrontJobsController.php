@@ -61,9 +61,8 @@ class FrontJobsController extends FrontBaseController
 
     // ─────────────────────────────────────────────────────────────
     //  Shared query builder — avoids repeating the base join block
-    //  $visibilityColumn = 'show_on_consortium' | 'show_on_assistmyday' | null
     // ─────────────────────────────────────────────────────────────
-    private function baseJobLocationQuery(?string $visibilityColumn = null)
+    private function baseJobLocationQuery()
     {
         $query = JobJobLocation::select(
                 'job_job_locations.id as id',
@@ -74,15 +73,11 @@ class FrontJobsController extends FrontBaseController
             ->join('job_locations', 'job_locations.id', '=', 'job_job_locations.location_id')
             ->join('jobs', 'jobs.id', '=', 'job_job_locations.job_id')
             ->where('jobs.status', 'active')
-            ->where('jobs.start_date', '<=', Carbon::now()->format('Y-m-d'))
+            ->whereDate('jobs.start_date', '<=', Carbon::now()->format('Y-m-d'))
             ->where(function ($q) {
                 $q->where('jobs.end_date', '>=', Carbon::now()->format('Y-m-d'))
                   ->orWhereNull('jobs.end_date');
             });
-
-        if ($visibilityColumn) {
-            $query->where('jobs.' . $visibilityColumn, true);
-        }
 
         return $query;
     }
@@ -114,7 +109,7 @@ class FrontJobsController extends FrontBaseController
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  CONSORTIUM homepage
+    //  Public job board
     // ─────────────────────────────────────────────────────────────
     public function jobOpenings()
     {
@@ -129,8 +124,8 @@ class FrontJobsController extends FrontBaseController
         $this->skills      = Skill::all();
         $this->companies   = Company::all();
 
-        // Only jobs with show_on_consortium = true
-        $jobLocations       = $this->baseJobLocationQuery('show_on_consortium');
+        // All currently open jobs, independent of the retired board flags.
+        $jobLocations       = $this->baseJobLocationQuery();
         $this->jobCount     = $jobLocations->count();
         $this->jobLocations = (clone $jobLocations)->take($this->perPage)->get();
         $this->perPage      = $this->perPage;
@@ -150,8 +145,8 @@ class FrontJobsController extends FrontBaseController
         $this->skills     = Skill::all();
         $this->companies  = Company::all();
 
-        // Only jobs with show_on_assistmyday = true
-        $jobLocations       = $this->baseJobLocationQuery('show_on_assistmyday');
+        // Legacy renderer uses the same publication rules.
+        $jobLocations       = $this->baseJobLocationQuery();
         $this->jobCount     = $jobLocations->count();
         $this->jobLocations = (clone $jobLocations)->take($this->perPage)->get();
         $this->perPage      = $this->perPage;
@@ -161,11 +156,6 @@ class FrontJobsController extends FrontBaseController
 
     // ─────────────────────────────────────────────────────────────
     //  LOAD MORE — serves both pages via the same AJAX route.
-    //  Detects which page it's called from via the `page_source`
-    //  field sent in the POST data:
-    //    page_source = 'consortium'   → filter show_on_consortium
-    //    page_source = 'assistmyday'  → filter show_on_assistmyday
-    //    (missing / anything else)    → no visibility filter
     // ─────────────────────────────────────────────────────────────
     public function moreData(Request $request)
     {
@@ -176,9 +166,7 @@ class FrontJobsController extends FrontBaseController
         $this->locations  = JobLocation::all();
         $this->categories = JobCategory::all();
 
-        $visibilityColumn = $this->resolveVisibilityColumn($request->page_source);
-
-        $jobLocations = $this->baseJobLocationQuery($visibilityColumn);
+        $jobLocations = $this->baseJobLocationQuery();
         $jobLocations = $this->applySearchFilters($jobLocations, $request);
 
         $this->jobLocationCount = $jobLocations->count();
@@ -199,7 +187,7 @@ class FrontJobsController extends FrontBaseController
 
     // ─────────────────────────────────────────────────────────────
     //  SEARCH — also serves both pages via the same AJAX route.
-    //  Same page_source logic as moreData().
+    //  Uses the same publication rules as moreData().
     // ─────────────────────────────────────────────────────────────
     public function searchJob(Request $request)
     {
@@ -208,9 +196,7 @@ class FrontJobsController extends FrontBaseController
         $this->skills     = Skill::all();
         $this->companies  = Company::all();
 
-        $visibilityColumn = $this->resolveVisibilityColumn($request->page_source);
-
-        $jobLocations = $this->baseJobLocationQuery($visibilityColumn);
+        $jobLocations = $this->baseJobLocationQuery();
         $jobLocations = $this->applySearchFilters($jobLocations, $request);
 
         $totalCurrentData       = (int) ($request->totalCurrentData ?? 0);
@@ -226,18 +212,6 @@ class FrontJobsController extends FrontBaseController
             'view'   => $view,
             'data'   => $this->data,
         ]);
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    //  Helper — maps page_source string → column name
-    // ─────────────────────────────────────────────────────────────
-    private function resolveVisibilityColumn(?string $pageSource): ?string
-    {
-        return match ($pageSource) {
-            'consortium'   => 'show_on_consortium',
-            'assistmyday'  => 'show_on_assistmyday',
-            default        => null,
-        };
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -294,7 +268,9 @@ class FrontJobsController extends FrontBaseController
         $this->job = Job::with(['workExperience', 'jobType'])
             ->where('slug', $slug)
             ->whereDate('start_date', '<=', Carbon::now())
-            ->whereDate('end_date',   '>=', Carbon::now())
+            ->where(function ($query) {
+                $query->whereNull('end_date')->orWhereDate('end_date', '>=', Carbon::now());
+            })
             ->where('status', 'active')
             ->firstOrFail();
 
@@ -615,7 +591,9 @@ class FrontJobsController extends FrontBaseController
         $this->job = Job::with(['workExperience', 'jobType'])
             ->where('slug', $slug)
             ->whereDate('start_date', '<=', Carbon::now())
-            ->whereDate('end_date',   '>=', Carbon::now())
+            ->where(function ($query) {
+                $query->whereNull('end_date')->orWhereDate('end_date', '>=', Carbon::now());
+            })
             ->where('status', 'active')
             ->firstOrFail();
 
