@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CompanySetting extends Model
 {
+    public function getWebsiteAttribute($value) { return tenant_external_url($value); }
     protected $fillable = [
         'company_name',
         'company_email',

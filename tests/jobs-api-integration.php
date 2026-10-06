@@ -7,6 +7,7 @@ namespace {
     if (!is_file($autoload)) { fwrite(STDERR, "Provide a Composer vendor/autoload.php path.\n"); exit(1); }
     $loader = require $autoload;
     $loader->setPsr4('App\\', $root.'/app');
+    require_once $root.'/app/Saas/helpers.php';
 }
 
 namespace App\Http\Controllers\Admin {

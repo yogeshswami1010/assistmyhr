@@ -19,7 +19,7 @@
     <h1 class="hidden sm:block text-white text-4xl mb-8">{{ $pageTitle }}</h1>
     <h3 class="block sm:hidden text-white text-2xl mb-8">{{ $pageTitle }}</h3>
     <div class="text-white">
-        <a class="text-white" href="{{ route('jobs.jobOpenings') }}"><u>@lang('modules.front.jobOpenings')</u>&nbsp; </a> &raquo; &nbsp;<span class="text-white">{{ ucwords($pageTitle) }}</span>
+        <a class="text-white" href="{{ tenant_route('jobs.jobOpenings') }}"><u>@lang('modules.front.jobOpenings')</u>&nbsp; </a> &raquo; &nbsp;<span class="text-white">{{ ucwords($pageTitle) }}</span>
     </div>
 @endsection
 

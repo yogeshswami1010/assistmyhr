@@ -10,6 +10,9 @@ class Job extends Model
 {
     use Sluggable;
 
+    public function getJobDescriptionAttribute($value) { return tenant_html($value); }
+    public function getJobRequirementAttribute($value) { return tenant_html($value); }
+
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',

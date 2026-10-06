@@ -60,7 +60,7 @@ class ScheduleInterview extends Notification
             ->subject(__('email.interviewSchedule.subject'))
             ->greeting(__('email.hello').' ' . ucwords($notifiable->name) . '!')
             ->line(__($this->jobApplication->full_name).' '.__('email.interviewSchedule.text').' - ' . ucwords($this->jobApplication->job->title))
-            ->action(__('email.interviewSchedule.response').' '.__('email.loginDashboard'), url('/login'));
+            ->action(__('email.interviewSchedule.response').' '.__('email.loginDashboard'), tenant_route('login'));
             if($this->meetings != null){
                 if( $notifiable->id == $this->meetings->created_by){
                     $emailContent = $emailContent->line(__('modules.zoommeeting.meetingPassword') . ' - ' . $this->meetings->password);

@@ -62,6 +62,7 @@ class CandidateCallController extends AdminBaseController
             $locked = CandidateCall::whereKey($call->id)->lockForUpdate()->firstOrFail();
             // Retries must never duplicate or replace a previously accepted recording.
             if ($locked->status !== 'initiated') return;
+            if (config('saas.enabled') && $request->hasFile('audio')) { app(\App\Saas\QuotaService::class)->assertUploadFits((int) $request->file('audio')->getSize()); }
             $path = $request->hasFile('audio') ? $request->file('audio')->store('calls', 'candidate_call_audio') : null;
             if ($request->hasFile('audio') && !$path) throw new \RuntimeException('Could not save recording.');
             $locked->update([

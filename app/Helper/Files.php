@@ -45,80 +45,96 @@ class Files
             throw new \Exception('File was not uploaded correctly');
         }
 
+        if (config('saas.enabled') && app(\App\Saas\TenantContext::class)->current()) {
+            app(\App\Saas\QuotaService::class)->assertUploadFits((int) $uploadedFile->getSize());
+        }
+
         $newName = self::generateNewFileName($uploadedFile->getClientOriginalName());
 
-        $tempPath = public_path('user-uploads/temp/'.$newName);
+        $tempPath = tenant_upload_path('temp/'.$newName);
         /** Check if folder exits or not. If not then create the folder */
-        if (! \File::exists(public_path('user-uploads/'.$folder))) {
-            \File::makeDirectory(public_path('user-uploads/'.$folder), 0775, true);
+        if (! \File::exists(tenant_upload_path($folder))) {
+            \File::makeDirectory(tenant_upload_path($folder), 0775, true);
         }
 
         $newPath = $folder.'/'.$newName;
 
         /** @var UploadedFile $uploadedFile */
-        $uploadedFile->move(public_path('user-uploads/temp'), $newName);
+        $temporaryFiles = [$tempPath];
+        try {
+            $uploadedFile->move(tenant_upload_path('temp'), $newName);
 
-        if (! empty($crop)) {
-            // Crop image
-            if (isset($crop[0])) {
-                // To store the multiple images for the copped ones
-                foreach ($crop as $cropped) {
-                    $img = self::imageManager()->read($tempPath);
+            if (! empty($crop)) {
+                // Crop image
+                if (isset($crop[0])) {
+                    // To store the multiple images for the copped ones
+                    foreach ($crop as $cropped) {
+                        $img = self::imageManager()->read($tempPath);
 
-                    if (isset($cropped['resize']['width']) && isset($cropped['resize']['height'])) {
+                        if (isset($cropped['resize']['width']) && isset($cropped['resize']['height'])) {
 
-                        $img->crop(
-                            (int) floor($cropped['width']),
-                            (int) floor($cropped['height']),
-                            (int) floor($cropped['x']),
-                            (int) floor($cropped['y'])
-                        );
+                            $img->crop(
+                                (int) floor($cropped['width']),
+                                (int) floor($cropped['height']),
+                                (int) floor($cropped['x']),
+                                (int) floor($cropped['y'])
+                            );
 
-                        $fileName = str_replace('.', '_'.$cropped['resize']['width'].'x'.$cropped['resize']['height'].'.', $newName);
-                        $tempPathCropped = public_path('user-uploads/temp').'/'.$fileName;
-                        $newPathCropped = $folder.'/'.$fileName;
+                            $fileName = str_replace('.', '_'.$cropped['resize']['width'].'x'.$cropped['resize']['height'].'.', $newName);
+                            $tempPathCropped = tenant_upload_path('temp').'/'.$fileName;
+                            $temporaryFiles[] = $tempPathCropped;
+                            $newPathCropped = $folder.'/'.$fileName;
 
-                        $img->resize(
-                            (int) $cropped['resize']['width'],
-                            (int) $cropped['resize']['height']
-                        );
+                            $img->resize(
+                                (int) $cropped['resize']['width'],
+                                (int) $cropped['resize']['height']
+                            );
 
-                        $img->save($tempPathCropped);
+                            $img->save($tempPathCropped);
 
-                        \Storage::put($newPathCropped, \File::get($tempPathCropped), ['public']);
+                            self::putUpload($newPathCropped, \File::get($tempPathCropped));
 
-                        // Deleting cropped temp file
-                        \File::delete($tempPathCropped);
+                            // Deleting cropped temp file
+                            \File::delete($tempPathCropped);
+                        }
+
                     }
-
+                } else {
+                    $img = self::imageManager()->read($tempPath);
+                    $img->crop(
+                        (int) floor($crop['width']),
+                        (int) floor($crop['height']),
+                        (int) floor($crop['x']),
+                        (int) floor($crop['y'])
+                    );
+                    $img->save($tempPath);
                 }
-            } else {
+
+            }
+
+            if (($width || $height)) {
                 $img = self::imageManager()->read($tempPath);
-                $img->crop(
-                    (int) floor($crop['width']),
-                    (int) floor($crop['height']),
-                    (int) floor($crop['x']),
-                    (int) floor($crop['y'])
-                );
+                $w = $width ? (int) $width : null;
+                $h = $height ? (int) $height : null;
+                $img->scaleDown($w, $h);
                 $img->save($tempPath);
             }
 
+            self::putUpload($newPath, \File::get($tempPath));
+
+            // Deleting temp file
+            \File::delete($tempPath);
+
+            return $newName;
+        } finally { foreach ($temporaryFiles as $temporaryFile) { \File::delete($temporaryFile); } }
+    }
+
+    private static function putUpload(string $path, string $contents): void
+    {
+        if (config('saas.enabled') && app(\App\Saas\TenantContext::class)->current() && config('filesystems.default') === 'local') {
+            app(\App\Saas\QuotaService::class)->assertUploadFits(strlen($contents));
         }
-
-        if (($width || $height)) {
-            $img = self::imageManager()->read($tempPath);
-            $w = $width ? (int) $width : null;
-            $h = $height ? (int) $height : null;
-            $img->scaleDown($w, $h);
-            $img->save($tempPath);
-        }
-
-        \Storage::put($newPath, \File::get($tempPath), ['public']);
-
-        // Deleting temp file
-        \File::delete($tempPath);
-
-        return $newName;
+        \Storage::put($path, $contents);
     }
 
     public static function generateNewFileName($currentFileName)

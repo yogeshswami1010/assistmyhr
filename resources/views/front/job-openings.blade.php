@@ -91,7 +91,7 @@
                         $i = $index % 3;
                     @endphp
                     <div class="job-list" data-shuffle="item" data-groups="{{ $location->location.','.$location->job->category->name }}">
-                        <a href="{{ route('jobs.jobDetail', [$location->job->slug, $location->location->id]) }}" class="fr-job-card job-opening-card group">
+                        <a href="{{ tenant_route('jobs.jobDetail', [$location->job->slug, $location->location->id]) }}" class="fr-job-card job-opening-card group">
                             <div class="fr-job-card-bar" style="background: {{ $barStyles[$i] }};"></div>
                             <div class="pl-3">
                                 <div class="flex items-center justify-between mb-5">
@@ -175,7 +175,7 @@
             var token = '{{ csrf_token() }}';
             $('#load_more_button').html('<b>'+"@lang('app.loading')"+'...</b>');
             $.easyAjax({
-                url:"{{ route('jobs.more-data') }}",
+                url:"{{ tenant_route('jobs.more-data') }}",
                 type:'POST',
                 data: {'_token':token, 'totalCurrentData':totalCurrentData,'location_id':location_id, 'category':category, 'skill':skill, 'company':company},
                 success:function(response) {
@@ -202,7 +202,7 @@
             var company = $('#company').val();
             var token = '{{ csrf_token() }}';
             $.easyAjax({
-                url:"{{ route('jobs.search-job') }}",
+                url:"{{ tenant_route('jobs.search-job') }}",
                 type:'POST',
                 data: {'_token':token, location_id:location_id, category:category, skill:skill, company:company},
                 success:function(response){

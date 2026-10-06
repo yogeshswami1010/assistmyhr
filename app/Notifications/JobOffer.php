@@ -59,7 +59,7 @@ class JobOffer extends Notification
             ->greeting(__('email.hello').' ' . ucwords($this->jobApplication->full_name) . '!')
             ->line(__('email.jobOffer.text'))
             ->line(__('modules.jobs.jobTitle').' - ' . ucwords($this->jobApplication->job->title))
-            ->action(__('email.viewOffer'), route('jobs.job-offer', $this->jobApplication->onboard->offer_code))
+            ->action(__('email.viewOffer'), tenant_route('jobs.job-offer', $this->jobApplication->onboard->offer_code))
             ->line(__('email.thankyouNote'));
     }
 

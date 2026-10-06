@@ -28,6 +28,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        if (config('saas.enabled')) {
+            $schedule->command('saas:maintenance minute')->everyMinute()->withoutOverlapping();
+            $schedule->command('saas:maintenance daily')->dailyAt('02:00')->withoutOverlapping();
+            return;
+        }
         $schedule->command('candidate-emails:import-replies')->everyMinute()->withoutOverlapping();
         $schedule->command('client-reviews:notify')->everyMinute()->withoutOverlapping();
         // Moved to routes/console.php

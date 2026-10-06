@@ -195,7 +195,7 @@
                     $c = $colors[$index % 4];
                 @endphp
                 <div class="amd-job-item" data-groups="{{ optional($location->location)->location }},{{ optional($location->job->category)->name }}">
-                    <a href="{{ route('jobs.assistmyday.jobDetail', [$location->job->slug, optional($location->location)->id]) }}"
+                    <a href="{{ tenant_route('jobs.assistmyday.jobDetail', [$location->job->slug, optional($location->location)->id]) }}"
                        class="amd-job-card">
                         <div style="height:4px;width:100%;background:{{ $c['bar'] }};"></div>
                         <div style="padding:20px;">
@@ -303,7 +303,7 @@ $(document).ready(function () {
         var category    = $('#amd-category').val();
         $(this).html('<b>Loading...</b>');
         $.easyAjax({
-            url:  "{{ route('jobs.more-data') }}",
+            url:  "{{ tenant_route('jobs.more-data') }}",
             type: 'POST',
             data: {
                 _token:           csrfToken,
@@ -331,7 +331,7 @@ $(document).ready(function () {
         var location_id = $('#amd-location').val();
         var category    = $('#amd-category').val();
         $.easyAjax({
-            url:  "{{ route('jobs.search-job') }}",
+            url:  "{{ tenant_route('jobs.search-job') }}",
             type: 'POST',
             data: {
                 _token:      csrfToken,

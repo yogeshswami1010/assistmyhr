@@ -82,9 +82,9 @@ class JobController extends Controller
             'experience' => $job->workExperience?->work_experience ?? '',
             'start_date' => $job->start_date?->format('Y-m-d'),
             'end_date' => $job->end_date?->format('Y-m-d'),
-            'detail_url' => route('jobs.jobDetail', [$job->slug, $location?->id]),
+            'detail_url' => tenant_route('jobs.jobDetail', [$job->slug, $location?->id]),
             'api_detail_url' => url('/api/jobs/'.$job->id),
-            'apply_url' => route('jobs.jobApply', [$job->slug, $location?->id]),
+            'apply_url' => tenant_route('jobs.jobApply', [$job->slug, $location?->id]),
         ];
     }
 }

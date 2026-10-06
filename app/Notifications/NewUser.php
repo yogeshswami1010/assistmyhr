@@ -48,7 +48,7 @@ class NewUser extends Notification
             ->line(__('email.newUser.text'))
             ->line(__('app.email').' - '.$notifiable->email)
             ->line(__('app.password').' - '.$this->password)
-            ->action(__('email.loginDashboard'), url('/login'))
+            ->action(__('email.loginDashboard'), tenant_route('login'))
             ->line(__('email.thankyouNote'));
     }
 

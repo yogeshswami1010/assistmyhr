@@ -15,5 +15,7 @@ use Illuminate\Support\Facades\Schedule;
 */
 
 
-Schedule::command('job-check-status')->daily();
-Schedule::command('candidates:purge')->dailyAt('02:00');
+if (!config('saas.enabled')) {
+    Schedule::command('job-check-status')->daily();
+    Schedule::command('candidates:purge')->dailyAt('02:00');
+}

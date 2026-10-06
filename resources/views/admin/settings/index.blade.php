@@ -6,10 +6,10 @@
 
 @php
     $logoPreviewUrl = $global->logo
-        ? asset('user-uploads/app-logo/' . $global->logo)
+        ? asset_url_local_s3('app-logo/' . $global->logo)
         : asset('app-logo.png');
     $faviconPreviewUrl = $global->favicon
-        ? asset('user-uploads/favicon/' . $global->favicon)
+        ? asset_url_local_s3('favicon/' . $global->favicon)
         : asset('app-logo.png');
 @endphp
 

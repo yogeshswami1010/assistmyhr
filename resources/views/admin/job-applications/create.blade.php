@@ -2173,7 +2173,7 @@
 
     {{-- Globals required by location.js and other shared scripts --}}
     <script>
-        const fetchCountryState       = "{{ route('jobs.fetchCountryState') }}";
+        const fetchCountryState       = "{{ tenant_route('jobs.fetchCountryState') }}";
         const csrfToken               = "{{ csrf_token() }}";
         const selectCountry           = "@lang('modules.front.selectCountry')";
         const selectState             = "@lang('modules.front.selectState')";

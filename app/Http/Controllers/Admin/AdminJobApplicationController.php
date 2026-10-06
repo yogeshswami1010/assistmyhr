@@ -2681,7 +2681,7 @@ class AdminJobApplicationController extends AdminBaseController
                 return response()->json(['status' => 'error', 'message' => 'No resume found for this applicant.']);
             }
 
-            $filePath = public_path('user-uploads/documents/' . $application->id . '/' . $doc->hashname);
+            $filePath = tenant_upload_path('documents/' . $application->id . '/' . $doc->hashname);
             if (!is_readable($filePath)) {
                 return response()->json(['status' => 'error', 'message' => 'Resume file not found on disk.']);
             }
@@ -2918,7 +2918,7 @@ class AdminJobApplicationController extends AdminBaseController
                 continue;
             }
 
-            $file = public_path('user-uploads/documents/'.$app->id.'/'.$doc->hashname);
+            $file = tenant_upload_path('documents/'.$app->id.'/'.$doc->hashname);
             if (!is_readable($file)) {
                 $app->update(['cv_index_failed' => true, 'cv_indexed_at' => now()]); // ← ADD
                 $failed++;
@@ -3781,7 +3781,7 @@ public function aiSearchResults(Request $request)
                         return $result;
                     }
 
-                    $filePath = public_path('user-uploads/documents/' . $app->id . '/' . $doc->hashname);
+                    $filePath = tenant_upload_path('documents/' . $app->id . '/' . $doc->hashname);
                     if (!is_readable($filePath)) {
                         if (!$dryRun) {
                             $app->update(['cv_index_failed' => true, 'cv_indexed_at' => now()]);
@@ -4027,7 +4027,7 @@ public function aiSearchResults(Request $request)
      */
     protected function callDeepSeekWithImage(string $systemPrompt, string $userPrompt): string
     {
-        $apiKey = env('DEEPSEEK_API_KEY');
+        $apiKey = config('services.deepseek.key');
         
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,

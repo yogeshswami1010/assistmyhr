@@ -86,7 +86,7 @@
 <script>
     $('#save-job-alert').click(function () {
         $.easyAjax({
-            url: '{{ route('jobs.saveJobAlert') }}',
+            url: '{{ tenant_route('jobs.saveJobAlert') }}',
             container: '#createJobAlert',
             type: 'POST',
             data: $('#createJobAlert').serialize(),

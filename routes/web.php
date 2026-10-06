@@ -113,7 +113,8 @@ Route::middleware(['signed', 'throttle:60,1'])->prefix('candidate-review')->name
     Route::post('{review:public_id}/reply', [\App\Http\Controllers\ClientCandidateReviewController::class, 'reply'])->middleware('throttle:10,1')->name('reply');
 });
 
-Auth::routes();
+Auth::routes(['register' => false]);
+require __DIR__.'/saas.php';
 
 // Old bookmarks go to login; purchase verification is no longer registered.
 Route::redirect('/verify-purchase', '/login');

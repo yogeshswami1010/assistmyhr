@@ -49,6 +49,9 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if (config('saas.enabled') && $exception instanceof \Illuminate\Auth\AuthenticationException && !$request->expectsJson()) {
+            return redirect()->guest($request->is('superadmin*') ? route('superadmin.login') : tenant_route('login'));
+        }
         if ($request->routeIs('client-reviews.*') && (
             $exception instanceof InvalidSignatureException
             || $exception instanceof ModelNotFoundException

@@ -61,7 +61,7 @@ class ScheduleInterviewStatus extends Notification
             ->subject(__('email.interviewScheduleStatus.subject'))
             ->greeting(__('email.hello').' ' . ucwords($notifiable->name) . '!')
             ->line($this->jobApplication->full_name.' '.__('email.interviewScheduleStatus.text').' - ' . ucwords($this->jobApplication->job->title) .' ' .__('email.interviewScheduleStatus.statusChangesTo'). '  ' . ucFirst($this->jobApplication->status->status))
-            ->action(__('email.ScheduleStatusCandidate.forCheckDetails').' '.__('email.loginDashboard'), url('/login'))
+            ->action(__('email.ScheduleStatusCandidate.forCheckDetails').' '.__('email.loginDashboard'), tenant_route('login'))
             ->line(__('email.thankyouNote'));
     }
 

@@ -13,7 +13,7 @@
             --main-color: {{ $frontTheme->primary_color }};
         }
 
-        {!! $frontTheme->front_custom_css !!}
+        {!! config('saas.enabled') ? '' : $frontTheme->front_custom_css !!}
     </style>
 
     <!-- Vite CSS & JS -->

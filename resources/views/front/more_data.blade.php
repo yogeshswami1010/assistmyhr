@@ -10,7 +10,7 @@
         $iconColor = ['#2563EB', '#059669', '#7C3AED'];
     @endphp
     <div class="job-list" data-shuffle="item" data-groups="{{ $location->location.','.$location->job->category->name }}">
-        <a href="{{ route('jobs.jobDetail', [$location->job->slug, $location->location->id]) }}" class="fr-job-card job-opening-card block group">
+        <a href="{{ tenant_route('jobs.jobDetail', [$location->job->slug, $location->location->id]) }}" class="fr-job-card job-opening-card block group">
             <div class="fr-job-card-bar" style="background: {{ $barStyles[$i] }};"></div>
             <div class="pl-3">
                 <div class="flex items-center justify-between mb-5">

@@ -36,6 +36,7 @@ return [
     */
 
     'guards' => [
+        'platform' => ['driver' => 'session', 'provider' => 'platform_admins'],
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
@@ -65,6 +66,7 @@ return [
     */
 
     'providers' => [
+        'platform_admins' => ['driver' => 'eloquent', 'model' => App\Saas\PlatformAdmin::class],
         'users' => [
             'driver' => 'eloquent',
             'model' => App\User::class,

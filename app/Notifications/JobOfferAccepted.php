@@ -54,7 +54,7 @@ class JobOfferAccepted extends Notification
             ->subject(__('email.jobOfferAccepted.subject'))
             ->greeting(__('email.hello').' ' . ucwords($notifiable->name) . '!')
             ->line(__('email.jobOfferAccepted.text').' by '.__($this->jobApplication->full_name).' for job ' . ucwords($this->jobApplication->job->title))
-            ->action(__('email.loginDashboard'), url('/login'))
+            ->action(__('email.loginDashboard'), tenant_route('login'))
             ->line(__('email.thankyouNote'));
     }
 

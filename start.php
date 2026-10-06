@@ -16,6 +16,8 @@ use App\MessageSetting;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
+require_once __DIR__.'/app/Saas/helpers.php';
+
 if (!function_exists('user')) {
 
     /**
@@ -46,6 +48,7 @@ if (!function_exists('asset_url')) {
     // @codingStandardsIgnoreLine
     function asset_url($path)
     {
+        if (config('saas.enabled') && app(\App\Saas\TenantContext::class)->current()) { return tenant_asset_url($path); }
         $path = 'user-uploads/' . $path;
         $storageUrl = $path;
 
@@ -80,6 +83,7 @@ if (!function_exists('asset_url_local_s3')) {
             return generateS3SignedUrl($path);
         }
 
+        if (config('saas.enabled') && app(\App\Saas\TenantContext::class)->current()) { return tenant_asset_url($path); }
         $path = 'user-uploads/' . $path;
         $storageUrl = $path;
 

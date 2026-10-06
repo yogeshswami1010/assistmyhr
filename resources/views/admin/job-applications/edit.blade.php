@@ -123,7 +123,7 @@
     <script src="{{ asset('assets/plugins/datepicker/bootstrap-datepicker.js') }}"></script>
     <script src="{{ asset('assets/node_modules_files/select2/dist/js/select2.full.min.js') }}"></script>
     <script>
-        const fetchCountryState = "{{ route('jobs.fetchCountryState') }}";
+        const fetchCountryState = "{{ tenant_route('jobs.fetchCountryState') }}";
         const csrfToken = "{{ csrf_token() }}";
         const selectCountry = "@lang('modules.front.selectCountry')";
         const selectState = "@lang('modules.front.selectState')";

@@ -96,7 +96,7 @@ class AdminDocumentController extends AdminBaseController
     {
         abort_if(! $this->user->cans('view_job_applications'), 403);
 
-        $filePath = public_path('user-uploads/documents/'.$document->documentable->id.'/'.$document->hashname);
+        $filePath = tenant_upload_path('documents/'.$document->documentable->id.'/'.$document->hashname);
 
         return response()->download($filePath, snake_case(strtolower($document->name)).'.'.File::extension($filePath));
     }

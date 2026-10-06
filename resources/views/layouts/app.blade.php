@@ -126,7 +126,7 @@
             overflow-y: scroll;
         }
 
-        {!! isset($adminTheme) ? $adminTheme->admin_custom_css : '' !!}
+        {!! !config('saas.enabled') && isset($adminTheme) ? $adminTheme->admin_custom_css : '' !!}
     </style>
 
 </head>

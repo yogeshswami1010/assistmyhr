@@ -12,7 +12,7 @@ class CandidateClientReviewService
 {
     public function url(CandidateClientReview $review, string $action = 'show'): string
     {
-        return URL::temporarySignedRoute('client-reviews.'.$action, $review->expires_at, ['review' => $review->public_id]);
+        return URL::temporarySignedRoute('client-reviews.'.$action, $review->expires_at, tenant_parameters(['review' => $review->public_id]));
     }
 
     protected function mailer()
@@ -67,7 +67,7 @@ class CandidateClientReviewService
             }
             $html = view('email.client-review-reply', [
                 'review' => $review, 'message' => $locked,
-                'atsUrl' => route('admin.job-applications.table', ['review_candidate' => $review->job_application_id]),
+                'atsUrl' => tenant_route('admin.job-applications.table', ['review_candidate' => $review->job_application_id]),
             ])->render();
             $this->mailer()->html($html, function ($mail) use ($review, $recipient) {
                 $mail->to($recipient)->replyTo($review->client_email)->subject('Client review: '.$review->candidate_name);

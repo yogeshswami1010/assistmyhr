@@ -307,7 +307,7 @@ class FrontJobsController extends FrontBaseController
         Session::put('accessToken', $this->user->token);
         Session::put('expiresIn',   $this->user->expiresIn);
 
-        return redirect()->route('jobs.jobApply', $this->lastPageUrl);
+        return redirect(tenant_route('jobs.jobApply', $this->lastPageUrl));
     }
 
     public function redirect($provider)
@@ -584,7 +584,7 @@ class FrontJobsController extends FrontBaseController
     public function disableJobAlert()
     {
         JobAlert::where('id', request()->id)->update(['status' => 'inactive']);
-        return Reply::redirect(route('jobs.jobOpenings'), __('messages.disableJobAlert'));
+        return Reply::redirect(tenant_route('jobs.jobOpenings'), __('messages.disableJobAlert'));
     }
     public function assistMyDayJobDetail($slug, $location = null)
     {

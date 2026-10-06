@@ -60,7 +60,7 @@
                 if (!empty($answer->file_url)) {
                     $resumeUrl = $answer->file_url;
                 } else {
-                    $resumeUrl = url('user-uploads/documents/' . basename($answer->file));
+                    $resumeUrl = asset_url_local_s3('documents/' . basename($answer->file));
                 }
                 break;
             }

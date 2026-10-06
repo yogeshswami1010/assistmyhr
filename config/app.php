@@ -228,6 +228,7 @@ return [
          * Application Service Providers...
          */
         AppServiceProvider::class,
+        App\Providers\SaasServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         EventServiceProvider::class,

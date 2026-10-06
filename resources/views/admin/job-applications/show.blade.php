@@ -41,7 +41,7 @@
     if (!$resumeUrl && !empty($answers)) {
         foreach ($answers as $answer) {
             if (!empty($answer->file)) {
-                $resumeUrl = !empty($answer->file_url) ? $answer->file_url : url('user-uploads/documents/' . basename($answer->file));
+                $resumeUrl = !empty($answer->file_url) ? $answer->file_url : asset_url_local_s3('documents/' . basename($answer->file));
                 break;
             }
         }

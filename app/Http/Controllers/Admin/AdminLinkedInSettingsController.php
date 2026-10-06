@@ -18,7 +18,7 @@ class AdminLinkedInSettingsController extends AdminBaseController
 
     public function index(){
         $this->linkedInSetting = LinkedInSetting::first();
-        $this->linkedInSetting->callback_url = route('jobs.linkedinCallback', 'linkedin');
+        $this->linkedInSetting->callback_url = tenant_route('jobs.linkedinCallback', 'linkedin');
         return view('admin.linked-in-settings.edit', $this->data);
     }
 

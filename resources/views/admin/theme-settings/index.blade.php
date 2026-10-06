@@ -47,7 +47,7 @@
                     </div>
                 </div>
                 <div class="p-6">
-                    <textarea name="admin_custom_css" class="my-code-area w-full min-h-[240px] rounded-[11px] border border-[#E2DED8] font-mono text-[13px]" rows="16">@if (is_null($adminTheme->admin_custom_css))/*Enter your custom css after this line*/@else {!! $adminTheme->admin_custom_css !!} @endif</textarea>
+                    <textarea name="admin_custom_css" class="my-code-area w-full min-h-[240px] rounded-[11px] border border-[#E2DED8] font-mono text-[13px]" rows="16">@if (is_null($adminTheme->admin_custom_css))/*Enter your custom css after this line*/@else {{ $adminTheme->admin_custom_css }} @endif</textarea>
                 </div>
             </div>
 
@@ -62,7 +62,7 @@
                     </div>
                 </div>
                 <div class="p-6">
-                    <textarea name="front_custom_css" class="my-code-area w-full min-h-[240px] rounded-[11px] border border-[#E2DED8] font-mono text-[13px]" rows="16">@if (is_null($adminTheme->front_custom_css))/*Enter your custom css after this line*/@else {!! $adminTheme->front_custom_css !!} @endif</textarea>
+                    <textarea name="front_custom_css" class="my-code-area w-full min-h-[240px] rounded-[11px] border border-[#E2DED8] font-mono text-[13px]" rows="16">@if (is_null($adminTheme->front_custom_css))/*Enter your custom css after this line*/@else {{ $adminTheme->front_custom_css }} @endif</textarea>
                 </div>
             </div>
 

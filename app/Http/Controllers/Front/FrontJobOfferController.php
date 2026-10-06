@@ -132,14 +132,15 @@ class FrontJobOfferController extends FrontBaseController
             $image     = str_replace(' ', '+', $image);
             $imageName = str_random(32).'.'.'jpg';
 
-            if (!\File::exists(public_path('user-uploads/offer/sign'))) {
-                $result = \File::makeDirectory(public_path('user-uploads/offer/sign'), 0777, true);
+            if (!\File::exists(tenant_upload_path('offer/sign'))) {
+                $result = \File::makeDirectory(tenant_upload_path('offer/sign'), 0777, true);
             }
 
 
             if (config('filesystems.default') === 'local') {
             
-                \File::put(public_path(). '/user-uploads/offer/sign/' . $imageName, base64_decode($image));
+                if (config('saas.enabled')) { app(\App\Saas\QuotaService::class)->assertUploadFits(strlen(base64_decode($image))); }
+                \File::put(tenant_upload_path('offer/sign/'.$imageName), base64_decode($image));
 
                 // self::storeSize($uploadedFile, $dir, $fileName);
             }

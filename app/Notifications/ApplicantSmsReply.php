@@ -38,7 +38,7 @@ class ApplicantSmsReply extends Notification
         $application = $this->smsMessage->application;
         $applicantName = $application?->full_name ?? 'Applicant';
         $jobTitle = $application?->job?->title ?? 'Unassigned job';
-        $profileUrl = route('admin.job-applications.table', [
+        $profileUrl = tenant_route('admin.job-applications.table', [
             'jobs' => $application?->job_id ?: 'all',
             'open' => $this->smsMessage->job_application_id,
             'tab' => 'sms',

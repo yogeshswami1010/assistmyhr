@@ -140,6 +140,10 @@
                     </a>
                 </li>
                 @if(in_array('manage_settings', $userPermissions))
+                    @if(config('saas.enabled'))
+                    <li><a href="{{ tenant_route('saas.subscription') }}" class="ra-nav-sublink"><span class="ra-sublink-dot" aria-hidden="true"></span><span>Subscription</span></a></li>
+                    <li><a href="{{ tenant_route('saas.integrations') }}" class="ra-nav-sublink"><span class="ra-sublink-dot" aria-hidden="true"></span><span>Workspace integrations</span></a></li>
+                    @endif
                     <li>
                         <a href="{{ route('admin.job-api-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/jobs-api*') ? 'on' : '' }}">
                             <span class="ra-sublink-dot" aria-hidden="true"></span>

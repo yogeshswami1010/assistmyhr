@@ -334,7 +334,7 @@
                             <input type="file" id="companyShowLogoFile" accept="image/*" class="hidden" />
                             <input type="file" id="companyShowLogoDropify" name="logo" class="dropify" data-max-file-size="2M"
                                 @if (is_null($company->logo)) data-default-file="{{ asset('logo-not-found.png') }}"
-                                @else data-default-file="{{ asset('user-uploads/company-logo/'.$company->logo) }}"
+                                @else data-default-file="{{ asset_url_local_s3('company-logo/'.$company->logo) }}"
                                 @endif />
                         </div>
                         <p class="mt-1 text-[11px] text-[#8892A0]">@lang('app.dragDrop')</p>

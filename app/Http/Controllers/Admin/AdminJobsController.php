@@ -84,7 +84,7 @@ class AdminJobsController extends AdminBaseController
                 'start' => $job->start_date?->format('d M, Y') ?? '—',
                 'end' => $job->end_date?->format('d M, Y') ?? '—',
                 'status' => $job->status,
-                'copyUrl' => route('jobs.jobDetail', array_filter([$job->slug, $locId])),
+                'copyUrl' => tenant_route('jobs.jobDetail', array_filter([$job->slug, $locId])),
                 'editUrl' => route('admin.jobs.edit', $job->id),
                 'duplicateUrl' => route('admin.jobs.create', ['duplicate_job' => $job->id]),
                 'destroyUrl' => route('admin.jobs.destroy', $job->id),
@@ -605,7 +605,7 @@ class AdminJobsController extends AdminBaseController
                 $parts[] = RaDataTableHtml::js(
                     RaDataTableHtml::SVG_COPY,
                     'jc-btn-violet open-url',
-                    ['data-row-open-url' => route('jobs.jobDetail', $params)],
+                    ['data-row-open-url' => tenant_route('jobs.jobDetail', $params)],
                     __('app.copyUrl')
                 );
 
@@ -640,7 +640,7 @@ class AdminJobsController extends AdminBaseController
                 $locations = '<ul>';
                 foreach ($row->jobLocation as $value) {
 
-                    $locations .= '<li><a href="'.route('jobs.jobDetail', [$row->slug, $value->id]).'">'.ucfirst($value->location).'</a></li>';
+                    $locations .= '<li><a href="'.tenant_route('jobs.jobDetail', [$row->slug, $value->id]).'">'.ucfirst($value->location).'</a></li>';
                 }
                 $locations .= '</ul>';
 

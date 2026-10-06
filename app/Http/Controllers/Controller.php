@@ -47,6 +47,7 @@ class Controller extends BaseController
     }
     public function checkMigrateStatus()
     {
+        if (config('saas.enabled')) { return; }
         $status = Artisan::call('migrate:check');
 
         if ($status && !request()->ajax()) {

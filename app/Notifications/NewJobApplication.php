@@ -66,7 +66,7 @@ class NewJobApplication extends Notification
         return (new MailMessage)
             ->subject(__('email.newJobApplication.subject'))
             ->greeting(__('email.hello').' ' . ucwords($notifiable->name) . '!')
-            ->markdown('email.job-apply', ['url' => url('/login'),'buttonText' => __('email.loginDashboard'),'buttonUrl' => $buttonUrl,'extraButtonText' => 'LinkedIn Profile', 'content' => $content]);
+            ->markdown('email.job-apply', ['url' => tenant_route('login'),'buttonText' => __('email.loginDashboard'),'buttonUrl' => $buttonUrl,'extraButtonText' => 'LinkedIn Profile', 'content' => $content]);
     }
 
     /**

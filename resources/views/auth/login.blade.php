@@ -11,6 +11,11 @@
 @section('content')
     <form action="{{ route('login') }}" id="loginform" method="post" class="flex flex-col gap-4">
         @csrf
+        @if(config('saas.enabled'))
+        <label class="text-sm">Company workspace</label>
+        <input name="workspace" value="{{ old('workspace', app(\App\Saas\TenantContext::class)->current()?->slug) }}" required pattern="[a-z0-9][a-z0-9-]{1,49}" class="{{ $authField }}" placeholder="your-company">
+        <a href="{{ route('register') }}" class="text-sm text-blue-600">Create a company account</a>
+        @endif
 
         <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
             <h2 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">
@@ -78,7 +83,7 @@
 
         <div class="my-2 flex animate-auth-fade-up items-center gap-3 text-xs font-semibold text-[#C4CBD4] opacity-0 before:h-px before:flex-1 before:bg-[#E8E6E1] before:content-[''] after:h-px after:flex-1 after:bg-[#E8E6E1] after:content-[''] [animation-delay:260ms]">{{ __('OR') }}</div>
 
-        <!-- <a href="{{ route('jobs.jobOpenings') }}" class="{{ $authSecondary }} animate-auth-fade-up opacity-0 [animation-delay:320ms]">
+        <!-- <a href="{{ tenant_route('jobs.jobOpenings') }}" class="{{ $authSecondary }} animate-auth-fade-up opacity-0 [animation-delay:320ms]">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
             {{ __('messages.VisitJobOpening') }}
         </a> -->
@@ -90,6 +95,7 @@
 
     <form class="hidden flex flex-col gap-4" method="post" id="recoverform" action="{{ route('password.email') }}">
         @csrf
+        @if(config('saas.enabled'))<label>Company workspace</label><input name="workspace" required value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}" class="{{ $authField }}">@endif
 
         <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
             <h2 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">@lang('app.recoverPassword')</h2>

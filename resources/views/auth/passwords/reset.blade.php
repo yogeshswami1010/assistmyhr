@@ -15,6 +15,7 @@
 
     <form method="POST" action="{{ route('password.update') }}" class="flex flex-col gap-4">
         @csrf
+        @if(config('saas.enabled'))<input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">@endif
 
         <input type="hidden" name="token" value="{{ $token }}">
 

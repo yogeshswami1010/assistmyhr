@@ -1,0 +1,4 @@
+@extends('saas.layout')
+@section('content')
+<div class="card narrow"><h1>Signup and trial settings</h1><form method="post" action="{{ route('superadmin.settings.save') }}">@csrf<label>Public signup</label><select name="signup_enabled"><option value="1" @selected(($settings['signup_enabled']??'0')==='1')>Open</option><option value="0" @selected(($settings['signup_enabled']??'0')!=='1')>Closed</option></select><label>Trial length in days</label><input name="trial_days" type="number" min="1" max="90" value="{{ $settings['trial_days']??14 }}" required><label>Trial plan</label><select name="trial_plan_id" required>@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected(($settings['trial_plan_id']??null)==$plan->id)>{{ $plan->name }}</option>@endforeach</select><button>Save settings</button></form></div>
+@endsection

@@ -148,12 +148,17 @@ class LoginController extends Controller
         return 'admin/dashboard';
     }
 
+    protected function attemptLogin(Request $request)
+    {
+        return $this->guard()->attempt($this->credentials($request), config('saas.enabled') ? false : $request->boolean('remember'));
+    }
+
     public function logout(Request $request)
     {
         $this->guard()->logout();
 
         $request->session()->invalidate();
 
-        return redirect(route('login'));
+        return redirect(tenant_route('login'));
     }
 }

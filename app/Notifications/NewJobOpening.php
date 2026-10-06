@@ -56,7 +56,7 @@ class NewJobOpening extends Notification
                     ->line(__('email.newJobOpening.jobTitle').' - '.$this->job->title)
                     ->line(__('email.newJobOpening.jobLocation').' - '.$this->job->location->location)
                     ->line(__('email.newJobOpening.moreDetails'))
-                    ->action(__('email.newJobOpening.jobDetails'), route('jobs.jobDetail', [$this->job->slug]))
+                    ->action(__('email.newJobOpening.jobDetails'), tenant_route('jobs.jobDetail', [$this->job->slug]))
                     ->line(__('email.thankyouNote'));
 
     }
@@ -82,7 +82,7 @@ class NewJobOpening extends Notification
      */
     // public function toVonage($notifiable)
     // {
-    //     $link = '<a href="'.route('jobs.jobDetail', [$this->job->slug]).'">Link</a>';
+    //     $link = '<a href="'.tenant_route('jobs.jobDetail', [$this->job->slug]).'">Link</a>';
 
     //     return (new VonageMessage)
     //                 ->content(

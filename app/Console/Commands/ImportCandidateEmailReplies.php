@@ -14,6 +14,9 @@ class ImportCandidateEmailReplies extends Command
 
     public function handle(): int
     {
+        if (config('saas.enabled') && app(\App\Saas\TenantContext::class)->current()?->slug !== 'main' && !config('services.candidate_email_imap.host')) {
+            return self::SUCCESS;
+        }
         if (!function_exists('imap_open')) {
             $this->error('PHP IMAP extension is not installed.');
             return self::FAILURE;

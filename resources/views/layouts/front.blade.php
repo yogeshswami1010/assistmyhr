@@ -31,7 +31,7 @@
             --main-color: {{ $frontTheme->primary_color }};
         }
 
-        {!! $frontTheme->front_custom_css !!}
+        {!! config('saas.enabled') ? '' : $frontTheme->front_custom_css !!}
     </style>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -130,7 +130,7 @@
         <nav class="flex flex-wrap justify-center gap-4 sm:gap-6">
             @forelse($customPages as $customPage)
                 @php
-                    $ftHref = ! empty($customPage->external_url) ? $customPage->external_url : route('jobs.custom-page', $customPage->slug);
+                    $ftHref = ! empty($customPage->external_url) ? $customPage->external_url : tenant_route('jobs.custom-page', $customPage->slug);
                     $ftTarget = ! empty($customPage->external_url) ? ($customPage->link_target ?? '_self') : '_self';
                 @endphp
                 <a class="text-[13px] font-medium text-[#8892A0] hover:text-[#1A1A2A] transition-colors" href="{{ $ftHref }}" @if($ftTarget === '_blank') target="_blank" rel="noopener noreferrer" @endif>{{ $customPage->name }}</a>
@@ -151,7 +151,7 @@
     $('.language-drop .dropdown-item').click(function () {
         let code = $(this).data('lang-code');
 
-        let url = '{{ route('jobs.changeLanguage', ':code') }}';
+        let url = '{{ tenant_route('jobs.changeLanguage', ':code') }}';
         url = url.replace(':code', code);
 
         if (!$(this).hasClass('active')) {
@@ -188,7 +188,7 @@
        }, function(isConfirm){
            if (isConfirm) {
 
-               var url = "{{ route('jobs.disableJobAlert',':id') }}";
+               var url = "{{ tenant_route('jobs.disableJobAlert',':id') }}";
                url = url.replace(':id', id);
 
                var token = "{{ csrf_token() }}";
@@ -224,7 +224,7 @@
     }
     $(document).ready(function () {
         $('#job-alert').click(function() {
-            var url = "{{ route('jobs.jobAlert') }}";
+            var url = "{{ tenant_route('jobs.jobAlert') }}";
             $('.modal-title').html("<i class='icon-plus'></i> @lang('modules.front.jobAlert')");
             $('#addJobAlert').removeClass('hidden');
             $.ajaxModal('#addJobAlert', url);

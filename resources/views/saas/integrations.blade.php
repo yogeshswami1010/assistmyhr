@@ -1,0 +1,4 @@
+@extends('saas.layout')
+@section('content')
+<div class="card narrow"><h1>Your workspace integrations</h1><p>Configure your own <a href="{{ tenant_route('admin.smtp-settings.index') }}">SMTP account</a> and <a href="{{ tenant_route('admin.ai-settings.index') }}">AI API keys</a> in ATS settings.</p><h2>Candidate reply inbox</h2><p class="muted">Use the IMAP host supplied by your email provider. The scheduler imports replies using the SMTP username and password configured for your company. Leave the host blank to disable importing.</p><form method="post" action="{{ tenant_route('saas.integrations.save') }}">@csrf<label>IMAP host</label><input name="imap_host" value="{{ old('imap_host',$settings?->imap_host) }}" placeholder="imap.example.com"><label>IMAP TLS port</label><input name="imap_port" type="number" value="{{ old('imap_port',$settings?->imap_port ?? 993) }}" min="1" max="65535" required><button>Save mailbox settings</button></form></div>
+@endsection

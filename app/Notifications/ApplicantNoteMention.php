@@ -44,7 +44,7 @@ class ApplicantNoteMention extends Notification
         $application = $this->note->jobApplication;
         $applicantName = $application?->full_name ?? 'an applicant';
         $jobTitle = $application?->job?->title ?? 'Unassigned job';
-        $profileUrl = route('admin.job-applications.table', [
+        $profileUrl = tenant_route('admin.job-applications.table', [
             'jobs' => $application?->job_id ?: 'all',
             'open' => $this->note->job_application_id,
         ]);

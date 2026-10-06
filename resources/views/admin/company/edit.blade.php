@@ -31,7 +31,7 @@
                         <label for="logo" class="form-label">@lang('modules.accountSettings.companyLogo')</label>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <input type="file" id="input-file-now" name="logo" class="dropify" @if(is_null($company->logo))
-                            data-default-file="{{ asset('logo-not-found.png') }}" @else data-default-file="{{ asset('user-uploads/company-logo/'.$company->logo)
+                            data-default-file="{{ asset('logo-not-found.png') }}" @else data-default-file="{{ asset_url_local_s3('company-logo/'.$company->logo)
                             }}" @endif />
                         </div>
                     </div>

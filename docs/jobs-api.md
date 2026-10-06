@@ -1,5 +1,7 @@
 # Jobs API for third-party websites
 
+In SaaS mode, an all-jobs key includes only its own client workspace. Job and application URLs include the workspace identifier. See [SaaS deployment](saas-deployment.md).
+
 Open **Settings → Jobs API** (`/admin/settings/jobs-api`) as a user with
 `manage_settings`. Choose **Create all-jobs API key** for one feed of all currently
 open ATS jobs across active companies. Optionally create a company-only key for a

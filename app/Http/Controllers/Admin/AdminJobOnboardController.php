@@ -268,7 +268,7 @@ class AdminJobOnboardController extends AdminBaseController
     public function destroy($id)
     {
         $onBoardFiles = OnboardFiles::findOrFail($id);
-        File::delete('user-uploads/onboard-files/'.$onBoardFiles->hashName);
+        File::delete(tenant_upload_path('onboard-files/'.$onBoardFiles->hashName));
 
         OnboardFiles::destroy($id);
 

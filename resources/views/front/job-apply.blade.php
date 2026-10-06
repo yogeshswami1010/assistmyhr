@@ -38,9 +38,9 @@
     <div class="max-w-6xl mx-auto relative z-10">
 
         <nav class="fr-breadcrumb flex flex-wrap items-center mb-6">
-            <a href="{{ route('jobs.jobOpenings') }}">@lang('modules.front.jobOpenings')</a>
+            <a href="{{ tenant_route('jobs.jobOpenings') }}">@lang('modules.front.jobOpenings')</a>
             <span class="sep">›</span>
-            <a href="{{ route('jobs.jobDetail', [$job->slug, isset($location) && $location ? $location->id : null]) }}" class="cur hover:!text-white">{{ ucwords($job->title) }}</a>
+            <a href="{{ tenant_route('jobs.jobDetail', [$job->slug, isset($location) && $location ? $location->id : null]) }}" class="cur hover:!text-white">{{ ucwords($job->title) }}</a>
             <span class="sep">›</span>
             <span class="cur">@lang('modules.front.applicationForm')</span>
         </nav>
@@ -260,7 +260,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                         @lang('modules.front.submitApplication')
                     </button>
-                    <a href="{{ route('jobs.jobDetail', [$job->slug, isset($location) && $location ? $location->id : null]) }}"
+                    <a href="{{ tenant_route('jobs.jobDetail', [$job->slug, isset($location) && $location ? $location->id : null]) }}"
                        class="text-center sm:text-left text-[13px] font-semibold text-[#8892A0] py-3">← @lang('app.back')</a>
                 </div>
 
@@ -352,7 +352,7 @@
     </script>
 
     <script>
-        const fetchCountryState = "{{ route('jobs.fetchCountryState') }}";
+        const fetchCountryState = "{{ tenant_route('jobs.fetchCountryState') }}";
         const csrfToken         = "{{ csrf_token() }}";
         const selectCountry     = "@lang('modules.front.selectCountry')";
         const selectState       = "@lang('modules.front.selectState')";
@@ -394,7 +394,7 @@
             $('#email-check-result').remove();
 
             $.ajax({
-                url:  '{{ route('jobs.checkApplicantEmail') }}',
+                url:  '{{ tenant_route('jobs.checkApplicantEmail') }}',
                 type: 'POST',
                 data: { _token: '{{ csrf_token() }}', email: email, job_id: {{ $job->id }} },
                 success: function(res) {
@@ -409,7 +409,7 @@
     // ── Submit ───────────────────────────────────────────────
         $('#save-form').click(function() {
             $.easyAjax({
-                url:       '{{ route('jobs.saveApplication') }}',
+                url:       '{{ tenant_route('jobs.saveApplication') }}',
                 container: '#createForm',
                 type:      'POST',
                 file:      true,
@@ -420,7 +420,7 @@
                             '<div class="fr-form-card border-emerald-200 bg-emerald-50/80 text-emerald-900 p-8 text-center rounded-2xl" role="alert">' +
                                 '<div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-100 text-emerald-600 text-2xl">✓</div>' +
                                 '<p class="text-lg font-semibold mb-2">' + (response.msg || '') + '</p>' +
-                                '<a class="fr-btn-lg inline-block mt-4" href="{{ route('jobs.jobOpenings') }}">@lang('app.view') @lang('modules.front.jobOpenings')</a>' +
+                                '<a class="fr-btn-lg inline-block mt-4" href="{{ tenant_route('jobs.jobOpenings') }}">@lang('app.view') @lang('modules.front.jobOpenings')</a>' +
                             '</div>';
                         $('#apply-form-area').html(successMsg);
                     }

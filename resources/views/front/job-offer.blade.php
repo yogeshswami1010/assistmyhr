@@ -327,7 +327,7 @@
            }
 
            $.easyAjax({
-               url: '{{route('jobs.save-offer')}}',
+               url: '{{tenant_route('jobs.save-offer')}}',
                container: '#createForm',
                type: "POST",
                file: true,

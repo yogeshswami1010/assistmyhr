@@ -53,7 +53,7 @@ class JobAlert extends Notification
                     ->subject(__('email.newJobAlert.subject'))
                     ->greeting(__('email.hello'))
                     ->line(__('email.newJobAlert.text').' - ' . ucwords($this->job->title))
-                    ->action(__('email.newJobAlert.applyNow'), route('jobs.jobDetail', [$this->job->slug, $notifiable->hash]))
+                    ->action(__('email.newJobAlert.applyNow'), tenant_route('jobs.jobDetail', [$this->job->slug, $notifiable->hash]))
                     ->line(__('email.thankyouNote'));
     }
 
