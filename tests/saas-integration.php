@@ -91,6 +91,12 @@ $checks=0;
 function check($ok,$message){global $checks;if(!$ok){throw new RuntimeException($message);} $checks++;}
 function rejected(callable $call,string $message){try{$call();}catch(Illuminate\Validation\ValidationException $e){check(true,$message);return;}throw new RuntimeException($message);}
 check(DB::table('users')->value('email_verified_at')!==null,'Existing users preserved and verified');
+check(App\Services\SmtpConfiguration::encryption('none',465)==='ssl','Port 465 corrects None to implicit TLS');
+check(App\Services\SmtpConfiguration::encryption('tls',587)==='tls','STARTTLS preserved on port 587');
+$plain=App\Services\SmtpConfiguration::transport((object)['mail_port'=>2525,'mail_encryption'=>'none']);
+check($plain['scheme']==='smtp'&&!$plain['auto_tls']&&!$plain['require_tls'],'Custom unencrypted SMTP is supported explicitly');
+$secure=App\Services\SmtpConfiguration::transport((object)['mail_port'=>587,'mail_encryption'=>'tls']);
+check($secure['auto_tls']&&$secure['require_tls'],'STARTTLS cannot silently downgrade to plaintext');
 $plan=Plan::create(['name'=>'Starter','slug'=>'starter','max_users'=>2,'max_jobs'=>2,'max_candidates'=>2,'storage_mb'=>1]);
 PlatformSetting::create(['key'=>'trial_plan_id','value'=>$plan->id]);PlatformSetting::create(['key'=>'trial_days','value'=>'14']);
 $admin=PlatformAdmin::create(['name'=>'Platform owner','email'=>'platform@example.test','password'=>Hash::make('long-admin-password')]);
@@ -313,5 +319,6 @@ config(['saas.enabled'=>true]);
 foreach(['signup','pricing','platform-login','platform-dashboard','platform-tenant','platform-plans','platform-settings','subscription','verify'] as $view){check(is_file($root.'/resources/views/saas/'.$view.'.blade.php'),'Required page exists: '.$view);}
 foreach(glob($root.'/resources/views/saas/*.blade.php') as $view){$app['blade.compiler']->compileString(file_get_contents($view));check(true,'Blade compiles: '.basename($view));}
 $app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/admin/ai-settings/index.blade.php'));check(true,'AI settings model form compiles');
+$app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/admin/mail-setting/index.blade.php'));check(true,'SMTP provider form compiles');
 Carbon\Carbon::setTestNow();
 echo "SaaS integration checks passed: $checks\n";

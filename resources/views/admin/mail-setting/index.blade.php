@@ -40,12 +40,14 @@
                 </div>
                 <div class="p-6">
                     <div class="flex flex-wrap gap-6">
+                        @unless(config('saas.enabled'))
                         <label class="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-[#3D4A5C]">
                             <input type="radio" class="h-4 w-4 border-[#E2DED8] text-[#2563EB] focus:ring-[#2563EB]" onchange="getDriverValue(this);" value="mail" @if ($smtpSetting->mail_driver == 'mail') checked @endif name="mail_driver">
                             Mail
                         </label>
+                        @endunless
                         <label class="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-[#3D4A5C]">
-                            <input type="radio" class="h-4 w-4 border-[#E2DED8] text-[#2563EB] focus:ring-[#2563EB]" onchange="getDriverValue(this);" value="smtp" @if ($smtpSetting->mail_driver == 'smtp') checked @endif name="mail_driver">
+                            <input type="radio" class="h-4 w-4 border-[#E2DED8] text-[#2563EB] focus:ring-[#2563EB]" onchange="getDriverValue(this);" value="smtp" @if (config('saas.enabled') || $smtpSetting->mail_driver == 'smtp') checked @endif name="mail_driver">
                             SMTP
                         </label>
                     </div>
@@ -64,6 +66,18 @@
                 </div>
                 <div class="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
                     <div class="md:col-span-2">
+                        <label for="smtp_provider" class="bs-set-lbl">SMTP provider</label>
+                        <select id="smtp_provider" class="bs-f-sel">
+                            <option value="custom">Custom SMTP / any provider</option>
+                            <option value="gmail">Gmail / Google Workspace</option>
+                            <option value="zoho-in">Zoho business — India</option>
+                            <option value="zoho">Zoho business — Global</option>
+                            <option value="zoho-personal">Zoho personal — Global</option>
+                            <option value="microsoft">Microsoft 365</option>
+                        </select>
+                        <p id="smtp-provider-help" class="mt-2 text-[12px] text-[#5A6478]">Enter your provider's SMTP host and credentials. Use SSL on port 465 or STARTTLS on port 587. Save before sending a test email.</p>
+                    </div>
+                    <div class="md:col-span-2">
                         <label for="mail_host" class="bs-set-lbl">@lang('app.mailHost')</label>
                         <input type="text" class="bs-f-input" id="mail_host" name="mail_host" value="{{ $smtpSetting->mail_host }}">
                     </div>
@@ -74,9 +88,9 @@
                     <div>
                         <label for="mail_encryption" class="bs-set-lbl">@lang('app.mailEncryption')</label>
                         <select class="bs-f-sel" name="mail_encryption" id="mail_encryption">
-                            <option value="tls" @if ($smtpSetting->mail_encryption == 'tls') selected @endif>@lang('app.tls')</option>
-                            <option value="ssl" @if ($smtpSetting->mail_encryption == 'ssl') selected @endif>@lang('app.ssl')</option>
-                            <option value="none" @if ($smtpSetting->mail_encryption == null) selected @endif>@lang('app.none')</option>
+                            <option value="tls" @if ($smtpSetting->mail_encryption == 'tls') selected @endif>TLS / STARTTLS (usually 587)</option>
+                            <option value="ssl" @if ($smtpSetting->mail_encryption == 'ssl' || (int) $smtpSetting->mail_port === 465) selected @endif>SSL / TLS (usually 465)</option>
+                            <option value="none" @if (in_array($smtpSetting->mail_encryption, [null, 'none', 'null'], true) && (int) $smtpSetting->mail_port !== 465) selected @endif>@lang('app.none')</option>
                         </select>
                     </div>
                     <div>
@@ -85,7 +99,7 @@
                     </div>
                     <div>
                         <label for="mail_password" class="bs-set-lbl">@lang('app.mailPassword')</label>
-                        <input type="password" class="bs-f-input" id="mail_password" name="mail_password" value="{{ $smtpSetting->mail_password }}">
+                        <input type="password" class="bs-f-input" id="mail_password" name="mail_password" value="" autocomplete="new-password" placeholder="Leave blank to keep the saved password">
                     </div>
                 </div>
             </div>
@@ -154,6 +168,30 @@
 
 @push('footer-script')
     <script>
+        const smtpPresets = {
+            gmail: ['smtp.gmail.com', 465, 'ssl', 'Use the full Gmail or Google Workspace address and an app password. Two-step verification is required for app passwords.'],
+            'zoho-in': ['smtppro.zoho.in', 465, 'ssl', 'Use your full Zoho business email and an app password if two-factor authentication is enabled. Confirm the host in your Zoho account for your region.'],
+            zoho: ['smtppro.zoho.com', 465, 'ssl', 'Use your full Zoho business email. Confirm your regional SMTP host in Zoho settings.'],
+            'zoho-personal': ['smtp.zoho.com', 465, 'ssl', 'Use your full Zoho email and the SMTP host shown in your account.'],
+            microsoft: ['smtp.office365.com', 587, 'tls', 'Authenticated SMTP must be allowed by your Microsoft 365 administrator. If password authentication is disabled by your organization, use an authorized SMTP relay.']
+        };
+        $('#smtp_provider').on('change', function () {
+            const preset = smtpPresets[this.value];
+            if (!preset) {
+                $('#smtp-provider-help').text("Enter your provider's SMTP host, port and encryption. Save before sending a test email.");
+                return;
+            }
+            $('#mail_host').val(preset[0]);
+            $('#mail_port').val(preset[1]);
+            $('#mail_encryption').val(preset[2]);
+            $('input[name="mail_driver"][value="smtp"]').prop('checked', true);
+            $('#smtp_div').show();
+            $('#smtp-provider-help').text(preset[3]);
+        });
+        $('#mail_port').on('change', function () {
+            if (Number(this.value) === 465) { $('#mail_encryption').val('ssl'); }
+            else if (Number(this.value) === 587) { $('#mail_encryption').val('tls'); }
+        });
         $('#save-form').click(function () {
             $.easyAjax({
                 url: '{{ route('admin.smtp-settings.update', $smtpSetting->id) }}',
@@ -190,7 +228,7 @@
                         setTimeout(function () {
                             $('#testMailModal').addClass('hidden').attr('aria-hidden', 'true');
                         }, 1200);
-                    } else if (response.status === 'fail') {
+                    } else if (response.status === 'fail' || response.status === 'error') {
                         $('#test-email-alert')
                             .removeClass('hidden')
                             .addClass('border-red-200 bg-red-50 text-red-900')
@@ -232,7 +270,7 @@
             }
         }
 
-        @if ($smtpSetting->mail_driver == 'mail')
+        @if (!config('saas.enabled') && $smtpSetting->mail_driver == 'mail')
             $('#smtp_div').hide();
             $('#alert').hide();
         @endif

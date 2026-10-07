@@ -82,10 +82,7 @@ class TenantContext
         config(['services.deepseek.key' => null, 'services.deepseek.model' => 'deepseek-chat',
             'services.candidate_email_imap.host' => null, 'mail.ai_search_smtp' => null]);
         $smtp = DB::getSchemaBuilder()->hasTable('smtp_settings') ? DB::table('smtp_settings')->first() : null;
-        $transport = ['transport' => 'smtp', 'host' => $smtp?->mail_host, 'port' => $smtp?->mail_port ?: 587,
-            'encryption' => $smtp?->mail_encryption, 'scheme' => $smtp?->mail_encryption === 'ssl' ? 'smtps' : 'smtp',
-            'username' => $smtp?->mail_username, 'password' => $smtp?->mail_password,
-            'from' => ['address' => $smtp?->mail_from_email, 'name' => $smtp?->mail_from_name]];
+        $transport = \App\Services\SmtpConfiguration::transport($smtp);
         config(['mail.default' => 'tenant', 'mail.driver' => 'smtp', 'mail.mailers.tenant' => $transport,
             'mail.host' => $transport['host'], 'mail.port' => $transport['port'],
             'mail.encryption' => $transport['encryption'], 'mail.username' => $transport['username'],

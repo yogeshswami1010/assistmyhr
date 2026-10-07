@@ -29,11 +29,15 @@ class EmailSetting extends Authenticatable
         }
 
         try {
-            $tls = $this->mail_encryption === 'ssl';
-            $transport = new EsmtpTransport($this->mail_host, (int) $this->mail_port, $tls);
-            $transport->setUsername($this->mail_username);
-            $transport->setPassword($this->mail_password);
+            $settings = \App\Services\SmtpConfiguration::transport($this);
+            $transport = new EsmtpTransport($settings['host'], $settings['port'], $settings['scheme'] === 'smtps');
+            $transport->setAutoTls($settings['auto_tls']);
+            if (method_exists($transport, 'setRequireTls')) { $transport->setRequireTls($settings['require_tls']); }
+            $transport->getStream()->setTimeout(20);
+            $transport->setUsername((string) $this->mail_username);
+            $transport->setPassword((string) $this->mail_password);
             $transport->start();
+            $transport->stop();
 
             if ($this->verified == 0) {
                 $this->verified = 1;

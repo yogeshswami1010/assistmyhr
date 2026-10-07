@@ -35,11 +35,10 @@ class AdminSmtpSettingController extends AdminBaseController
     {
         $smtp = EmailSetting::first();
 
-        $data = $request->all();
-
-        if ($request->mail_encryption == 'null') {
-            $data['mail_encryption'] = null;
-        }
+        abort_if(! $this->user->cans('manage_settings'), 403);
+        $data = $request->validated();
+        $data['mail_encryption'] = \App\Services\SmtpConfiguration::encryption($data['mail_encryption'] ?? null, (int) ($data['mail_port'] ?? 587));
+        if (empty($data['mail_password'])) { unset($data['mail_password']); }
 
         $smtp->update($data);
         $smtp->refresh();
@@ -57,23 +56,16 @@ class AdminSmtpSettingController extends AdminBaseController
             return Reply::success($response['message']);
         }
 
-        if ($smtp->mail_host == 'smtp.gmail.com') {
-            $message = __('messages.smtpError').'<br><br>';
-            $secureUrl = 'https://froiden.freshdesk.com/support/solutions/articles/43000672983';
-            $message .= __('messages.smtpSecureEnabled');
-            $message .= '<a class="underline underline-offset-1 mb-2" target="_blank" href="'.$secureUrl.'">'.$secureUrl.'</a>';
-            $message .= '<div class="mt-2">'.$response['message'].'</div>';
-
-            return Reply::error($message);
+        $message = 'SMTP connection failed. Check your provider host, port and encryption, app password or SMTP authorization, and VPS outbound mail access.';
+        if ($smtp->mail_host === 'smtp.gmail.com') {
+            $message .= ' Gmail requires an app password for this password-based connection.';
         }
-
-        $message = '<strong>'.__('messages.smtpError').'</strong><ul><li class="py-2">'.$response['message'].'</li></ul>';
-
-        return Reply::error($message);
+        return Reply::error($message.'<br>'.e($response['message']));
     }
 
     public function sendTestEmail(Request $request)
     {
+        abort_if(! $this->user->cans('manage_settings'), 403);
         $request->validate([
             'test_email' => 'required|email',
         ]);
