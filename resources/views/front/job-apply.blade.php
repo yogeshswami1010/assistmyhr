@@ -79,7 +79,7 @@
 @endphp
 
 <div id="apply-form-area" class="max-w-6xl mx-auto py-10">
-    <form id="createForm" method="POST">
+    <form id="createForm" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="job_id"     value="{{ $job->id }}">
         <input type="hidden" name="location_id" @if(isset($location->id)) value="{{ $location->id }}" @else value="" @endif>
@@ -163,22 +163,19 @@
                     </div>
                 </div>
 
-                {{-- Resume --}}
-                @if ($job->section_visibility['resume'] == 'yes')
+                {{-- Default CV upload, saved as the candidate's Resume document. --}}
                 <div class="fr-form-card">
                     <div class="flex items-center gap-3 mb-6 pb-5 border-b border-[#F0EEE9]">
                         <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-[#FFF7ED]">
-                            <svg class="w-[18px] h-[18px] text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <svg class="w-[18px] h-[18px] text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
                         <div>
-                            <h3 class="font-bold text-[16px] tracking-[-0.01em] text-[#1A1A2A] required">@lang('modules.front.resume')</h3>
-                            <p class="text-[12px] text-[#8892A0]">@lang('modules.front.resumeFileType')</p>
+                            <label for="application-cv" class="font-bold text-[16px] tracking-[-0.01em] text-[#1A1A2A]">{{ __('Upload your CV') }} @if(($job->section_visibility['resume'] ?? 'no') === 'yes')<span class="text-red-500">*</span>@endif</label>
+                            <p id="application-cv-hint" class="text-[12px] text-[#8892A0]">{{ __('PDF, DOC or DOCX. Maximum file size: 10 MB.') }}</p>
                         </div>
                     </div>
-                    <input class="select-file text-sm w-full" accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" name="resume">
+                    <input id="application-cv" class="select-file text-sm w-full" accept=".pdf,.doc,.docx" type="file" name="resume" aria-describedby="application-cv-hint" @if(($job->section_visibility['resume'] ?? 'no') === 'yes') required @endif>
                 </div>
-                @endif
-
                 {{-- Questions --}}
                 @if (count($jobQuestion) > 0)
                 <div class="fr-form-card">

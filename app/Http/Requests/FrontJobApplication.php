@@ -57,6 +57,8 @@ class FrontJobApplication extends CoreRequest
             ];
         }
 
+        $rules['resume'] = 'nullable|file|mimes:pdf,doc,docx|max:10240';
+
         if($google_captcha->status == 'active' && $google_captcha->job_apply_page == 'active')
         {
             $rules['recaptcha'] = 'required';
@@ -69,7 +71,7 @@ class FrontJobApplication extends CoreRequest
                         $rules = Arr::add($rules, 'photo', 'required|mimes:jpeg,jpg,png');
                     }
                     if ($key === 'resume') {
-                        $rules = Arr::add($rules, 'resume', 'required|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf');
+                        $rules = Arr::add($rules, 'resume', 'required|file|mimes:pdf,doc,docx|max:10240');
                     }
                     if ($key === 'terms_and_conditions') {
                         $rules = Arr::add($rules, 'term_agreement', 'required');
@@ -107,6 +109,8 @@ class FrontJobApplication extends CoreRequest
     public function messages()
     {
         return [
+            'resume.mimes' => 'Please upload your CV as a PDF, DOC or DOCX file.',
+            'resume.max' => 'Your CV must be 10 MB or smaller.',
             'answer.*.required' => 'This answer field is required.',
             'dob.required' => 'Date of Birth field is required.',
             'country.min' => 'Please select country.',
