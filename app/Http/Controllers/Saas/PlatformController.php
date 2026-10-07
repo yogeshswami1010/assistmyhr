@@ -175,12 +175,19 @@ class PlatformController extends Controller
     public function savePlan(Request $request, ?Plan $plan = null)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'], 'slug' => ['required', 'regex:/\A[a-z0-9-]+\z/', 'max:50', Rule::unique('saas_landlord.saas_plans', 'slug')->ignore($plan?->id)],
+            'name' => ['required', 'string', 'max:100'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999'], 'currency' => ['required', 'regex:/\A[A-Z]{3}\z/'],
             'max_users' => ['nullable', 'integer', 'min:1'], 'max_jobs' => ['nullable', 'integer', 'min:1'],
             'max_candidates' => ['nullable', 'integer', 'min:1'], 'storage_mb' => ['nullable', 'integer', 'min:1'],
             'enabled' => ['required', 'boolean'], 'public' => ['required', 'boolean'],
         ]);
+        if (!$plan) {
+            $baseSlug = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['name'])), '-') ?: 'plan', 0, 38);
+            $data['slug'] = $baseSlug;
+            while ($data['slug'] === 'existing-workspace' || Plan::where('slug', $data['slug'])->exists()) {
+                $data['slug'] = $baseSlug.'-'.strtolower(\Illuminate\Support\Str::random(10));
+            }
+        }
         $plan ??= new Plan;
         $before = $plan->exists ? $plan->toArray() : null;
         $plan->fill($data)->save();
