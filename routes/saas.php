@@ -35,6 +35,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('plans', [PlatformController::class, 'plans'])->name('plans');
         Route::post('plans', [PlatformController::class, 'savePlan'])->name('plans.store');
         Route::put('plans/{plan}', [PlatformController::class, 'savePlan'])->name('plans.update');
+        Route::get('profile', [PlatformController::class, 'profile'])->name('profile');
+        Route::put('profile', [PlatformController::class, 'updateProfile'])->middleware('throttle:10,1')->name('profile.update');
+        Route::put('profile/password', [PlatformController::class, 'updatePassword'])->middleware('throttle:5,1')->name('profile.password');
+        Route::get('admins', [PlatformController::class, 'admins'])->name('admins');
+        Route::post('admins', [PlatformController::class, 'createAdmin'])->middleware('throttle:5,1')->name('admins.store');
         Route::get('settings', [PlatformController::class, 'settings'])->name('settings');
         Route::post('settings', [PlatformController::class, 'saveSettings'])->name('settings.save');
     });

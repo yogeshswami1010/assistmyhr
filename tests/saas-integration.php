@@ -193,6 +193,23 @@ check(str_contains($platform->dashboard()->render(),'Client overview'),'Platform
 check(str_contains($platform->tenant($alpha)->render(),'Extend subscription manually'),'Client management page renders');
 check(str_contains($platform->plans()->render(),'Create plan'),'Plan editor renders');
 check(str_contains($platform->settings()->render(),'Signup and trial settings'),'Platform settings render');
+check(str_contains($platform->profile()->render(),'Profile details'),'Super admin profile renders');
+check(str_contains($platform->admins()->render(),'Add super admin'),'Super admin account management renders');
+$adminRequest=Request::create('https://ats.example.test/superadmin/admins','POST',['name'=>'Second admin','email'=>'SECOND@example.test','password'=>'second-admin-password','password_confirmation'=>'second-admin-password','current_password'=>'incorrect']);
+$adminRequest->setLaravelSession($session);
+try{$platform->createAdmin($adminRequest);throw new RuntimeException('Admin creation accepted invalid current password');}catch(Illuminate\Validation\ValidationException $e){check(isset($e->errors()['current_password']),'Adding admin requires current password');}
+$adminRequest->merge(['current_password'=>'long-admin-password']);$platform->createAdmin($adminRequest);
+$secondAdmin=PlatformAdmin::where('email','second@example.test')->firstOrFail();
+check(Hash::check('second-admin-password',$secondAdmin->password),'New super admin password hashed');
+check(AuditLog::where('action','admin.created')->exists(),'Super admin creation audited');
+try{$platform->createAdmin($adminRequest);throw new RuntimeException('Duplicate administrator accepted');}catch(Illuminate\Validation\ValidationException $e){check(isset($e->errors()['email']),'Duplicate super admin email rejected');}
+$profileRequest=Request::create('https://ats.example.test/superadmin/profile','PUT',['name'=>'Updated platform owner','email'=>'OWNER@example.test','current_password'=>'long-admin-password']);
+$profileRequest->setLaravelSession($session);$platform->updateProfile($profileRequest);
+check($admin->fresh()->email==='owner@example.test','Profile updates own normalized email');
+$passwordRequest=Request::create('https://ats.example.test/superadmin/profile/password','PUT',['current_password'=>'long-admin-password','password'=>'replacement-admin-password','password_confirmation'=>'replacement-admin-password']);
+$passwordRequest->setLaravelSession($session);$platform->updatePassword($passwordRequest);
+check(Hash::check('replacement-admin-password',$admin->fresh()->password),'Own password changes securely');
+check(!str_contains(json_encode(AuditLog::whereIn('action',['admin.created','admin.password_changed'])->get()),'replacement-admin-password'),'Audit logs exclude administrator passwords');
 $request=Request::create('https://ats.example.test/superadmin/tenants/'.$alpha->id,'PUT',['status'=>'suspended','reason'=>'Test suspension']);$request->setLaravelSession($session);$app->instance('request',$request);
 $platform->updateTenant($request,$alpha->fresh());
 check($alpha->fresh()->status==='suspended'&&AuditLog::where('action','tenant.status_changed')->exists(),'Super admin status action audited');

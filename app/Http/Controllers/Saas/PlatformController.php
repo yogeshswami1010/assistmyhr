@@ -21,7 +21,7 @@ class PlatformController extends Controller
     private function platformView(string $view, array $data = [])
     {
         $brand = (object) ['company_name' => 'AssistMyHR', 'logo_url' => asset('logo.webp'), 'favicon_url' => asset('favicon/assistmyhr.svg')];
-        $titles = ['saas.platform-dashboard' => 'Client overview', 'saas.platform-plans' => 'Subscription plans', 'saas.platform-settings' => 'Signup and trial settings', 'saas.platform-tenant' => $data['tenant']->name ?? 'Client details'];
+        $titles = ['saas.platform-profile' => 'My profile', 'saas.platform-admins' => 'Super admins', 'saas.platform-dashboard' => 'Client overview', 'saas.platform-plans' => 'Subscription plans', 'saas.platform-settings' => 'Signup and trial settings', 'saas.platform-tenant' => $data['tenant']->name ?? 'Client details'];
         return view($view, $data + ['platformLayout' => true, 'platformAdmin' => Auth::guard('platform')->user(),
             'pageTitle' => $titles[$view] ?? 'Super admin login', 'companyName' => 'AssistMyHR',
             'companySetting' => $brand, 'setting' => $brand, 'frontTheme' => (object) ['primary_color' => '#2563eb']]);
@@ -42,6 +42,57 @@ class PlatformController extends Controller
         Auth::guard('platform')->logout();
         $request->session()->invalidate(); $request->session()->regenerateToken();
         return redirect('/superadmin/login');
+    }
+    public function profile()
+    {
+        return $this->platformView('saas.platform-profile');
+    }
+
+    public function updateProfile(Request $request)
+    {
+        if (is_string($request->input('email'))) { $request->merge(['email' => strtolower(trim($request->input('email')))]); }
+        $admin = Auth::guard('platform')->user();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'email' => ['required', 'email', 'max:254', Rule::unique('saas_landlord.saas_platform_admins', 'email')->ignore($admin->id)],
+            'current_password' => ['required', 'current_password:platform'],
+        ]);
+        $before = $admin->only(['name', 'email']);
+        $admin->update(['name' => $data['name'], 'email' => strtolower($data['email'])]);
+        AuditLog::create(['admin_id' => $admin->id, 'action' => 'admin.profile_updated', 'reason' => 'Super admin updated their profile.', 'before' => $before, 'after' => $admin->only(['name', 'email'])]);
+        return back()->with('status', 'Your profile has been updated.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password:platform'],
+            'password' => ['required', 'string', 'min:12', 'max:200', 'confirmed'],
+        ]);
+        $admin = Auth::guard('platform')->user();
+        $admin->update(['password' => \Illuminate\Support\Facades\Hash::make($data['password']), 'remember_token' => \Illuminate\Support\Str::random(60)]);
+        $request->session()->regenerate();
+        AuditLog::create(['admin_id' => $admin->id, 'action' => 'admin.password_changed', 'reason' => 'Super admin changed their own password.']);
+        return back()->with('status', 'Your password has been updated.');
+    }
+
+    public function admins()
+    {
+        return $this->platformView('saas.platform-admins', ['admins' => \App\Saas\PlatformAdmin::orderBy('name')->get()]);
+    }
+
+    public function createAdmin(Request $request)
+    {
+        if (is_string($request->input('email'))) { $request->merge(['email' => strtolower(trim($request->input('email')))]); }
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'email' => ['required', 'email', 'max:254', Rule::unique('saas_landlord.saas_platform_admins', 'email')],
+            'password' => ['required', 'string', 'min:12', 'max:200', 'confirmed'],
+            'current_password' => ['required', 'current_password:platform'],
+        ]);
+        $admin = \App\Saas\PlatformAdmin::create(['name' => $data['name'], 'email' => strtolower($data['email']), 'password' => \Illuminate\Support\Facades\Hash::make($data['password'])]);
+        AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'admin.created', 'reason' => 'Super admin added a platform administrator.', 'after' => $admin->only(['id', 'name', 'email'])]);
+        return back()->with('status', 'Super admin created. They can sign in at /superadmin/login.');
     }
     public function dashboard()
     {
