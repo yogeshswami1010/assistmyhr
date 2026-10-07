@@ -78,20 +78,22 @@ class TenantContext
             'cache.stores.file.path' => $root.'/cache',
             'cache.default' => 'file',
         ]);
-        if ($tenant->slug !== 'main') {
-            // Platform credentials must never send or receive a client's ATS email.
-            config(['mail.ai_search_smtp.username' => null, 'mail.ai_search_smtp.password' => null,
-                'mail.ai_search_smtp.from.address' => null, 'services.deepseek.key' => null,
-                'services.candidate_email_imap.host' => null]);
-            if (DB::getSchemaBuilder()->hasTable('smtp_settings') && ($smtp = DB::table('smtp_settings')->first())) {
-                config(['mail.ai_search_smtp' => ['transport' => 'smtp', 'host' => $smtp->mail_host, 'port' => $smtp->mail_port,
-                    'encryption' => $smtp->mail_encryption, 'username' => $smtp->mail_username, 'password' => $smtp->mail_password,
-                    'from' => ['address' => $smtp->mail_from_email, 'name' => $smtp->mail_from_name]]]);
-            }
-            if (DB::getSchemaBuilder()->hasTable('ai_api_keys')) {
-                $key = \App\AiApiKey::where('provider', 'deepseek')->active()->orderBy('sort_order')->first();
-                if ($key) { config(['services.deepseek.key' => $key->api_key]); }
-            }
+        // Every ATS workspace, including main, uses its own SMTP and AI settings.
+        config(['services.deepseek.key' => null, 'services.deepseek.model' => 'deepseek-chat',
+            'services.candidate_email_imap.host' => null, 'mail.ai_search_smtp' => null]);
+        $smtp = DB::getSchemaBuilder()->hasTable('smtp_settings') ? DB::table('smtp_settings')->first() : null;
+        $transport = ['transport' => 'smtp', 'host' => $smtp?->mail_host, 'port' => $smtp?->mail_port ?: 587,
+            'encryption' => $smtp?->mail_encryption, 'scheme' => $smtp?->mail_encryption === 'ssl' ? 'smtps' : 'smtp',
+            'username' => $smtp?->mail_username, 'password' => $smtp?->mail_password,
+            'from' => ['address' => $smtp?->mail_from_email, 'name' => $smtp?->mail_from_name]];
+        config(['mail.default' => 'tenant', 'mail.driver' => 'smtp', 'mail.mailers.tenant' => $transport,
+            'mail.host' => $transport['host'], 'mail.port' => $transport['port'],
+            'mail.encryption' => $transport['encryption'], 'mail.username' => $transport['username'],
+            'mail.password' => $transport['password'], 'mail.from' => $transport['from'],
+            'mail.ai_search_smtp' => $transport]);
+        if (DB::getSchemaBuilder()->hasTable('ai_api_keys')) {
+            $key = \App\AiApiKey::whereRaw('LOWER(provider) = ?', ['deepseek'])->active()->orderBy('sort_order')->orderBy('id')->first();
+            if ($key) { config(['services.deepseek.key' => $key->api_key, 'services.deepseek.model' => $key->model ?: 'deepseek-chat']); }
         }
         if (DB::getSchemaBuilder()->hasTable('tenant_service_settings') && ($service = DB::table('tenant_service_settings')->first()) && $service->imap_host) {
             config(['services.candidate_email_imap.host' => $service->imap_host, 'services.candidate_email_imap.port' => $service->imap_port]);

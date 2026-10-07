@@ -35,7 +35,21 @@ trait SmtpSettings
         }
         Config::set('app.name', $settings->company_name);
         Config::set('mail.from.name', $settings->company_name);
-        (new MailServiceProvider(app()))->register();
+        if (config('saas.enabled')) {
+            $transport = [
+                'transport' => 'smtp', 'host' => $smtpSetting?->mail_host,
+                'port' => $smtpSetting?->mail_port ?: 587,
+                'encryption' => $smtpSetting?->mail_encryption,
+                'scheme' => $smtpSetting?->mail_encryption === 'ssl' ? 'smtps' : 'smtp',
+                'username' => $smtpSetting?->mail_username, 'password' => $smtpSetting?->mail_password,
+                'from' => ['address' => $smtpSetting?->mail_from_email, 'name' => $smtpSetting?->mail_from_name],
+            ];
+            config(['mail.default' => 'tenant', 'mail.mailers.tenant' => $transport,
+                'mail.ai_search_smtp' => $transport, 'mail.from' => $transport['from']]);
+            if (app()->bound('mail.manager')) { app('mail.manager')->forgetMailers(); }
+        } else {
+            (new MailServiceProvider(app()))->register();
+        }
     }
 
 }

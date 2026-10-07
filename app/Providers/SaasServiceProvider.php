@@ -15,6 +15,14 @@ class SaasServiceProvider extends ServiceProvider
         config(['database.connections.saas_landlord' => config('database.connections.'.config('database.default'))]);
         $this->app->singleton(TenantContext::class);
         if (config('saas.enabled')) {
+            config(['mail.mailers.platform' => [
+                'transport' => config('mail.driver', 'smtp'),
+                'host' => config('mail.host'), 'port' => config('mail.port'),
+                'encryption' => config('mail.encryption'),
+                'scheme' => config('mail.encryption') === 'ssl' ? 'smtps' : 'smtp',
+                'username' => config('mail.username'), 'password' => config('mail.password'),
+                'from' => config('mail.from'),
+            ]]);
             config(['session.connection' => 'saas_landlord', 'queue.default' => 'sync', 'cache.default' => 'file']);
         }
     }
@@ -25,6 +33,13 @@ class SaasServiceProvider extends ServiceProvider
         \Illuminate\Auth\Notifications\VerifyEmail::createUrlUsing(fn ($user) => \Illuminate\Support\Facades\URL::temporarySignedRoute(
             'verification.verify', now()->addMinutes(60), tenant_parameters(['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())])
         ));
+        \Illuminate\Auth\Notifications\VerifyEmail::toMailUsing(fn ($user, $url) => (new \Illuminate\Notifications\Messages\MailMessage)
+            ->mailer('platform')
+            ->from(config('mail.mailers.platform.from.address'), config('mail.mailers.platform.from.name'))
+            ->subject('Verify your email address')
+            ->line('Please verify your email address to start using your ATS.')
+            ->action('Verify email address', $url)
+            ->line('If you did not create an account, no action is required.'));
         \Illuminate\Auth\Notifications\ResetPassword::createUrlUsing(fn ($user, $token) => tenant_route('password.reset', ['token' => $token, 'email' => $user->getEmailForPasswordReset()]));
         foreach ([\App\User::class => 'users', \App\Job::class => 'jobs', \App\JobApplication::class => 'job_applications'] as $model => $table) {
             $model::creating(fn () => app(QuotaService::class)->assertCanCreate($table));

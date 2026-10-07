@@ -35,7 +35,7 @@ class CandidateCallService
     public function aiKey(): string
     {
         $key = trim((string) config('services.deepseek.key'));
-        if ($key === '') throw new RuntimeException('DEEPSEEK_API_KEY is not configured for call summaries.');
+        if ($key === '') throw new RuntimeException('Configure an active DeepSeek key in AI Settings for call summaries.');
         return $key;
     }
 

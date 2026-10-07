@@ -43,8 +43,13 @@
                         </div>
                         <div>
                             <label for="add_provider" class="bs-set-lbl">@lang('app.aiProvider')</label>
-                            <input type="text" name="provider" id="add_provider" class="bs-f-input" maxlength="191" placeholder="openai, anthropic, …">
+                            <input type="text" name="provider" id="add_provider" class="bs-f-input" maxlength="191" placeholder="deepseek, openai, anthropic, …">
                         </div>
+                    </div>
+                    <div>
+                        <label for="add_model" class="bs-set-lbl">Model</label>
+                        <input type="text" name="model" id="add_model" class="bs-f-input" maxlength="191" placeholder="deepseek-chat">
+                        <p class="text-xs text-gray-500">For DeepSeek, enter your model name. Blank uses deepseek-chat.</p>
                     </div>
                     <div>
                         <label for="add_api_key" class="bs-set-lbl">@lang('app.aiApiKey')</label>
@@ -148,7 +153,7 @@
                                                 data-url="{{ route('admin.ai-settings.update', $key) }}"
                                                 data-name="{{ e($key->name) }}"
                                                 data-provider="{{ e($key->provider ?? '') }}"
-                                                data-sort-order="{{ $key->sort_order }}"
+                                                data-sort-order="{{ $key->sort_order }}" data-model="{{ $key->model }}"
                                                 data-is-active="{{ $key->is_active ? '1' : '0' }}"
                                             >
                                                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -202,6 +207,10 @@
                         <input type="text" name="provider" id="edit_provider" class="bs-f-input" maxlength="191">
                     </div>
                     <div class="sm:col-span-2">
+                        <label for="edit_model" class="bs-set-lbl">Model</label>
+                        <input type="text" name="model" id="edit_model" class="bs-f-input" maxlength="191" placeholder="deepseek-chat">
+                    </div>
+                    <div>
                         <label for="edit_api_key" class="bs-set-lbl">@lang('app.aiApiKey')</label>
                         <input type="password" name="api_key" id="edit_api_key" class="bs-f-input" autocomplete="off" placeholder="@lang('app.aiKeyHintKeep')">
                     </div>
@@ -257,6 +266,7 @@
                 updateUrl = $btn.data('url');
                 $('#edit_name').val($btn.data('name') || '');
                 $('#edit_provider').val($btn.data('provider') || '');
+                $('#edit_model').val($btn.attr('data-model') || '');
                 $('#edit_sort_order').val($btn.attr('data-sort-order'));
                 $('#edit_api_key').val('');
                 $('#edit_is_active').val(String($btn.attr('data-is-active')) === '1' ? '1' : '0');

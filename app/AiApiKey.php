@@ -10,6 +10,7 @@ class AiApiKey extends Model
     protected $fillable = [
         'name',
         'provider',
+        'model',
         'api_key',
         'is_active',
         'sort_order',

@@ -18,6 +18,7 @@ class UpdateAiApiKeyRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:191'],
+            'model' => ['nullable', 'string', 'max:191', 'regex:/\A[a-zA-Z0-9._:\/-]+\z/'],
             'provider' => ['nullable', 'string', 'max:191'],
             'api_key' => ['nullable', 'string', 'max:8192'],
             'is_active' => ['sometimes', 'boolean'],

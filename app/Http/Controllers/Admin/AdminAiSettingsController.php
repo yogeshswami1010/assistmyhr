@@ -68,7 +68,8 @@ class AdminAiSettingsController extends AdminBaseController
     {
         $row = new AiApiKey;
         $row->name = $request->name;
-        $row->provider = $request->provider ?? null;
+        $row->provider = strtolower(trim((string) $request->provider));
+        $row->model = $request->model ?: null;
         $row->api_key = $request->api_key;
         $row->is_active = $request->boolean('is_active');
         $row->sort_order = $request->sort_order ?? 0;
@@ -80,7 +81,8 @@ class AdminAiSettingsController extends AdminBaseController
     public function update(UpdateAiApiKeyRequest $request, AiApiKey $aiApiKey)
     {
         $aiApiKey->name = $request->name;
-        $aiApiKey->provider = $request->provider ?? null;
+        $aiApiKey->provider = strtolower(trim((string) $request->provider));
+        $aiApiKey->model = $request->model ?: null;
         if (! empty($request->api_key)) {
             $aiApiKey->api_key = $request->api_key;
         }
@@ -150,6 +152,8 @@ class AdminAiSettingsController extends AdminBaseController
         try {
             if ($provider === 'openai') {
                 $response = Http::timeout(20)->withToken($apiKey)->get('https://api.openai.com/v1/models');
+            } elseif ($provider === 'deepseek') {
+                $response = Http::timeout(20)->withToken($apiKey)->get('https://api.deepseek.com/models');
             } elseif ($provider === 'groq') {
                 $response = Http::timeout(20)->withToken($apiKey)->get('https://api.groq.com/openai/v1/models');
             } elseif ($provider === 'anthropic') {
@@ -178,6 +182,7 @@ class AdminAiSettingsController extends AdminBaseController
     {
         $provider = strtolower(trim($provider));
 
+        if (str_contains($provider, 'deepseek')) { return 'deepseek'; }
         if ($provider === '' || str_contains($provider, 'openai') || str_contains($provider, 'gpt')) {
             return 'openai';
         }

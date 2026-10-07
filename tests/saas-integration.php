@@ -37,7 +37,7 @@ $app->instance('config', new Illuminate\Config\Repository([
     'hashing'=>['driver'=>'bcrypt','bcrypt'=>['rounds'=>4,'verify'=>true]],
     'view'=>['paths'=>[$root.'/resources/views'],'compiled'=>$temp],
     'filesystems'=>['default'=>'local','disks'=>['local'=>['driver'=>'local','root'=>$temp.'/original'], 'public'=>['driver'=>'local','root'=>$temp.'/public'], 'candidate_call_audio'=>['driver'=>'local','root'=>$temp.'/calls']]],
-    'mail'=>['ai_search_smtp'=>['username'=>'PLATFORM-MAIL','password'=>'PLATFORM-SECRET']],
+    'mail'=>['driver'=>'log','from'=>['address'=>'platform@example.test','name'=>'Platform'], 'ai_search_smtp'=>['username'=>'PLATFORM-MAIL','password'=>'PLATFORM-SECRET']],
     'services'=>['deepseek'=>['key'=>'PLATFORM-AI'], 'candidate_email_imap'=>['host'=>'platform.example.test']],
     'entrust'=>['models'=>['role'=>App\Role::class,'permission'=>App\Permission::class], 'tables'=>['roles'=>'roles','permissions'=>'permissions','role_user'=>'role_user','permission_role'=>'permission_role'], 'foreign_keys'=>['user'=>'user_id','role'=>'role_id','permission'=>'permission_id']],
 ]));
@@ -73,6 +73,8 @@ Schema::create('migrations',function(Blueprint $t){$t->increments('id');$t->stri
 Schema::create('company_settings',function(Blueprint $t){$t->increments('id');$t->string('company_name');$t->string('company_email');$t->string('locale')->default('eng');$t->string('timezone')->default('UTC');});
 foreach(['theme_settings','application_settings','google_captcha_settings','sms_settings','linked_in_settings','zoom_settings'] as $table){Schema::create($table,function(Blueprint $t){$t->increments('id');$t->string('secret')->nullable();});}
 Schema::create('smtp_settings',function(Blueprint $t){$t->increments('id');$t->string('mail_host')->default('smtp.example.test');$t->integer('mail_port')->default(587);$t->string('mail_encryption')->default('tls');$t->string('mail_username')->default('placeholder');$t->string('mail_password')->default('placeholder');$t->string('mail_from_email')->default('test@example.test');$t->string('mail_from_name')->default('test');});
+Schema::create('ai_api_keys',function(Blueprint $t){$t->increments('id');$t->string('name');$t->string('provider')->nullable();$t->text('api_key');$t->boolean('is_active')->default(true);$t->integer('sort_order')->default(0);$t->timestamps();});
+$modelMigration=require $root.'/database/migrations/2026_10_07_000001_add_model_to_ai_api_keys.php';$modelMigration->up();$modelMigration->up();
 Schema::create('language_settings',function(Blueprint $t){$t->increments('id');$t->string('language_code');$t->string('language_name');$t->string('status');});
 Schema::create('job_api_integrations',function(Blueprint $t){$t->increments('id');$t->string('token_hash');$t->timestamps();});
 DB::table('users')->insert(['id'=>1,'name'=>'Old owner','email'=>'same@example.test','password'=>Hash::make('old-password')]);
@@ -93,6 +95,10 @@ $plan=Plan::create(['name'=>'Starter','slug'=>'starter','max_users'=>2,'max_jobs
 PlatformSetting::create(['key'=>'trial_plan_id','value'=>$plan->id]);PlatformSetting::create(['key'=>'trial_days','value'=>'14']);
 $admin=PlatformAdmin::create(['name'=>'Platform owner','email'=>'platform@example.test','password'=>Hash::make('long-admin-password')]);
 $context=app(TenantContext::class);
+$main=Tenant::create(['uuid'=>(string) Illuminate\Support\Str::uuid(),'slug'=>'main','name'=>'Original','owner_email'=>'same@example.test','database_name'=>$temp.'/landlord.sqlite','database_driver'=>'sqlite','status'=>'active']);
+$context->activate($main);
+check(config('mail.mailers.tenant.password')==='ORIGINAL-MAIL-SECRET'&&config('services.deepseek.key')===null,'Main ATS also uses saved client settings');
+$context->reset();
 $data=['company_name'=>'Client Alpha','slug'=>'alpha','name'=>'Alpha owner','email'=>'same@example.test','password'=>'long-owner-password'];
 $alpha=app(TenantProvisioner::class)->create($data);
 $beta=app(TenantProvisioner::class)->create(array_replace($data,['company_name'=>'Client Beta','slug'=>'beta']));
@@ -109,6 +115,16 @@ check(DB::table('companies')->value('company_name')==='Client Alpha','Only clien
 check(DB::table('google_captcha_settings')->value('secret')===null,'Source integration secrets not copied');
 check(DB::table('smtp_settings')->value('mail_password')==='','New client does not inherit SMTP password');
 check(config('services.deepseek.key')===null&&config('mail.ai_search_smtp.password')==='','No platform AI or email credentials inherited');
+App\AiApiKey::create(['name'=>'DeepSeek Alpha','provider'=>'deepseek','model'=>'alpha-model','api_key'=>'ALPHA-AI','is_active'=>true]);
+DB::table('smtp_settings')->update(['mail_username'=>'alpha@example.test','mail_password'=>'ALPHA-SMTP']);
+$context->activate($alpha);
+check(config('services.deepseek.key')==='ALPHA-AI'&&config('services.deepseek.model')==='alpha-model','Client AI key and model loaded together');
+check(config('mail.default')==='tenant'&&config('mail.mailers.tenant.password')==='ALPHA-SMTP'&&config('mail.ai_search_smtp.password')==='ALPHA-SMTP','All client mail transports use saved SMTP');
+$message=call_user_func(Illuminate\Auth\Notifications\VerifyEmail::$toMailCallback, App\User::first(), 'https://ats.example.test/verify');
+check($message->mailer==='platform'&&$message->from[0]==='platform@example.test','Signup verification retains platform SMTP and sender');
+$context->activate($beta);
+check(config('services.deepseek.key')===null&&config('mail.mailers.tenant.password')==='','Client settings never leak to another client');
+$context->activate($alpha);
 check(!DB::getSchemaBuilder()->hasTable('saas_platform_admins'),'Platform administrators never cloned into client database');
 check(DB::table('permission_role')->count()===1,'Owner receives local ATS permissions');
 check(Hash::check($data['password'],DB::table('users')->value('password')),'Owner password securely hashed');
@@ -119,7 +135,7 @@ $context->activate($beta);
 check(DB::table('jobs')->count()===0&&DB::table('job_applications')->count()===0,'Global legacy queries cannot see another client');
 check(!file_exists($context->root().'/uploads/resume.txt'),'File storage separated by workspace');
 DB::table('jobs')->insert(['company_id'=>1,'title'=>'Beta secret']);
-check(PlatformAdmin::count()===1&&Tenant::count()===2,'Central models stay on landlord while client active');
+check(PlatformAdmin::count()===1&&Tenant::count()===3,'Central models stay on landlord while client active');
 check(Auth::guard('platform')->attempt(['email'=>'same@example.test','password'=>$data['password']])===false,'Client credentials cannot authenticate as platform administrator');
 check(Auth::guard('platform')->attempt(['email'=>'platform@example.test','password'=>'long-admin-password']),'Separate platform guard authenticates');
 $context->activate($alpha);
@@ -296,5 +312,6 @@ try{$middleware->handle(middlewareRequest('/superadmin',$session),fn()=>null);th
 config(['saas.enabled'=>true]);
 foreach(['signup','pricing','platform-login','platform-dashboard','platform-tenant','platform-plans','platform-settings','subscription','verify'] as $view){check(is_file($root.'/resources/views/saas/'.$view.'.blade.php'),'Required page exists: '.$view);}
 foreach(glob($root.'/resources/views/saas/*.blade.php') as $view){$app['blade.compiler']->compileString(file_get_contents($view));check(true,'Blade compiles: '.basename($view));}
+$app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/admin/ai-settings/index.blade.php'));check(true,'AI settings model form compiles');
 Carbon\Carbon::setTestNow();
 echo "SaaS integration checks passed: $checks\n";

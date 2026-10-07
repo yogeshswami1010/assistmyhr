@@ -2749,7 +2749,7 @@ class AdminJobApplicationController extends AdminBaseController
         $model = config('services.deepseek.model', 'deepseek-chat');
 
         if (!$key) {
-            throw new \RuntimeException('DEEPSEEK_API_KEY is not configured in config/services.php');
+            throw new \RuntimeException('Configure an active DeepSeek key in AI Settings.');
         }
 
         $response = \Illuminate\Support\Facades\Http::timeout(45)

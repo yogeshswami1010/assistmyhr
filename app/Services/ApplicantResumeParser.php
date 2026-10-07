@@ -50,7 +50,7 @@ class ApplicantResumeParser
     private function parseStructured(string $cvText): array
     {
         $apiKey = trim((string) config('services.deepseek.key'));
-        if ($apiKey === '') throw new RuntimeException('DEEPSEEK_API_KEY is not configured.');
+        if ($apiKey === '') throw new RuntimeException('Configure an active DeepSeek key in AI Settings.');
 
         $schema = '{"personal":{"name":"","email":"","phone":"","location":{"city":"","province":"","country":""}},"headline":"","total_experience":{"years":0,"months":0},"job_titles":[],"skills":[],"certifications":[],"education":[{"degree":"","field":"","school":""}],"employment":[{"company":"","title":"","start":"","end":"","duration_years":0}],"languages":[],"availability":{"notice_period":""},"resume_summary":""}';
         $prompt = "You are a CV parser API. Return only one valid JSON object with this exact schema:\n{$schema}\n"
