@@ -56,12 +56,10 @@
 
 <body class="front-site min-h-screen bg-[#F8F7F4] text-[#1A1A2A]"> 
 
-<nav class="fr-navbar" style="
-    display: none;
-">
+<nav class="fr-navbar" aria-label="Company navigation">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-        <a class="flex items-center gap-2.5 shrink-0" href="{{ url('/') }}">
-            <img src="{{ $global->logo_url }}" alt="" class="h-8">
+        <a class="flex items-center gap-2.5 shrink-0" href="{{ tenant_route('jobs.jobOpenings') }}">
+            <img src="{{ $global->logo_url }}" alt="{{ $companyName ?? $global->company_name }}" class="h-8" style="max-width:220px;object-fit:contain;@if(empty($global->logo)) background:#fff;border-radius:6px;padding:4px 8px; @endif">
             
         </a>
 

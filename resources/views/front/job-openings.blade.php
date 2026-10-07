@@ -20,7 +20,7 @@
             @lang('modules.front.jobOpeningHeading') &nbsp;·&nbsp; {{ $companyShort }}
         </div> -->
         <h1 class="text-white font-bold leading-[1.1] tracking-[-0.025em] mb-5 text-[clamp(36px,5vw,58px)]">
-            Welcome to Consortium Staffing Solutions
+            {{ __('Welcome to :company', ['company' => $companyName ?? $global->company_name]) }}
         </h1>
         <p class="font-normal leading-relaxed mx-auto mb-10 text-white/50 text-[16.5px]">
           Explore our open positions to find roles that align with your interests and expertise. From entry-level positions to leadership roles.
