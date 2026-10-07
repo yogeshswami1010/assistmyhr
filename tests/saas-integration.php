@@ -266,10 +266,8 @@ $context->activate($gamma);$verificationRequest=middlewareRequest('/email/verify
 check(App\User::find(1)->hasVerifiedEmail(),'Owner verification updates only their workspace');
 $context->reset();
 $app['router']->aliasMiddleware('auth',Illuminate\Auth\Middleware\Authenticate::class);
-$deleteRequest=Request::create('https://ats.example.test/superadmin/tenants/'.$beta->id,'DELETE',['confirmation'=>'incorrect','current_password'=>'replacement-admin-password','reason'=>'Account closed']);
+$deleteRequest=Request::create('https://ats.example.test/superadmin/tenants/'.$beta->id,'DELETE');
 $deleteRequest->setLaravelSession($session);
-try{$platform->deleteTenant($deleteRequest,$beta);throw new RuntimeException('Wrong deletion confirmation accepted');}catch(Illuminate\Validation\ValidationException $e){check(isset($e->errors()['confirmation']),'Deletion requires exact client confirmation');}
-$deleteRequest->merge(['confirmation'=>$beta->slug]);
 $betaDatabase=$beta->database_name;
 $platform->deleteTenant($deleteRequest,$beta);
 check(!Tenant::find($beta->id)&&!Subscription::where('tenant_id',$beta->id)->exists(),'Deletion removes client and subscription');

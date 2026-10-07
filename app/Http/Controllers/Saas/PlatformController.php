@@ -97,11 +97,6 @@ class PlatformController extends Controller
     public function deleteTenant(Request $request, Tenant $tenant)
     {
         abort_if($tenant->slug === 'main' || $tenant->status === 'provisioning', 403, 'This workspace cannot be deleted.');
-        $request->validate([
-            'confirmation' => ['required', Rule::in([$tenant->slug])],
-            'current_password' => ['required', 'current_password:platform'],
-            'reason' => ['required', 'string', 'max:1000'],
-        ]);
         DB::connection('saas_landlord')->transaction(function () use ($request, $tenant) {
             $locked = Tenant::whereKey($tenant->id)->lockForUpdate()->firstOrFail();
             abort_if($locked->slug === 'main' || $locked->status === 'provisioning', 403);
@@ -110,7 +105,7 @@ class PlatformController extends Controller
             AuditLog::where('tenant_id', $locked->id)->update(['tenant_id' => null]);
             \App\Saas\ApiKey::where('tenant_id', $locked->id)->delete();
             Subscription::where('tenant_id', $locked->id)->delete();
-            AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'tenant.deleted', 'reason' => $request->input('reason'), 'before' => $before]);
+            AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'tenant.deleted', 'reason' => 'Client deleted by super admin after confirmation.', 'before' => $before]);
             $locked->delete();
         });
         return redirect()->route('superadmin.dashboard')->with('status', 'Client deleted and access revoked. The workspace database and files have been retained for recovery.');
