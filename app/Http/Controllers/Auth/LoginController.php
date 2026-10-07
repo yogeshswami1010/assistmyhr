@@ -143,6 +143,14 @@ class LoginController extends Controller
         return $this->sendFailedLoginResponse($request);
     }
 
+    protected function sendFailedLoginResponse(Request $request)
+    {
+        $message = 'The email address or password is incorrect.';
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message, 'errors' => ['email' => [$message]]], 422);
+        }
+        return redirect()->route('login')->withErrors(['email' => $message])->withInput($request->only('email'));
+    }
     protected function redirectTo()
     {
         return 'admin/dashboard';

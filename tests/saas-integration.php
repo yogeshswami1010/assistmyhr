@@ -251,6 +251,14 @@ $response=$middleware->handle($loginRequest,function($request)use($gamma){
     return response('Signed in');
 });
 check($response->isOk(),'Email-only workspace login succeeds');
+foreach(['missing-workspace','INVALID WORKSPACE'] as $badWorkspace){
+    $badLogin=Request::create('https://ats.example.test/login','POST',['email'=>'unknown@example.test','password'=>'wrong-password','workspace'=>$badWorkspace]);
+    $badLogin->setLaravelSession($session);$app->instance('request',$badLogin);$app['url']->setRequest($badLogin);
+    $failedResponse=$middleware->handle($badLogin,fn()=>throw new RuntimeException('Invalid workspace reached login controller'));
+    check($failedResponse->isRedirect()&&str_ends_with($failedResponse->headers->get('Location'),'/login'),'Invalid login workspace returns to login instead of 404');
+    check($session->get('errors')->first('email')==='The email address or password is incorrect.','Failed login has readable credential message');
+    check(!array_key_exists('password',$session->get('_old_input',[])),'Failed login never flashes password');
+}
 $duplicateRequest=Request::create('https://ats.example.test/register','POST',array_replace($data,['email'=>'gamma@example.test','password_confirmation'=>$data['password']]));
 try{$signup->store($duplicateRequest);throw new RuntimeException('Duplicate owner accepted');}catch(Illuminate\Validation\ValidationException $e){check(isset($e->errors()['email']),'Duplicate owner email rejected');}
 check(!str_contains($signup->form()->render(),'name="slug"'),'Registration has no workspace input');

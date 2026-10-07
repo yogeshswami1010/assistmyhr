@@ -45,10 +45,13 @@ class InitializeSaasTenant
                 }
             }
             $slug = $request->is('saas-files/*') ? $request->segment(2) : $request->input('workspace');
-            if ($slug !== null && (!is_string($slug) || !preg_match('/\A[a-z0-9][a-z0-9-]{1,49}\z/', $slug))) { abort(404); }
+            if ($slug !== null && (!is_string($slug) || !preg_match('/\A[a-z0-9][a-z0-9-]{1,49}\z/', $slug))) { if ($request->is('login') && $request->isMethod('POST')) { return $this->failedLogin($request); } abort(404); }
             $tenant = $slug !== null ? Tenant::where('slug', $slug)->first() : Tenant::find($request->session()->get('saas_tenant_id'));
             $tenant ??= $slug === null ? Tenant::where('slug', 'main')->first() : null;
-            abort_unless($tenant && !in_array($tenant->status, ['provisioning', 'failed'], true), 404);
+            if (!$tenant || in_array($tenant->status, ['provisioning', 'failed'], true)) {
+                if ($request->is('login') && $request->isMethod('POST')) { return $this->failedLogin($request); }
+                abort(404);
+            }
             $guard = Auth::guard('web');
             $recaller = $guard->getRecallerName();
             $request->cookies->remove($recaller);
@@ -85,6 +88,14 @@ class InitializeSaasTenant
         } finally { $context->reset(); }
     }
 
+    private function failedLogin($request)
+    {
+        $message = 'The email address or password is incorrect.';
+        $response = $request->expectsJson()
+            ? response()->json(['message' => $message, 'errors' => ['email' => [$message]]], 422)
+            : redirect()->route('login')->withErrors(['email' => $message])->withInput($request->only('email'));
+        return $this->privateResponse($response);
+    }
     private function privateResponse($response)
     {
         $response->headers->set('Cache-Control', 'private, no-store');

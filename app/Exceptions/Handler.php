@@ -49,6 +49,9 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if ($request->is('login') && $request->isMethod('POST') && $exception instanceof \Illuminate\Validation\ValidationException && !$request->expectsJson()) {
+            return redirect()->route('login')->withErrors($exception->errors())->withInput($request->only('email'));
+        }
         if (config('saas.enabled') && $exception instanceof \Illuminate\Auth\AuthenticationException && !$request->expectsJson()) {
             return redirect()->guest($request->is('superadmin*') ? route('superadmin.login') : tenant_route('login'));
         }
