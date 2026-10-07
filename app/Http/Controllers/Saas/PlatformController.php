@@ -104,7 +104,7 @@ class PlatformController extends Controller
         } finally { $context->reset(); }
         return back()->with('status', 'Owner email verification approved.');
     }
-    public function plans() { return $this->platformView('saas.platform-plans', ['plans' => Plan::orderBy('id')->get()]); }
+    public function plans() { return $this->platformView('saas.platform-plans', ['plans' => Plan::where('slug', '!=', 'existing-workspace')->orderBy('id')->get()]); }
     public function savePlan(Request $request, ?Plan $plan = null)
     {
         $data = $request->validate([
