@@ -103,11 +103,7 @@ class AdminLocationsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('add_locations'), 403);
 
-        foreach ($request->locations as $location) {
-            if (! is_null($location)) {
-                JobLocation::create(['country_id' => $request->country_id, 'location' => $location]);
-            }
-        }
+        JobLocation::create(['location' => $request->location]);
 
         return Reply::redirect(route('admin.locations.index'), __('menu.locations').' '.__('messages.createdSuccessfully'));
     }
@@ -141,7 +137,7 @@ class AdminLocationsController extends AdminBaseController
 
         $location = JobLocation::find($id);
         $location->location = $request->location;
-        $location->country_id = $request->country_id;
+
         $location->save();
 
         return Reply::redirect(route('admin.locations.index'), __('menu.locations').' '.__('messages.updatedSuccessfully'));

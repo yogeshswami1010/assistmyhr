@@ -24,8 +24,7 @@ class UpdateLocation extends FormRequest
     public function rules()
     {
         return [
-            'location' => 'required',
-            'country_id' => 'required'
+            'location' => 'required|string|max:255',
         ];
     }
 }

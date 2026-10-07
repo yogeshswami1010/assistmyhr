@@ -13,13 +13,7 @@
 
                         <div class="mb-4">
                             <div class="mb-4">
-                                <label for="address" class="block text-sm font-medium text-gray-700 mb-1">@lang('app.country')</label>
-                                <select name="country_id" id="country_id"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary select2">
-                                    @foreach($countries as $country)
-                                        <option value="{{ $country->id }}">{{ ucfirst($country->country_name) }}</option>
-                                    @endforeach
-                                </select>
+
                             </div>
                         </div>
 
@@ -28,7 +22,7 @@
                                 <div class="flex-1">
                                     <div class="mb-4">
                                         <div class="flex">
-                                            <input type="text" name="locations[]" class="w-full px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary rounded-r-none"
+                                            <input type="text" name="location" required maxlength="255" class="w-full px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary rounded-r-none"
                                                     placeholder="@lang('menu.locations') @lang('app.name')">
                                             <button class="px-4 py-2 bg-green-600 text-white rounded-r-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-l-none" type="button" id="add-more">
                                                 <i class="fa fa-plus"></i>
@@ -68,7 +62,7 @@
                     <div class="flex-1">
                         <div class="mb-4">
                             <div class="flex">
-                                <input type="text" name="locations[]" class="w-full px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary rounded-r-none" placeholder="@lang('menu.locations') @lang('app.name')">
+                                <input type="text" name="location" required maxlength="255" class="w-full px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary rounded-r-none" placeholder="@lang('menu.locations') @lang('app.name')">
                                 <button class="px-4 py-2 bg-red-600 text-white rounded-r-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded-l-none" type="button" onclick="remove_education_fields(${room});">
                                     <i class="fa fa-minus"></i>
                                 </button>

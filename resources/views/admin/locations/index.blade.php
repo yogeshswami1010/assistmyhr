@@ -299,7 +299,7 @@
                 <div class="jc-modal-hd">
                     <div>
                         <h3 id="loc-create-title" class="text-[16px] font-bold tracking-[-0.01em] text-[#1A1E2E]">{{ __('modules.locationsPage.modalCreateTitle') }}</h3>
-                        <p class="mt-0.5 text-[12px] text-[#8892A0]">{{ __('modules.locationsPage.modalCreateSub') }}</p>
+                        <p class="mt-0.5 text-[12px] text-[#8892A0]">{{ __('Enter the city, region or location for your jobs.') }}</p>
                     </div>
                     <button type="button" onclick="window.locModalCloseCreate()" class="flex h-8 w-8 items-center justify-center rounded-lg text-[#8892A0] transition hover:bg-gray-100" aria-label="@lang('app.close')">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -310,26 +310,13 @@
                     <div id="loc-create-alert"></div>
                     <div class="jc-modal-body space-y-4">
                         <div class="form-group">
-                            <label for="loc-create-country" class="jc-field-label">@lang('app.country') <span class="text-red-400">*</span></label>
-                            <select name="country_id" id="loc-create-country" class="jc-field-input cursor-pointer w-full">
-                                @foreach($countries as $country)
-                                    <option value="{{ $country->id }}">{{ ucfirst($country->country_name) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group">
                             <label class="jc-field-label">@lang('menu.locations') <span class="text-red-400">*</span></label>
-                            <p class="mb-2 text-[11px] text-[#B0B8C4]">{{ __('modules.locationsPage.locationsFieldHint') }}</p>
+                            <p class="mb-2 text-[11px] text-[#B0B8C4]">{{ __('For example: Jaipur or Remote.') }}</p>
                             <div id="loc-education-fields" class="space-y-2">
                                 <div class="flex overflow-hidden rounded-lg border border-[#E2DED8] transition focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/10">
-                                    <input type="text" name="locations[]" autocomplete="off"
+                                    <input type="text" name="location" required maxlength="255" autocomplete="off"
                                            class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-[13.5px] text-[#1A1E2E] outline-none placeholder:text-[#C4CBD4]"
                                            placeholder="@lang('menu.locations') @lang('app.name')">
-                                    <button type="button" id="loc-add-more"
-                                            class="inline-flex shrink-0 items-center justify-center bg-[#059669] px-3.5 text-white transition hover:bg-[#047857]"
-                                            title="@lang('app.add')">
-                                        <i class="fa fa-plus" aria-hidden="true"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -351,8 +338,6 @@
     <script>
         @if(in_array('add_locations', $userPermissions))
         (function () {
-            var locRoom = 1;
-            var locLocPlaceholder = @json(__('menu.locations').' '.__('app.name'));
 
             window.locBackdropCloseCreate = function (e) {
                 if (e.target.id === 'loc-modal-create') {
@@ -367,39 +352,16 @@
                 $form.find('input, select').removeClass('border-red-500');
                 $('#loc-create-alert').html('');
                 $('.loc-extra-location').remove();
-                $form.find('input[name="locations[]"]').first().val('');
-                $('#loc-create-country').val($('#loc-create-country option:first').val());
+                $form.find('input[name="location"]').first().val('');
                 $('#loc-modal-create').addClass('is-open');
                 $('body').addClass('overflow-hidden');
-                if (!$('#loc-create-country').data('select2')) {
-                    $('#loc-create-country').select2({
-                        width: '100%',
-                        dropdownParent: $('#loc-modal-create .jc-modal'),
-                    });
-                } else {
-                    $('#loc-create-country').trigger('change');
-                }
-                $form.find('input[name="locations[]"]').first().focus();
+                $form.find('input[name="location"]').first().focus();
             };
 
             window.locModalCloseCreate = function () {
                 $('#loc-modal-create').removeClass('is-open');
                 $('body').removeClass('overflow-hidden');
             };
-
-            window.locRemoveEducationFields = function (rid) {
-                $('.removeclass' + rid).remove();
-            };
-
-            $('#loc-add-more').on('click', function () {
-                locRoom++;
-                var html = '<div class="loc-extra-location flex overflow-hidden rounded-lg border border-[#E2DED8] removeclass' + locRoom + '">' +
-                    '<input type="text" name="locations[]" autocomplete="off" class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-[13.5px] text-[#1A1E2E] outline-none placeholder:text-[#C4CBD4]" placeholder="' + $('<div>').text(locLocPlaceholder).html() + '">' +
-                    '<button type="button" class="inline-flex shrink-0 items-center justify-center bg-red-600 px-3.5 text-white transition hover:bg-red-700" onclick="locRemoveEducationFields(' + locRoom + ')" title="@lang('app.remove')"><i class="fa fa-minus" aria-hidden="true"></i></button></div>';
-                $('#loc-education-fields').append(html);
-                $('.removeclass' + locRoom + ' input').first().focus();
-            });
-
             $('#loc-save-create').on('click', function () {
                 $.easyAjax({
                     url: '{{ route('admin.locations.store') }}',

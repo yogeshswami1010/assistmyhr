@@ -24,9 +24,7 @@ class StoreLocation extends FormRequest
     public function rules()
     {
         return [
-            'locations' => 'required|array|min:1',
-            'locations.0' => 'required',
-            'country_id' => 'required'
+            'location' => 'required|string|max:255'
         ];
     }
 
