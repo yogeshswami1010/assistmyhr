@@ -266,6 +266,16 @@ $context->activate($gamma);$verificationRequest=middlewareRequest('/email/verify
 check(App\User::find(1)->hasVerifiedEmail(),'Owner verification updates only their workspace');
 $context->reset();
 $app['router']->aliasMiddleware('auth',Illuminate\Auth\Middleware\Authenticate::class);
+$deleteRequest=Request::create('https://ats.example.test/superadmin/tenants/'.$beta->id,'DELETE',['confirmation'=>'incorrect','current_password'=>'replacement-admin-password','reason'=>'Account closed']);
+$deleteRequest->setLaravelSession($session);
+try{$platform->deleteTenant($deleteRequest,$beta);throw new RuntimeException('Wrong deletion confirmation accepted');}catch(Illuminate\Validation\ValidationException $e){check(isset($e->errors()['confirmation']),'Deletion requires exact client confirmation');}
+$deleteRequest->merge(['confirmation'=>$beta->slug]);
+$betaDatabase=$beta->database_name;
+$platform->deleteTenant($deleteRequest,$beta);
+check(!Tenant::find($beta->id)&&!Subscription::where('tenant_id',$beta->id)->exists(),'Deletion removes client and subscription');
+check(is_file($betaDatabase),'Deletion retains tenant database for recovery');
+check(AuditLog::where('action','tenant.deleted')->exists(),'Deletion audited');
+try{$platform->deleteTenant($deleteRequest,Tenant::where('slug','main')->firstOrFail());throw new RuntimeException('Main workspace deletion accepted');}catch(Symfony\Component\HttpKernel\Exception\HttpException $e){check($e->getStatusCode()===403,'Main workspace cannot be deleted');}
 Auth::guard('platform')->logout();
 $platformRequest=middlewareRequest('/superadmin',$session);
 try{$app['router']->dispatch($platformRequest);throw new RuntimeException('Unauthenticated platform access accepted');}catch(Illuminate\Auth\AuthenticationException $e){check(in_array('platform',$e->guards(),true),'Platform routes enforce separate authentication guard');}

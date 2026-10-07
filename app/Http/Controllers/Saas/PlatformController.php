@@ -94,6 +94,27 @@ class PlatformController extends Controller
         AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'admin.created', 'reason' => 'Super admin added a platform administrator.', 'after' => $admin->only(['id', 'name', 'email'])]);
         return back()->with('status', 'Super admin created. They can sign in at /superadmin/login.');
     }
+    public function deleteTenant(Request $request, Tenant $tenant)
+    {
+        abort_if($tenant->slug === 'main' || $tenant->status === 'provisioning', 403, 'This workspace cannot be deleted.');
+        $request->validate([
+            'confirmation' => ['required', Rule::in([$tenant->slug])],
+            'current_password' => ['required', 'current_password:platform'],
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+        DB::connection('saas_landlord')->transaction(function () use ($request, $tenant) {
+            $locked = Tenant::whereKey($tenant->id)->lockForUpdate()->firstOrFail();
+            abort_if($locked->slug === 'main' || $locked->status === 'provisioning', 403);
+            $before = $locked->only(['id', 'uuid', 'slug', 'name', 'owner_email', 'status']);
+            // Preserve audit history without leaving a foreign key to the removed client.
+            AuditLog::where('tenant_id', $locked->id)->update(['tenant_id' => null]);
+            \App\Saas\ApiKey::where('tenant_id', $locked->id)->delete();
+            Subscription::where('tenant_id', $locked->id)->delete();
+            AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'tenant.deleted', 'reason' => $request->input('reason'), 'before' => $before]);
+            $locked->delete();
+        });
+        return redirect()->route('superadmin.dashboard')->with('status', 'Client deleted and access revoked. The workspace database and files have been retained for recovery.');
+    }
     public function dashboard()
     {
         return $this->platformView('saas.platform-dashboard', [

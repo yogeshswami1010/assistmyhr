@@ -28,6 +28,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/', [PlatformController::class, 'dashboard'])->name('dashboard');
         Route::post('logout', [PlatformController::class, 'logout'])->name('logout');
         Route::get('tenants/{tenant}', [PlatformController::class, 'tenant'])->name('tenants.show');
+        Route::delete('tenants/{tenant}', [PlatformController::class, 'deleteTenant'])->middleware('throttle:5,1')->name('tenants.destroy');
         Route::put('tenants/{tenant}', [PlatformController::class, 'updateTenant'])->name('tenants.update');
         Route::post('tenants/{tenant}/extend', [PlatformController::class, 'extend'])->name('tenants.extend');
         Route::post('tenants/{tenant}/plan', [PlatformController::class, 'changePlan'])->name('tenants.plan');
