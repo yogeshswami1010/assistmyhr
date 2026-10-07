@@ -361,7 +361,7 @@
         let country = "";
         let state   = "";
     </script>
-    <script src="{{ asset('front/assets/js/location.js') }}"></script>
+    <script src="{{ asset('front/assets/js/location.js') }}?v={{ filemtime(public_path('front/assets/js/location.js')) }}"></script>
 
     <script>
         $('.dob').datepicker({

@@ -34,7 +34,10 @@ function locationInfo() {
     $('.states option:gt(0)').remove()
     $('#stateId').val(0)
     $('#stateId').trigger('change')
-    var url = rootUrl + '?type=getStates&countryId=' + id
+    var endpoint = new URL(rootUrl, window.location.href)
+    endpoint.searchParams.set('type', 'getStates')
+    endpoint.searchParams.set('countryId', id)
+    var url = endpoint.toString()
     var method = 'post'
     var data = { _token: csrfToken }
     $('.states')
@@ -63,7 +66,9 @@ function locationInfo() {
   }
 
   this.getCountries = function() {
-    var url = rootUrl + '?type=getCountries'
+    var endpoint = new URL(rootUrl, window.location.href)
+    endpoint.searchParams.set('type', 'getCountries')
+    var url = endpoint.toString()
     var method = 'post'
     var data = { _token: csrfToken }
 
@@ -96,7 +101,7 @@ function locationInfo() {
 
 $(function() {
   var loc = new locationInfo()
-  loc.getCountries()
+  if ($('.countries').length) loc.getCountries()
   $('body').on('change', '.countries', function(ev) {
     var countryId = $(this).val()
     if (countryId != '0') {
