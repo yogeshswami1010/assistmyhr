@@ -243,9 +243,15 @@ check($response->isRedirect()&&str_ends_with($response->headers->get('Location')
 $gamma=Tenant::where('owner_email','gamma@example.test')->firstOrFail();
 check($session->get('saas_tenant_id')===$gamma->id&&$context->current()===null,'Signup persists correct workspace and resets global context');
 check(str_starts_with($gamma->slug,'client-gamma-'),'Registration generates workspace automatically');
+$session->put('saas_tenant_id', $alpha->id);
+$session->regenerateToken();
+$loginToken=$session->token();
+$previousLoginSessionId=$session->getId();
 $loginRequest=Request::create('https://ats.example.test/login','POST',['email'=>'GAMMA@example.test','password'=>$data['password'],'workspace'=>'main']);
 $loginRequest->setLaravelSession($session);$app->instance('request',$loginRequest);
-$response=$middleware->handle($loginRequest,function($request)use($gamma){
+$response=$middleware->handle($loginRequest,function($request)use($gamma,$loginToken,$previousLoginSessionId){
+    check($request->session()->token()===$loginToken,'Changing workspace preserves CSRF token until validation');
+    check($request->session()->getId()!==$previousLoginSessionId,'Changing workspace still rotates session identifier');
     check(app(TenantContext::class)->current()->id===$gamma->id,'Email selects owner workspace even with stale hidden workspace');
     check(Auth::guard('web')->attempt(['email'=>$request->input('email'),'password'=>$request->input('password')]),'Owner can authenticate with email and password');
     return response('Signed in');

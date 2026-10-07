@@ -58,7 +58,9 @@ class InitializeSaasTenant
             Cookie::queue(Cookie::forget($recaller));
             if ($request->session()->get('saas_tenant_id') !== $tenant->id) {
                 $request->session()->forget([$guard->getName(), 'user', 'storage_setting', 'password_hash_web', 'url.intended', 'auth.password_confirmed_at']);
-                $request->session()->regenerate();
+                // Select the database before controllers run, preserving the form's CSRF token.
+                // Authentication rotates the token after CSRF validation succeeds.
+                $request->session()->migrate(true);
                 $request->session()->put('saas_tenant_id', $tenant->id);
             }
             if ($tenant->status === 'suspended' && !$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
