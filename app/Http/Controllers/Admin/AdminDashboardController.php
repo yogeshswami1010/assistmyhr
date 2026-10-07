@@ -34,7 +34,6 @@ class AdminDashboardController extends AdminBaseController
             ->unique()
             ->values();
         $this->totalOpenings = Job::where('status', 'active')->count();
-        $this->totalAtsJobs = Job::where('status', 'ats')->count();
         
         $this->totalCompanies = Company::count();
         $this->totalApplications = JobApplication::withTrashed()

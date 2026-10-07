@@ -483,10 +483,7 @@
                                         <option value="active" {{ $job && $job->status == 'active' ? 'selected' : '' }}>
                                             Active
                                         </option>
-                                        <option value="ats" {{ $job && $job->status == 'ats' ? 'selected' : '' }}>
-                                            ATS Only
-                                        </option>
-                                        <option value="inactive" {{ $job && $job->status == 'inactive' ? 'selected' : '' }}>
+                                        <option value="inactive" {{ $job && in_array($job->status, ['inactive', 'ats']) ? 'selected' : '' }}>
                                             Inactive
                                         </option>
                                     </select>
