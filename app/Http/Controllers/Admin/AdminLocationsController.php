@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Country;
 use App\Helper\Reply;
 use App\Http\Requests\Admin\Location\StoreLocation;
 use App\Http\Requests\Admin\Location\UpdateLocation;
@@ -32,7 +31,6 @@ class AdminLocationsController extends AdminBaseController
         $now = Carbon::now()->format('Y-m-d');
 
         $this->locations = JobLocation::query()
-            ->with('country')
             ->withCount([
                 'jobs as open_jobs_count' => function ($query) use ($now) {
                     $query->where('status', 'active')
@@ -44,39 +42,12 @@ class AdminLocationsController extends AdminBaseController
             ->get();
 
         $this->locationStatTotalCities = $this->locations->count();
-        $this->locationStatCountries = $this->locations->pluck('country_id')->filter()->unique()->count();
         $this->locationStatActiveJobs = Job::query()
             ->where('status', 'active')
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
             ->count();
         $this->locationStatCandidates = JobApplication::query()->count();
-
-        $this->locationCountriesForFilter = $this->locations
-            ->filter(fn ($loc) => $loc->country)
-            ->map(fn ($loc) => [
-                'id' => $loc->country_id,
-                'name' => $loc->country->country_name,
-            ])
-            ->unique('id')
-            ->sortBy('name')
-            ->values();
-
-        $this->locationCountryBreakdown = $this->locations
-            ->groupBy('country_id')
-            ->map(function ($group) {
-                $first = $group->first();
-
-                return [
-                    'name' => $first->country ? $first->country->country_name : '—',
-                    'locations' => $group->count(),
-                    'open_jobs' => $group->sum(fn ($loc) => (int) $loc->open_jobs_count),
-                ];
-            })
-            ->sortByDesc('locations')
-            ->values();
-
-        $this->countries = Country::orderBy('country_name')->get();
 
         return view('admin.locations.index', $this->data);
     }
@@ -117,8 +88,6 @@ class AdminLocationsController extends AdminBaseController
     public function edit($id)
     {
         abort_if(! $this->user->cans('edit_locations'), 403);
-
-        $this->countries = Country::all();
         $this->location = JobLocation::find($id);
 
         return view('admin.locations.edit', $this->data);

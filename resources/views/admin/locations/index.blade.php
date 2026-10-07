@@ -20,13 +20,6 @@
     $locEmojis = ['🏙️', '🌆', '🏛️', '🌊', '💎', '🎓', '🏰', '🗺️'];
     $mapDots = $locations->take(8)->values();
     $mapColors = ['#34D399', '#60A5FA', '#F9A8D4', '#FBBF24', '#A78BFA', '#FB7185', '#2DD4BF', '#F472B6'];
-    $breakdownMax = max((int) $locationCountryBreakdown->max('locations'), 1);
-    $flagHints = [
-        'india' => '🇮🇳', 'united states' => '🇺🇸', 'usa' => '🇺🇸', 'u.s.a.' => '🇺🇸',
-        'united arab emirates' => '🇦🇪', 'uae' => '🇦🇪', 'united kingdom' => '🇬🇧', 'uk' => '🇬🇧',
-        'singapore' => '🇸🇬', 'australia' => '🇦🇺', 'canada' => '🇨🇦', 'germany' => '🇩🇪',
-        'france' => '🇫🇷', 'spain' => '🇪🇸', 'italy' => '🇮🇹', 'netherlands' => '🇳🇱', 'brazil' => '🇧🇷',
-    ];
 @endphp
 
 @section('page-title-html')
@@ -53,7 +46,7 @@
 
 @section('content')
     <div class="flex flex-col gap-6">
-        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="grid gap-3" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
             <div class="flex items-center gap-2.5 rounded-xl border border-[#E8E6E1] bg-white px-3 py-2.5">
                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EFF6FF]">
                     <svg class="h-4 w-4" fill="none" stroke="#2563EB" viewBox="0 0 24 24">
@@ -62,19 +55,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#8892A0]">{{ __('modules.locationsPage.statTotalCities') }}</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#8892A0]">{{ __('Total locations') }}</p>
                     <p class="text-[18px] font-extrabold tracking-tight text-[#1A1E2E]">{{ number_format($locationStatTotalCities) }}</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2.5 rounded-xl border border-[#E8E6E1] bg-white px-3 py-2.5">
-                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F5F3FF]">
-                    <svg class="h-4 w-4" fill="none" stroke="#7C3AED" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#8892A0]">{{ __('modules.locationsPage.statCountries') }}</p>
-                    <p class="text-[18px] font-extrabold tracking-tight text-[#1A1E2E]">{{ number_format($locationStatCountries) }}</p>
                 </div>
             </div>
             <div class="flex items-center gap-2.5 rounded-xl border border-[#E8E6E1] bg-white px-3 py-2.5">
@@ -111,12 +93,6 @@
                             </svg>
                             <input type="search" id="loc-table-search" placeholder="{{ __('modules.locationsPage.searchPlaceholder') }}" autocomplete="off">
                         </div>
-                        <select id="loc-country-filter" class="cursor-pointer rounded-xl border border-[#E2DED8] bg-white px-3 py-2 text-[12.5px] font-medium text-[#5A6478] outline-none focus:border-[#2563EB]">
-                            <option value="">{{ __('modules.locationsPage.filterAllCountries') }}</option>
-                            @foreach($locationCountriesForFilter as $c)
-                                <option value="{{ $c['id'] }}">{{ ucwords($c['name']) }}</option>
-                            @endforeach
-                        </select>
                     </div>
                     <div class="flex items-center gap-2 text-[12px] text-[#8892A0]">
                         <span>{{ __('modules.locationsPage.showing') }}</span>
@@ -133,7 +109,6 @@
                         <tr>
                             <th style="width:56px;">#</th>
                             <th>{{ __('modules.locationsPage.columnLocation') }}</th>
-                            <th>{{ __('modules.locationsPage.columnCountry') }}</th>
                             <th>{{ __('modules.locationsPage.columnOpenJobs') }}</th>
                             <th>{{ __('modules.locationsPage.columnAdded') }}</th>
                             <th class="jc-th-right" style="padding-right:20px;">@lang('app.action')</th>
@@ -142,13 +117,10 @@
                         <tbody id="loc-tbody">
                         @forelse($locations as $location)
                             @php
-                                $cname = $location->country ? strtolower($location->country->country_name) : '';
-                                $flag = $flagHints[$cname] ?? '🌍';
                                 $hi = crc32($location->location) % count($locIconBgs);
-                                $searchBlob = strtolower($location->location.' '.($location->country ? $location->country->country_name : ''));
+                                $searchBlob = strtolower($location->location);
                             @endphp
                             <tr class="loc-row"
-                                data-country-id="{{ $location->country_id ?? '' }}"
                                 data-search="{{ e($searchBlob) }}">
                                 <td class="jc-td-num text-[12.5px] font-semibold text-[#C4CBD4]">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</td>
                                 <td>
@@ -159,12 +131,6 @@
                                         <div class="min-w-0">
                                             <p class="text-[13.5px] font-bold text-[#1A1E2E]">{{ ucwords($location->location) }}</p>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-lg leading-none">{{ $flag }}</span>
-                                        <span class="text-[13px] font-semibold text-[#3D4A5C]">{{ $location->country ? ucwords($location->country->country_name) : '—' }}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -197,7 +163,7 @@
                             </tr>
                         @empty
                             <tr id="loc-native-empty">
-                                <td colspan="6" class="py-12 text-center">
+                                <td colspan="5" class="py-12 text-center">
                                     <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F1F3F7]">
                                         <svg class="h-6 w-6" fill="none" stroke="#C4CBD4" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -259,26 +225,6 @@
                     </div>
                 </div> -->
 
-                <div class="rounded-2xl border border-[#E8E6E1] bg-white p-5">
-                    <p class="mb-4 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8892A0]">{{ __('modules.locationsPage.byCountry') }}</p>
-                    <div class="flex flex-col gap-3">
-                        @forelse($locationCountryBreakdown as $row)
-                            <div>
-                                <div class="mb-1 flex items-center justify-between gap-2 text-[12.5px]">
-                                    <span class="truncate font-semibold text-[#1A1E2E]">{{ ucwords($row['name']) }}</span>
-                                    <span class="shrink-0 text-[11px] font-medium text-[#8892A0]">{{ $row['locations'] }} {{ __('modules.locationsPage.citiesLabel') }}</span>
-                                </div>
-                                <div class="h-2 overflow-hidden rounded-full bg-[#F1F3F7]">
-                                    <div class="h-full rounded-full bg-[#2563EB]/90 transition-all" style="width: {{ min(100, round(100 * $row['locations'] / $breakdownMax)) }}%"></div>
-                                </div>
-                                <p class="mt-1 text-[11px] text-[#B0B8C4]">{{ $row['open_jobs'] }} {{ __('modules.locationsPage.openJobsShort') }}</p>
-                            </div>
-                        @empty
-                            <p class="text-[12.5px] text-[#8892A0]">@lang('modules.emptyTable')</p>
-                        @endforelse
-                    </div>
-                </div>
-
                 @if(in_array('add_locations', $userPermissions))
                     <div class="rounded-2xl border border-[#E8E6E1] bg-white p-5">
                         <p class="mb-3 text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#8892A0]">{{ __('modules.locationsPage.quickAddTitle') }}</p>
@@ -286,7 +232,7 @@
                                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#1d4ed8]">
                             @lang('app.createNew')
                         </button>
-                        <p class="mt-2 text-[11px] text-[#B0B8C4]">{{ __('modules.locationsPage.quickAddHint') }}</p>
+                        <p class="mt-2 text-[11px] text-[#B0B8C4]">{{ __('Add a city, region or remote location.') }}</p>
                     </div>
                 @endif
             </div>
@@ -401,14 +347,12 @@
 
             function locApplyFilter() {
                 var q = ($('#loc-table-search').val() || '').toLowerCase().trim();
-                var cid = ($('#loc-country-filter').val() || '').toString();
                 var visible = 0;
                 $('#loc-tbody tr.loc-row').each(function () {
                     var $r = $(this);
                     var blob = ($r.data('search') || '').toString().toLowerCase();
                     var textMatch = !q || blob.indexOf(q) !== -1;
-                    var countryMatch = !cid || String($r.data('country-id')) === cid;
-                    var match = textMatch && countryMatch;
+                    var match = textMatch;
                     $r.toggle(match);
                     if (match) visible++;
                 });
@@ -419,7 +363,6 @@
             }
 
             $('#loc-table-search').on('input', locApplyFilter);
-            $('#loc-country-filter').on('change', locApplyFilter);
         })();
 
         $('body').on('click', '.sa-params', function () {
