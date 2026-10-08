@@ -1,0 +1,8 @@
+[Unit]
+Description=Hourly AssistMyHR backup
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=120
+[Install]
+WantedBy=timers.target

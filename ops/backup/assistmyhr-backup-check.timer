@@ -1,0 +1,8 @@
+[Unit]
+Description=Weekly AssistMyHR backup integrity check
+[Timer]
+OnCalendar=Sun *-*-* 04:30:00
+Persistent=true
+RandomizedDelaySec=300
+[Install]
+WantedBy=timers.target
