@@ -208,12 +208,7 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a href="{{ route('admin.security-setting.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/security-setting') ? 'on' : '' }}">
-                            <span class="ra-sublink-dot" aria-hidden="true"></span>
-                            <span>@lang('menu.securitySettings')</span>
-                        </a>
-                    </li>
+
 
 
                 @endif
