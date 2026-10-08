@@ -78,8 +78,8 @@ class TenantContext
             'cache.stores.file.path' => $root.'/cache',
             'cache.default' => 'file',
         ]);
-        // Every ATS workspace, including main, uses its own SMTP and AI settings.
-        config(['services.deepseek.key' => null, 'services.deepseek.model' => 'deepseek-chat',
+        // SMTP stays client-specific; DeepSeek uses the company default until overridden.
+        config(['services.deepseek.key' => $this->baseline['services.deepseek']['key'] ?? null, 'services.deepseek.model' => $this->baseline['services.deepseek']['model'] ?? 'deepseek-chat', 'services.deepseek.source' => 'company',
             'services.candidate_email_imap.host' => null, 'mail.ai_search_smtp' => null]);
         $smtp = DB::getSchemaBuilder()->hasTable('smtp_settings') ? DB::table('smtp_settings')->first() : null;
         $transport = \App\Services\SmtpConfiguration::transport($smtp);
@@ -88,9 +88,15 @@ class TenantContext
             'mail.encryption' => $transport['encryption'], 'mail.username' => $transport['username'],
             'mail.password' => $transport['password'], 'mail.from' => $transport['from'],
             'mail.ai_search_smtp' => $transport]);
+        if (DB::connection('saas_landlord')->getSchemaBuilder()->hasTable('ai_api_keys')) {
+            $companyKey = \App\AiApiKey::on('saas_landlord')->whereRaw('LOWER(provider) = ?', ['deepseek'])->active()->orderBy('sort_order')->orderBy('id')->first();
+            if ($companyKey && trim((string) $companyKey->api_key) !== '') {
+                config(['services.deepseek.key' => $companyKey->api_key, 'services.deepseek.model' => $companyKey->model ?: 'deepseek-chat']);
+            }
+        }
         if (DB::getSchemaBuilder()->hasTable('ai_api_keys')) {
             $key = \App\AiApiKey::whereRaw('LOWER(provider) = ?', ['deepseek'])->active()->orderBy('sort_order')->orderBy('id')->first();
-            if ($key) { config(['services.deepseek.key' => $key->api_key, 'services.deepseek.model' => $key->model ?: 'deepseek-chat']); }
+            if ($key && trim((string) $key->api_key) !== '') { config(['services.deepseek.key' => $key->api_key, 'services.deepseek.model' => $key->model ?: 'deepseek-chat', 'services.deepseek.source' => 'client']); }
         }
         config(['services.candidate_email_imap.host' => \App\Services\SmtpConfiguration::inboxHost($transport['host']), 'services.candidate_email_imap.port' => 993]);
         if (DB::getSchemaBuilder()->hasTable('tenant_service_settings') && ($service = DB::table('tenant_service_settings')->first()) && $service->imap_host) {

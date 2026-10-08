@@ -106,7 +106,7 @@ $admin=PlatformAdmin::create(['name'=>'Platform owner','email'=>'platform@exampl
 $context=app(TenantContext::class);
 $main=Tenant::create(['uuid'=>(string) Illuminate\Support\Str::uuid(),'slug'=>'main','name'=>'Original','owner_email'=>'same@example.test','database_name'=>$temp.'/landlord.sqlite','database_driver'=>'sqlite','status'=>'active']);
 $context->activate($main);
-check(config('mail.mailers.tenant.password')==='ORIGINAL-MAIL-SECRET'&&config('services.deepseek.key')===null,'Main ATS also uses saved client settings');
+check(config('mail.mailers.tenant.password')==='ORIGINAL-MAIL-SECRET'&&config('services.deepseek.key')==='PLATFORM-AI','Main ATS also uses saved client settings');
 $context->reset();
 $data=['company_name'=>'Client Alpha','slug'=>'alpha','name'=>'Alpha owner','email'=>'same@example.test','password'=>'long-owner-password'];
 $alpha=app(TenantProvisioner::class)->create($data);
@@ -123,16 +123,17 @@ check(DB::table('jobs')->count()===0&&DB::table('job_applications')->count()===0
 check(DB::table('companies')->value('company_name')==='Client Alpha','Only client employer seeded');
 check(DB::table('google_captcha_settings')->value('secret')===null,'Source integration secrets not copied');
 check(DB::table('smtp_settings')->value('mail_password')==='','New client does not inherit SMTP password');
-check(config('services.deepseek.key')===null&&config('mail.ai_search_smtp.password')==='','No platform AI or email credentials inherited');
+check(config('services.deepseek.key')==='PLATFORM-AI'&&config('mail.ai_search_smtp.password')==='','Company AI default available without platform email credentials');
 App\AiApiKey::create(['name'=>'DeepSeek Alpha','provider'=>'deepseek','model'=>'alpha-model','api_key'=>'ALPHA-AI','is_active'=>true]);
 DB::table('smtp_settings')->update(['mail_username'=>'alpha@example.test','mail_password'=>'ALPHA-SMTP']);
 $context->activate($alpha);
 check(config('services.deepseek.key')==='ALPHA-AI'&&config('services.deepseek.model')==='alpha-model','Client AI key and model loaded together');
+check(config('services.deepseek.source')==='client','Client override is identified without exposing company key');
 check(config('mail.default')==='tenant'&&config('mail.mailers.tenant.password')==='ALPHA-SMTP'&&config('mail.ai_search_smtp.password')==='ALPHA-SMTP','All client mail transports use saved SMTP');
 $message=call_user_func(Illuminate\Auth\Notifications\VerifyEmail::$toMailCallback, App\User::first(), 'https://ats.example.test/verify');
 check($message->mailer==='platform'&&$message->from[0]==='platform@example.test','Signup verification retains platform SMTP and sender');
 $context->activate($beta);
-check(config('services.deepseek.key')===null&&config('mail.mailers.tenant.password')==='','Client settings never leak to another client');
+check(config('services.deepseek.key')==='PLATFORM-AI'&&config('mail.mailers.tenant.password')==='','Another client uses company AI default and its own SMTP');
 $context->activate($alpha);
 check(!DB::getSchemaBuilder()->hasTable('saas_platform_admins'),'Platform administrators never cloned into client database');
 check(DB::table('permission_role')->count()===1,'Owner receives local ATS permissions');
@@ -323,5 +324,12 @@ foreach(['signup','pricing','platform-login','platform-dashboard','platform-tena
 foreach(glob($root.'/resources/views/saas/*.blade.php') as $view){$app['blade.compiler']->compileString(file_get_contents($view));check(true,'Blade compiles: '.basename($view));}
 $app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/admin/ai-settings/index.blade.php'));check(true,'AI settings model form compiles');
 $app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/admin/mail-setting/index.blade.php'));check(true,'SMTP provider form compiles');
+$sharedKey=App\AiApiKey::on('saas_landlord')->create(['name'=>'Company default','provider'=>'deepseek','model'=>'company-model','api_key'=>'COMPANY-KEY','is_active'=>true]);
+$context->activate($beta);
+check(config('services.deepseek.key')==='COMPANY-KEY'&&config('services.deepseek.model')==='company-model','Company saved key supplies default key and model');
+check(App\AiApiKey::count()===0,'Company key is never copied into client key table');
+$context->activate($alpha);
+check(config('services.deepseek.key')==='ALPHA-AI','Client override wins over company saved key');
+$context->reset();$sharedKey->delete();
 Carbon\Carbon::setTestNow();
 echo "SaaS integration checks passed: $checks\n";

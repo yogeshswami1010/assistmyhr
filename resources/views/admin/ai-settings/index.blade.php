@@ -22,6 +22,9 @@
 @section('content')
     <div class="mx-auto pb-10">
         <div id="alert"></div>
+        @if(config('saas.enabled'))
+            <div class="bs-set-card mb-6 p-6"><h2 class="text-[15px] font-bold">{{ config('services.deepseek.source') === 'client' ? 'Your DeepSeek key is active' : 'Company DeepSeek default' }}</h2><p class="text-[13px]">{{ config('services.deepseek.source') === 'client' ? 'AI parsing uses your saved DeepSeek key and model.' : 'AI parsing uses the company DeepSeek key. Add an active key with provider deepseek to use your own account. The company key stays private.' }}</p></div>
+        @endif
 
         <div class="bs-set-card mb-6">
             <div class="bs-set-card-hd">

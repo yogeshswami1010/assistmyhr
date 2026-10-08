@@ -4033,7 +4033,7 @@ public function aiSearchResults(Request $request)
             'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type'  => 'application/json',
         ])->post('https://api.deepseek.com/v1/chat/completions', [
-            'model'    => 'deepseek-chat',
+            'model'    => config('services.deepseek.model', 'deepseek-chat'),
             'messages' => [
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user',   'content' => $userPrompt],
