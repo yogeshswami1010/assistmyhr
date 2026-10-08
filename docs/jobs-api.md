@@ -12,6 +12,17 @@ Inactive or deleted companies cannot use their company-specific keys.
 
 ## Client website integration
 
+For a website without backend code, create a feed, then use **Website jobs widget
+— HTML + CSS → Copy HTML + CSS** on the Jobs API settings page. Paste the snippet
+into the website's HTML or Custom HTML block. Its signed public iframe URL is
+already included; no API key needs to be pasted into the website. The widget shows
+active jobs within the feed's workspace and company scope, with job details and
+Apply links opening the ATS. It refreshes every minute and paginates at 100 jobs.
+Adjust the CSS height to fit the website. Disabling or revoking a feed stops its
+widget; after regenerating a key, copy and replace the widget snippet too.
+
+For a custom integration, use the server-side API below.
+
 The client's backend requests `GET /api/jobs` over HTTPS with:
 
 ```http

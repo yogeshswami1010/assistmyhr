@@ -75,6 +75,8 @@ Route::post('/telnyx-webhook', TelnyxWebhookController::class)
 // ── Front public job board ─────────────────────────────────────────────────
 Route::get('/', [PublicWebsiteController::class, 'index'])->name('home');
 
+Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');
+
 Route::name('jobs.')
     ->group(function () {
         Route::get('/jobs', [FrontJobsController::class, 'jobOpenings'])

@@ -101,6 +101,17 @@
     </section>
 
     <section class="rounded-2xl border border-[#E8E6E1] bg-white p-6">
+        <h2 class="text-lg font-bold">Website jobs widget — HTML + CSS</h2>
+        <p class="mt-2 text-sm text-slate-600">Create an API feed above, then copy this into your website's HTML or Custom HTML block. The feed link is included automatically; your API key stays private. Jobs refresh every minute. Apply opens the ATS application form. Adjust the iframe height in the CSS to fit your website.</p>
+        @forelse($integrations as $integration)
+        <div class="mt-5 rounded-xl border p-4"><h3 class="font-semibold">{{ $integration->feed_scope === 'all' ? 'All active jobs' : ($integration->company?->company_name ?? 'Company feed') }} · {{ $integration->enabled ? 'Enabled' : 'Disabled' }}</h3>
+        <textarea id="widget-code-{{ $integration->id }}" readonly rows="5" class="mt-3 w-full rounded-lg border p-3 font-mono text-xs" aria-label="HTML and CSS jobs widget">{{ $widgetCodes[$integration->id] }}</textarea>
+        <button type="button" data-copy="widget-code-{{ $integration->id }}" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white">Copy HTML + CSS</button></div>
+        @empty<p class="mt-4">Create an API feed first to generate its widget.</p>@endforelse
+        <p class="mt-4 text-sm text-slate-600">The public embed link displays jobs only. Disabling or revoking its API feed stops the widget. After regenerating the API key, copy the new widget code and replace the old code on your website.</p>
+    </section>
+
+    <section class="rounded-2xl border border-[#E8E6E1] bg-white p-6">
         <h2 class="text-lg font-bold">Example request</h2>
         <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-white">curl --get '{{ $endpoint }}' \
   --header 'Accept: application/json' \

@@ -26,7 +26,15 @@ class AdminJobApiSettingsController extends AdminBaseController
         $this->companies = Company::where('status', 'active')->orderBy('company_name')->get();
         $this->integrations = JobApiIntegration::with('company')->orderByDesc('id')->get();
         $this->endpoint = url('/api/jobs');
+        $widgetCodes = [];
+        foreach ($this->integrations as $integration) {
+            $url = \Illuminate\Support\Facades\URL::signedRoute('jobs.widget', tenant_parameters(['integration'=>$integration->id, 'version'=>substr($integration->token_hash,0,16)]));
+            $safeUrl = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+            $widgetCodes[$integration->id] = '<style>.assistmyhr-jobs-widget{width:100%;height:760px;border:0;border-radius:16px;background:#f8fafc}</style>'."\n".'<iframe class="assistmyhr-jobs-widget" src="'.$safeUrl.'" title="Current job openings" loading="lazy" referrerpolicy="no-referrer"></iframe>';
+        }
 
+
+        $this->widgetCodes = $widgetCodes;
         return response()->view('admin.job-api-settings.index', $this->data)
             ->header('Cache-Control', 'no-store, private');
     }

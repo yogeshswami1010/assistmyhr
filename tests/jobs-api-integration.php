@@ -132,6 +132,7 @@ namespace {
         $router->put('jobs-api/{integration}', [$controller, 'update'])->name('job-api-settings.update');
         $router->delete('jobs-api/{integration}', [$controller, 'destroy'])->name('job-api-settings.destroy');
     });
+    $router->get('jobs-widget/{integration}', App\Http\Controllers\Front\JobsWidgetController::class)->middleware('bindings')->name('jobs.widget');
     $router->getRoutes()->refreshNameLookups();
 
     $checks = 0;
@@ -238,10 +239,20 @@ namespace {
     $restricted = json_decode(callEndpoint('GET', '/api/jobs', ['feed_scope' => 'all'], $newKey)->getContent(), true);
     check($restricted['total_jobs'] === 1 && $restricted['jobs'][0]['id'] === 6, 'Company key cannot request all-jobs scope');
     $allIntegration = JobApiIntegration::where('feed_scope', 'all')->firstOrFail();
+    $widgetUrl=Illuminate\Support\Facades\URL::signedRoute('jobs.widget',['integration'=>$allIntegration->id,'version'=>substr($allIntegration->token_hash,0,16)]);
+    $widgetPath=str_replace('https://ats.example.test','',$widgetUrl);
+    $widgetResponse=callEndpoint('GET',$widgetPath);
+    check($widgetResponse->getStatusCode()===200&&str_contains($widgetResponse->getContent(),'Apply now'),'Signed widget displays active jobs and apply links');
+    check(!str_contains($widgetResponse->getContent(),'PRIVATE ATS NOTE')&&!str_contains($widgetResponse->getContent(),'Job 5'),'Widget excludes private notes and expired jobs');
+    check(callEndpoint('GET','/jobs-widget/'.$allIntegration->id)->getStatusCode()===403,'Widget requires signed embed URL');
+    check(callEndpoint('GET',$widgetPath.'&page=1')->getStatusCode()===200,'Widget pagination retains valid signed feed');
     callEndpoint('PUT', '/admin/settings/jobs-api/'.$allIntegration->id, ['enabled' => 0], null, true);
     check(callEndpoint('GET', '/api/jobs', [], $allKey)->getStatusCode() === 401, 'Disabled all-jobs key rejected');
+    check(callEndpoint('GET',$widgetPath)->getStatusCode()===404,'Disabled feed also disables embedded widget');
     callEndpoint('PUT', '/admin/settings/jobs-api/'.$allIntegration->id, ['enabled' => 1], null, true);
     check(callEndpoint('GET', '/api/jobs/6', [], $allKey)->getStatusCode() === 200, 'Re-enabled all-jobs key works');
+    callEndpoint('POST', '/admin/settings/jobs-api/'.$allIntegration->id.'/regenerate', [], null, true);
+    check(callEndpoint('GET',$widgetPath)->getStatusCode()===403,'Regenerated feed invalidates old widget URL');
     check(callEndpoint('GET', '/api/assistmyday/jobs', [], $key)->getStatusCode() === 404, 'Legacy branded API retired');
     check(callEndpoint('POST', '/api/consortium-registration', [], $key)->getStatusCode() === 404, 'Legacy registration API retired');
     $allJobsMigration->down();
