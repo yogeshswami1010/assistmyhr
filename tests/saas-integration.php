@@ -86,6 +86,10 @@ DB::table('company_settings')->insert(['company_name'=>'Original','company_email
 DB::table('smtp_settings')->insert(['mail_password'=>'ORIGINAL-MAIL-SECRET']);
 DB::table('google_captcha_settings')->insert(['secret'=>'ORIGINAL-CAPTCHA-SECRET']);
 $migration=require $root.'/database/migrations/2026_10_06_000003_create_saas_platform.php';$migration->up();
+Schema::create('currencies',function(Blueprint $t){$t->increments('id');$t->string('currency_name');$t->string('currency_symbol');$t->string('currency_code');$t->boolean('default')->default(false);});
+Schema::table('company_settings',function(Blueprint $t){$t->integer('currency_id')->nullable();});
+DB::table('currencies')->insert(['currency_name'=>'US Dollar','currency_symbol'=>'$','currency_code'=>'USD']);
+$cadMigration=require $root.'/database/migrations/2026_10_08_000001_set_canadian_dollar_default.php';$cadMigration->up();$cadMigration->up();
 $serviceMigration=require $root.'/database/migrations/2026_10_06_000004_create_tenant_service_settings.php';$serviceMigration->up();
 $checks=0;
 function check($ok,$message){global $checks;if(!$ok){throw new RuntimeException($message);} $checks++;}
@@ -121,6 +125,8 @@ $context->activate($alpha);
 check(DB::table('users')->count()===1&&DB::table('users')->value('email_verified_at')===null,'Only new unverified owner seeded');
 check(DB::table('jobs')->count()===0&&DB::table('job_applications')->count()===0,'Source jobs and candidates never copied');
 check(DB::table('companies')->value('company_name')==='Client Alpha','Only client employer seeded');
+check(DB::table('currencies')->count()===1&&DB::table('currencies')->value('currency_code')==='CAD','New client has only Canadian Dollar');
+check(DB::table('company_settings')->value('currency_id')===DB::table('currencies')->value('id'),'New client defaults to Canadian Dollar');
 check(DB::table('google_captcha_settings')->value('secret')===null,'Source integration secrets not copied');
 check(DB::table('smtp_settings')->value('mail_password')==='','New client does not inherit SMTP password');
 check(config('services.deepseek.key')==='PLATFORM-AI'&&config('mail.ai_search_smtp.password')==='','Company AI default available without platform email credentials');

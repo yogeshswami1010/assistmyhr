@@ -57,7 +57,7 @@ class AdminJobOnboardController extends AdminBaseController
         $this->users = User::all();
         $this->departments = Department::all();
         $this->designations = Designation::all();
-        $this->currencies = Currency::all();
+        $this->currencies = Currency::where('currency_code', 'CAD')->get();
         $this->questions = JobOfferQuestion::all();
 
         return view('admin.job-onboard.create', $this->data);
@@ -144,7 +144,7 @@ class AdminJobOnboardController extends AdminBaseController
         $this->users = User::all();
         $this->departments = Department::all();
         $this->designations = Designation::all();
-        $this->currencies = Currency::all();
+        $this->currencies = Currency::where('currency_code', 'CAD')->get();
         $this->questions = JobOfferQuestion::all();
         $this->onboardQuestion = $this->onboard->onboardQuestion->pluck('id')->toArray();
 

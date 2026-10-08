@@ -106,6 +106,13 @@ class TenantProvisioner
             'company_phone' => '', 'address' => '', 'website' => '', 'timezone' => 'UTC', 'locale' => 'eng',
             'latitude' => 0, 'longitude' => 0, 'candidate_calls_enabled' => false,
         ]);
+        if ($target->getSchemaBuilder()->hasTable('currencies')) {
+            $cadId = $target->table('currencies')->where('currency_code', 'CAD')->value('id');
+            if (!$cadId) { $this->insertDefaults($target, 'currencies', ['currency_name'=>'Canadian Dollar','currency_symbol'=>'CA$', 'currency_code'=>'CAD']); $cadId=$target->table('currencies')->where('currency_code','CAD')->value('id'); }
+            $target->table('currencies')->where('id', '!=', $cadId)->delete();
+            $this->updateKnown($target, 'company_settings', ['currency_id'=>$cadId]);
+            $this->updateKnown($target, 'currencies', ['default'=>1]);
+        }
         $this->updateKnown($target, 'theme_settings', ['primary_color' => '#2563eb', 'disable_frontend' => 0]);
         $this->updateKnown($target, 'google_captcha_settings', ['status' => 'inactive', 'v2_status' => 'inactive', 'v3_status' => 'inactive']);
         $this->updateKnown($target, 'smtp_settings', ['mail_username' => '', 'mail_password' => '', 'mail_from_name' => $data['company_name'], 'mail_from_email' => $data['email'], 'verified' => 0]);

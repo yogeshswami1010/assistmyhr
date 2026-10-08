@@ -267,7 +267,7 @@ class AdminJobApplicationController extends AdminBaseController
         ];
 
         // Add this
-        // $this->currencies = Currency::all();
+        // $this->currencies = Currency::where('currency_code', 'CAD')->get();
 
         return view('admin.job-applications.create', $this->data);
     }
@@ -352,7 +352,7 @@ class AdminJobApplicationController extends AdminBaseController
             ->get();
 
         // Add this
-        $this->currencies = Currency::all();
+        $this->currencies = Currency::where('currency_code', 'CAD')->get();
 
         return view('admin.job-applications.edit', $this->data);
     }
