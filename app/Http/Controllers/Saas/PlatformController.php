@@ -117,8 +117,11 @@ class PlatformController extends Controller
             'suspended' => Tenant::where('status', 'suspended')->count(),
             'expired' => Subscription::whereNotNull('expires_at')->where('expires_at', '<=', now())->count(),
             'tenants' => Tenant::with('subscription.plan')->latest()->paginate(20),
-            'logs' => AuditLog::with('admin')->latest('id')->limit(20)->get(),
         ]);
+    }
+    public function activity()
+    {
+        return $this->platformView('saas.platform-activity', ['logs' => AuditLog::with('admin')->latest('id')->paginate(25), 'pageTitle' => 'Platform activity']);
     }
     public function tenant(Tenant $tenant)
     {

@@ -26,6 +26,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::post('login', [PlatformController::class, 'login'])->middleware('throttle:5,1');
     Route::middleware('auth:platform')->group(function () {
         Route::get('/', [PlatformController::class, 'dashboard'])->name('dashboard');
+        Route::get('activity', [PlatformController::class, 'activity'])->name('activity');
         Route::post('logout', [PlatformController::class, 'logout'])->name('logout');
         Route::get('tenants/{tenant}', [PlatformController::class, 'tenant'])->name('tenants.show');
         Route::delete('tenants/{tenant}', [PlatformController::class, 'deleteTenant'])->middleware('throttle:5,1')->name('tenants.destroy');
