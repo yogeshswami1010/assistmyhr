@@ -19,6 +19,7 @@ class InitializeSaasTenant
             return $next($request);
         }
         abort_if($request->is('admin/settings/security-setting', 'admin/settings/security-setting/*'), 404);
+        abort_if($request->isMethod('GET') && $request->is('admin/settings/application-setting'), 404);
         $context = app(TenantContext::class);
         $context->reset();
         if ($request->is('superadmin*', 'register', 'pricing', 'saas/workspace/*') || $request->path() === '/') {

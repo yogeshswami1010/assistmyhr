@@ -157,10 +157,12 @@
                         </a>
                     </li>
                     <li>
+                        @unless(config('saas.enabled'))
                         <a href="{{ route('admin.application-setting.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/application-setting') ? 'on' : '' }}">
                             <span class="ra-sublink-dot" aria-hidden="true"></span>
                             <span>@lang('menu.applicationFormSettings')</span>
                         </a>
+                        @endunless
                     </li>
                     <li>
                         <a href="{{ route('admin.currency-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/currency-settings') ? 'on' : '' }}">
