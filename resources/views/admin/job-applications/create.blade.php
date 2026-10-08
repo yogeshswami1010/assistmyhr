@@ -765,7 +765,7 @@
         const bulkStoreUrl           = "{{ route('admin.job-applications.store') }}";
         const bulkUpdateUrlTpl       = "{{ route('admin.job-applications.update', ':id') }}";
         const bulkIndexUrl           = "{{ route('admin.job-applications.index') }}";
-        const archiveUrl             = "https://virtualtecsolutions.com/admin/applications-archive";
+        const archiveUrl             = @json(tenant_route('admin.applications-archive.index'));
         const bulkQuestionRouteBase  = "{{ route('admin.job-applications.question', ':id') }}";
         const bulkParseResumeUrl     = "{{ route('admin.job-applications.bulk-parse-resume') }}";
 
@@ -1949,7 +1949,7 @@
                 '<div class="flex flex-col items-center justify-center h-full gap-2 text-green-600">' +
                 '<i class="fa fa-check-circle fa-3x"></i>' +
                 '<p class="text-sm font-medium">All CVs reviewed!</p>' +
-                '<p class="text-xs text-gray-400">Redirecting to applicants board in <span id="bulk-redirect-countdown">3</span>s...</p>' +
+                '<p class="text-xs text-gray-400">Redirecting to Candidate Database in <span id="bulk-redirect-countdown">3</span>s...</p>' +
                 '<a href="' + archiveUrl + '" class="text-xs text-blue-600 underline mt-1">Go now →</a>' +
                 '</div>';
 
