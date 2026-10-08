@@ -184,6 +184,7 @@
                 </div>
             </div>
 
+            @unless(config('saas.enabled'))
             {{-- Feature toggles --}}
             <div class="mb-4 overflow-hidden rounded-[18px] border border-[#E8E6E1] bg-white">
                 <div class="flex items-center gap-3 border-b border-[#F0EEE9] px-6 py-4">
@@ -254,6 +255,7 @@
                 </div>
             </div>
 
+            @endunless
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button type="button" id="save-form" class="inline-flex items-center justify-center gap-2 rounded-[11px] bg-[#2563EB] px-8 py-3 text-[13.5px] font-bold text-white shadow-sm transition hover:bg-[#1d4ed8] hover:shadow-md">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -267,7 +269,7 @@
 
 @push('footer-script')
     <script src="{{ asset('assets/node_modules_files/select2/dist/js/select2.full.min.js') }}" type="text/javascript"></script>
-    @if (! empty($applicationSetting->google_map_api_key))
+    @if (!config('saas.enabled') && ! empty($applicationSetting->google_map_api_key))
         <script src="https://maps.googleapis.com/maps/api/js?key={{ $applicationSetting->google_map_api_key }}&libraries=places"></script>
     @endif
     <script>
@@ -302,6 +304,7 @@
             });
         });
 
+        @unless(config('saas.enabled'))
         $(document).ready(function () {
             $("#getLoaction").click(function () {
                 $('body').block({
@@ -407,5 +410,6 @@
             google.maps.event.addDomListener(window, 'load', initialize);
         }
         @endif
+        @endunless
     </script>
 @endpush

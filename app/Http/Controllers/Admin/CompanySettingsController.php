@@ -70,13 +70,19 @@ class CompanySettingsController extends AdminBaseController
         
         $data->company_name = $request->company_name;
 
+        if (!config('saas.enabled')) {
         $data->system_update = $request->has('system_update') && $request->input('system_update') == 'on' ? 1 : 0;
+        }
         
+        if (!config('saas.enabled')) {
         $data->front_language = $request->has('front_language') && $request->input('front_language') == '1' ? 1 : 0;
+        }
         
         $data->currency_id = $request->has('currency_id') ? $request->input('currency_id') : '1';
 
+        if (!config('saas.enabled')) {
         $data->job_alert_status = $request->has('job_alert_status') && $request->input('job_alert_status') == '1' ? 1 : 0;
+        }
 
         $data->company_phone = $request->company_phone;
 
