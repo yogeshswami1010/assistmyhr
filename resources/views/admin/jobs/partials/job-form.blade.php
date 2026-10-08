@@ -578,8 +578,6 @@
                                     ) == $currency->id ? 'selected' : '' }}
                                 >
                                     {{ strtoupper($currency->currency_code) }}
-                                    - {{ $currency->currency_name }}
-                                    ({{ $currency->currency_symbol }})
                                 </option>
                             @endforeach
                         </select>
