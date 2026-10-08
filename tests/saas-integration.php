@@ -91,6 +91,9 @@ $checks=0;
 function check($ok,$message){global $checks;if(!$ok){throw new RuntimeException($message);} $checks++;}
 function rejected(callable $call,string $message){try{$call();}catch(Illuminate\Validation\ValidationException $e){check(true,$message);return;}throw new RuntimeException($message);}
 check(DB::table('users')->value('email_verified_at')!==null,'Existing users preserved and verified');
+check(App\Services\SmtpConfiguration::inboxHost('smtppro.zoho.in')==='imappro.zoho.in','Zoho India reply inbox detected from SMTP');
+check(App\Services\SmtpConfiguration::inboxHost('smtp.gmail.com')==='imap.gmail.com','Gmail reply inbox detected from SMTP');
+check(App\Services\SmtpConfiguration::inboxHost('smtp.custom.test')===null,'Custom inbox host is never guessed');
 check(App\Services\SmtpConfiguration::encryption('none',465)==='ssl','Port 465 corrects None to implicit TLS');
 check(App\Services\SmtpConfiguration::encryption('tls',587)==='tls','STARTTLS preserved on port 587');
 $plain=App\Services\SmtpConfiguration::transport((object)['mail_port'=>2525,'mail_encryption'=>'none']);

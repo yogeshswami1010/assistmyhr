@@ -92,6 +92,7 @@ class TenantContext
             $key = \App\AiApiKey::whereRaw('LOWER(provider) = ?', ['deepseek'])->active()->orderBy('sort_order')->orderBy('id')->first();
             if ($key) { config(['services.deepseek.key' => $key->api_key, 'services.deepseek.model' => $key->model ?: 'deepseek-chat']); }
         }
+        config(['services.candidate_email_imap.host' => \App\Services\SmtpConfiguration::inboxHost($transport['host']), 'services.candidate_email_imap.port' => 993]);
         if (DB::getSchemaBuilder()->hasTable('tenant_service_settings') && ($service = DB::table('tenant_service_settings')->first()) && $service->imap_host) {
             config(['services.candidate_email_imap.host' => $service->imap_host, 'services.candidate_email_imap.port' => $service->imap_port]);
         }

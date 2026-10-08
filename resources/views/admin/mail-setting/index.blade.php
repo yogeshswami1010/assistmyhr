@@ -18,6 +18,9 @@
             @csrf
             @method('PUT')
 
+            @if(config('saas.enabled'))
+            <div class="mb-4 rounded-[11px] border border-blue-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-900">SMTP sends email. Candidate replies use IMAP: Zoho and Gmail are detected automatically; configure other inboxes in <a class="underline" href="{{ tenant_route('saas.integrations') }}">Workspace Integrations</a>. Your mailbox must allow IMAP access and the server scheduler must be running.</div>
+            @endif
             <div id="alert">
                 @if ($smtpSetting->mail_driver == 'smtp')
                     @if ($smtpSetting->verified)

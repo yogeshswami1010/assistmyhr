@@ -28,3 +28,17 @@ Port 465 always uses implicit TLS, including old records saved as None. TLS uses
 If authentication still fails, check the provider's app-password / SMTP AUTH policy. If the connection times out or closes, check the server's outbound SMTP access. Live credentials and VPS connectivity cannot be verified by the isolated tests.
 
 Provider references: https://support.google.com/a/answer/176600, https://www.zoho.com/mail/help/zoho-smtp.html, https://learn.microsoft.com/en-us/Exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-microsoft-365-or-office-365
+
+## Candidate reply synchronization
+
+SMTP sends outbound messages. Receiving replies needs IMAP access and PHP's IMAP extension in the CLI PHP used by cron. SaaS automatically detects Zoho and Gmail inbox hosts from SMTP; Workspace Integrations can override the host and TLS port (normally 993). Custom providers need an explicit host. The importer uses the client's SMTP username/password for the inbox, so those credentials must support IMAP. OAuth-only or separate-credential mailboxes are not supported by this password-based connector.
+
+Enable IMAP in the provider account. Run `php artisan saas:maintenance minute` as the site user to diagnose/import replies for active subscribed clients, including previously received replies. Matching uses email thread headers and sender/subject fallback within each client's database; imports deduplicate existing messages. It does not mark mailbox messages read.
+
+Install a cron entry for the site user (do not duplicate an existing scheduler):
+
+```cron
+* * * * * cd /home/assistmyhr.com/public_html/ats && /usr/bin/php artisan schedule:run >> /home/assistmyhr.com/logs/scheduler.log 2>&1
+```
+
+Check `php --ri imap` before starting. If missing, install the IMAP extension matching the VPS CLI PHP version; the web PHP extension alone is insufficient. In the ATS, refresh Email Conversation after the scheduled import. The server mailbox connection and scheduler must be verified on the VPS.

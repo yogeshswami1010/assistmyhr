@@ -63,6 +63,7 @@ namespace App {
 }
 namespace App\Console\Commands {
     function config($key) {
+        if ($key === 'saas.enabled') return false;
         return $key === 'services.candidate_email_imap' ? ['host' => 'example.invalid','port' => 993] :
             ['username' => 'hr@example.invalid','password' => 'fake','from' => ['address' => 'hr@example.invalid']];
     }

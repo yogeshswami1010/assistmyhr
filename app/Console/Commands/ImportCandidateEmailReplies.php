@@ -14,8 +14,15 @@ class ImportCandidateEmailReplies extends Command
 
     public function handle(): int
     {
-        if (config('saas.enabled') && app(\App\Saas\TenantContext::class)->current()?->slug !== 'main' && !config('services.candidate_email_imap.host')) {
-            return self::SUCCESS;
+        if (config('saas.enabled')) {
+            if (!app(\App\Saas\TenantContext::class)->current()) {
+                $this->error('Use saas:maintenance minute to import replies in client workspaces.');
+                return self::FAILURE;
+            }
+            if (!config('services.candidate_email_imap.host')) {
+                $this->warn('No reply inbox configured. Set the IMAP host in Workspace Integrations.');
+                return self::SUCCESS;
+            }
         }
         if (!function_exists('imap_open')) {
             $this->error('PHP IMAP extension is not installed.');
@@ -23,7 +30,11 @@ class ImportCandidateEmailReplies extends Command
         }
         $settings = config('services.candidate_email_imap');
         $smtp = config('mail.ai_search_smtp');
-        $host = $settings['host'] ?? 'imappro.zoho.in';
+        $host = $settings['host'] ?? null;
+        if (!$host || empty($smtp['username']) || empty($smtp['password'])) {
+            $this->warn('Configure the reply inbox and SMTP credentials before importing replies.');
+            return self::SUCCESS;
+        }
         $mailbox = sprintf('{%s:%s/imap/ssl}INBOX', $host, $settings['port'] ?? 993);
         imap_timeout(IMAP_OPENTIMEOUT, 15);
         imap_timeout(IMAP_READTIMEOUT, 15);
