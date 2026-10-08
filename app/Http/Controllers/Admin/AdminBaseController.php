@@ -87,7 +87,7 @@ class AdminBaseController extends Controller
         $this->applicationSetting = ApplicationSetting::first();
         
         $this->languageSettings = LanguageSetting::where('status', 'enabled')->orderBy('language_name')->get();
-        $this->currencySettings = Currency::where('currency_code', 'CAD')->get();
+        $this->currencySettings = Currency::all();
        
         $this->zoom_setting = ZoomSetting::first();
 

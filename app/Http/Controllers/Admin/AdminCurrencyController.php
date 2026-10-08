@@ -30,7 +30,7 @@ class AdminCurrencyController extends AdminBaseController
      */
     public function index()
     {
-        $this->currencies = Currency::where('currency_code', 'CAD')->get();
+        $this->currencies = Currency::all();
         $countriesPath = public_path('country-state-city/countries.json');
         $countries = [];
 
@@ -53,7 +53,6 @@ class AdminCurrencyController extends AdminBaseController
 
     public function create()
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         return redirect()->route('admin.currency-settings.index', ['open' => 'create']);
     }
     /**
@@ -64,7 +63,6 @@ class AdminCurrencyController extends AdminBaseController
      */
     public function store(StoreCurrency $request)
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         $currency = new Currency();
         $currency->currency_symbol = $request->currency_symbol;
         $currency->currency_code = $request->currency_code;
@@ -84,7 +82,6 @@ class AdminCurrencyController extends AdminBaseController
 
     public function edit($id)
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         return redirect()->route('admin.currency-settings.index', [
             'open' => 'edit',
             'id' => $id,
@@ -100,7 +97,6 @@ class AdminCurrencyController extends AdminBaseController
      */
     public function update(StoreCurrency $request, $id)
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         $currency = Currency::findOrFail($id);
         $currency->currency_symbol = $request->currency_symbol;
         $currency->currency_code = $request->currency_code;
@@ -120,7 +116,6 @@ class AdminCurrencyController extends AdminBaseController
 
     public function setDefault(Request $request)
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         $request->validate([
             'currency_id' => 'required|integer|exists:currencies,id',
         ]);
@@ -138,7 +133,6 @@ class AdminCurrencyController extends AdminBaseController
 
     public function bulkDestroy(Request $request)
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         $ids = $request->input('ids', []);
         if (! is_array($ids)) {
             $ids = [];
@@ -164,14 +158,12 @@ class AdminCurrencyController extends AdminBaseController
      */
     public function destroy($id)
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         Currency::destroy($id);
         return Reply::success(__('messages.recordDeleted'));
     }
 
     public function aiGenerateCurrencies(Request $request)
     {
-        abort(403, 'Canadian Dollar is the fixed default currency.');
         abort_if(! $this->user?->cans('manage_settings'), 403);
 
         $validated = $request->validate([

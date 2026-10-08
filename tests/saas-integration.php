@@ -125,7 +125,7 @@ $context->activate($alpha);
 check(DB::table('users')->count()===1&&DB::table('users')->value('email_verified_at')===null,'Only new unverified owner seeded');
 check(DB::table('jobs')->count()===0&&DB::table('job_applications')->count()===0,'Source jobs and candidates never copied');
 check(DB::table('companies')->value('company_name')==='Client Alpha','Only client employer seeded');
-check(DB::table('currencies')->count()===1&&DB::table('currencies')->value('currency_code')==='CAD','New client has only Canadian Dollar');
+check(DB::table('currencies')->count()===1&&DB::table('currencies')->value('currency_code')==='CAD','New client starts with Canadian Dollar');
 check(DB::table('company_settings')->value('currency_id')===DB::table('currencies')->value('id'),'New client defaults to Canadian Dollar');
 check(DB::table('google_captcha_settings')->value('secret')===null,'Source integration secrets not copied');
 check(DB::table('smtp_settings')->value('mail_password')==='','New client does not inherit SMTP password');
