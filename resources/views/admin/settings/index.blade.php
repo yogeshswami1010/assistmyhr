@@ -29,6 +29,7 @@
             @csrf
             @method('PUT')
 
+            @unless(config('saas.enabled'))
             {{-- Company information --}}
             <div class="bs-set-card mb-4">
                 <div class="bs-set-card-hd">
@@ -57,6 +58,7 @@
                 </div>
             </div>
 
+            @endunless
             <div class="mb-4 overflow-hidden rounded-[18px] border border-[#E8E6E1] bg-white">
                 <div class="flex items-center gap-3 border-b border-[#F0EEE9] px-6 py-4">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#EFF6FF]">

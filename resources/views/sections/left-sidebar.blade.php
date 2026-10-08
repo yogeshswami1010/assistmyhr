@@ -193,12 +193,14 @@
                             <span>@lang('menu.mailSetting')</span>
                         </a>
                     </li>
+                    @unless(config('saas.enabled'))
                     <li>
                         <a href="{{ route('admin.sms-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/sms-settings') ? 'on' : '' }}">
                             <span class="ra-sublink-dot" aria-hidden="true"></span>
                             <span>@lang('menu.smsSettings')</span>
                         </a>
                     </li>
+                    @endunless
                     <li>
                         <a href="{{ route('admin.ai-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/ai-settings') ? 'on' : '' }}">
                             <span class="ra-sublink-dot" aria-hidden="true"></span>

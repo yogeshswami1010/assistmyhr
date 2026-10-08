@@ -811,7 +811,7 @@ class AdminJobApplicationController extends AdminBaseController
         try {
             $message = trim($request->message);
             $telnyxMessageId = $sms->send($application->phone, $message);
-            $settings = SmsSetting::first();
+            $settings = \App\Services\PlatformTelephony::settings();
 
             $storedMessage = ApplicantSmsMessage::create([
                 'job_application_id' => $application->id,

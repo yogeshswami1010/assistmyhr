@@ -9,4 +9,13 @@
 @if($tenant->slug !== 'main' && $tenant->status !== 'provisioning')
 <div class="card" style="border-color:#fecdd3"><h2 style="color:#be123c">Delete client</h2><p class="muted">Remove this client from the platform and revoke their login and Jobs API access. The client database and uploaded files remain on the server for recovery. This action removes the subscription and cannot be undone from this page.</p><form method="post" action="{{ route('superadmin.tenants.destroy',$tenant) }}" onsubmit="return window.confirm('Delete this client and revoke their access? The database and files will be retained for recovery.');">@csrf @method('DELETE')<button type="submit" style="background:#be123c">Delete client</button></form></div>
 @endif
+@php($telephony = json_decode(\App\Saas\PlatformSetting::valueFor('telephony.'.$tenant->id, '{}'), true) ?: [])
+<div class="card"><h2>Client calling and SMS</h2><form method="post" action="{{ route('superadmin.tenants.telephony',$tenant) }}">@csrf
+<label class="bs-set-lbl">Browser calling</label><select class="bs-f-sel" name="calls_enabled"><option value="0">Disabled</option><option value="1" @selected(!empty($telephony['calls_enabled']))>Enabled</option></select>
+<label class="bs-set-lbl">SIP connection ID</label><input class="bs-f-input" name="connection_id" value="{{ $telephony['connection_id'] ?? '' }}">
+<label class="bs-set-lbl">Calling number</label><input class="bs-f-input" name="voice_number" placeholder="+14165551234" value="{{ $telephony['voice_number'] ?? '' }}">
+<label class="bs-set-lbl">Candidate SMS</label><select class="bs-f-sel" name="sms_enabled"><option value="0">Disabled</option><option value="1" @selected(!empty($telephony['sms_enabled']))>Enabled</option></select>
+<label class="bs-set-lbl">SMS sender number</label><input class="bs-f-input" name="sms_number" placeholder="+14165551234" value="{{ $telephony['sms_number'] ?? '' }}">
+<p class="muted">Assign a dedicated SMS number to each client. Configure its Telnyx messaging profile webhook with this URL:</p><code>{{ url('/telnyx-webhook').'?workspace='.rawurlencode($tenant->slug) }}</code>
+<button>Save client calling and SMS</button></form></div>
 @endsection

@@ -15,7 +15,7 @@ class TelnyxWebhookController extends Controller
 {
     public function __invoke(Request $request, TelnyxSmsService $sms): Response
     {
-        $settings = SmsSetting::first();
+        $settings = \App\Services\PlatformTelephony::settings();
         $publicKey = trim((string) optional($settings)->telnyx_public_key);
 
         if ($publicKey === '' || ! $this->hasValidSignature($request, $publicKey)) {
@@ -46,6 +46,8 @@ class TelnyxWebhookController extends Controller
             Log::warning('Telnyx reply contains an invalid phone number.', ['message_id' => $messageId]);
             return response('OK');
         }
+
+        if (config('saas.enabled') && ($settings->nexmo_status !== 'active' || $normalizedTo !== $settings->telnyx_from_number)) { return response('Recipient is unavailable',403); }
 
         // Prefer the exact conversation that most recently sent to this
         // number. This matters when one candidate has applications for

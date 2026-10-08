@@ -337,5 +337,16 @@ check(App\AiApiKey::count()===0,'Company key is never copied into client key tab
 $context->activate($alpha);
 check(config('services.deepseek.key')==='ALPHA-AI','Client override wins over company saved key');
 $context->reset();$sharedKey->delete();
+$platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>'PLATFORM-TELNYX-SECRET','telnyx_public_key'=>'PUBLIC-KEY']));
+check(PlatformSetting::valueFor('telnyx_api_key')!=='PLATFORM-TELNYX-SECRET','Platform Telnyx key encrypted at rest');
+$platform->saveClientTelephony(Request::create('/superadmin/tenants/'.$alpha->id.'/telephony','POST',['sms_enabled'=>1,'calls_enabled'=>1,'sms_number'=>'+14165551234','voice_number'=>'+14165551234','connection_id'=>'alpha-connection']),$alpha);
+$context->activate($alpha);
+check(App\Services\PlatformTelephony::settings()->telnyx_api_key==='PLATFORM-TELNYX-SECRET','Client communication uses server-side platform key');
+check(App\Services\CandidateCallService::voiceSettings()['credential_id']==='alpha-connection','Client voice uses super admin assignment');
+$context->activate($gamma);
+check(App\Services\PlatformTelephony::settings()->nexmo_status==='deactive'&&!App\Services\CandidateCallService::voiceSettings()['enabled'],'Unconfigured client cannot call or send SMS');
+try { (new App\Services\TelnyxSmsService)->send('+14165559999','Test'); throw new RuntimeException('Disabled client sent SMS'); } catch (RuntimeException $e) { check(str_contains($e->getMessage(),'not enabled'),'Disabled client SMS blocked before contacting provider'); }
+$context->reset();
+rejected(fn()=>$platform->saveClientTelephony(Request::create('/superadmin/tenants/'.$gamma->id.'/telephony','POST',['sms_enabled'=>1,'calls_enabled'=>0,'sms_number'=>'+14165551234']),$gamma),'SMS numbers cannot be assigned to two clients');
 Carbon\Carbon::setTestNow();
 echo "SaaS integration checks passed: $checks\n";

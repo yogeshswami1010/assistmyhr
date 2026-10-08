@@ -1,4 +1,8 @@
 @extends('saas.platform-layout')
 @section('platform-content')
 <div class="card narrow"><form method="post" action="{{ route('superadmin.settings.save') }}">@csrf<label class="bs-set-lbl">Public signup</label><select class="bs-f-sel" name="signup_enabled"><option value="1" @selected(($settings['signup_enabled']??'0')==='1')>Open</option><option value="0" @selected(($settings['signup_enabled']??'0')!=='1')>Closed</option></select><label class="bs-set-lbl">Trial length in days</label><input class="bs-f-input" name="trial_days" type="number" min="1" max="90" value="{{ $settings['trial_days']??14 }}" required><label class="bs-set-lbl">Trial plan</label><select class="bs-f-sel" name="trial_plan_id" required>@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected(($settings['trial_plan_id']??null)==$plan->id)>{{ $plan->name }}</option>@endforeach</select><button>Save settings</button></form></div>
+<div class="card narrow"><h2>Calling and SMS provider</h2><p class="muted">Telnyx is managed here for all clients. Enable features and assign numbers from each client's details page.</p><form method="post" action="{{ route('superadmin.telephony.save') }}">@csrf
+<label class="bs-set-lbl">Telnyx API key</label><input class="bs-f-input" type="password" name="telnyx_api_key" autocomplete="new-password" placeholder="Leave blank to keep the saved key">
+<label class="bs-set-lbl">Telnyx webhook public key</label><input class="bs-f-input" name="telnyx_public_key" value="{{ $settings['telnyx_public_key'] ?? '' }}" required>
+<button>Save calling and SMS provider</button></form></div>
 @endsection

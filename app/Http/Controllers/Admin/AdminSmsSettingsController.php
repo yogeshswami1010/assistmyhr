@@ -16,11 +16,13 @@ class AdminSmsSettingsController extends AdminBaseController
     }
 
     public function index() {
+        abort_if(config('saas.enabled'),403,'Calling and SMS settings are managed by the super admin.');
         $this->credentials = SmsSetting::first();
         return view('admin.sms-setting.index', $this->data);
     }
 
     public function update(UpdateRequest $request) {
+        abort_if(config('saas.enabled'),403,'Calling and SMS settings are managed by the super admin.');
         $smsSetting = SmsSetting::first();
 
         // Save SMS Credentials

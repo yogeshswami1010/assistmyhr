@@ -177,7 +177,7 @@ class CandidateCommunicationController extends AdminBaseController
                         try {
                             ApplicantSmsMessage::create([
                                 'job_application_id' => $candidate->id, 'user_id' => $this->user->id,
-                                'direction' => 'outbound', 'from_number' => $sms->normalizePhone((string) SmsSetting::first()->telnyx_from_number),
+                                'direction' => 'outbound', 'from_number' => $sms->normalizePhone((string) \App\Services\PlatformTelephony::settings()->telnyx_from_number),
                                 'to_number' => $address, 'message' => $message,
                                 'telnyx_message_id' => $messageId, 'status' => 'sent',
                             ]);

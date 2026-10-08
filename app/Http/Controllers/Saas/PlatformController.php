@@ -206,6 +206,31 @@ class PlatformController extends Controller
         AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'platform.settings_changed', 'reason' => 'Signup and trial settings changed.', 'before' => $before, 'after' => $data]);
         return back()->with('status', 'Platform settings saved.');
     }
+    public function saveTelephony(Request $request) {
+        $data=$request->validate(['telnyx_api_key'=>['nullable','string','max:8192'],'telnyx_public_key'=>['required','string','max:255']]);
+        if (!empty($data['telnyx_api_key'])) PlatformSetting::updateOrCreate(['key'=>'telnyx_api_key'],['value'=>\Illuminate\Support\Facades\Crypt::encryptString($data['telnyx_api_key'])]);
+        PlatformSetting::updateOrCreate(['key'=>'telnyx_public_key'],['value'=>$data['telnyx_public_key']]);
+        AuditLog::create(['admin_id'=>Auth::guard('platform')->id(),'action'=>'telephony.provider_updated','reason'=>'Platform Telnyx settings updated.']);
+        return back()->with('status','Platform calling and SMS provider saved.');
+    }
+    public function saveClientTelephony(Request $request,Tenant $tenant) {
+        $data=$request->validate([
+            'sms_enabled'=>['required','boolean'],'calls_enabled'=>['required','boolean'],
+            'sms_number'=>['required_if:sms_enabled,1','nullable','regex:/^\+1[0-9]{10}$/'],
+            'voice_number'=>['required_if:calls_enabled,1','nullable','regex:/^\+1[0-9]{10}$/'],
+            'connection_id'=>['required_if:calls_enabled,1','nullable','string','max:191','regex:/^[A-Za-z0-9_-]+$/'],
+        ]);
+        if (!empty($data['sms_number'])) {
+            foreach (PlatformSetting::where('key','like','telephony.%')->where('key','!=','telephony.'.$tenant->id)->pluck('value') as $value) {
+                if ((json_decode($value,true)['sms_number'] ?? null) === $data['sms_number']) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['sms_number'=>'This SMS number is already assigned to another client.']);
+                }
+            }
+        }
+        PlatformSetting::updateOrCreate(['key'=>'telephony.'.$tenant->id],['value'=>json_encode($data)]);
+        AuditLog::create(['tenant_id'=>$tenant->id,'admin_id'=>Auth::guard('platform')->id(),'action'=>'telephony.client_updated','reason'=>'Client calling and SMS permissions updated.','after'=>$data]);
+        return back()->with('status','Client calling and SMS settings saved.');
+    }
     private function auditMutation(Request $request, Tenant $tenant, string $action, string $reason, callable $mutation): void
     {
         DB::connection('saas_landlord')->transaction(function () use ($tenant, $action, $reason, $mutation) {

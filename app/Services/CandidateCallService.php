@@ -15,6 +15,10 @@ class CandidateCallService
 {
     public static function voiceSettings(?CompanySetting $settings = null): array
     {
+        if (config('saas.enabled')) {
+            $managed=PlatformTelephony::settings();
+            return ['enabled'=>$managed->calls_enabled,'credential_id'=>$managed->connection_id,'from_number'=>$managed->voice_number];
+        }
         $settings ??= CompanySetting::first();
         if ($settings && $settings->candidate_calls_enabled !== null) {
             return [
@@ -41,7 +45,7 @@ class CandidateCallService
 
     public function session(): array
     {
-        $settings = SmsSetting::first();
+        $settings = \App\Services\PlatformTelephony::settings();
         $voice = self::voiceSettings();
         $connectionId = trim((string) ($voice['credential_id'] ?? ''));
         $from = $voice['from_number'];
@@ -50,6 +54,7 @@ class CandidateCallService
         if ($connectionId === '') $missing[] = 'enter the Telnyx SIP connection ID in Account Settings';
         if (!trim((string) $from)) $missing[] = 'enter the Telnyx calling number in Account Settings';
         if (!trim((string) $settings?->telnyx_api_key)) $missing[] = 'save your Telnyx API key in SMS Settings';
+        if (config('saas.enabled') && $missing) throw new RuntimeException('Calling is unavailable. Contact the platform administrator to configure calling.');
         if ($missing) throw new RuntimeException('Calling setup incomplete: '.implode('; ', $missing).'.');
         $this->aiKey();
 
@@ -59,6 +64,11 @@ class CandidateCallService
         $credential = DB::transaction(function () use ($settings, $connectionId) {
             $companySettings = CompanySetting::query()->lockForUpdate()->first();
             if (!$companySettings) throw new RuntimeException('Company settings are unavailable.');
+            if (config('saas.enabled') && $companySettings->telnyx_voice_credential_id !== $connectionId) {
+                $companySettings->telnyx_voice_credential_id=$connectionId;
+                $companySettings->telnyx_webrtc_credential_id=null;
+                $companySettings->save();
+            }
             if (trim((string) $companySettings->telnyx_webrtc_credential_id) !== '') {
                 return $companySettings->telnyx_webrtc_credential_id;
             }
@@ -116,7 +126,7 @@ class CandidateCallService
     {
         $key = $this->aiKey();
         if (!$call->transcript) {
-            $transcriptionKey = trim((string) SmsSetting::first()?->telnyx_api_key);
+            $transcriptionKey = trim((string) \App\Services\PlatformTelephony::settings()?->telnyx_api_key);
             if ($transcriptionKey === '') throw new RuntimeException('Configure the Telnyx API key in SMS Settings for call transcription.');
             $stream = Storage::disk('candidate_call_audio')->readStream($call->audio_path);
             if (!is_resource($stream)) throw new RuntimeException('Call audio is unavailable.');

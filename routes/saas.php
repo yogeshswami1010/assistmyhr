@@ -41,6 +41,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::put('profile/password', [PlatformController::class, 'updatePassword'])->middleware('throttle:5,1')->name('profile.password');
         Route::get('admins', [PlatformController::class, 'admins'])->name('admins');
         Route::post('admins', [PlatformController::class, 'createAdmin'])->middleware('throttle:5,1')->name('admins.store');
+        Route::post('settings/telephony', [PlatformController::class, 'saveTelephony'])->name('telephony.save');
+        Route::post('tenants/{tenant}/telephony', [PlatformController::class, 'saveClientTelephony'])->name('tenants.telephony');
         Route::get('settings', [PlatformController::class, 'settings'])->name('settings');
         Route::post('settings', [PlatformController::class, 'saveSettings'])->name('settings.save');
     });

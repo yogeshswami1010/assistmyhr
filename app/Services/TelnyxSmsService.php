@@ -10,9 +10,9 @@ class TelnyxSmsService
 {
     public function send(string $phone, string $message): string
     {
-        $settings = SmsSetting::first();
+        $settings = \App\Services\PlatformTelephony::settings();
         if (!$settings || $settings->nexmo_status !== 'active' || $settings->sms_provider !== 'telnyx') {
-            throw new RuntimeException('Telnyx SMS is not enabled in SMS Settings.');
+            throw new RuntimeException('SMS is not enabled. Contact the platform administrator.');
         }
         if (!$settings->telnyx_api_key || !$settings->telnyx_from_number) {
             throw new RuntimeException('Telnyx API key and sender number are required.');

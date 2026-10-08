@@ -90,7 +90,7 @@ class CompanySettingsController extends AdminBaseController
 
         $data->website = $request->website;
 
-        if ($request->has('candidate_calls_enabled')) {
+        if (!config('saas.enabled') && $request->has('candidate_calls_enabled')) {
             $previousConnectionId = trim((string) $data->telnyx_voice_credential_id);
             $newConnectionId = trim((string) $request->input('telnyx_voice_credential_id'));
             $data->candidate_calls_enabled = $request->boolean('candidate_calls_enabled');
