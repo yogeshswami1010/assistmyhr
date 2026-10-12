@@ -123,6 +123,10 @@ class PlatformController extends Controller
     {
         return $this->platformView('saas.platform-activity', ['logs' => AuditLog::with('admin')->latest('id')->paginate(25), 'pageTitle' => 'Platform activity']);
     }
+    public function requests()
+    {
+        return $this->platformView('saas.platform-requests', ['requests' => AuditLog::with('tenant')->where('action', 'subscription.change_requested')->latest('id')->paginate(25), 'plans' => Plan::all()->keyBy('id'), 'pageTitle' => 'Client requests']);
+    }
     public function tenant(Tenant $tenant)
     {
         $context = app(TenantContext::class);

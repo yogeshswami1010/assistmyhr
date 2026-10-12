@@ -1,0 +1,4 @@
+@extends('saas.platform-layout')
+@section('platform-content')
+<div class="card"><h2>Plan and renewal requests</h2><p class="muted">Open the client to update their plan or extend their subscription. Requests do not change subscriptions automatically.</p><div class="scroll"><table><thead><tr><th>Received (UTC)</th><th>Client</th><th>Requested plan</th><th>Message</th><th>Action</th></tr></thead><tbody>@forelse($requests as $item)<tr><td>{{ $item->created_at }}</td><td>{{ $item->tenant?->name ?? 'Deleted client' }}</td><td>{{ $plans->get($item->after['plan_id'] ?? null)?->name ?? 'Unavailable plan' }}</td><td style="white-space:pre-wrap;min-width:240px;overflow-wrap:anywhere">{{ $item->reason }}</td><td>@if($item->tenant)<a href="{{ route('superadmin.tenants.show',$item->tenant) }}">Manage client &rarr;</a>@endif</td></tr>@empty<tr><td colspan="5">No client requests yet.</td></tr>@endforelse</tbody></table></div>{{ $requests->links() }}</div>
+@endsection

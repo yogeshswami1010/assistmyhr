@@ -31,7 +31,7 @@ class AccountController extends Controller
     {
         $tenant = app(TenantContext::class)->current();
         abort_unless($tenant, 404);
-        return view('saas.subscription', ['tenant' => $tenant, 'usage' => app(QuotaService::class)->usage(), 'plans' => Plan::where('enabled', true)->where('public', true)->get()]);
+        return view('saas.subscription', ['tenant' => $tenant, 'requests' => AuditLog::where('tenant_id',  $tenant->id)->where('action', 'subscription.change_requested')->latest('id')->limit(10)->get(), 'usage' => app(QuotaService::class)->usage(), 'plans' => Plan::where('enabled', true)->where('public', true)->get()]);
     }
 
     public function requestPlan(Request $request)
@@ -42,6 +42,6 @@ class AccountController extends Controller
             'tenant_id' => app(TenantContext::class)->current()->id, 'action' => 'subscription.change_requested',
             'reason' => $data['reason'], 'after' => ['plan_id' => $data['plan_id'], 'requested_by_user_id' => $request->user()->id],
         ]);
-        return back()->with('status', 'Your plan request has been recorded for the platform administrator.');
+        return redirect(tenant_route('saas.subscription'))->with('status', 'Your plan request has been sent to the platform administrator.');
     }
 }
