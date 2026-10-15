@@ -134,6 +134,7 @@ Route::middleware('auth')->group(function () {
             Route::redirect('/', '/admin/dashboard');
 
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+            Route::post('/welcome/dismiss', [AdminDashboardController::class, 'dismissWelcome'])->name('welcome.dismiss');
 
             Route::get('job-applications/{id}/calls', [\App\Http\Controllers\Admin\CandidateCallController::class, 'index'])->name('candidate-calls.index');
             Route::post('job-applications/{id}/calls', [\App\Http\Controllers\Admin\CandidateCallController::class, 'start'])->middleware('throttle:10,1')->name('candidate-calls.start');

@@ -22,6 +22,7 @@
 @endpush
 
 @section('content')
+@if($showWelcome ?? false) @include('admin.dashboard.welcome') @endif
     @if (!$user->mobile_verified && $smsSettings->nexmo_status == 'active')
         <div id="verify-mobile-info" class="rd-a rd-a1 mb-4">
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4" role="alert">

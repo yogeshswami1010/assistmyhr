@@ -24,6 +24,9 @@ class AdminDashboardController extends AdminBaseController
 
     public function index()
     {        
+        $tenant = config('saas.enabled') ? app(\App\Saas\TenantContext::class)->current() : null;
+        $this->showWelcome = $tenant && $tenant->slug !== 'main'
+            && !\App\Saas\PlatformSetting::valueFor('welcome.'.$tenant->id.'.'.$this->user->id);
         $this->smsSettings = SmsSetting::first();
         $this->teamMembers = User::with('role.role')->orderBy('name')->get();
         $this->onlineTeamMemberIds = User::query()
@@ -59,6 +62,17 @@ class AdminDashboardController extends AdminBaseController
         $this->todoItemsView = $this->generateTodoView();
 
         return view('admin.dashboard.index', $this->data);
+    }
+    public function dismissWelcome(\Illuminate\Http\Request $request)
+    {
+        abort_unless(config('saas.enabled'), 404);
+        $tenant = app(\App\Saas\TenantContext::class)->current();
+        abort_unless($tenant, 404);
+        \App\Saas\PlatformSetting::updateOrCreate(
+            ['key' => 'welcome.'.$tenant->id.'.'.$request->user()->id],
+            ['value' => now()->toIso8601String()]
+        );
+        return redirect(tenant_route('admin.dashboard'));
     }
 
     private function progressbarPercent()
