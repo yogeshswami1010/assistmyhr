@@ -22,7 +22,7 @@
 
 
         @if(in_array("view_jobs", $userPermissions))
-            <a href="{{ route('admin.jobs.index') }}" class="ra-nav-link {{ request()->is('admin/jobs*') ? 'on' : '' }}">
+            <a data-tour-target="jobs" href="{{ route('admin.jobs.index') }}" class="ra-nav-link {{ request()->is('admin/jobs*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="jobs" /></span>
                 <span class="ra-nl">@lang('menu.jobs')</span>
             </a>
@@ -33,11 +33,11 @@
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="dashboard" /></span>
                 <span class="ra-nl">ATS Overview</span>
             </a>
-            <a href="{{ route('admin.job-applications.table') }}" class="ra-nav-link {{ request()->is('admin/job-applications*') ? 'on' : '' }}">
+            <a data-tour-target="applications" href="{{ route('admin.job-applications.table') }}" class="ra-nav-link {{ request()->is('admin/job-applications*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="job-applications" /></span>
                 <span class="ra-nl">@lang('menu.jobApplications')</span>
             </a>
-            <a href="{{ route('admin.applications-archive.index') }}" class="ra-nav-link {{ request()->is('admin/applications-archive*') ? 'on' : '' }}">
+            <a data-tour-target="candidates" href="{{ route('admin.applications-archive.index') }}" class="ra-nav-link {{ request()->is('admin/applications-archive*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="candidate-database" /></span>
                 <span class="ra-nl">@lang('menu.candidateDatabase')</span>
             </a>
@@ -64,14 +64,14 @@
 
 
         @if(in_array("view_schedule", $userPermissions))
-            <a href="{{ route('admin.interview-schedule.index') }}" class="ra-nav-link {{ request()->is('admin/interview-schedule*') ? 'on' : '' }}">
+            <a data-tour-target="interviews" href="{{ route('admin.interview-schedule.index') }}" class="ra-nav-link {{ request()->is('admin/interview-schedule*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="interview-schedule" /></span>
                 <span class="ra-nl">@lang('menu.interviewSchedule')</span>
             </a>
         @endif
 
         @if(in_array("view_team", $userPermissions))
-            <a href="{{ route('admin.team.index') }}" class="ra-nav-link {{ request()->is('admin/team*') ? 'on' : '' }}">
+            <a data-tour-target="team" href="{{ route('admin.team.index') }}" class="ra-nav-link {{ request()->is('admin/team*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="team" /></span>
                 <span class="ra-nl">@lang('menu.team')</span>
             </a>
@@ -121,7 +121,7 @@
         @endif
 
         <div x-data="{ open: {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/integrations*') ? 'true' : 'false' }} }">
-            <button type="button" @click.prevent="open = !open" class="ra-nav-link {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/integrations*') ? 'on' : '' }}">
+            <button data-tour-target="settings" type="button" @click.prevent="open = !open" class="ra-nav-link {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/integrations*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="settings" /></span>
                 <span class="ra-nl">@lang('menu.settings')</span>
                 <svg class="ra-settings-chevron h-2.5 w-2.5 shrink-0 text-white/40 transition-transform ml-auto" :class="open ? '-rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -151,7 +151,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('admin.settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/settings') ? 'on' : '' }}">
+                        <a data-tour-target="business-settings" href="{{ route('admin.settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/settings') ? 'on' : '' }}">
                             <span class="ra-sublink-dot" aria-hidden="true"></span>
                             <span>@lang('menu.businessSettings')</span>
                         </a>
