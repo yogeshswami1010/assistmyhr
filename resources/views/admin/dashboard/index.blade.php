@@ -11,7 +11,7 @@
 @section('create-button')
     <div class="flex flex-wrap items-center gap-2">
     @if($tourAvailable ?? false)
-        <a href="{{ tenant_route('admin.dashboard', ['tour' => 1]) }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Guided tour</a>
+        <a href="{{ tenant_route('admin.dashboard', ['tour' => 1]) }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Guided Tour</a>
     @endif
     @if($user->cans('add_jobs'))
         <a href="{{ route('admin.jobs.create') }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl text-white shadow-sm hover:opacity-95 transition-opacity" style="background: var(--ra-accent, #2563eb);">
