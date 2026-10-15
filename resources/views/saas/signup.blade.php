@@ -14,7 +14,7 @@ input.addEventListener('input',function(){
 const value=input.value,special=/[^\p{L}\p{N}\s]/u.test(value);
 input.setCustomValidity(value&&!special?'Include at least one special character, such as !, @ or #.':'');
 let level=0;
-if(value){level=1;if(value.length>=8&&special)level=2;if(value.length>=16&&special&&/[a-z]/.test(value)&&/[A-Z]/.test(value)&&/[0-9]/.test(value))level=3;}
+if(value){level=1;if(value.length>=6)level=2;if(value.length>=8&&special)level=3;}
 bar.style.width=[0,33,66,100][level]+'%';bar.style.background=['transparent','#10b981','#eab308','#ef4444'][level];
 meter.setAttribute('aria-valuenow',level);meter.setAttribute('aria-valuetext',['Empty','Easy','Medium','Hard'][level]);label.textContent='Password strength: '+['Enter a password','Easy','Medium','Hard'][level];
 });
