@@ -9,12 +9,17 @@
 @endsection
 
 @section('create-button')
+    <div class="flex flex-wrap items-center gap-2">
+    @if($tourAvailable ?? false)
+        <a href="{{ tenant_route('admin.dashboard', ['tour' => 1]) }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Guided tour</a>
+    @endif
     @if($user->cans('add_jobs'))
         <a href="{{ route('admin.jobs.create') }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl text-white shadow-sm hover:opacity-95 transition-opacity" style="background: var(--ra-accent, #2563eb);">
             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
             @lang('modules.dashboard.newJobPost')
         </a>
     @endif
+    </div>
 @endsection
 
 @push('head-script')
@@ -22,7 +27,7 @@
 @endpush
 
 @section('content')
-@if($showWelcome ?? false) @include('admin.dashboard.welcome') @endif
+@if(($showWelcome ?? false) || ($replayTour ?? false)) @include('admin.dashboard.welcome') @endif
     @if (!$user->mobile_verified && $smsSettings->nexmo_status == 'active')
         <div id="verify-mobile-info" class="rd-a rd-a1 mb-4">
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4" role="alert">

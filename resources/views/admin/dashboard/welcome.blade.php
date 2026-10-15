@@ -54,5 +54,8 @@ render();
 dialog.addEventListener('cancel',function(event){event.preventDefault();finish();});
 window.addEventListener('resize',position);document.addEventListener('scroll',position,true);
 if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
+@if($replayTour ?? false)
+tour.click();
+@endif
 })();
 </script>

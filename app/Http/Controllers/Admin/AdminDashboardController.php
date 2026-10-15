@@ -25,6 +25,8 @@ class AdminDashboardController extends AdminBaseController
     public function index()
     {        
         $tenant = config('saas.enabled') ? app(\App\Saas\TenantContext::class)->current() : null;
+        $this->tourAvailable = (bool) $tenant;
+        $this->replayTour = $tenant && request()->boolean('tour');
         $this->showWelcome = $tenant && $tenant->slug !== 'main'
             && !\App\Saas\PlatformSetting::valueFor('welcome.'.$tenant->id.'.'.$this->user->id);
         $this->smsSettings = SmsSetting::first();
