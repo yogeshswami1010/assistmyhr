@@ -184,10 +184,12 @@
                     </li>
 
                     <li>
+                        @unless(config('saas.enabled'))
                         <a href="{{ route('admin.theme-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/theme-settings') ? 'on' : '' }}">
                             <span class="ra-sublink-dot" aria-hidden="true"></span>
                             <span>@lang('menu.themeSettings')</span>
                         </a>
+                        @endunless
                     </li>
                     <li>
                         <a href="{{ route('admin.smtp-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/smtp-settings') ? 'on' : '' }}">
