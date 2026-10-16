@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class TrashController extends AdminBaseController
 {
     private const TYPES = [
+        'job' => \App\Job::class,
         'application' => JobApplication::class,
         'application-note' => ApplicantNote::class,
         'client-note' => JobClientNote::class,
@@ -28,6 +29,14 @@ class TrashController extends AdminBaseController
         abort_unless($selectedType === 'all' || isset(self::TYPES[$selectedType]), 404);
 
         $items = collect();
+
+        if ($selectedType === 'all' || $selectedType === 'job') {
+            $items = $items->concat(\App\Job::onlyTrashed()->get()->map(fn ($job) => (object) [
+                'id' => $job->id, 'type' => 'job', 'type_label' => 'Job',
+                'title' => $job->title, 'details' => 'Applicants are preserved.',
+                'context' => 'Job #'.$job->id, 'deleted_at' => $job->deleted_at,
+            ]));
+        }
 
         if ($selectedType === 'all' || $selectedType === 'application') {
             $items = $items->concat(JobApplication::onlyTrashed()->whereNotNull('moved_to_trash_at')->with('job:id,title')->get()->map(function ($application) {
@@ -126,6 +135,10 @@ class TrashController extends AdminBaseController
     {
         abort_if(!auth()->user()->hasRole('admin'), 403);
         $item = $this->trashedItem($type, $id);
+
+        if ($type === 'job' && JobApplication::withTrashed()->where('job_id', $id)->exists()) {
+            return redirect()->back()->withErrors(['trash' => 'This job has applicants and cannot be permanently deleted. Applicants and their records are preserved. You can restore the job.']);
+        }
 
         if ($type === 'application' && $item->photo) {
             Storage::delete('candidate-photos/'.$item->photo);

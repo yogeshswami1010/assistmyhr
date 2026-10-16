@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Job extends Model
 {
     use Sluggable;
+    use \Illuminate\Database\Eloquent\SoftDeletes;
 
     public function getJobDescriptionAttribute($value) { return tenant_html($value); }
     public function getJobRequirementAttribute($value) { return tenant_html($value); }
