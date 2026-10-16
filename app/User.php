@@ -12,6 +12,26 @@ class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVer
     use Notifiable, LaravelEntrustUserTrait, HasFactory;
     use \Illuminate\Auth\MustVerifyEmail;
 
+    public function sendEmailVerificationNotification()
+    {
+        if (!config('saas.enabled')) {
+            $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+            return;
+        }
+
+        // Laravel's legacy mail.driver makes it ignore named mailer settings.
+        // Select the platform mailer explicitly while sending verification only.
+        $legacyDriver = config('mail.driver');
+        try {
+            config(['mail.driver' => null]);
+            app('mail.manager')->purge('platform');
+            $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+        } finally {
+            config(['mail.driver' => $legacyDriver]);
+            app('mail.manager')->purge('platform');
+        }
+    }
+
     /**
      * The attributes that are mass assignable.
      *
