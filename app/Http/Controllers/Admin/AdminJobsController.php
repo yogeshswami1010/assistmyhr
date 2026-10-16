@@ -565,7 +565,7 @@ class AdminJobsController extends AdminBaseController
 
         Job::destroy($id);
 
-        return Reply::success(__('messages.recordDeleted'));
+        return Reply::success('Job moved to Trash. Applicants have been preserved.');
     }
 
     public function data()

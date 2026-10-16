@@ -194,7 +194,7 @@
                 </div>
                 <div>
                     <h3 id="jobsDelTitle" class="text-[15px] font-bold text-[#1A1E2E]">@lang('app.delete')</h3>
-                    <p class="text-[11.5px] text-[#8892A0]">@lang('errors.deleteWarning')</p>
+                    <p class="text-[11.5px] text-[#8892A0]">Jobs moved to Trash can be restored.</p>
                 </div>
             </div>
             <button type="button" class="rounded-lg p-2 text-[#8892A0] hover:bg-gray-100" id="jobsDelClose" aria-label="@lang('app.close')">
@@ -206,7 +206,7 @@
         </div>
         <div class="flex justify-end gap-2.5 border-t border-[#F0EEE9] px-6 py-3.5">
             <button type="button" id="jobsDelCancel" class="rounded-lg border-0 bg-[#F1F3F7] px-5 py-2.5 text-[13px] font-semibold text-[#5A6478] hover:bg-[#E5E7ED]">@lang('app.cancel')</button>
-            <button type="button" id="jobsDelConfirm" class="rounded-lg border-0 bg-[#EF4444] px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-[#DC2626]">@lang('app.delete')</button>
+            <button type="button" id="jobsDelConfirm" class="rounded-lg border-0 bg-[#EF4444] px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-[#DC2626]">Move to Trash</button>
         </div>
     </div>
 </div>
@@ -441,7 +441,7 @@
         if (delBtn && PERM.delete) {
             deleteMode = 'single';
             deleteTargetIds = [parseInt(delBtn.getAttribute('data-id'), 10)];
-            document.getElementById('jobsDelMessage').textContent = @json(__('errors.deleteWarning'));
+            document.getElementById('jobsDelMessage').textContent = 'Move this job to Trash? Applicants and their records will be preserved. You can restore the job from Trash.';
             document.getElementById('jobsDelModal').classList.remove('hidden');
             document.getElementById('jobsDelModal').classList.add('flex');
             return;
@@ -515,7 +515,7 @@
         if (!PERM.delete || selected.size === 0) return;
         deleteMode = 'bulk';
         deleteTargetIds = Array.from(selected);
-        document.getElementById('jobsDelMessage').textContent = deleteTargetIds.length + ' — ' + String(I18N.deleteN);
+        document.getElementById('jobsDelMessage').textContent = 'Move ' + deleteTargetIds.length + ' jobs to Trash? Applicants will be preserved, and the jobs can be restored.';
         document.getElementById('jobsDelModal').classList.remove('hidden');
         document.getElementById('jobsDelModal').classList.add('flex');
     });

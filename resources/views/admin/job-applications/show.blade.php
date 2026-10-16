@@ -737,6 +737,9 @@ function jaSaveMarketingLabel(appId) {
                                 <div id="ja-job-view-{{ $application->id }}" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
                                     <span class="ja-info-val" style="display:inline-flex;align-items:center;gap:6px;">
                                         <span id="ja-display-job-{{ $application->id }}">{{ ucwords($application->job?->title ?? 'N/A') }}</span>
+                                        @if($application->job?->trashed())
+                                        <span id="ja-deleted-job-{{ $application->id }}" style="display:inline-block;padding:3px 8px;border-radius:20px;background:#fff1f2;color:#be123c;font-size:10px;font-weight:600;white-space:nowrap">Deleted job</span>
+                                        @endif
                                         @if($user->cans('edit_job_applications'))
                                         <button type="button" onclick="jaToggleJobEdit({{ $application->id }})" title="Change job"
                                                 style="width:20px;height:20px;border-radius:6px;border:1px solid #E2DED8;background:#F8F7F4;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#8A94A6;flex-shrink:0;padding:0;transition:all .15s;"
