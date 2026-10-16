@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class SaasMaintenance extends Command
 {
-    protected $signature = 'saas:maintenance {task : minute or daily}';
+    protected $signature = 'saas:maintenance {task : minute or daily} {--workspace= : Run only this client workspace} {--debug : Show email reply matching results}';
     protected $description = 'Run ATS maintenance separately in every active client database';
 
     public function handle(): int
@@ -21,11 +21,20 @@ class SaasMaintenance extends Command
         };
         if (!$commands) { $this->error('Task must be minute or daily.'); return self::FAILURE; }
         $context = app(TenantContext::class); $failed = false;
-        foreach (Tenant::where('status', 'active')->cursor() as $tenant) {
+        $tenants = Tenant::where('status', 'active');
+        if ($this->option('workspace')) {
+            $tenants->where('slug', $this->option('workspace'));
+            if (!(clone $tenants)->exists()) { $this->error('Active workspace not found.'); return self::FAILURE; }
+        }
+        foreach ($tenants->cursor() as $tenant) {
             if (!$tenant->hasAccess()) { continue; }
             try {
+                $this->line('Workspace: '.$tenant->slug);
                 $context->activate($tenant);
-                foreach ($commands as $command) { if ($this->call($command) !== 0) { $failed = true; } }
+                foreach ($commands as $command) {
+                    $options = $command === 'candidate-emails:import-replies' && $this->option('debug') ? ['--debug' => true] : [];
+                    if ($this->call($command, $options) !== 0) { $failed = true; }
+                }
             } catch (\Throwable $e) { report($e); $failed = true; $this->error('Maintenance failed for workspace '.$tenant->slug.'. See application logs.'); }
             finally { $context->reset(); }
         }

@@ -16,6 +16,7 @@ class SmtpConfiguration
     {
         $host = strtolower(trim((string) $smtpHost));
         if ($host === 'smtp.gmail.com') { return 'imap.gmail.com'; }
+        if ($host === 'smtp.zohocloud.ca') { return 'imap.zohocloud.ca'; }
         if (preg_match('/\A(smtppro|smtp)\.zoho\.(com|in|eu|com.au|jp|ca|sa)\z/', $host, $matches)) {
             return ($matches[1] === 'smtppro' ? 'imappro' : 'imap').'.zoho.'.$matches[2];
         }
