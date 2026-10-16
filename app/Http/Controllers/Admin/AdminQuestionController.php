@@ -77,6 +77,10 @@ public function store(StoreRequest $request)
     $question->job_category_id = $request->job_category_id ?: null;
     $question->save();
 
+    if ($request->boolean('inline_job')) {
+        return response()->json(['question' => $question->only(['id', 'question', 'type', 'required', 'is_knockout'])]);
+    }
+
     return Reply::redirect(
         route('admin.questions.index'),
         __('menu.question').' '.__('messages.createdSuccessfully')

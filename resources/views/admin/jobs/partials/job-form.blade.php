@@ -602,7 +602,7 @@
 
                     {{-- ── HOMEPAGE VISIBILITY ── --}}
 
-@if (count($questions) > 0)
+
 
 <div class="overflow-hidden rounded-2xl border border-[#E8E6E1] bg-white job-page-question-wrapper">
 
@@ -616,12 +616,11 @@
                 Select questions for this job
             </p>
         </div>
-        <a href="{{ route('admin.questions.create') }}"
-           target="_blank"
+        @if($user->cans('add_question'))<button type="button" id="job-add-question"
            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 transition">
             <i class="fa fa-plus"></i>
             Add Question
-        </a>
+        </button>@endif
     </div>
 
     {{-- Search bar --}}
@@ -643,7 +642,7 @@
     </div>
 
     {{-- Questions list --}}
-    <div id="question-list" class="space-y-3 px-5 pb-4">
+    <div id="question-list" class="space-y-3 px-5 pb-4">@if(count($questions) === 0)<p id="questions-empty" class="text-sm text-slate-500">No custom questions yet. Use Add Question to create your first question here.</p>@endif
         @foreach ($questions as $question)
             @php $isResumeQuestion = strtolower(trim($question->question)) === 'upload resume'; @endphp
             <label
@@ -797,8 +796,6 @@
     document.addEventListener('DOMContentLoaded', render);
 })();
 </script>
-
-@endif
 
                     <div @if(!$isEdit) hidden style="display:none" @endif class="overflow-hidden rounded-2xl border border-[#E8E6E1] bg-white">
                         <div class="border-b border-gray-100 px-5 py-4">
@@ -1268,3 +1265,5 @@ $(document).ready(function () {
 })();
 </script>
 
+
+@include('admin.jobs.partials.question-create-modal')
