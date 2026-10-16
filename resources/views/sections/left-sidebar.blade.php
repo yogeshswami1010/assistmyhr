@@ -89,10 +89,12 @@
             @endphp
             <span id="internal-messages-sidebar-count" class="{{ $sidebarInternalUnread > 0 ? '' : 'hidden' }} ml-auto min-w-[20px] rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">{{ $sidebarInternalUnread }}</span>
         </a>
+        @unless(config('saas.enabled'))
         <a href="{{ route('admin.temp-staffing.index') }}" class="ra-nav-link {{ request()->is('admin/temp-staffing*') ? 'on' : '' }}">
             <span class="ra-ni" aria-hidden="true"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.29-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.29.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
             <span class="ra-nl">Temp Staffing</span>
         </a>
+        @endunless
         <div class="ra-sec-title">@lang('menu.general')</div>
 
         @if ($user->roles->count() > 0)

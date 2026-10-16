@@ -20,6 +20,7 @@ class InitializeSaasTenant
         }
         abort_if($request->is('admin/settings/security-setting', 'admin/settings/security-setting/*'), 404);
         abort_if($request->is('admin/settings/theme-settings', 'admin/settings/theme-settings/*'), 404);
+        abort_if($request->is('admin/temp-staffing', 'admin/temp-staffing/*'), 404);
         abort_if($request->isMethod('GET') && $request->is('admin/settings/application-setting'), 404);
         $context = app(TenantContext::class);
         $context->reset();
