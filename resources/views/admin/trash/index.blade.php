@@ -8,7 +8,7 @@
     <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
             <h1 class="text-[22px] font-bold tracking-tight text-[#1A1E2E]">Trash</h1>
-            <p class="mt-1 text-[12.5px] text-[#8892A0]">Deleted applications, notes, and consortium registrations stay here until permanently deleted.</p>
+            <p class="mt-1 text-[12.5px] text-[#8892A0]">Deleted applications and notes stay here until permanently deleted.</p>
         </div>
         <form method="GET" action="{{ route('admin.trash.index') }}" class="flex gap-2">
             <input type="hidden" name="type" value="{{ $selectedType }}">
@@ -18,7 +18,7 @@
     </div>
 
     <div class="mb-4 flex flex-wrap gap-2">
-        @foreach(['all' => 'All', 'application' => 'Applications', 'application-note' => 'Application notes', 'client-note' => 'Client notes', 'consortium-registration' => 'Consortium registrations'] as $value => $label)
+        @foreach(['all' => 'All', 'application' => 'Applications', 'application-note' => 'Application notes', 'client-note' => 'Client notes'] as $value => $label)
             <a href="{{ route('admin.trash.index', ['type' => $value]) }}" class="rounded-lg px-3 py-2 text-xs font-semibold {{ $selectedType === $value ? 'bg-[#1A1E2E] text-white' : 'border border-[#E2DED8] bg-white text-[#5A6478]' }}">{{ $label }}</a>
         @endforeach
     </div>
