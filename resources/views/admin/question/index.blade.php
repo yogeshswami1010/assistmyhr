@@ -2,10 +2,6 @@
 
 @if(in_array("add_question", $userPermissions))
 @section('create-button')
-    <button type="button" id="open-ai-question-modal" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm ml-4">
-    <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"></path></svg>
-    <span>Generate Questions with AI</span>
-    </button>
     <a href="{{ route('admin.questions.create') }}" class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm ml-4"><i class="fa fa-plus-circle"></i> @lang('app.createNew')</a>
 @endsection
 @endif
