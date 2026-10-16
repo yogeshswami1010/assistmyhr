@@ -54,7 +54,7 @@ class AdminCandidateMarketingController extends AdminBaseController
                 'job_applications.created_at'
             )
             ->where('job_applications.is_marketing', 1)
-            ->with(['job:id,title', 'status:id,status,color']);
+            ->with(['job:id,title,deleted_at', 'status:id,status,color']);
 
         if ($request->jobs != 'all' && $request->jobs != '') {
             $applications->where('job_applications.job_id', $request->jobs);
@@ -82,7 +82,7 @@ class AdminCandidateMarketingController extends AdminBaseController
                         <div class="text-[11.5px] text-[#8892A0]">' . $row->email . '</div>';
             })
             ->editColumn('title', function ($row) {
-                return ucfirst($row->job?->title ?? '—');
+                return \App\Support\CandidateJobLabel::html($row->job);
             })
             ->editColumn('marketing_label', function ($row) {
                 return $row->marketing_label
@@ -117,7 +117,7 @@ class AdminCandidateMarketingController extends AdminBaseController
                     <button type="button" onclick="cmRemoveFromMarketing(' . $row->id . ')" class="ja-act-btn reject" title="Remove from Candidate Marketing"><i class="fa fa-times"></i></button>
                 </div>';
             })
-            ->rawColumns(['full_name', 'marketing_label', 'status', 'action'])
+            ->rawColumns(['full_name', 'marketing_label', 'status', 'action', 'title'])
             ->addIndexColumn()
             ->make(true);
     }

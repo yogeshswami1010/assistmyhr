@@ -90,7 +90,7 @@
 
         {{-- Job Title --}}
         <p class="mb-[10px] break-words text-[12px] leading-[1.45] text-[#5A6478]">
-             {{ ucwords($application->job?->title ?? '—') }}
+             {!! \App\Support\CandidateJobLabel::html($application->job) !!}
         </p>
 
         {{-- Footer --}}

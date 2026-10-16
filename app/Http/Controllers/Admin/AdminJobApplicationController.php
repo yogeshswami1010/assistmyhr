@@ -543,7 +543,7 @@ class AdminJobApplicationController extends AdminBaseController
             })
             ->editColumn('full_name', function ($row) {
                 $name = ucwords($row->full_name);
-                $job  = ucfirst($row->job?->title ?? '—');
+                $job  = \App\Support\CandidateJobLabel::html($row->job);
                 $loc  = ucwords($row->location?->location ?? '—');
                 return '
                     <div class="flex items-center gap-3">
@@ -557,7 +557,7 @@ class AdminJobApplicationController extends AdminBaseController
                     </div>';
             })
             ->editColumn('title', function ($row) {
-                return ucfirst($row->job?->title ?? '—');
+                return \App\Support\CandidateJobLabel::html($row->job);
             })
             ->addColumn('location_id', function ($row) {
                 return ucwords($row->location?->location ?? '—');
@@ -571,7 +571,7 @@ class AdminJobApplicationController extends AdminBaseController
                 return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold text-white" style="background:' . $color . '">' . $label . '</span>';
             })
             ->orderColumn('created_at', 'job_applications.created_at $1')  // ← add this
-            ->rawColumns(['action', 'full_name', 'status'])
+            ->rawColumns(['action', 'full_name', 'status', 'title'])
             ->addIndexColumn()
             ->make(true);
     }

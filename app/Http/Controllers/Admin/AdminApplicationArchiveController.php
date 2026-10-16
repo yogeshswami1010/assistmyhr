@@ -120,7 +120,7 @@ class AdminApplicationArchiveController extends AdminBaseController
         })
 
         ->addColumn('title', function ($row) {
-            return optional($row->job)->title;
+            return \App\Support\CandidateJobLabel::html($row->job);
         })
 
         ->addColumn('location', function ($row) {
@@ -168,6 +168,7 @@ class AdminApplicationArchiveController extends AdminBaseController
         })
 
         ->rawColumns([
+            'title',
             'select_orders',
             'full_name',
             'status',
