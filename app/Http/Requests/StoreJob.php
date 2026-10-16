@@ -53,11 +53,11 @@ class StoreJob extends CoreRequest
                 $validator->errors()->add('company', __('app.company').' '.__('errors.fieldRequired'));
             }
 
-            if (empty(trim((string) $this->category_new)) && empty($this->category_id)) {
+            if (empty(trim((string) $this->category_new)) && (empty($this->category_id) || $this->category_id === 'new')) {
                 $validator->errors()->add('category_id', __('menu.jobCategories').' '.__('errors.fieldRequired'));
             }
 
-            $locationIds = $this->location_id ?? [];
+            $locationIds = array_filter((array) ($this->location_id ?? []), fn ($id) => filled($id) && $id !== 'new');
             if (empty(trim((string) $this->location_new)) && empty($locationIds)) {
                 $validator->errors()->add('location_id', __('menu.locations').' '.__('errors.fieldRequired'));
             }

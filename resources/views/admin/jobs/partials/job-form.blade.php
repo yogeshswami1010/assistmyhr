@@ -34,35 +34,6 @@
 @endphp
 
 <div class="job-form-page pb-10 text-[#0F1F3D]">
-    @if (count($locations) == 0)
-        <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-900 shadow-sm">
-            <h4 class="mb-2 flex items-center gap-2 text-base font-semibold">
-                <i class="fa fa-triangle-exclamation text-red-600" aria-hidden="true"></i> Job Location Empty!
-            </h4>
-            <p class="text-sm leading-relaxed text-red-800/90">
-                You do not have any Location created. You need to create the Job location first to add the job.
-                <a href="{{ route('admin.locations.create') }}"
-                    class="ml-2 inline-flex items-center gap-1.5 rounded-xl bg-[#0F1F3D] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1B3560]">
-                    <i class="fa fa-plus-circle" aria-hidden="true"></i> @lang('app.createNew') @lang('menu.locations')
-                </a>
-            </p>
-        </div>
-    @elseif(count($categories) == 0)
-        <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-900 shadow-sm">
-            <h4 class="mb-2 flex items-center gap-2 text-base font-semibold">
-                <i class="fa fa-triangle-exclamation text-red-600" aria-hidden="true"></i> Job Category Empty!
-            </h4>
-            <p class="text-sm leading-relaxed text-red-800/90">
-                You do not have any Job Category created. You need to create a category first to add the job.
-                <a href="{{ route('admin.job-categories.create') }}"
-                    class="ml-2 inline-flex items-center gap-1.5 rounded-xl bg-[#0F1F3D] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1B3560]">
-                    <i class="fa fa-plus-circle" aria-hidden="true"></i> @lang('app.createNew') @lang('menu.jobCategories')
-                </a>
-            </p>
-        </div>
-    @else
-      
-
         <div class="flex flex-col gap-5 xl:flex-row">
             <div class="min-w-0 flex flex-1 flex-col gap-4">
                 <form class="ajax-form flex flex-col gap-4" method="POST" id="createForm">
@@ -173,7 +144,7 @@
                                     <option value="">@lang('Choose job Categories')</option>
 
                                     {{-- Add New Category FIRST --}}
-                                    <option value="new">@lang('Add New Category')</option>
+                                    <option value="new" @selected(count($categories) === 0)>@lang('Add New Category')</option>
 
                                     {{-- Existing categories --}}
                                     @foreach ($categories as $category)
@@ -426,7 +397,7 @@
                                     >
 
                                         {{-- Add New Location FIRST --}}
-                                        <option value="new">@lang('Add New Location')</option>
+                                        <option value="new" @selected(count($locations) === 0)>@lang('Add New Location')</option>
 
                                         {{-- Existing Locations --}}
                                         @foreach ($locations as $location)
@@ -1024,7 +995,6 @@
                 </div>
             </div>
         </div>
-    @endif
 </div>
 <script>
 function handleDualInput(inputEl, key) {
@@ -1071,7 +1041,7 @@ function handleDualSelect(selEl, key) {
     );
     if (!inputEl) return;
 
-    const hasSelection = Array.from(selEl.options).some(o => o.selected && o.value);
+    const hasSelection = Array.from(selEl.options).some(o => o.selected && o.value && o.value !== 'new');
     inputEl.style.opacity = hasSelection ? '0.4' : '1';
     inputEl.disabled = hasSelection;
     if (hasSelection) inputEl.value = '';
@@ -1080,10 +1050,10 @@ function handleDualSelect(selEl, key) {
 // Wire up Select2 changes (since Select2 bypasses native onchange for multi-selects)
 $(document).ready(function () {
     $('#location_id').on('change', function () {
-        handleDualSelect(this, 'location');
+        handleDualSelect(this, 'location'); toggleNewLocationField(this);
     });
     $('#category_id').on('change', function () {
-        handleDualSelect(this, 'category');
+        handleDualSelect(this, 'category'); toggleNewCategoryField(this);
     });
     $('#company').on('change', function () {
         handleDualSelect(this, 'company');
