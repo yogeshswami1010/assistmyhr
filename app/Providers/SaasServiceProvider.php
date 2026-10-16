@@ -21,6 +21,7 @@ class SaasServiceProvider extends ServiceProvider
                 'encryption' => config('mail.encryption'),
                 'scheme' => config('mail.encryption') === 'ssl' ? 'smtps' : 'smtp',
                 'username' => config('mail.username'), 'password' => config('mail.password'),
+                'timeout' => 20,
                 'from' => config('mail.from'),
             ]]);
             config(['session.connection' => 'saas_landlord', 'queue.default' => 'sync', 'cache.default' => 'file']);

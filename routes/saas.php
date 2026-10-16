@@ -19,7 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/account/subscription/request-plan', [AccountController::class, 'requestPlan'])->middleware('throttle:5,60')->name('saas.request-plan');
     Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
-    Route::post('/email/verification-notification', [VerificationController::class, 'resend'])->middleware('throttle:3,10')->name('verification.send');
+    Route::post('/email/verification-notification', [VerificationController::class, 'resend'])->name('verification.send');
 });
 Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('login', [PlatformController::class, 'loginForm'])->name('login');
