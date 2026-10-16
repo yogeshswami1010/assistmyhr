@@ -23,6 +23,7 @@ class AdminTodoItemController extends AdminBaseController
 
     public function index()
     {
+        $this->teamMembers = \App\User::orderBy('name')->get(['id', 'name']);
         $this->boardTodos = $this->boardTodosPayload();
 
         return view('admin.todo-list.index', $this->data);
@@ -35,7 +36,7 @@ class AdminTodoItemController extends AdminBaseController
 
     protected function boardTodosPayload(): array
     {
-        $todos = $this->user->todoItems()
+        $todos = \App\TodoItem::visibleTo($this->user->id)->with(['assignee','user'])
             ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'completed' THEN 3 ELSE 4 END")
             ->orderBy('position')
             ->get();
@@ -48,6 +49,7 @@ class AdminTodoItemController extends AdminBaseController
         return [
             'id' => $t->id,
             'title' => $t->title,
+            'assigned_to' => $t->assigned_to, 'assignee' => $t->assignee?->name ?? $t->user?->name ?? '',
             'desc' => $t->description ?? '',
             'priority' => $t->priority ?? 'medium',
             'tag' => $t->tag ?? '',
@@ -65,14 +67,14 @@ class AdminTodoItemController extends AdminBaseController
 
     public function create(Request $request)
     {
-        return view('admin.todo-list.todo-item-create');
+        return view('admin.todo-list.todo-item-create', ['teamMembers' => \App\User::orderBy('name')->get(['id','name'])]);
     }
 
     public function edit(Request $request, $id)
     {
-        $todoItem = $this->user->todoItems()->where('id', $id)->firstOrFail();
+        $todoItem = \App\TodoItem::visibleTo($this->user->id)->where('id', $id)->firstOrFail();
 
-        return view('admin.todo-list.todo-item-edit', compact('todoItem'));
+        return view('admin.todo-list.todo-item-edit', ['todoItem' => $todoItem, 'teamMembers' => \App\User::orderBy('name')->get(['id','name'])]);
     }
 
     public function store(StoreTodo $request)
@@ -82,10 +84,11 @@ class AdminTodoItemController extends AdminBaseController
             $status = 'pending';
         }
 
-        $maxPos = (int) $this->user->todoItems()->where('status', $status)->max('position');
+        $maxPos = (int) \App\TodoItem::visibleTo($this->user->id)->where('status', $status)->max('position');
 
         $todoItem = new TodoItem;
         $todoItem->user_id = $this->user->id;
+        $todoItem->assigned_to = $request->input('assigned_to') ?: $this->user->id;
         $todoItem->title = $request->title;
         $todoItem->description = $request->input('description');
         $todoItem->priority = $request->input('priority', 'medium');
@@ -96,25 +99,16 @@ class AdminTodoItemController extends AdminBaseController
 
         $todoItem->save();
 
-        if (request()->server('HTTP_REFERER') == route('admin.dashboard')) {
-            $view = $this->generateTodoView();
-
-            return Reply::successWithData(__('messages.todos.todoCreatedSuccessfully'), ['view' => $view]);
-        }
-
-        if ($this->isTodoBoardRequest()) {
-            return Reply::successWithData(__('messages.todos.todoCreatedSuccessfully'), [
-                'todo' => $this->formatTodoForBoard($todoItem->fresh()),
-            ]);
-        }
-
-        return Reply::success(__('messages.todos.todoCreatedSuccessfully'));
+        return Reply::successWithData(__('messages.todos.todoCreatedSuccessfully'), [
+            'todo' => $this->formatTodoForBoard($todoItem->fresh()), 'view' => $this->generateTodoView(),
+        ]);
     }
 
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:500',
+            'assigned_to' => 'nullable|integer|exists:users,id',
             'status' => 'required|in:pending,in_progress,completed',
             'description' => 'sometimes|nullable|string',
             'priority' => 'sometimes|nullable|in:low,medium,high',
@@ -126,7 +120,7 @@ class AdminTodoItemController extends AdminBaseController
             return Reply::formErrors($validator);
         }
 
-        $todoItem = $this->user->todoItems()->where('id', $id)->firstOrFail();
+        $todoItem = \App\TodoItem::visibleTo($this->user->id)->where('id', $id)->firstOrFail();
 
         if ($todoItem->status !== $request->status) {
             $todoItemsToUpdate = $this->todoItems->filter(function ($value, $key) use ($todoItem) {
@@ -151,6 +145,7 @@ class AdminTodoItemController extends AdminBaseController
         }
 
         $todoItem->title = $request->title;
+        if ($request->has('assigned_to')) { $todoItem->assigned_to = $request->input('assigned_to') ?: $todoItem->user_id; }
 
         if ($request->has('description')) {
             $todoItem->description = $request->input('description');
@@ -167,24 +162,14 @@ class AdminTodoItemController extends AdminBaseController
 
         $todoItem->save();
 
-        if (request()->server('HTTP_REFERER') == route('admin.dashboard')) {
-            $view = $this->generateTodoView();
-
-            return Reply::successWithData(__('messages.todos.todoUpdatedSuccessfully'), ['view' => $view]);
-        }
-
-        if ($this->isTodoBoardRequest()) {
-            return Reply::successWithData(__('messages.todos.todoUpdatedSuccessfully'), [
-                'todo' => $this->formatTodoForBoard($todoItem->fresh()),
-            ]);
-        }
-
-        return Reply::success(__('messages.todos.todoUpdatedSuccessfully'));
+        return Reply::successWithData(__('messages.todos.todoUpdatedSuccessfully'), [
+            'todo' => $this->formatTodoForBoard($todoItem->fresh()), 'view' => $this->generateTodoView(),
+        ]);
     }
 
     public function destroy(Request $request, $id)
     {
-        $todoItem = $this->user->todoItems()->where('id', $id)->firstOrFail();
+        $todoItem = \App\TodoItem::visibleTo($this->user->id)->where('id', $id)->firstOrFail();
 
         $allAfterTodos = $this->todoItems->filter(function ($value, $key) use ($todoItem) {
             return $value->status == $todoItem->status && $value->position > $todoItem->position;
@@ -199,7 +184,7 @@ class AdminTodoItemController extends AdminBaseController
 
         $todoItem->delete();
 
-        if (request()->server('HTTP_REFERER') == route('admin.dashboard')) {
+        if (str_contains((string) request()->header('Referer', ''), '/admin/dashboard')) {
             $view = $this->generateTodoView();
 
             return Reply::successWithData(__('messages.todos.todoDeletedSuccessfully'), ['view' => $view]);
@@ -219,7 +204,7 @@ class AdminTodoItemController extends AdminBaseController
             'status' => 'required|in:pending,in_progress,completed',
         ]);
 
-        $todoItem = $this->user->todoItems()->where('id', $request->id)->firstOrFail();
+        $todoItem = \App\TodoItem::visibleTo($this->user->id)->where('id', $request->id)->firstOrFail();
         $oldStatus = $todoItem->status;
         $newStatus = $request->status;
 
@@ -227,7 +212,7 @@ class AdminTodoItemController extends AdminBaseController
             return Reply::success(__('messages.todos.todoUpdatedSuccessfully'));
         }
 
-        $after = $this->user->todoItems()
+        $after = \App\TodoItem::visibleTo($this->user->id)
             ->where('status', $oldStatus)
             ->where('position', '>', $todoItem->position)
             ->orderBy('position')
@@ -238,7 +223,7 @@ class AdminTodoItemController extends AdminBaseController
             $t->save();
         }
 
-        $maxPos = (int) $this->user->todoItems()->where('status', $newStatus)->max('position');
+        $maxPos = (int) \App\TodoItem::visibleTo($this->user->id)->where('status', $newStatus)->max('position');
         $todoItem->status = $newStatus;
         $todoItem->position = $maxPos + 1;
         $todoItem->save();
@@ -250,7 +235,7 @@ class AdminTodoItemController extends AdminBaseController
     {
         $request->validate(['id' => 'required|integer']);
 
-        $todoItem = $this->user->todoItems()->where('id', $request->id)->firstOrFail();
+        $todoItem = \App\TodoItem::visibleTo($this->user->id)->where('id', $request->id)->firstOrFail();
         $newStatus = $todoItem->status === 'completed' ? 'pending' : 'completed';
         $request->merge(['status' => $newStatus]);
 
@@ -266,6 +251,7 @@ class AdminTodoItemController extends AdminBaseController
 
         $validated = $request->validate([
             'title' => 'required|string|max:500',
+            'assigned_to' => 'nullable|integer|exists:users,id',
         ]);
 
         $configuredKeys = AiApiKey::query()
@@ -544,7 +530,7 @@ class AdminTodoItemController extends AdminBaseController
 
     public function updateTodoItem(Request $request)
     {
-        $todoItem = $this->user->todoItems()->where('id', $request->id)->firstOrFail();
+        $todoItem = \App\TodoItem::visibleTo($this->user->id)->where('id', $request->id)->firstOrFail();
 
         if ($request->position) {
             $oldPosition = $request->position['oldPosition'];
@@ -607,7 +593,7 @@ class AdminTodoItemController extends AdminBaseController
         } else {
             // dd($oldPosition, $newPosition);
             $status = $todoItem->status;
-            $todos = $this->user->todoItems()->status($status)->orderBy('position')->get();
+            $todos = \App\TodoItem::visibleTo($this->user->id)->status($status)->orderBy('position')->get();
             $oldTodo = $todos->filter(function ($value, $key) use ($oldPosition) {
                 return $value->position == $oldPosition;
             })->first();

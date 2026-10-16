@@ -25,6 +25,7 @@ class StoreTodo extends FormRequest
     {
         return [
             'title' => 'required|string|max:500',
+            'assigned_to' => 'nullable|integer|exists:users,id',
             'description' => 'nullable|string',
             'priority' => 'nullable|in:low,medium,high',
             'tag' => 'nullable|string|max:64',

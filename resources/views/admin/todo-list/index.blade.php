@@ -205,6 +205,7 @@
                     </div>
                 </div>
             </div>
+<div style="padding:0 24px 20px"><label class="fl" for="raTodoAssignee">Assign to</label><select id="raTodoAssignee" class="fs"><option value="">Myself</option>@foreach($teamMembers as $member)<option value="{{ $member->id }}">{{ $member->name }}</option>@endforeach</select></div>
             <div class="modal-footer">
                 <button type="button" class="btn-c" id="raTodoModalCancel">@lang('app.cancel')</button>
                 <button type="button" class="btn-s" id="raTodoModalSave">@lang('modules.module.todos.saveTask')</button>
@@ -389,7 +390,7 @@
                             </div>
                             ${task.desc ? `<div class="card-desc">${escapeHtml(task.desc)}</div>` : ''}
                             <div class="card-foot">
-                                <span class="priority-pill ${prioClass}">${escapeHtml(prioLabel)}</span>
+                                <span style="font-size:11px;color:#64748b">Assigned to: ${escapeHtml(task.assignee || 'Myself')}</span><span class="priority-pill ${prioClass}">${escapeHtml(prioLabel)}</span>
                                 <div class="flex items-center gap-2 flex-wrap">
                                     ${task.tag ? `<span class="card-tag" style="background:${tc.bg};color:${tc.tc};">${escapeHtml(task.tag)}</span>` : ''}
                                     ${dueStr ? `<span class="card-date" style="${isOverdue ? 'color:#EF4444;' : ''}">${isOverdue ? '⚠️ ' : ''}<svg style="width:10px;height:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>${escapeHtml(dueStr)}</span>` : ''}
@@ -519,6 +520,7 @@
         document.getElementById('raTodoTag').value = '';
         document.getElementById('raTodoDue').value = '';
         document.getElementById('raTodoStatus').value = status || 'pending';
+        document.getElementById('raTodoAssignee').value = '';
         openModal(true);
     }
 
@@ -535,6 +537,7 @@
         document.getElementById('raTodoTag').value = t.tag || '';
         document.getElementById('raTodoDue').value = t.due || '';
         document.getElementById('raTodoStatus').value = t.status;
+        document.getElementById('raTodoAssignee').value = t.assigned_to || '';
         openModal(true);
     }
 
@@ -554,6 +557,7 @@
             tag: document.getElementById('raTodoTag').value,
             due_date: document.getElementById('raTodoDue').value,
             status: document.getElementById('raTodoStatus').value,
+            assigned_to: document.getElementById('raTodoAssignee').value,
         };
 
         if (editId) {

@@ -9,6 +9,7 @@ class TodoItem extends Model
 {
     protected $fillable = [
         'user_id',
+        'assigned_to',
         'title',
         'description',
         'status',
@@ -25,6 +26,12 @@ class TodoItem extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function assignee() { return $this->belongsTo(User::class, 'assigned_to'); }
+
+    public function scopeVisibleTo($query, int $userId)
+    {
+        return $query->where(fn ($query) => $query->where('user_id', $userId)->orWhere('assigned_to', $userId));
     }
 
     public function scopeStatus($query, $status)

@@ -100,7 +100,7 @@ class AdminBaseController extends Controller
             // Ensure `$user` is available in blade views that expect it.
             // Other properties are added through __set, but `$user` is a real property.
             $this->data['user'] = $this->user;
-            $this->todoItems = $this->user->todoItems()->groupBy('status', 'position')->get();
+            $this->todoItems = \App\TodoItem::visibleTo($this->user->id)->groupBy('status', 'position')->get();
             $this->linkedinGlobal = LinkedInSetting::first();
             $this->stickyNotes = StickyNote::where('user_id', $this->user->id)
                 ->orderBy('updated_at', 'desc')
@@ -130,8 +130,8 @@ class AdminBaseController extends Controller
 
     public function generateTodoView()
     {
-        $pendingTodos = $this->user->todoItems()->status('pending')->orderBy('position', 'DESC')->limit(5)->get();
-        $completedTodos = $this->user->todoItems()->status('completed')->orderBy('position', 'DESC')->limit(5)->get();
+        $pendingTodos = \App\TodoItem::visibleTo($this->user->id)->status('pending')->orderBy('position', 'DESC')->limit(5)->get();
+        $completedTodos = \App\TodoItem::visibleTo($this->user->id)->status('completed')->orderBy('position', 'DESC')->limit(5)->get();
 
         $view = view('sections.todo_items_list_dashboard', compact('pendingTodos', 'completedTodos'))->render();
 
