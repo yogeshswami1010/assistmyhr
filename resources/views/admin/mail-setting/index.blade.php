@@ -135,9 +135,6 @@
                     @lang('app.save')
                 </button>
                 <button type="reset" class="rounded-[11px] border-[1.5px] border-[#E2DED8] bg-[#F1F3F7] px-6 py-3 text-[13.5px] font-semibold text-[#5A6478] transition hover:border-[#C4CBD4] hover:bg-[#E8EBEF]">@lang('app.reset')</button>
-                <button type="button" id="send-test-email" class="sm:ml-auto inline-flex items-center justify-center gap-2 rounded-[11px] border-[1.5px] border-[#2563EB] bg-[#EFF6FF] px-6 py-3 text-[13.5px] font-semibold text-[#2563EB] transition hover:bg-[#DBEAFE]">
-                    @lang('app.SendTestMail')
-                </button>
             </div>
         </form>
     </div>
