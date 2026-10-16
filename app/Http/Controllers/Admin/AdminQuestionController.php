@@ -78,7 +78,7 @@ public function store(StoreRequest $request)
     $question->save();
 
     if ($request->boolean('inline_job')) {
-        return response()->json(['question' => $question->only(['id', 'question', 'type', 'required', 'is_knockout'])]);
+        return response()->json(['question' => $question->fresh()->only(['id', 'question', 'type', 'required', 'is_knockout', 'knockout_answer', 'answer_type'])]);
     }
 
     return Reply::redirect(

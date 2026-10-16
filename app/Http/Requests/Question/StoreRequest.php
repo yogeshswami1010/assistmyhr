@@ -6,6 +6,17 @@ use App\Http\Requests\CoreRequest;
 
 class StoreRequest extends CoreRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (!$this->boolean('inline_job')) { return; }
+        $options = $this->input('radio_options');
+        if (is_array($options)) {
+            $this->merge(['radio_options' => array_map(fn ($value) => is_string($value) ? trim($value) : $value, $options)]);
+        }
+        if (is_string($this->input('knockout_answer'))) {
+            $this->merge(['knockout_answer' => trim($this->input('knockout_answer'))]);
+        }
+    }
     /**
      * Determine if the user is authorized to make this request.
      *
