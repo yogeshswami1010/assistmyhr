@@ -44,11 +44,14 @@
     <span id="dashboard-copy-status" role="status" aria-live="polite" class="text-xs text-slate-500"></span>
 </section>
 <script>
-document.getElementById('dashboard-copy-login').addEventListener('click',async function(){
+async function copyDashboardLogin(event){
+    event.preventDefault();
     const link=document.getElementById('dashboard-login-url'),status=document.getElementById('dashboard-copy-status');
     try{await navigator.clipboard.writeText(link.href);status.textContent='Login link copied.';}
     catch(error){const range=document.createRange();range.selectNodeContents(link);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);status.textContent='Select and copy your login link.';}
-});
+}
+document.getElementById('dashboard-copy-login').addEventListener('click',copyDashboardLogin);
+document.getElementById('dashboard-login-url').addEventListener('click',copyDashboardLogin);
 </script>
 @endif
 @if(session('status'))<div role="status" class="mb-4 rounded-xl p-4" style="background:#eff6ff;color:#1e40af">{{ session('status') }}</div>@endif

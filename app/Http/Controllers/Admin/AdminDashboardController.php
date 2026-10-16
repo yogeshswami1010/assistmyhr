@@ -25,6 +25,9 @@ class AdminDashboardController extends AdminBaseController
     public function index()
     {        
         $tenant = config('saas.enabled') ? app(\App\Saas\TenantContext::class)->current() : null;
+        if ($tenant && !request()->has('workspace')) {
+            return redirect(tenant_route('admin.dashboard', request()->query()));
+        }
         $this->tourAvailable = (bool) $tenant;
         $this->replayTour = $tenant && request()->boolean('tour');
         $this->showWelcome = $tenant && $tenant->slug !== 'main'
