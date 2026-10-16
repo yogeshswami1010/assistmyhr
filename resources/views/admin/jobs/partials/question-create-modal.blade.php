@@ -46,11 +46,9 @@ save.disabled=true;
 try{
 const response=await fetch(@json(tenant_route('admin.questions.store')),{method:'POST',body:data,headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}),result=await response.json();
 if(!response.ok){error.textContent=result.errors?Object.values(result.errors).flat().join('\n'):(result.message||'Could not create question.');return;}
-if(!result.question){error.textContent='Could not create question. Please try again.';return;}
-const question=result.question,row=document.createElement('label'),checkbox=document.createElement('input'),text=document.createElement('span');
-row.className='question-item flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4';row.dataset.questionText=question.question.toLowerCase();checkbox.type='checkbox';checkbox.name='question[]';checkbox.value=question.id;checkbox.checked=true;checkbox.className='question-checkbox';checkbox.addEventListener('change',()=>window.updateSelectedCount());text.textContent=question.question+' · '+question.type+(question.required==='yes'?' · Required':'')+(question.is_knockout?' · Knockout answer: '+question.knockout_answer:'');
-if(question.answer_type){const options=document.createElement('small');options.style.cssText='display:block;color:#64748b;margin-top:6px';options.textContent='Options: '+question.answer_type;text.append(options);}
-row.append(checkbox,text);document.getElementById('questions-empty')?.remove();document.getElementById('question-list').prepend(row);document.getElementById('question-search').value='';window.filterQuestions();dialog.close();reset();
+if(!result.question || !result.view){error.textContent='Could not create question. Please try again.';return;}
+const template=document.createElement('template');template.innerHTML=result.view.trim();const row=template.content.firstElementChild;
+document.getElementById('questions-empty')?.remove();document.getElementById('question-list').prepend(row);document.getElementById('question-search').value='';window.filterQuestions();dialog.close();reset();
 }catch(failure){error.textContent='Could not save the question. Check your connection and try again.';}finally{save.disabled=false;}
 });
 reset();

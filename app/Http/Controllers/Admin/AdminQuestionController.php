@@ -78,7 +78,13 @@ public function store(StoreRequest $request)
     $question->save();
 
     if ($request->boolean('inline_job')) {
-        return response()->json(['question' => $question->fresh()->only(['id', 'question', 'type', 'required', 'is_knockout', 'knockout_answer', 'answer_type'])]);
+        $question->refresh();
+        return response()->json([
+            'question' => $question->only(['id', 'question', 'type', 'required', 'is_knockout', 'knockout_answer', 'answer_type']),
+            'view' => view('admin.jobs.partials.question-card', [
+                'question' => $question, 'jobQuestion' => [$question->id], 'jobUsageCounts' => [],
+            ])->render(),
+        ]);
     }
 
     return Reply::redirect(
