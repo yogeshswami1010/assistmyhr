@@ -61,11 +61,11 @@
     .ra-todos-board .modal-bg { display: none; position: fixed; inset: 0; background: rgba(15,31,61,0.5); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
     .ra-todos-board .modal-bg.show { display: flex; animation: raTodoFi 0.2s ease; }
     @keyframes raTodoFi { from { opacity: 0; } to { opacity: 1; } }
-    .ra-todos-board .modal-todo { background: #fff; border-radius: 20px; width: 460px; max-width: 94vw; max-height: 90vh; overflow: hidden; animation: raTodoPi 0.28s cubic-bezier(0.22,1,0.36,1); }
+    .ra-todos-board .modal-todo { display:flex;flex-direction:column; background: #fff; border-radius: 20px; width: 460px; max-width: 94vw; max-height: 90vh; overflow: hidden; animation: raTodoPi 0.28s cubic-bezier(0.22,1,0.36,1); }
     @keyframes raTodoPi { from { opacity: 0; transform: scale(0.94) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    .ra-todos-board .modal-hd { padding: 20px 24px 16px; border-bottom: 1px solid #F0EEE9; display: flex; align-items: center; justify-content: space-between; }
-    .ra-todos-board .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
-    .ra-todos-board .modal-footer { padding: 14px 24px; border-top: 1px solid #F0EEE9; display: flex; justify-content: flex-end; gap: 10px; }
+    .ra-todos-board .modal-hd { flex-shrink:0; padding: 20px 24px 16px; border-bottom: 1px solid #F0EEE9; display: flex; align-items: center; justify-content: space-between; }
+    .ra-todos-board .modal-body { min-height:0;flex:1 1 auto;overscroll-behavior:contain;scrollbar-width:thin; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+    .ra-todos-board .modal-footer { flex-shrink:0; padding: 14px 24px; border-top: 1px solid #F0EEE9; display: flex; justify-content: flex-end; gap: 10px; }
     .ra-todos-board .fl { font-size: 11.5px; font-weight: 700; color: #5A6478; margin-bottom: 5px; }
     .ra-todos-board .fi { width: 100%; border: 1.5px solid #E2DED8; border-radius: 10px; padding: 10px 14px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; color: #1A1E2E; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
     .ra-todos-board .fi:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.09); }
@@ -204,8 +204,8 @@
                         </select>
                     </div>
                 </div>
+<div><label class="fl" for="raTodoAssignee">Assign to</label><select id="raTodoAssignee" class="fs"><option value="">Myself</option>@foreach($teamMembers as $member)<option value="{{ $member->id }}">{{ $member->name }}</option>@endforeach</select></div>
             </div>
-<div style="padding:0 24px 20px"><label class="fl" for="raTodoAssignee">Assign to</label><select id="raTodoAssignee" class="fs"><option value="">Myself</option>@foreach($teamMembers as $member)<option value="{{ $member->id }}">{{ $member->name }}</option>@endforeach</select></div>
             <div class="modal-footer">
                 <button type="button" class="btn-c" id="raTodoModalCancel">@lang('app.cancel')</button>
                 <button type="button" class="btn-s" id="raTodoModalSave">@lang('modules.module.todos.saveTask')</button>
