@@ -257,7 +257,7 @@
                     <div class="jc-modal-body space-y-4">
                         <div class="form-group">
                             <label class="jc-field-label">@lang('menu.locations') <span class="text-red-400">*</span></label>
-                            <p class="mb-2 text-[11px] text-[#B0B8C4]">{{ __('For example: Jaipur or Remote.') }}</p>
+                            <p class="mb-2 text-[11px] text-[#B0B8C4]">{{ __('For example: Toronto or Remote.') }}</p>
                             <div id="loc-education-fields" class="space-y-2">
                                 <div class="flex overflow-hidden rounded-lg border border-[#E2DED8] transition focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/10">
                                     <input type="text" name="location" required maxlength="255" autocomplete="off"
