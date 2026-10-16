@@ -74,9 +74,6 @@ class InitializeSaasTenant
         }
         $context->activate($tenant);
         try {
-            if ($request->is('admin*') && Auth::guard('web')->check() && !Auth::guard('web')->user()->hasVerifiedEmail()) {
-                return redirect('/email/verify');
-            }
             if ($request->is('admin/settings/language-settings*', 'admin/settings/update-application*') && !$request->isMethod('GET')) { abort(403, 'Shared application files are managed by the platform administrator.'); }
             if (!$request->isMethodSafe()) {
                 // Serialize tenant writes so concurrent signups/imports cannot bypass model quotas.

@@ -10,6 +10,13 @@
 
 @section('create-button')
     <div class="flex flex-wrap items-center gap-2">
+    @if(config('saas.enabled') && !$user->hasVerifiedEmail())
+        <form method="post" action="{{ tenant_route('verification.send') }}" class="flex flex-wrap items-center gap-2" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:6px 12px;margin:0">
+            @csrf
+            <span style="color:#92400e;font-size:12px;font-weight:600">Email verification pending</span>
+            <button type="submit" style="background:transparent;border:0;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer;padding:4px">Resend email</button>
+        </form>
+    @endif
     @if($tourAvailable ?? false)
         <a href="{{ tenant_route('admin.dashboard', ['tour' => 1]) }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Guided Tour</a>
     @endif
@@ -27,6 +34,8 @@
 @endpush
 
 @section('content')
+@if(session('status'))<div role="status" class="mb-4 rounded-xl p-4" style="background:#eff6ff;color:#1e40af">{{ session('status') }}</div>@endif
+@if($errors->has('delivery'))<div role="alert" class="mb-4 rounded-xl p-4" style="background:#fff1f2;color:#be123c">{{ $errors->first('delivery') }}</div>@endif
 @if(($showWelcome ?? false) || ($replayTour ?? false)) @include('admin.dashboard.welcome') @endif
     @if (!$user->mobile_verified && $smsSettings->nexmo_status == 'active')
         <div id="verify-mobile-info" class="rd-a rd-a1 mb-4">

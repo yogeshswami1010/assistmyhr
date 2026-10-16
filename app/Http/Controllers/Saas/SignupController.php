@@ -53,7 +53,7 @@ class SignupController extends Controller
         Auth::guard('web')->login($user);
         try { $user->sendEmailVerificationNotification(); }
         catch (\Throwable $e) { report($e); $request->session()->flash('status', 'Your workspace was created, but the verification email could not be sent. Contact the platform administrator.'); }
-        return redirect('/email/verify');
+        return redirect(tenant_route('admin.dashboard'));
     }
 
     public function workspace(string $slug)
