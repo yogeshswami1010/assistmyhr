@@ -29,15 +29,15 @@ class VerificationController extends Controller
         if (($mailer['transport'] ?? null) === 'smtp'
             && (blank($mailer['username'] ?? null) || blank($mailer['password'] ?? null))) {
             return redirect(tenant_route('verification.notice'))->withErrors([
-                'delivery' => 'Verification email is temporarily unavailable. Please contact the platform administrator to configure the platform email service.',
+                'delivery' => 'Email failed to send. Please try again later or contact the platform administrator.',
             ]);
         }
         try {
             $request->user()->sendEmailVerificationNotification();
-        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $exception) {
+        } catch (\Throwable $exception) {
             report($exception);
             return redirect(tenant_route('verification.notice'))->withErrors([
-                'delivery' => 'We could not send your verification email. Please contact the platform administrator or try again later.',
+                'delivery' => 'Email failed to send. Please try again later or contact the platform administrator.',
             ]);
         }
         return redirect(tenant_route('verification.notice'))->with('status', 'Verification email sent.');
