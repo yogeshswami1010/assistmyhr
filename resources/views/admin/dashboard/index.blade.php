@@ -34,6 +34,23 @@
 @endpush
 
 @section('content')
+@if(config('saas.enabled') && ($dashboardTenant = app(\App\Saas\TenantContext::class)->current()))
+<section class="mb-4 rounded-2xl border border-slate-200 bg-white p-4" aria-labelledby="dashboard-login-title">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 id="dashboard-login-title" class="text-sm font-semibold">Your company login URL</h2><p class="mt-1 text-xs text-slate-500">Save this link to sign in to your company's ATS.</p></div>
+        <button type="button" id="dashboard-copy-login" class="rounded-xl px-4 py-2 text-xs font-semibold" style="background:#eff6ff;color:#2563eb">Copy link</button>
+    </div>
+    <a id="dashboard-login-url" href="{{ route('saas.workspace', $dashboardTenant->slug) }}" class="mt-3 block text-sm" style="color:#2563eb;overflow-wrap:anywhere">{{ route('saas.workspace', $dashboardTenant->slug) }}</a>
+    <span id="dashboard-copy-status" role="status" aria-live="polite" class="text-xs text-slate-500"></span>
+</section>
+<script>
+document.getElementById('dashboard-copy-login').addEventListener('click',async function(){
+    const link=document.getElementById('dashboard-login-url'),status=document.getElementById('dashboard-copy-status');
+    try{await navigator.clipboard.writeText(link.href);status.textContent='Login link copied.';}
+    catch(error){const range=document.createRange();range.selectNodeContents(link);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);status.textContent='Select and copy your login link.';}
+});
+</script>
+@endif
 @if(session('status'))<div role="status" class="mb-4 rounded-xl p-4" style="background:#eff6ff;color:#1e40af">{{ session('status') }}</div>@endif
 @if($errors->has('delivery'))<div role="alert" class="mb-4 rounded-xl p-4" style="background:#fff1f2;color:#be123c">{{ $errors->first('delivery') }}</div>@endif
 @if(($showWelcome ?? false) || ($replayTour ?? false)) @include('admin.dashboard.welcome') @endif
