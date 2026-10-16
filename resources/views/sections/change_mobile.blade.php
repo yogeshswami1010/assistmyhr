@@ -9,9 +9,7 @@
                         <select name="calling_code" id="calling_code" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm bg-white" data-live-search="true">
                             @foreach ($calling_codes as $code => $value)
                                 <option value="{{ $value['dial_code'] }}"
-                                @if ($user->calling_code)
-                                    {{ $user->calling_code == $value['dial_code'] ? 'selected' : '' }}
-                                @endif>{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
+                                @selected(old('calling_code', $user->calling_code ?: '+1') == $value['dial_code'])>{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
                             @endforeach
                         </select>
                     </div>

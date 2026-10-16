@@ -124,7 +124,7 @@
                                 <label for="calling_code" class="bs-set-lbl required">@lang('app.country')</label>
                                 <select name="calling_code" id="calling_code" class="selectpicker bs-f-sel" data-live-search="true" data-width="100%">
                                     @foreach ($calling_codes as $code => $value)
-                                        <option value="{{ $value['dial_code'] }}">{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
+                                        <option value="{{ $value['dial_code'] }}" @selected(old('calling_code', '+1') == $value['dial_code'])>{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
                                     @endforeach
                                 </select>
                             </div>

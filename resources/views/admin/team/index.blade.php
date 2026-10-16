@@ -446,7 +446,7 @@
                             <div class="sm:w-[42%]">
                                 <select name="calling_code" id="team-modal-calling" class="selectpicker w-full" data-live-search="true" data-width="100%" title="@lang('app.mobile')">
                                     @foreach ($calling_codes as $code => $value)
-                                        <option value="{{ $value['dial_code'] }}">{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
+                                        <option value="{{ $value['dial_code'] }}" @selected(old('calling_code', '+1') == $value['dial_code'])>{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -599,7 +599,7 @@
             teamInitDropify(defaultAvatar);
             if (typeof $.fn.selectpicker === 'function') {
                 if ($('#team-modal-calling option').length) {
-                    $('#team-modal-calling').selectpicker('val', $('#team-modal-calling option:first').val());
+                    $('#team-modal-calling').selectpicker('val', '+1');
                 }
                 $('#team-modal-calling').selectpicker('refresh');
             }
@@ -636,12 +636,12 @@
             } else {
                 $vw.removeClass('hidden').html(@json(__('app.notVerified')));
             }
-            var cc = u.calling_code || '';
+            var cc = u.calling_code || '+1';
             if (typeof $.fn.selectpicker === 'function') {
                 if (cc) {
                     $('#team-modal-calling').selectpicker('val', cc);
                 } else if ($('#team-modal-calling option').length) {
-                    $('#team-modal-calling').selectpicker('val', $('#team-modal-calling option:first').val());
+                    $('#team-modal-calling').selectpicker('val', '+1');
                 }
                 $('#team-modal-calling').selectpicker('refresh');
             }

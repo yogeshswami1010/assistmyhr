@@ -126,9 +126,7 @@
                                 <select name="calling_code" id="calling_code" class="selectpicker bs-f-sel" data-live-search="true" data-width="100%">
                                     @foreach ($calling_codes as $code => $value)
                                         <option value="{{ $value['dial_code'] }}"
-                                        @if ($team->calling_code)
-                                            {{ $team->calling_code == $value['dial_code'] ? 'selected' : '' }}
-                                        @endif>{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
+                                        @selected(old('calling_code', $team->calling_code ?: '+1') == $value['dial_code'])>{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
                                     @endforeach
                                 </select>
                             </div>

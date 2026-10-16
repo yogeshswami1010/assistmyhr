@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @push('head-script')
+<style>.mp-phone-wrap .mp-phone-code{flex:0 0 100px;width:100px;min-width:100px;max-width:100px}.mp-phone-wrap{display:flex;gap:12px}.mp-phone-code select{width:100%}</style>
 <style>
 #signature-toolbar{align-items:center;gap:10px!important;padding:12px!important;background:#f8fafc!important;border-color:#e2e8f0!important;border-radius:14px 14px 0 0!important}#signature-toolbar .signature-tools{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding-right:10px;border-right:1px solid #e2e8f0}#signature-toolbar .signature-tools:last-child{border:0;padding-right:0}#signature-toolbar button{display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:36px;padding:7px 11px;background:white;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:12px;line-height:20px;white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s}#signature-toolbar button[data-command]{font-size:14px;padding:6px 9px}#signature-toolbar button:hover{background:#eff6ff;border-color:#bfdbfe;color:#2563eb}#signature-toolbar :focus-visible{outline:2px solid #2563eb;outline-offset:2px}#signature-toolbar select{width:auto!important;height:36px;min-height:36px;padding:6px 28px 6px 10px;margin:0;border:1px solid #e2e8f0;border-radius:8px;background-color:white;color:#334155;font-family:inherit;font-size:12px;line-height:20px}#signature-toolbar #signature-font{max-width:150px}#signature-toolbar #signature-size{min-width:64px}#signature-toolbar #signature-color{width:36px!important;height:36px;border:1px solid #e2e8f0;border-radius:8px;padding:5px;background:white;cursor:pointer}#signature-toolbar [hidden]{display:none!important}#signature-visual-editor{border-color:#e2e8f0!important;border-top:0!important;border-radius:0 0 14px 14px}#signature-add-image{color:#2563eb!important;background:#eff6ff!important}#signature-editor-status{line-height:1.7;padding:0 2px}@media(max-width:640px){#signature-toolbar .signature-tools{border-right:0;padding-right:0}#signature-toolbar{gap:8px!important}#signature-toolbar #signature-font{max-width:130px}}
 </style>
@@ -154,7 +155,7 @@
                                             <select name="calling_code" id="calling_code">
                                                 @foreach ($calling_codes as $code => $value)
                                                     <option value="{{ $value['dial_code'] }}"
-                                                        @selected($user->calling_code == $value['dial_code'])>{{ $value['dial_code'] }} — {{ $value['name'] }}</option>
+                                                        @selected(old('calling_code', $user->calling_code ?: '+1') == $value['dial_code'])>{{ $value['dial_code'] }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
