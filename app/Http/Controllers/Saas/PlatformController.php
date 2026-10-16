@@ -112,12 +112,33 @@ class PlatformController extends Controller
     }
     public function dashboard()
     {
+        $tenants = Tenant::with('subscription.plan')->latest()->paginate(20);
+        foreach ($tenants as $tenant) {
+            $tenant->setAttribute('owner_email_verified', $this->ownerEmailVerified($tenant));
+        }
         return $this->platformView('saas.platform-dashboard', [
             'total' => Tenant::count(), 'active' => Tenant::where('status', 'active')->count(),
             'suspended' => Tenant::where('status', 'suspended')->count(),
             'expired' => Subscription::whereNotNull('expires_at')->where('expires_at', '<=', now())->count(),
-            'tenants' => Tenant::with('subscription.plan')->latest()->paginate(20),
+            'tenants' => $tenants,
         ]);
+    }
+    private function ownerEmailVerified(Tenant $tenant): ?bool
+    {
+        if (in_array($tenant->status, ['provisioning', 'failed'], true)) { return null; }
+        try {
+            config(['database.connections.saas_owner_status' => app(TenantContext::class)->connectionConfig($tenant)]);
+            DB::purge('saas_owner_status');
+            $owner = DB::connection('saas_owner_status')->table('users')
+                ->where('email', $tenant->owner_email)->first(['email_verified_at']);
+            return $owner ? $owner->email_verified_at !== null : null;
+        } catch (\Throwable $exception) {
+            report($exception);
+            return null;
+        } finally {
+            DB::purge('saas_owner_status');
+            config(['database.connections.saas_owner_status' => null]);
+        }
     }
     public function activity()
     {
@@ -129,6 +150,7 @@ class PlatformController extends Controller
     }
     public function tenant(Tenant $tenant)
     {
+        $tenant->setAttribute('owner_email_verified', $this->ownerEmailVerified($tenant));
         $context = app(TenantContext::class);
         $usage = null;
         try { $context->activate($tenant); $usage = app(QuotaService::class)->usage(); }
