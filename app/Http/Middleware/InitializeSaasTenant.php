@@ -28,6 +28,7 @@ class InitializeSaasTenant
             try { return $this->privateResponse($next($request)); } finally { $context->reset(); }
         }
         $api = $request->is('api/jobs', 'api/jobs/*');
+        $supportAccess = false;
         if ($api) {
             $token = $request->bearerToken();
             $tenant = $token ? ApiKey::where('token_hash', hash('sha256', $token))->first()?->tenant : null;
@@ -57,6 +58,17 @@ class InitializeSaasTenant
                 abort(404);
             }
             $guard = Auth::guard('web');
+            if ($access = $request->session()->get('support_access')) {
+                $supportAccess = (int) ($access['admin_id'] ?? 0) === (int) Auth::guard('platform')->id()
+                    && Auth::guard('platform')->check()
+                    && (int) ($access['tenant_id'] ?? 0) === (int) $tenant->id
+                    && (int) ($access['expires_at'] ?? 0) > now()->timestamp;
+                if (!$supportAccess) {
+                    $request->session()->forget([$guard->getName(), 'support_access', 'saas_tenant_id', 'user', 'storage_setting']);
+                    $request->session()->regenerate();
+                    return redirect('/superadmin');
+                }
+            }
             $recaller = $guard->getRecallerName();
             $request->cookies->remove($recaller);
             Cookie::queue(Cookie::forget($recaller));
@@ -67,10 +79,10 @@ class InitializeSaasTenant
                 $request->session()->migrate(true);
                 $request->session()->put('saas_tenant_id', $tenant->id);
             }
-            if ($tenant->status === 'suspended' && !$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
+            if (!$supportAccess && $tenant->status === 'suspended' && !$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
                 return $request->expectsJson() ? response()->json(['message' => 'This workspace is suspended.'], 403) : redirect('/account/subscription');
             }
-            if (!$tenant->hasAccess() && !$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
+            if (!$supportAccess && !$tenant->hasAccess() && !$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
                 return $request->is('admin*') ? redirect('/account/subscription') : response('This workspace subscription is unavailable.', 410);
             }
         }
@@ -79,9 +91,9 @@ class InitializeSaasTenant
             if ($request->is('admin/settings/language-settings*', 'admin/settings/update-application*') && !$request->isMethod('GET')) { abort(403, 'Shared application files are managed by the platform administrator.'); }
             if (!$request->isMethodSafe()) {
                 // Serialize tenant writes so concurrent signups/imports cannot bypass model quotas.
-                return DB::connection('saas_landlord')->transaction(function () use ($tenant, $request, $next) {
+                return DB::connection('saas_landlord')->transaction(function () use ($tenant, $request, $next, $supportAccess) {
                     $locked = Tenant::whereKey($tenant->id)->lockForUpdate()->firstOrFail();
-                    if (!$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
+                    if (!$supportAccess && !$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
                         abort_unless($locked->hasAccess(), 403, 'This subscription is unavailable.');
                     }
                     return $this->privateResponse($next($request));

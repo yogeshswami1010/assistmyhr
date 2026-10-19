@@ -25,6 +25,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('login', [PlatformController::class, 'loginForm'])->name('login');
     Route::post('login', [PlatformController::class, 'login'])->middleware('throttle:5,1');
     Route::middleware('auth:platform')->group(function () {
+        Route::post('tenants/{tenant}/login-as', [PlatformController::class, 'loginAsClient'])->middleware('throttle:10,1')->name('tenants.login-as');
+        Route::post('exit-client', [PlatformController::class, 'exitClient'])->name('exit-client');
         Route::get('/', [PlatformController::class, 'dashboard'])->name('dashboard');
         Route::get('activity', [PlatformController::class, 'activity'])->name('activity');
         Route::get('requests', [PlatformController::class, 'requests'])->name('requests');

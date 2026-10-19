@@ -123,6 +123,39 @@ class PlatformController extends Controller
             'tenants' => $tenants,
         ]);
     }
+    public function loginAsClient(Request $request, Tenant $tenant)
+    {
+        abort_if(in_array($tenant->status, ['provisioning', 'failed'], true), 422, 'This workspace is not ready.');
+        $adminId = Auth::guard('platform')->id();
+        $context = app(TenantContext::class);
+        try {
+            $context->activate($tenant);
+            $owner = \App\User::where('email', $tenant->owner_email)->firstOrFail();
+            abort_unless($owner->hasRole('admin'), 403, 'The client owner is not an administrator.');
+            AuditLog::create(['tenant_id' => $tenant->id, 'admin_id' => $adminId,
+                'action' => 'support.access_started', 'reason' => 'Super administrator accessed the client account for setup.',
+                'after' => ['user_id' => $owner->id]]);
+            $request->session()->forget(['user', 'storage_setting', 'password_hash_web', 'url.intended', 'auth.password_confirmed_at']);
+            $request->session()->put('saas_tenant_id', $tenant->id);
+            $request->session()->put('support_access', ['admin_id' => $adminId, 'tenant_id' => $tenant->id, 'expires_at' => now()->addHour()->timestamp]);
+            Auth::guard('web')->login($owner, false);
+            $request->session()->regenerate();
+            return redirect(route('admin.dashboard', ['workspace' => $tenant->slug]));
+        } finally { $context->reset(); }
+    }
+
+    public function exitClient(Request $request)
+    {
+        $access = $request->session()->get('support_access');
+        if ($access && (int) $access['admin_id'] === (int) Auth::guard('platform')->id()) {
+            AuditLog::create(['tenant_id' => $access['tenant_id'], 'admin_id' => $access['admin_id'],
+                'action' => 'support.access_ended', 'reason' => 'Super administrator exited the client account.']);
+        }
+        $request->session()->forget([Auth::guard('web')->getName(), 'support_access', 'saas_tenant_id', 'user', 'storage_setting', 'password_hash_web', 'url.intended', 'auth.password_confirmed_at']);
+        Auth::forgetGuards();
+        $request->session()->regenerate();
+        return redirect()->route('superadmin.dashboard');
+    }
     private function ownerEmailVerified(Tenant $tenant): ?bool
     {
         if (in_array($tenant->status, ['provisioning', 'failed'], true)) { return null; }

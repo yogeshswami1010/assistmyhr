@@ -12,6 +12,8 @@ class AuditLog extends LandlordModel
     {
         return [
             'tenant.created' => 'Client account created',
+            'support.access_started' => 'Administrator accessed client account',
+            'support.access_ended' => 'Administrator exited client account',
             'tenant.provisioning_failed' => 'Client account setup failed',
             'tenant.deleted' => 'Client account deleted',
             'tenant.status_changed' => 'Client access updated',

@@ -50,6 +50,7 @@ foreach ([Illuminate\Events\EventServiceProvider::class, Illuminate\Database\Dat
     Illuminate\View\ViewServiceProvider::class, Illuminate\Translation\TranslationServiceProvider::class,
     Illuminate\Pagination\PaginationServiceProvider::class,
     Illuminate\Notifications\NotificationServiceProvider::class,
+    Illuminate\Mail\MailServiceProvider::class,
     Illuminate\Validation\ValidationServiceProvider::class, Cviebrock\EloquentSluggable\ServiceProvider::class,
     App\Providers\SaasServiceProvider::class] as $provider) { $app->register($provider); }
 $app->boot();
@@ -64,7 +65,7 @@ Carbon\Carbon::setTestNow('2026-10-06 12:00:00');
 
 Schema::create('users', function(Blueprint $t){$t->increments('id');$t->string('name');$t->string('email')->unique();$t->string('password');$t->rememberToken();$t->timestamps();});
 Schema::create('companies', function(Blueprint $t){$t->increments('id');$t->string('company_name');$t->string('company_email')->nullable();$t->string('status')->default('active');$t->string('show_in_frontend')->default('true');$t->timestamps();});
-Schema::create('jobs', function(Blueprint $t){$t->increments('id');$t->unsignedInteger('company_id');$t->string('title');$t->string('slug')->nullable();$t->timestamps();});
+Schema::create('jobs', function(Blueprint $t){$t->increments('id');$t->unsignedInteger('company_id');$t->string('title');$t->string('slug')->nullable();$t->softDeletes();$t->timestamps();});
 Schema::create('job_applications', function(Blueprint $t){$t->increments('id');$t->string('full_name');$t->timestamps();});
 foreach(['roles','permissions'] as $table){Schema::create($table,function(Blueprint $t){$t->increments('id');$t->string('name');$t->string('display_name')->nullable();$t->timestamps();});}
 Schema::create('role_user',function(Blueprint $t){$t->unsignedInteger('user_id');$t->unsignedInteger('role_id');});
@@ -246,6 +247,22 @@ $request=Request::create('https://ats.example.test/superadmin/tenants/'.$alpha->
 $platform->updateTenant($request,$alpha->fresh());
 check($alpha->fresh()->status==='suspended'&&AuditLog::where('action','tenant.status_changed')->exists(),'Super admin status action audited');
 $request->merge(['status'=>'active']);$platform->updateTenant($request,$alpha->fresh());
+$supportRequest=middlewareRequest('/superadmin/tenants/'.$alpha->id.'/login-as',$session);
+$platform->loginAsClient($supportRequest,$alpha->fresh());
+check((int)$session->get('support_access.tenant_id')===(int)$alpha->id,'Support session is bound to selected client');
+$supportResponse=$middleware->handle(middlewareRequest('/admin/dashboard?workspace=alpha',$session),function()use($alpha){check(Auth::guard('web')->user()->email===$alpha->owner_email,'Support logs in as correct client owner');return response('Support dashboard');});
+check($supportResponse->getStatusCode()===200,'Super admin support reaches client dashboard');
+$platform->exitClient($supportRequest);
+check(!$session->has('support_access')&&!$session->has(Auth::guard('web')->getName()),'Exiting clears client authentication');
+check(Auth::guard('platform')->check(),'Exit preserves super admin authentication');
+$platform->loginAsClient($supportRequest,$alpha->fresh());
+$crossResponse=$middleware->handle(middlewareRequest('/admin/dashboard?workspace=beta',$session),fn()=>throw new RuntimeException('Cross-workspace support access accepted'));
+check($crossResponse->isRedirect()&&!$session->has('support_access'),'Changing support workspace revokes access');
+$platform->loginAsClient($supportRequest,$alpha->fresh());
+$session->put('support_access.expires_at',now()->subSecond()->timestamp);
+$expiredSupport=$middleware->handle(middlewareRequest('/admin/dashboard?workspace=alpha',$session),fn()=>throw new RuntimeException('Expired support access accepted'));
+check($expiredSupport->isRedirect()&&!$session->has('support_access'),'Expired support access revoked');
+check(AuditLog::where('action','support.access_started')->exists()&&AuditLog::where('action','support.access_ended')->exists(),'Support entry and exit audited');
 $request->merge(['reason'=>'Independently confirmed owner']);$platform->verifyOwner($request,$alpha->fresh());
 $context->activate($alpha);check(App\User::find(1)->hasVerifiedEmail(),'Super admin can approve owner email in correct tenant');
 Auth::guard('web')->login(App\User::find(1));
@@ -270,7 +287,7 @@ $context->reset();
 PlatformSetting::create(['key'=>'signup_enabled','value'=>'1']);
 $request=middlewareRequest('/register',$session);$signup=new App\Http\Controllers\Saas\SignupController;
 check(str_contains($signup->form()->render(),'Create your ATS workspace'),'Signup page renders');
-check(str_contains($signup->pricing()->render(),'Plans for your recruiting team'),'Pricing page renders');
+check(str_ends_with($signup->pricing()->getTargetUrl(),'/register'),'Pricing redirects to registration while hidden');
 $context->activate($beta);check(config('services.candidate_email_imap.host')===null,'Other client cannot inherit IMAP host');$context->reset();
 Illuminate\Support\Facades\Notification::fake();
 $signupRequest=Request::create('https://ats.example.test/register','POST',array_replace($data,['company_name'=>'Client Gamma','email'=>'gamma@example.test','password_confirmation'=>$data['password']]));

@@ -133,6 +133,11 @@
 
 </head>
 <body class="ra-admin-body">
+@if(config('saas.enabled') && session('support_access') && !request()->is('superadmin*'))
+<div role="status" style="position:fixed;bottom:16px;right:16px;z-index:9999;max-width:calc(100vw - 32px);background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:12px 16px;box-shadow:0 8px 30px #0f172a22;color:#92400e;font-size:13px">
+<strong>Super admin access</strong><div>You are working in a client's account.</div><form method="post" action="{{ route('superadmin.exit-client') }}" style="margin-top:8px">@csrf<button type="submit" style="background:#92400e;color:white;border:0;border-radius:8px;padding:7px 12px;cursor:pointer">Exit client account</button></form>
+</div>
+@endif
 <div id="ra-app" class="ra-app" style="--ra-accent: {{ isset($adminTheme) ? $adminTheme->primary_color : '#2563eb' }};">
 @if($platformLayout ?? false)
     @include('saas.platform-sidebar')
