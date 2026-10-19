@@ -267,9 +267,9 @@
                                         <i class="fa fa-check mr-1"></i> Save &amp; next
                                     </button>
                                     <button type="button" id="bulk-save-all-job" onclick="bulkSaveAllToJob()" class="bulk-save-btn" style="background:#2563eb">Save All</button>
-                                    <span id="bulk-save-all-status" role="status" aria-live="polite" class="text-xs text-gray-500"></span>
                                 </div>
                             </div>
+                            <p id="bulk-save-all-status" role="status" aria-live="polite" class="text-xs" style="color:#b91c1c;margin:0;padding:0 16px 12px;overflow-wrap:anywhere"></p>
                         </div>{{-- /bulk-review-pane --}}
                     </div>{{-- /bulk-col-right --}}
                 </div>{{-- /bulk-layout --}}
