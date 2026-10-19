@@ -782,6 +782,14 @@
         var bulkLastJobLocId = '';    // persists the last selected job across CVs
         var bulkLastJobId    = '';
         var bulkLastLocId    = '';
+        var bulkParsingCount = 0;
+        function bulkPumpParsing() {
+            while (bulkParsingCount < 2) {
+                var next = bulkQueue.findIndex(function (item) { return item.status === 'pending'; });
+                if (next === -1) break;
+                bulkParseItem(next);
+            }
+        }
         /* ─────────────────────────────────────────────
            File input / drop zone
         ───────────────────────────────────────────── */
@@ -829,6 +837,7 @@
             bulkRenderQueue();
             bulkUpdateBatchBar();
             if (bulkActive === -1 && bulkQueue.length > 0) bulkSelectItem(0);
+            bulkPumpParsing();
         }
 
         /* ─────────────────────────────────────────────
@@ -912,7 +921,9 @@
             } else if (item.status === 'parsing') {
                 bulkShowParsingState(item.name);
             } else {
-                bulkParseItem(i);
+                item.status = 'pending';
+                bulkShowParsingState(item.name);
+                bulkPumpParsing();
             }
         }
             /* ─────────────────────────────────────────────
@@ -1098,9 +1109,11 @@
         ───────────────────────────────────────────── */
         function bulkParseItem(i) {
             var item = bulkQueue[i];
+            if (!item || item.status !== 'pending') return;
+            bulkParsingCount++;
             item.status = 'parsing';
             bulkRenderQueue();
-            bulkShowParsingState(item.name);
+            if (bulkQueue[bulkActive] === item) bulkShowParsingState(item.name);
 
             var fname = (item.file.name || '').toLowerCase();
             var ftype = (item.file.type || '').toLowerCase();
@@ -1123,7 +1136,7 @@
                     if (res.status !== 'success') {
                         item.status = 'error';
                         bulkRenderQueue();
-                        if (bulkActive === i) {
+                        if (bulkQueue[bulkActive] === item) {
                             document.getElementById('bulk-cv-viewer').innerHTML =
                                 '<div class="flex flex-col items-center justify-center h-full gap-2 text-red-400">' +
                                 '<i class="fa fa-exclamation-triangle fa-2x"></i>' +
@@ -1182,7 +1195,7 @@
                             bulkRenderQueue();
                             bulkUpdateBatchBar();
 
-                            if (bulkActive === i) {
+                            if (bulkQueue[bulkActive] === item) {
                                 bulkRenderCV(item);
                                 bulkFillForm(item);
                             }
@@ -1195,7 +1208,7 @@
                         item.resumeText = '';
                         bulkRenderQueue();
                         bulkUpdateBatchBar();
-                        if (bulkActive === i) {
+                        if (bulkQueue[bulkActive] === item) {
                             bulkRenderCV(item);
                             bulkFillForm(item);
                         }
@@ -1205,12 +1218,17 @@
                     item.status = 'error';
                     item.parsed = null;
                     bulkRenderQueue();
-                    if (bulkActive === i) {
+                    if (bulkQueue[bulkActive] === item) {
                         document.getElementById('bulk-cv-viewer').innerHTML =
                             '<div class="flex flex-col items-center justify-center h-full gap-2 text-red-400">' +
                             '<i class="fa fa-exclamation-triangle fa-2x"></i>' +
                             '<p class="text-xs text-center">Server error. Please try again.</p></div>';
                     }
+                },
+                complete: function () {
+                    bulkParsingCount = Math.max(0, bulkParsingCount - 1);
+                    bulkUpdateBatchBar();
+                    bulkPumpParsing();
                 }
             });
         }
