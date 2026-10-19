@@ -365,6 +365,15 @@ rejected(fn()=>$platform->saveTelephony(Request::create('/superadmin/settings/te
 $platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>' PLATFORM-TELNYX-SECRET ','telnyx_public_key'=>'']));
 check(PlatformSetting::valueFor('telnyx_api_key')!=='PLATFORM-TELNYX-SECRET','Platform Telnyx key encrypted at rest');
 check(Illuminate\Support\Facades\Crypt::decryptString(PlatformSetting::valueFor('telnyx_api_key'))==='PLATFORM-TELNYX-SECRET','API key saves without the incoming SMS public key and trims pasted whitespace');
+foreach (['Bearer PLATFORM-TELNYX-SECRET','"PLATFORM-TELNYX-SECRET"',"PLATFORM-TELNYX-\nSECRET",'********','KEY...MASKED'] as $invalidKey) {
+    try {
+        $platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>$invalidKey,'telnyx_public_key'=>'']));
+        throw new RuntimeException('Malformed Telnyx key replaced saved credentials');
+    } catch (Illuminate\Validation\ValidationException $e) {
+        check(isset($e->errors()['telnyx_api_key'])&&!str_contains(json_encode($e->errors()),$invalidKey),'Malformed key rejected without echoing the secret');
+    }
+}
+check(Illuminate\Support\Facades\Crypt::decryptString(PlatformSetting::valueFor('telnyx_api_key'))==='PLATFORM-TELNYX-SECRET','Rejected Telnyx keys preserve the previously saved credential');
 $platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>'','telnyx_public_key'=>'PUBLIC-KEY']));
 $platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>'','telnyx_public_key'=>'']));
 check(Illuminate\Support\Facades\Crypt::decryptString(PlatformSetting::valueFor('telnyx_api_key'))==='PLATFORM-TELNYX-SECRET'&&PlatformSetting::valueFor('telnyx_public_key')==='PUBLIC-KEY','Blank provider fields preserve both saved keys');
