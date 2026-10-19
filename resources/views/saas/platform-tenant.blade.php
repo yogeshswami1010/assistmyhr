@@ -13,9 +13,7 @@
 </style>
 @endpush
 @section('platform-content')
-@if(!in_array($tenant->status, ['provisioning','failed'], true))
-<form method="post" action="{{ route('superadmin.tenants.login-as',$tenant) }}" style="display:flex;justify-content:flex-end;margin-bottom:12px" onsubmit="return confirm('Access this client account as its owner? This access will be recorded.');">@csrf<button type="submit">Login as client &rarr;</button></form>
-@endif
+<div style="display:flex;justify-content:flex-end;margin-bottom:16px">@include('saas.client-access-button', ['tenant' => $tenant])</div>
 <div class="client-summary"><p class="muted">Manage {{ $tenant->name }}'s account, subscription and communication services.</p><span class="client-status">{{ ucfirst($tenant->status) }}</span></div>
 <nav class="client-tabs" role="tablist" aria-label="Client details">
 <button type="button" role="tab" id="client-tab-overview" aria-controls="client-panel-overview" aria-selected="true" data-client-tab="overview" tabindex="0">Overview</button>

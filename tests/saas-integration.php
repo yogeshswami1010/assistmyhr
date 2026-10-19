@@ -222,8 +222,10 @@ check(DB::table('jobs')->value('title')==='Original private job','Original ATS d
 // Exercise actual controller actions and render their complete Blade pages.
 $platform=new App\Http\Controllers\Saas\PlatformController;
 $request=middlewareRequest('/superadmin',$session);Auth::guard('platform')->login($admin);
-check(str_contains($platform->dashboard()->render(),'Client overview'),'Platform dashboard renders actual client records');
-check(str_contains($platform->tenant($alpha)->render(),'Extend subscription manually'),'Client management page renders');
+$directoryHtml=$platform->dashboard()->render();
+check(str_contains($directoryHtml,'Client overview')&&str_contains($directoryHtml,'Access Client Account')&&str_contains($directoryHtml,route('superadmin.tenants.login-as',$alpha)),'Platform client directory includes direct account access');
+$clientHtml=$platform->tenant($alpha)->render();
+check(str_contains($clientHtml,'Extend subscription manually')&&str_contains($clientHtml,'Access Client Account')&&str_contains($clientHtml,route('superadmin.tenants.login-as',$alpha)),'Client management page includes account access');
 check(str_contains($platform->plans()->render(),'Create plan'),'Plan editor renders');
 check(str_contains($platform->settings()->render(),'Signup and trial settings'),'Platform settings render');
 check(str_contains($platform->profile()->render(),'Profile details'),'Super admin profile renders');
