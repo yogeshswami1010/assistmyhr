@@ -80,7 +80,7 @@ namespace {
         $table->integer('starting_salary')->nullable(); $table->integer('maximum_salary')->nullable();
         $table->string('pay_according')->nullable(); $table->boolean('show_on_consortium')->default(false);
         $table->boolean('show_on_assistmyday')->default(false); $table->text('internal_notes')->nullable();
-        $table->timestamps(); $table->softDeletes();
+        $table->timestamps();
     });
     foreach (['job_categories' => 'name', 'job_types' => 'job_type', 'work_experiences' => 'work_experience', 'currencies' => 'currency_symbol', 'job_locations' => 'location'] as $table => $field) {
         Schema::create($table, function (Blueprint $schema) use ($field) { $schema->increments('id'); $schema->string($field); });
@@ -137,10 +137,10 @@ namespace {
 
     $checks = 0;
     function check($ok, $message) { global $checks; if (!$ok) { throw new RuntimeException($message); } $checks++; }
-    function callEndpoint($method, $url, array $data = [], ?string $token = null, ?bool $settingsPermission = null, string $accept = 'application/json') {
+    function callEndpoint($method, $url, array $data = [], ?string $token = null, ?bool $settingsPermission = null) {
         global $app, $session;
         $request = Request::create('https://ats.example.test'.$url, $method, $data);
-        $request->headers->set('Accept', $accept);
+        $request->headers->set('Accept', 'application/json');
         if ($token !== null) { $request->headers->set('Authorization', 'Bearer '.$token); }
         $request->setLaravelSession($session);
         $request->setUserResolver(fn () => $settingsPermission === null ? null : new class($settingsPermission) {
@@ -241,19 +241,9 @@ namespace {
     $allIntegration = JobApiIntegration::where('feed_scope', 'all')->firstOrFail();
     $widgetUrl=Illuminate\Support\Facades\URL::signedRoute('jobs.widget',['integration'=>$allIntegration->id,'version'=>substr($allIntegration->token_hash,0,16)]);
     $widgetPath=str_replace('https://ats.example.test','',$widgetUrl);
-    $widgetResponse=callEndpoint('GET',$widgetPath,accept:'text/html');
+    $widgetResponse=callEndpoint('GET',$widgetPath);
     check($widgetResponse->getStatusCode()===200&&str_contains($widgetResponse->getContent(),'Apply now'),'Signed widget displays active jobs and apply links');
     check(!str_contains($widgetResponse->getContent(),'PRIVATE ATS NOTE')&&!str_contains($widgetResponse->getContent(),'Job 5'),'Widget excludes private notes and expired jobs');
-    $widgetJsonResponse=callEndpoint('GET',$widgetPath);
-    $widgetFeed=json_decode($widgetJsonResponse->getContent(),true);
-    check($widgetJsonResponse->getStatusCode()===200&&$widgetFeed['total_jobs']===$allFeed['total_jobs'],'Signed widget supports server-rendered career pages via JSON');
-    check(!str_contains($widgetJsonResponse->getContent(),'PRIVATE ATS NOTE')&&!in_array(5,array_column($widgetFeed['jobs'],'id')),'Signed JSON feed keeps the same public-only fields and job scope');
-    check(str_contains($widgetJsonResponse->headers->get('Cache-Control'),'no-store')&&!$widgetJsonResponse->headers->has('Access-Control-Allow-Origin'),'Signed JSON is not cached or exposed through browser CORS');
-    $companyWidgetIntegration=JobApiIntegration::where('company_id',4)->firstOrFail();
-    $companyWidgetUrl=Illuminate\Support\Facades\URL::signedRoute('jobs.widget',['integration'=>$companyWidgetIntegration->id,'version'=>substr($companyWidgetIntegration->token_hash,0,16)]);
-    $companyWidgetFeed=json_decode(callEndpoint('GET',str_replace('https://ats.example.test','',$companyWidgetUrl))->getContent(),true);
-    check($companyWidgetFeed['total_jobs']===1&&$companyWidgetFeed['jobs'][0]['id']===6,'Signed JSON honors the integration company scope');
-    check(callEndpoint('GET',$widgetPath.'&workspace=another-client')->getStatusCode()===403,'JSON requests cannot alter the signed workspace');
     check(callEndpoint('GET','/jobs-widget/'.$allIntegration->id)->getStatusCode()===403,'Widget requires signed embed URL');
     check(callEndpoint('GET',$widgetPath.'&page=1')->getStatusCode()===200,'Widget pagination retains valid signed feed');
     callEndpoint('PUT', '/admin/settings/jobs-api/'.$allIntegration->id, ['enabled' => 0], null, true);

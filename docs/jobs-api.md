@@ -23,15 +23,6 @@ widget; after regenerating a key, copy and replace the widget snippet too.
 
 For a custom integration, use the server-side API below.
 
-An existing signed widget URL can also be requested by a website backend with
-`Accept: application/json` to render the same public feed in the website's own
-design. Keep the complete signed URL unchanged; `page` can be appended for
-pagination. Signature validation, workspace/company scope, feed disable/revoke
-and key-regeneration rules remain the same. This response needs no additional
-Bearer key and exposes only the public job fields already used by the iframe.
-See [The Burke Group WordPress template](../integrations/wordpress/the-burke-group/README.md)
-for a complete career page using this approach.
-
 The client's backend requests `GET /api/jobs` over HTTPS with:
 
 ```http

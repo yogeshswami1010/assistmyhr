@@ -14,9 +14,6 @@ class JobsWidgetController extends Controller {
         $apiRequest=$request->duplicate();
         $apiRequest->merge(['per_page'=>100]);
         $feed=(new \App\Http\Controllers\Api\JobController)->index($apiRequest)->getData(true);
-        if ($request->wantsJson()) {
-            return response()->json($feed)->header('Cache-Control','no-store');
-        }
         return response()->view('front.jobs-widget',['feed'=>$feed,'request'=>$request])->header('Cache-Control','no-store');
     }
 }
