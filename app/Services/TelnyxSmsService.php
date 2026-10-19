@@ -14,8 +14,15 @@ class TelnyxSmsService
         if (!$settings || $settings->nexmo_status !== 'active' || $settings->sms_provider !== 'telnyx') {
             throw new RuntimeException('SMS is not enabled. Contact the platform administrator.');
         }
-        if (!$settings->telnyx_api_key || !$settings->telnyx_from_number) {
-            throw new RuntimeException('Telnyx API key and sender number are required.');
+        if (!trim((string) $settings->telnyx_api_key)) {
+            throw new RuntimeException(config('saas.enabled')
+                ? 'SMS setup incomplete: save the Telnyx API key in Super Admin > Settings > Calling and SMS provider.'
+                : 'Telnyx API key is required.');
+        }
+        if (!trim((string) $settings->telnyx_from_number)) {
+            throw new RuntimeException(config('saas.enabled')
+                ? "SMS setup incomplete: assign an SMS sender number in Super Admin > Clients > Manage > Calling & SMS."
+                : 'Telnyx SMS sender number is required.');
         }
 
         $response = Http::withToken($settings->telnyx_api_key)->acceptJson()->timeout(20)

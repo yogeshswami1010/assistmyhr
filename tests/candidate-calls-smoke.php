@@ -1,6 +1,7 @@
 <?php
 // Isolated SQLite/fake providers. No production database, calls, or AI requests.
-require __DIR__.'/../vendor/autoload.php';
+$loader = require ($argv[1] ?? __DIR__.'/../vendor/autoload.php');
+$loader->setPsr4('App\\', __DIR__.'/../app');
 
 use App\CandidateCall;
 use App\Http\Controllers\Admin\CandidateCallController;
@@ -123,7 +124,9 @@ Http::fake([
     'api.telnyx.com/v2/telephony_credentials'=>Http::response(['data'=>['id'=>'generated-webrtc-credential']], 201),
     'api.telnyx.com/v2/telephony_credentials/generated-webrtc-credential/token'=>Http::response('voice-token'),
 ]);
+$app['config']->set('services.deepseek.key', null);
 $voiceSession = $processor->session();
+check($voiceSession['token'] === 'voice-token', 'Calling works without an AI key; only summaries require AI');
 check($voiceSession['token'] === 'voice-token' && $voiceSession['from'] === '+14165550188', 'New voice sessions use saved account settings');
 check($db->table('company_settings')->value('telnyx_webrtc_credential_id') === 'generated-webrtc-credential', 'Provisioned WebRTC credential ID is stored server-side');
 Http::assertSent(fn ($request) => $request->url() === 'https://api.telnyx.com/v2/telephony_credentials'

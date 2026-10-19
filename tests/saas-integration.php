@@ -361,15 +361,33 @@ check(App\AiApiKey::count()===0,'Company key is never copied into client key tab
 $context->activate($alpha);
 check(config('services.deepseek.key')==='ALPHA-AI','Client override wins over company saved key');
 $context->reset();$sharedKey->delete();
-$platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>'PLATFORM-TELNYX-SECRET','telnyx_public_key'=>'PUBLIC-KEY']));
+rejected(fn()=>$platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>'','telnyx_public_key'=>'PUBLIC-KEY'])),'Initial Telnyx provider setup requires an API key');
+$platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>' PLATFORM-TELNYX-SECRET ','telnyx_public_key'=>'']));
 check(PlatformSetting::valueFor('telnyx_api_key')!=='PLATFORM-TELNYX-SECRET','Platform Telnyx key encrypted at rest');
+check(Illuminate\Support\Facades\Crypt::decryptString(PlatformSetting::valueFor('telnyx_api_key'))==='PLATFORM-TELNYX-SECRET','API key saves without the incoming SMS public key and trims pasted whitespace');
+$platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>'','telnyx_public_key'=>'PUBLIC-KEY']));
+$platform->saveTelephony(Request::create('/superadmin/settings/telephony','POST',['telnyx_api_key'=>'','telnyx_public_key'=>'']));
+check(Illuminate\Support\Facades\Crypt::decryptString(PlatformSetting::valueFor('telnyx_api_key'))==='PLATFORM-TELNYX-SECRET'&&PlatformSetting::valueFor('telnyx_public_key')==='PUBLIC-KEY','Blank provider fields preserve both saved keys');
 $platform->saveClientTelephony(Request::create('/superadmin/tenants/'.$alpha->id.'/telephony','POST',['sms_enabled'=>1,'calls_enabled'=>1,'sms_number'=>'+14165551234','voice_number'=>'+14165551234','connection_id'=>'alpha-connection']),$alpha);
 $context->activate($alpha);
 check(App\Services\PlatformTelephony::settings()->telnyx_api_key==='PLATFORM-TELNYX-SECRET','Client communication uses server-side platform key');
 check(App\Services\CandidateCallService::voiceSettings()['credential_id']==='alpha-connection','Client voice uses super admin assignment');
+Illuminate\Support\Facades\Http::swap(new Illuminate\Http\Client\Factory());
+Illuminate\Support\Facades\Http::preventStrayRequests();
+Illuminate\Support\Facades\Http::fake(['api.telnyx.com/v2/messages'=>Illuminate\Support\Facades\Http::response(['data'=>['id'=>'test-sms-id']],202)]);
+check((new App\Services\TelnyxSmsService)->send('+14165550100','Client SMS test')==='test-sms-id','Client SMS reaches the provider using centrally saved configuration');
+Illuminate\Support\Facades\Http::assertSent(fn($request)=>$request->hasHeader('Authorization','Bearer PLATFORM-TELNYX-SECRET')&&$request['from']==='+14165551234');
 $context->activate($gamma);
 check(App\Services\PlatformTelephony::settings()->nexmo_status==='deactive'&&!App\Services\CandidateCallService::voiceSettings()['enabled'],'Unconfigured client cannot call or send SMS');
 try { (new App\Services\TelnyxSmsService)->send('+14165559999','Test'); throw new RuntimeException('Disabled client sent SMS'); } catch (RuntimeException $e) { check(str_contains($e->getMessage(),'not enabled'),'Disabled client SMS blocked before contacting provider'); }
+PlatformSetting::updateOrCreate(['key'=>'telephony.'.$gamma->id],['value'=>json_encode(['sms_enabled'=>1])]);
+try { (new App\Services\TelnyxSmsService)->send('+14165559999','Test'); throw new RuntimeException('Unassigned client used another sender'); } catch (RuntimeException $e) { check(str_contains($e->getMessage(),'assign an SMS sender number'),'Missing client sender is identified separately from API key'); }
+$context->activate($alpha);
+$savedProviderKey=PlatformSetting::valueFor('telnyx_api_key');PlatformSetting::where('key','telnyx_api_key')->delete();
+try { (new App\Services\TelnyxSmsService)->send('+14165559999','Test'); throw new RuntimeException('SMS accepted without a provider key'); } catch (RuntimeException $e) { check(str_contains($e->getMessage(),'save the Telnyx API key'),'Missing platform API key has an actionable SMS error'); }
+try { (new App\Services\CandidateCallService)->session(); throw new RuntimeException('Calling accepted without a provider key'); } catch (RuntimeException $e) { check(str_contains($e->getMessage(),'save the Telnyx API key'),'Missing platform API key has an actionable calling error'); }
+Illuminate\Support\Facades\Http::assertSentCount(1);
+PlatformSetting::create(['key'=>'telnyx_api_key','value'=>$savedProviderKey]);
 $context->reset();
 rejected(fn()=>$platform->saveClientTelephony(Request::create('/superadmin/tenants/'.$gamma->id.'/telephony','POST',['sms_enabled'=>1,'calls_enabled'=>0,'sms_number'=>'+14165551234']),$gamma),'SMS numbers cannot be assigned to two clients');
 Carbon\Carbon::setTestNow();

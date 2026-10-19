@@ -269,9 +269,12 @@ class PlatformController extends Controller
         return back()->with('status', 'Platform settings saved.');
     }
     public function saveTelephony(Request $request) {
-        $data=$request->validate(['telnyx_api_key'=>['nullable','string','max:8192'],'telnyx_public_key'=>['required','string','max:255']]);
+        foreach (['telnyx_api_key','telnyx_public_key'] as $field) {
+            if (is_string($request->input($field))) $request->merge([$field=>trim($request->input($field))]);
+        }
+        $data=$request->validate(['telnyx_api_key'=>[Rule::requiredIf(!PlatformSetting::valueFor('telnyx_api_key')),'nullable','string','max:8192'],'telnyx_public_key'=>['nullable','string','max:255']]);
         if (!empty($data['telnyx_api_key'])) PlatformSetting::updateOrCreate(['key'=>'telnyx_api_key'],['value'=>\Illuminate\Support\Facades\Crypt::encryptString($data['telnyx_api_key'])]);
-        PlatformSetting::updateOrCreate(['key'=>'telnyx_public_key'],['value'=>$data['telnyx_public_key']]);
+        if (!empty($data['telnyx_public_key'])) PlatformSetting::updateOrCreate(['key'=>'telnyx_public_key'],['value'=>$data['telnyx_public_key']]);
         AuditLog::create(['admin_id'=>Auth::guard('platform')->id(),'action'=>'telephony.provider_updated','reason'=>'Platform Telnyx settings updated.']);
         return back()->with('status','Platform calling and SMS provider saved.');
     }

@@ -38,13 +38,22 @@
 <div class="card"><h2>Change plan</h2><p class="muted">Changing the plan preserves the current expiry.</p><form method="post" action="{{ route('superadmin.tenants.plan', $tenant) }}">@csrf<input type="hidden" name="client_tab" value="subscription"><label class="bs-set-lbl">Plan</label><select class="bs-f-sel" name="plan_id" required>@foreach($plans as $plan)<option value="{{ $plan->id }}" @selected($tenant->subscription->plan_id === $plan->id)>{{ $plan->name }}</option>@endforeach</select><label class="bs-set-lbl">Reason</label><textarea class="bs-f-textarea" name="reason" required maxlength="1000"></textarea><button>Update plan</button></form></div></div>@endif
 </section>
 <section class="client-panel" role="tabpanel" id="client-panel-telephony" aria-labelledby="client-tab-telephony" hidden>@php($telephony = json_decode(\App\Saas\PlatformSetting::valueFor('telephony.'.$tenant->id, '{}'), true) ?: [])
-<div class="card"><h2>Client calling and SMS</h2><form method="post" action="{{ route('superadmin.tenants.telephony',$tenant) }}">@csrf<input type="hidden" name="client_tab" value="telephony">
+<div class="card"><h2>Client calling and SMS</h2>
+@if(!\App\Saas\PlatformSetting::valueFor('telnyx_api_key'))
+<div class="notice error">No platform Telnyx API key is saved. <a href="{{ route('superadmin.settings') }}">Add the API key in Calling and SMS provider</a>, then enable features and assign this client's numbers below.</div>
+@else
+<p class="muted">Platform Telnyx API key: Saved. This confirms a key is stored; it does not test Telnyx authentication or delivery.</p>
+@endif
+<dl class="co-details" style="margin:0 0 20px"><div><dt>Browser calling</dt><dd>{{ !empty($telephony['calls_enabled']) ? 'Enabled' : 'Disabled' }}</dd></div><div><dt>Calling number</dt><dd>{{ $telephony['voice_number'] ?? 'Not assigned' }}</dd></div><div><dt>SIP connection ID</dt><dd>{{ $telephony['connection_id'] ?? 'Not assigned' }}</dd></div><div><dt>Candidate SMS</dt><dd>{{ !empty($telephony['sms_enabled']) ? 'Enabled' : 'Disabled' }}</dd></div><div><dt>SMS sender number</dt><dd>{{ $telephony['sms_number'] ?? 'Not assigned' }}</dd></div></dl>
+<form method="post" action="{{ route('superadmin.tenants.telephony',$tenant) }}">@csrf<input type="hidden" name="client_tab" value="telephony">
 <label class="bs-set-lbl">Browser calling</label><select class="bs-f-sel" name="calls_enabled"><option value="0">Disabled</option><option value="1" @selected(!empty($telephony['calls_enabled']))>Enabled</option></select>
 <label class="bs-set-lbl">SIP connection ID</label><input class="bs-f-input" name="connection_id" value="{{ $telephony['connection_id'] ?? '' }}">
+<p class="muted">Use a credential-based SIP connection with an outbound voice profile in Telnyx. A Voice API application ID is not a SIP connection ID.</p>
 <label class="bs-set-lbl">Calling number</label><input class="bs-f-input" name="voice_number" placeholder="+14165551234" value="{{ $telephony['voice_number'] ?? '' }}">
 <label class="bs-set-lbl">Candidate SMS</label><select class="bs-f-sel" name="sms_enabled"><option value="0">Disabled</option><option value="1" @selected(!empty($telephony['sms_enabled']))>Enabled</option></select>
 <label class="bs-set-lbl">SMS sender number</label><input class="bs-f-input" name="sms_number" placeholder="+14165551234" value="{{ $telephony['sms_number'] ?? '' }}">
-<p class="muted">Assign a dedicated SMS number to each client. Configure its Telnyx messaging profile webhook with this URL:</p><code>{{ url('/telnyx-webhook').'?workspace='.rawurlencode($tenant->slug) }}</code>
+<p class="muted">Assign a dedicated SMS number to each client. In Telnyx, assign this purchased number to a Messaging Profile. Set that profile's SMS webhook to this client's URL:</p><code>{{ url('/telnyx-webhook').'?workspace='.rawurlencode($tenant->slug) }}</code>
+@if(!\App\Saas\PlatformSetting::valueFor('telnyx_public_key'))<p style="color:#b45309">Incoming replies also require the webhook public key in Super Admin Settings.</p>@endif
 <button>Save client calling and SMS</button></form></div>
 </section>
 <section class="client-panel" role="tabpanel" id="client-panel-history" aria-labelledby="client-tab-history" hidden><div class="card"><h2>Audit history</h2>@include('saas.audit', ['logs'=>$logs])</div>

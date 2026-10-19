@@ -50,13 +50,13 @@ class CandidateCallService
         $connectionId = trim((string) ($voice['credential_id'] ?? ''));
         $from = $voice['from_number'];
         $missing = [];
-        if (!$voice['enabled']) $missing[] = 'enable Candidate calling in Account Settings';
-        if ($connectionId === '') $missing[] = 'enter the Telnyx SIP connection ID in Account Settings';
-        if (!trim((string) $from)) $missing[] = 'enter the Telnyx calling number in Account Settings';
-        if (!trim((string) $settings?->telnyx_api_key)) $missing[] = 'save your Telnyx API key in SMS Settings';
-        if (config('saas.enabled') && $missing) throw new RuntimeException('Calling is unavailable. Contact the platform administrator to configure calling.');
+        $clientSettings = config('saas.enabled') ? "Super Admin > Clients > Manage > Calling & SMS" : 'Account Settings';
+        $providerSettings = config('saas.enabled') ? 'Super Admin > Settings > Calling and SMS provider' : 'SMS Settings';
+        if (!$voice['enabled']) $missing[] = 'enable calling in '.$clientSettings;
+        if ($connectionId === '') $missing[] = 'enter the Telnyx SIP connection ID in '.$clientSettings;
+        if (!trim((string) $from)) $missing[] = 'assign the Telnyx calling number in '.$clientSettings;
+        if (!trim((string) $settings?->telnyx_api_key)) $missing[] = 'save the Telnyx API key in '.$providerSettings;
         if ($missing) throw new RuntimeException('Calling setup incomplete: '.implode('; ', $missing).'.');
-        $this->aiKey();
 
         // The ID shown on a Telnyx SIP Connection is a connection ID, not a
         // telephony credential ID. Create an on-demand WebRTC credential once
