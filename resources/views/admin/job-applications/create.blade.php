@@ -266,6 +266,8 @@
                                         class="bulk-save-btn">
                                         <i class="fa fa-check mr-1"></i> Save &amp; next
                                     </button>
+                                    <button type="button" id="bulk-save-all-job" onclick="bulkSaveAllToJob()" class="bulk-save-btn" style="background:#2563eb">Save All</button>
+                                    <span id="bulk-save-all-status" role="status" aria-live="polite" class="text-xs text-gray-500"></span>
                                 </div>
                             </div>
                         </div>{{-- /bulk-review-pane --}}
@@ -883,6 +885,7 @@
            Select item → parse if needed
         ───────────────────────────────────────────── */
         function bulkSelectItem(i) {
+            if (bulkSavingAll) return;
             // Save current form edits back to queue before switching
             if (bulkActive >= 0 && bulkActive !== i) bulkSnapshotForm(bulkActive);
 
@@ -1711,7 +1714,77 @@
         /* ─────────────────────────────────────────────
            Save current candidate
         ───────────────────────────────────────────── */
+        var bulkSavingAll = false, bulkSavingCurrent = false;
+        async function bulkSaveAllToJob() {
+            if (bulkSavingAll || bulkSavingCurrent || bulkActive < 0) return;
+            var status = document.getElementById('bulk-save-all-status');
+            var jobId = document.getElementById('bulk-job-id').value.trim();
+            var locationId = document.getElementById('bulk-location-id').value.trim();
+            var jobLocationId = document.getElementById('bulk-job-select').value.trim();
+            if (bulkFiling === 'db' || !jobId || !locationId || !jobLocationId) {
+                status.textContent = 'Select a job and wait for its location to load first.';
+                return;
+            }
+            bulkSnapshotForm(bulkActive);
+            var items = bulkQueue.filter(function (item) { return item.status === 'done' && !item.saved && !item.applicationId; });
+            if (!items.length) { status.textContent = 'No parsed, unsaved CVs to save.'; return; }
+            bulkSavingAll = true;
+            var button = document.getElementById('bulk-save-all-job');
+            var pane = document.getElementById('bulk-review-pane');
+            var previousInert = pane ? pane.inert : false;
+            if (pane) pane.inert = true;
+            button.disabled = true;
+            var approveButton = document.getElementById('bulk-approve-all');
+            var previousApproveDisabled = approveButton.disabled;
+            approveButton.disabled = true;
+            var saved = 0, failures = [];
+            try {
+                for (var index = 0; index < items.length; index++) {
+                    var item = items[index], parsed = item.parsed || {};
+                    button.textContent = 'Saving ' + (index + 1) + '/' + items.length;
+                    var data = new FormData();
+                    data.append('_token', bulkCsrfToken);
+                    data.append('is_bulk', '1');
+                    data.append('entry_type', 'applicant');
+                    data.append('job_id', jobId);
+                    data.append('location_id', locationId);
+                    data.append('job_job_location_id', jobLocationId);
+                    data.append('full_name', parsed.full_name || item.name || '');
+                    data.append('email', parsed.email || '');
+                    data.append('phone', parsed.phone || '');
+                    data.append('skills', parsed.skills || '');
+                    data.append('address', parsed.address || '');
+                    if (item._cvText) data.append('cv_text', item._cvText);
+                    if (item._parsedCvData) data.append('parsed_cv_data', JSON.stringify(item._parsedCvData));
+                    if (item.file) data.append('resume', item.file);
+                    (item.notes || []).filter(Boolean).forEach(function (note) { data.append('notes[]', note); });
+                    try {
+                        var response = await $.ajax({url: bulkStoreUrl, type: 'POST', data: data, processData: false, contentType: false, dataType: 'json'});
+                        if (!response || response.status !== 'success') throw new Error(response && response.message || 'Save failed');
+                        item.applicationId = response.data && response.data.id ? response.data.id : response.id || null;
+                        item.saved = true;
+                        item.jobId = jobId; item.locId = locationId; item.jobLocId = jobLocationId; item.filing = 'job'; item._filingSet = true;
+                        saved++;
+                    } catch (error) {
+                        var details = error.responseJSON;
+                        var message = details && details.errors ? Object.values(details.errors).flat().join(' ') : (details && details.message || error.message || 'Save failed');
+                        failures.push((parsed.full_name || item.name) + ': ' + message);
+                    }
+                }
+            } finally {
+                bulkSavingAll = false;
+                if (pane) pane.inert = previousInert;
+                button.disabled = false; button.textContent = 'Save All';
+                approveButton.disabled = previousApproveDisabled;
+                bulkRenderQueue(); bulkUpdateProgress(); bulkUpdateBatchBar();
+                var next = bulkFindNext();
+                if (next !== -1) bulkSelectItem(next); else bulkShowAllDoneState();
+                status.textContent = saved + ' applicant(s) saved to the selected job.' + (failures.length ? ' ' + failures.length + ' failed: ' + failures.join(' | ') : '');
+            }
+        }
+
         function bulkSaveCurrent() {
+            if (bulkSavingAll || bulkSavingCurrent) return;
             if (bulkActive < 0) return;
 
             // Auto-save any note typed but not yet committed
@@ -1797,6 +1870,7 @@
                 fd.append('_method', 'PUT');
             }
         
+            bulkSavingCurrent = true;
             $.ajax({
                 url:         saveUrl,
                 type:        'POST',
@@ -1805,6 +1879,7 @@
                 contentType: false,
                 dataType:    'json',
                 success: function (response) {
+                    bulkSavingCurrent = false;
                     saveBtn.disabled  = false;
                     saveBtn.innerHTML = prevHtml;
                     if (response && response.status === 'success') {
@@ -1833,6 +1908,7 @@
                     }
                 },
                 error: function (xhr) {
+                    bulkSavingCurrent = false;
                     saveBtn.disabled  = false;
                     saveBtn.innerHTML = prevHtml;
                     bulkHandleFails(xhr);
