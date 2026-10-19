@@ -66,13 +66,14 @@ Carbon\Carbon::setTestNow('2026-10-06 12:00:00');
 Schema::create('users', function(Blueprint $t){$t->increments('id');$t->string('name');$t->string('email')->unique();$t->string('password');$t->rememberToken();$t->timestamps();});
 Schema::create('companies', function(Blueprint $t){$t->increments('id');$t->string('company_name');$t->string('company_email')->nullable();$t->string('status')->default('active');$t->string('show_in_frontend')->default('true');$t->timestamps();});
 Schema::create('jobs', function(Blueprint $t){$t->increments('id');$t->unsignedInteger('company_id');$t->string('title');$t->string('slug')->nullable();$t->softDeletes();$t->timestamps();});
-Schema::create('job_applications', function(Blueprint $t){$t->increments('id');$t->string('full_name');$t->timestamps();});
+Schema::create('job_applications', function(Blueprint $t){$t->increments('id');$t->string('full_name');$t->string('phone')->nullable();$t->unsignedInteger('job_id')->nullable();$t->softDeletes();$t->timestamps();});
 foreach(['roles','permissions'] as $table){Schema::create($table,function(Blueprint $t){$t->increments('id');$t->string('name');$t->string('display_name')->nullable();$t->timestamps();});}
 Schema::create('role_user',function(Blueprint $t){$t->unsignedInteger('user_id');$t->unsignedInteger('role_id');});
 Schema::create('permission_role',function(Blueprint $t){$t->unsignedInteger('permission_id');$t->unsignedInteger('role_id');});
 Schema::create('migrations',function(Blueprint $t){$t->increments('id');$t->string('migration');$t->integer('batch');});
 Schema::create('company_settings',function(Blueprint $t){$t->increments('id');$t->string('company_name');$t->string('company_email');$t->string('locale')->default('eng');$t->string('timezone')->default('UTC');});
 foreach(['theme_settings','application_settings','google_captcha_settings','sms_settings','linked_in_settings','zoom_settings'] as $table){Schema::create($table,function(Blueprint $t){$t->increments('id');$t->string('secret')->nullable();});}
+(require $root.'/database/migrations/2026_07_25_120000_create_applicant_sms_messages_table.php')->up();
 Schema::create('smtp_settings',function(Blueprint $t){$t->increments('id');$t->string('mail_host')->default('smtp.example.test');$t->integer('mail_port')->default(587);$t->string('mail_encryption')->default('tls');$t->string('mail_username')->default('placeholder');$t->string('mail_password')->default('placeholder');$t->string('mail_from_email')->default('test@example.test');$t->string('mail_from_name')->default('test');});
 Schema::create('ai_api_keys',function(Blueprint $t){$t->increments('id');$t->string('name');$t->string('provider')->nullable();$t->text('api_key');$t->boolean('is_active')->default(true);$t->integer('sort_order')->default(0);$t->timestamps();});
 $modelMigration=require $root.'/database/migrations/2026_10_07_000001_add_model_to_ai_api_keys.php';$modelMigration->up();$modelMigration->up();
@@ -176,6 +177,7 @@ check(!is_file($alphaRoot.'/uploads/temp/'.$filename),'Upload temporary file cle
 $app['router']->get('jobapply/{slug}/{location?}',fn()=>null)->name('jobs.jobApply');
 $app['router']->get('login',fn()=>null)->name('login');
 $app['router']->get('admin/dashboard',fn()=>null)->name('admin.dashboard');
+$app['router']->post('telnyx-webhook',fn()=>null)->name('telnyx-webhook');
 $app['router']->get('logout',fn()=>null)->name('logout');
 $app['router']->get('admin/settings/smtp-settings',fn()=>null)->name('admin.smtp-settings.index');
 $app['router']->get('admin/settings/ai-settings',fn()=>null)->name('admin.ai-settings.index');

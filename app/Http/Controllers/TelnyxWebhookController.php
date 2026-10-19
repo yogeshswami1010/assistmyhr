@@ -6,7 +6,9 @@ use App\ApplicantSmsMessage;
 use App\JobApplication;
 use App\Notifications\ApplicantSmsReply;
 use App\Services\TelnyxSmsService;
-use App\SmsSetting;
+use App\Services\TelnyxWebhookSignature;
+use App\Saas\Tenant;
+use App\Saas\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +20,7 @@ class TelnyxWebhookController extends Controller
         $settings = \App\Services\PlatformTelephony::settings();
         $publicKey = trim((string) optional($settings)->telnyx_public_key);
 
-        if ($publicKey === '' || ! $this->hasValidSignature($request, $publicKey)) {
+        if ($publicKey === '' || ! TelnyxWebhookSignature::verify($request, $publicKey)) {
             Log::warning('Rejected an unsigned or invalid Telnyx webhook.');
             return response('Invalid signature', 401);
         }
@@ -55,6 +57,7 @@ class TelnyxWebhookController extends Controller
         $lastOutboundMessage = ApplicantSmsMessage::query()
             ->where('direction', 'outbound')
             ->where('to_number', $normalizedFrom)
+            ->where('from_number', $normalizedTo)
             ->whereNotNull('user_id')
             ->latest('id')
             ->first();
@@ -76,30 +79,39 @@ class TelnyxWebhookController extends Controller
 
         if (! $application) {
             Log::notice('Telnyx reply could not be matched to an applicant.', [
-                'from' => $normalizedFrom,
                 'message_id' => $messageId,
             ]);
             return response('OK');
         }
 
-        $inboundMessage = ApplicantSmsMessage::create([
+        $inboundMessage = ApplicantSmsMessage::firstOrCreate(['telnyx_message_id' => $messageId], [
             'job_application_id' => $application->id,
             'direction' => 'inbound',
             'from_number' => $normalizedFrom,
             'to_number' => $normalizedTo,
             'message' => $message,
-            'telnyx_message_id' => $messageId,
             'status' => 'received',
             'received_at' => now(),
         ]);
+        if (!$inboundMessage->wasRecentlyCreated) return response('OK');
 
         // A reply belongs to the team member who most recently sent an SMS
         // to this applicant. Do not notify every ATS team member.
         $replyOwner = $lastOutboundMessage?->user;
         if ($replyOwner) {
             $inboundMessage->loadMissing('application.job');
-            app()->terminating(function () use ($replyOwner, $inboundMessage) {
+            $tenantId = config('saas.enabled') ? app(TenantContext::class)->current()?->id : null;
+            app()->terminating(function () use ($replyOwner, $inboundMessage, $tenantId) {
+                $context = null;
                 try {
+                    // HTTP middleware resets the workspace before termination.
+                    // Restore it for database notifications, SMTP and ATS links.
+                    if ($tenantId !== null) {
+                        $tenant = Tenant::find($tenantId);
+                        if (!$tenant) return;
+                        $context = app(TenantContext::class);
+                        $context->activate($tenant);
+                    }
                     $replyOwner->notify(new ApplicantSmsReply($inboundMessage));
                 } catch (\Throwable $e) {
                     Log::error('Applicant SMS reply email failed.', [
@@ -107,32 +119,11 @@ class TelnyxWebhookController extends Controller
                         'user_id' => $replyOwner->id,
                         'error' => $e->getMessage(),
                     ]);
-                }
+                } finally { $context?->reset(); }
             });
         }
 
         return response('OK');
     }
 
-    private function hasValidSignature(Request $request, string $configuredKey): bool
-    {
-        if (! function_exists('sodium_crypto_sign_verify_detached')) {
-            Log::error('PHP Sodium is required to verify Telnyx webhooks.');
-            return false;
-        }
-
-        $signature = base64_decode((string) $request->header('telnyx-signature-ed25519'), true);
-        $timestamp = (string) $request->header('telnyx-timestamp');
-        if ($signature === false || $timestamp === '' || abs(time() - (int) $timestamp) > 300) {
-            return false;
-        }
-
-        $key = ctype_xdigit($configuredKey) && strlen($configuredKey) === 64
-            ? hex2bin($configuredKey)
-            : base64_decode($configuredKey, true);
-
-        return is_string($key)
-            && strlen($key) === SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES
-            && sodium_crypto_sign_verify_detached($signature, $timestamp.'|'.$request->getContent(), $key);
-    }
 }

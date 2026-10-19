@@ -6,5 +6,7 @@
 <p class="muted">{{ !empty($settings['telnyx_api_key']) ? 'API key saved. Leave the field blank to keep it.' : 'No API key saved. Add your Telnyx API key to enable calling and outgoing SMS.' }}</p>
 <label class="bs-set-lbl">Telnyx webhook public key</label><input class="bs-f-input" name="telnyx_public_key" value="{{ $settings['telnyx_public_key'] ?? '' }}">
 <p class="muted">Required for incoming SMS replies. You can save the API key first; leave this blank to keep an existing public key.</p>
+<label class="bs-set-lbl">Incoming SMS webhook URL</label><input class="bs-f-input" readonly aria-label="Incoming SMS webhook URL" value="{{ route('telnyx-webhook') }}">
+<p class="muted">In Telnyx, open the Messaging Profile assigned to your SMS number and paste this URL into its inbound webhook setting. Incoming SMS routes to the client assigned that number. Save the Telnyx webhook public key above to verify replies.</p>
 <button>Save calling and SMS provider</button></form></div>
 @endsection

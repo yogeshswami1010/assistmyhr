@@ -3,12 +3,17 @@
 namespace App\Http\Middleware;
 
 use App\Saas\ApiKey;
+use App\Saas\PlatformSetting;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
+use App\Services\TelnyxSmsService;
+use App\Services\TelnyxWebhookSignature;
 use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InitializeSaasTenant
 {
@@ -29,7 +34,10 @@ class InitializeSaasTenant
         }
         $api = $request->is('api/jobs', 'api/jobs/*');
         $supportAccess = false;
-        if ($api) {
+        if ($request->is('telnyx-webhook')) {
+            $tenant = $this->smsWebhookTenant($request);
+            if (!($tenant instanceof Tenant)) return $this->privateResponse($tenant);
+        } elseif ($api) {
             $token = $request->bearerToken();
             $tenant = $token ? ApiKey::where('token_hash', hash('sha256', $token))->first()?->tenant : null;
             if (!$tenant || !$tenant->hasAccess()) { return response()->json(['status' => false, 'message' => 'Invalid key or unavailable subscription.'], 401); }
@@ -101,6 +109,41 @@ class InitializeSaasTenant
             }
             return $this->privateResponse($next($request));
         } finally { $context->reset(); }
+    }
+
+    private function smsWebhookTenant(Request $request): Tenant|\Symfony\Component\HttpFoundation\Response
+    {
+        // Telnyx has no browser session. Authenticate the raw payload before
+        // resolving the workspace from the number that received this SMS.
+        if (!TelnyxWebhookSignature::verify($request, (string) PlatformSetting::valueFor('telnyx_public_key'))) {
+            Log::warning('Rejected an unsigned or invalid Telnyx webhook.');
+            return response('Invalid signature', 401);
+        }
+        if ($request->input('data.event_type') !== 'message.received') return response('OK');
+
+        $phones = app(TelnyxSmsService::class);
+        try { $recipient = $phones->normalizePhone((string) $request->input('data.payload.to.0.phone_number')); }
+        catch (\RuntimeException $e) { return response('Invalid recipient', 422); }
+
+        $matches = [];
+        foreach (PlatformSetting::where('key', 'like', 'telephony.%')->get(['key', 'value']) as $setting) {
+            if (!preg_match('/\Atelephony\.([0-9]+)\z/', $setting->key, $id)) continue;
+            $data = json_decode($setting->value, true);
+            if (!is_array($data) || empty($data['sms_enabled'])) continue;
+            try { $number = $phones->normalizePhone((string) ($data['sms_number'] ?? '')); }
+            catch (\RuntimeException $e) { continue; }
+            if ($number === $recipient) $matches[] = (int) $id[1];
+        }
+        if (count($matches) !== 1) {
+            Log::notice('Telnyx webhook has no unique SMS recipient.', ['event_id' => $request->input('data.id'), 'matches' => count($matches)]);
+            return response('Recipient is unavailable', 403);
+        }
+        $tenant = Tenant::find($matches[0]);
+        if (!$tenant || !$tenant->hasAccess()) return response('Recipient is unavailable', 403);
+        $workspace = $request->query('workspace');
+        if ($workspace !== null && $workspace !== $tenant->slug) return response('Recipient workspace does not match', 403);
+
+        return $tenant;
     }
 
     private function failedLogin($request)

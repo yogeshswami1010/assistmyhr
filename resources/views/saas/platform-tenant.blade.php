@@ -52,7 +52,7 @@
 <label class="bs-set-lbl">Calling number</label><input class="bs-f-input" name="voice_number" placeholder="+14165551234" value="{{ $telephony['voice_number'] ?? '' }}">
 <label class="bs-set-lbl">Candidate SMS</label><select class="bs-f-sel" name="sms_enabled"><option value="0">Disabled</option><option value="1" @selected(!empty($telephony['sms_enabled']))>Enabled</option></select>
 <label class="bs-set-lbl">SMS sender number</label><input class="bs-f-input" name="sms_number" placeholder="+14165551234" value="{{ $telephony['sms_number'] ?? '' }}">
-<p class="muted">Assign a dedicated SMS number to each client. In Telnyx, assign this purchased number to a Messaging Profile. Set that profile's SMS webhook to this client's URL:</p><code>{{ url('/telnyx-webhook').'?workspace='.rawurlencode($tenant->slug) }}</code>
+<p class="muted">Assign a dedicated SMS number to each client. In Telnyx, assign this purchased number to a Messaging Profile. Set that profile's inbound SMS webhook to this URL. Replies route automatically using this client's assigned SMS number:</p><code>{{ route('telnyx-webhook') }}</code>
 @if(!\App\Saas\PlatformSetting::valueFor('telnyx_public_key'))<p style="color:#b45309">Incoming replies also require the webhook public key in Super Admin Settings.</p>@endif
 <button>Save client calling and SMS</button></form></div>
 </section>
