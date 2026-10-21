@@ -93,6 +93,7 @@ Schema::table('company_settings',function(Blueprint $t){$t->integer('currency_id
 DB::table('currencies')->insert(['currency_name'=>'US Dollar','currency_symbol'=>'$','currency_code'=>'USD']);
 $cadMigration=require $root.'/database/migrations/2026_10_08_000001_set_canadian_dollar_default.php';$cadMigration->up();$cadMigration->up();
 $serviceMigration=require $root.'/database/migrations/2026_10_06_000004_create_tenant_service_settings.php';$serviceMigration->up();
+(require $root.'/database/migrations/2026_10_21_000001_create_candidate_reply_mailboxes.php')->up();
 $checks=0;
 function check($ok,$message){global $checks;if(!$ok){throw new RuntimeException($message);} $checks++;}
 function rejected(callable $call,string $message){try{$call();}catch(Illuminate\Validation\ValidationException $e){check(true,$message);return;}throw new RuntimeException($message);}

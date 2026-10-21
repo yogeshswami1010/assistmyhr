@@ -15,7 +15,12 @@ class AccountController extends Controller
     public function integrations(Request $request)
     {
         abort_unless($request->user()->cans('manage_settings'), 403);
-        return view('saas.integrations', ['settings' => \Illuminate\Support\Facades\DB::table('tenant_service_settings')->first()]);
+        return view('saas.integrations', [
+            'settings' => \Illuminate\Support\Facades\DB::table('tenant_service_settings')->first(),
+            'outlook' => \Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes') ? \App\CandidateReplyMailbox::find(1) : null,
+            'outlookAvailable' => app(\App\Services\MicrosoftReplyInbox::class)->configured()
+                && \Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes'),
+        ]);
     }
 
     public function saveIntegrations(Request $request)

@@ -15,6 +15,9 @@ Route::get('/saas-files/{workspace}/{path}', [FileController::class, 'show'])->w
 Route::middleware('auth')->group(function () {
     Route::get('/account/integrations', [\App\Http\Controllers\Saas\IntegrationsController::class, 'index'])->name('saas.integrations');
     Route::post('/account/integrations', [AccountController::class, 'saveIntegrations'])->name('saas.integrations.save');
+    Route::post('/account/integrations/microsoft/connect', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'connect'])->middleware('throttle:10,1')->name('saas.microsoft.connect');
+    Route::get('/account/integrations/microsoft/callback', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'callback'])->name('saas.microsoft.callback');
+    Route::delete('/account/integrations/microsoft', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'disconnect'])->name('saas.microsoft.disconnect');
     Route::get('/account/subscription', [\App\Http\Controllers\Saas\SubscriptionController::class, 'index'])->name('saas.subscription');
     Route::post('/account/subscription/request-plan', [AccountController::class, 'requestPlan'])->middleware('throttle:5,60')->name('saas.request-plan');
     Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');

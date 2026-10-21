@@ -93,6 +93,7 @@ namespace {
     foreach (['IMAP_OPENTIMEOUT' => 1, 'IMAP_READTIMEOUT' => 2, 'OP_READONLY' => 2, 'SA_UIDVALIDITY' => 16, 'FT_PEEK' => 2] as $key => $value) if (!defined($key)) define($key, $value);
     require __DIR__.'/../app/Services/CandidateEmailThread.php';
     require __DIR__.'/../app/Services/CandidateEmailContent.php';
+    require __DIR__.'/../app/Services/CandidateEmailReplyStore.php';
     require __DIR__.'/../app/Console/Commands/ImportCandidateEmailReplies.php';
     function checkImport($condition, $description) { if (!$condition) throw new \RuntimeException($description); }
     \App\JobApplication::$rows = [['id' => 1772,'email' => 'yogeshswami1010@gmail.com'], ['id' => 3280,'email' => 'yogeshswami1010@gmail.com']];

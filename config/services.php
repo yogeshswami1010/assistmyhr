@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'microsoft_reply' => [
+        'client_id' => env('MICROSOFT_REPLY_CLIENT_ID'),
+        'client_secret' => env('MICROSOFT_REPLY_CLIENT_SECRET'),
+    ],
     'candidate_email_webhook_token' => env('CANDIDATE_EMAIL_WEBHOOK_TOKEN'),
     'candidate_email_imap' => [
         'host' => env('AI_SEARCH_MAIL_IMAP_HOST', 'imappro.zoho.in'),
