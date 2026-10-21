@@ -19,6 +19,7 @@
 <button type="button" role="tab" id="client-tab-overview" aria-controls="client-panel-overview" aria-selected="true" data-client-tab="overview" tabindex="0">Overview</button>
 <button type="button" role="tab" id="client-tab-subscription" aria-controls="client-panel-subscription" aria-selected="false" data-client-tab="subscription" tabindex="-1">Subscription & Plan</button>
 <button type="button" role="tab" id="client-tab-telephony" aria-controls="client-panel-telephony" aria-selected="false" data-client-tab="telephony" tabindex="-1">Calling & SMS</button>
+<button type="button" role="tab" id="client-tab-outlook" aria-controls="client-panel-outlook" aria-selected="false" data-client-tab="outlook" tabindex="-1">Outlook Inbox</button>
 <button type="button" role="tab" id="client-tab-history" aria-controls="client-panel-history" aria-selected="false" data-client-tab="history" tabindex="-1">History</button>
 <button type="button" role="tab" id="client-tab-account" aria-controls="client-panel-account" aria-selected="false" data-client-tab="account" tabindex="-1">Account Controls</button>
 </nav>
@@ -55,6 +56,9 @@
 <p class="muted">Assign a dedicated SMS number to each client. In Telnyx, assign this purchased number to a Messaging Profile. Set that profile's inbound SMS webhook to this URL. Replies route automatically using this client's assigned SMS number:</p><code>{{ route('telnyx-webhook') }}</code>
 @if(!\App\Saas\PlatformSetting::valueFor('telnyx_public_key'))<p style="color:#b45309">Incoming replies also require the webhook public key in Super Admin Settings.</p>@endif
 <button>Save client calling and SMS</button></form></div>
+</section>
+<section class="client-panel" role="tabpanel" id="client-panel-outlook" aria-labelledby="client-tab-outlook" hidden>
+@include('saas.platform-microsoft-inbox')
 </section>
 <section class="client-panel" role="tabpanel" id="client-panel-history" aria-labelledby="client-tab-history" hidden><div class="card"><h2>Audit history</h2>@include('saas.audit', ['logs'=>$logs])</div>
 </section>
@@ -96,7 +100,7 @@
             event.preventDefault(); selectTab(tabs[next].dataset.clientTab, true);
         });
     });
-    var initial = @json(old('client_tab'));
+    var initial = @json(old('client_tab', session('client_tab')));
     if (!initial) { try { initial = sessionStorage.getItem(storageKey); } catch (e) {} }
     selectTab(initial || 'overview', false);
 })();

@@ -24,6 +24,7 @@ class MicrosoftReplyInboxController extends Controller
             'state' => $state, 'verifier' => $verifier,
             'tenant_id' => app(TenantContext::class)->current()?->id,
             'user_id' => $request->user()->id, 'expires_at' => now()->addMinutes(10)->timestamp,
+            'credential_fingerprint' => $inbox->credentialFingerprint(),
         ]);
         return redirect()->away($inbox->authorizationUrl($state, $verifier));
     }
@@ -40,6 +41,9 @@ class MicrosoftReplyInboxController extends Controller
             return $this->failure('The Outlook connection request expired or belongs to another account. Start Connect Outlook again from this workspace.');
         }
         $request->session()->forget('microsoft_reply_oauth');
+        if (!hash_equals($pending['credential_fingerprint'] ?? '', $inbox->credentialFingerprint())) {
+            return $this->failure('Microsoft app settings changed during sign-in. Start Connect Outlook again.');
+        }
         $code = $request->query('code');
         if ($request->query('error') || !is_string($code) || $code === '' || strlen($code) > 8192) {
             return $this->failure('Outlook was not connected. Sign in and approve inbox access; your organization may require administrator approval.');

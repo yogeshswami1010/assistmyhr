@@ -14,8 +14,14 @@ class MicrosoftReplyInbox
 
     public function configured(): bool
     {
-        return trim((string) config('services.microsoft_reply.client_id')) !== ''
-            && trim((string) config('services.microsoft_reply.client_secret')) !== '';
+        $credentials = app(MicrosoftReplyAppSettings::class)->current();
+        return $credentials['client_id'] !== '' && $credentials['client_secret'] !== '';
+    }
+
+    public function credentialFingerprint(): string
+    {
+        $credentials = app(MicrosoftReplyAppSettings::class)->current();
+        return hash('sha256', $credentials['client_id'].'|'.$credentials['client_secret']);
     }
 
     // One registered callback for every workspace; the session binds OAuth to its client.
@@ -27,7 +33,7 @@ class MicrosoftReplyInbox
     public function authorizationUrl(string $state, string $verifier): string
     {
         return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.http_build_query([
-            'client_id' => config('services.microsoft_reply.client_id'),
+            'client_id' => app(MicrosoftReplyAppSettings::class)->current()['client_id'],
             'response_type' => 'code', 'redirect_uri' => $this->redirectUri(),
             'response_mode' => 'query', 'scope' => self::SCOPES, 'state' => $state,
             'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
@@ -149,10 +155,11 @@ class MicrosoftReplyInbox
 
     private function tokens(array $parameters): array
     {
+        $credentials = app(MicrosoftReplyAppSettings::class)->current();
         try {
             $response = Http::asForm()->acceptJson()->connectTimeout(10)->timeout(25)->withoutRedirecting()->post(self::TOKEN, $parameters + [
-                'client_id' => config('services.microsoft_reply.client_id'),
-                'client_secret' => config('services.microsoft_reply.client_secret'), 'scope' => self::SCOPES,
+                'client_id' => $credentials['client_id'],
+                'client_secret' => $credentials['client_secret'], 'scope' => self::SCOPES,
             ]);
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             throw new MicrosoftInboxException('Could not reach Microsoft. Try connecting Outlook again later.');

@@ -47,7 +47,7 @@ For password-based IMAP only, check `php --ri imap` before starting. If missing,
 
 ## Outlook / Microsoft 365 inbox setup
 
-Register one **Web** application for AssistMyHR in Microsoft Entra ID. Choose accounts in any organizational directory and personal Microsoft accounts if both Microsoft 365 and Outlook.com clients need access. This integration uses the global Microsoft cloud. Set this exact Web redirect URI (no workspace query):
+Register a **Web** application in Microsoft Entra ID. Choose accounts in any organizational directory and personal Microsoft accounts if both Microsoft 365 and Outlook.com clients need access. This integration uses the global Microsoft cloud. Set this exact Web redirect URI (no workspace query):
 
 ```text
 https://assistmyhr.com/account/integrations/microsoft/callback
@@ -55,14 +55,20 @@ https://assistmyhr.com/account/integrations/microsoft/callback
 
 The URI is generated from the server's `APP_URL`, which must be the canonical HTTPS ATS URL. Add Microsoft Graph **delegated** permissions `User.Read` and `Mail.Read`. The authorization request also asks for `offline_access` so the scheduler can renew access without repeated sign-in. Do not add application-wide mailbox permissions. Some organizations require administrator approval of the delegated consent.
 
-Create a client secret and set these server environment values privately. Use the secret **value**, not its ID. Keep secrets out of chat, source control and browser forms:
+Create a client secret and copy its **value**, not its ID. In **Super Admin → Clients → Manage → Outlook Inbox**, enter the application (client) ID and secret, then click **Save Microsoft app settings**. These settings take effect immediately for that client; no environment edit or configuration-cache refresh is needed. All existing and new clients have this tab. Microsoft app registration and mailbox consent are still required.
+
+Secrets are encrypted in the central platform settings store. The Super Admin form shows only the saved app ID and whether a secret is present; leaving the secret blank preserves it. Validation never flashes a secret back into the session. Audit history records the application ID and whether settings changed, without storing secret values. Users in client accounts cannot edit these Super Admin credentials. Their company SMTP settings remain separate.
+
+Changing the application ID requires a new secret and disconnects that client's existing Outlook authorization so they can reconnect to the new app. Stored email conversations remain available. Updating the secret for the same application retains the mailbox and automatically uses the new secret for token renewal. Settings saves share the workspace's inbox lock, preventing races with an active sync. A sign-in started before an app-credential change must be started again.
+
+An optional platform default can still be set through the following server environment values. It applies only to workspaces with no saved Microsoft app override; each client's saved app always takes precedence. A broken client override fails closed instead of switching applications:
 
 ```dotenv
 MICROSOFT_REPLY_CLIENT_ID=your-application-client-id
 MICROSOFT_REPLY_CLIENT_SECRET="your-client-secret-value"
 ```
 
-Deploy with both `php artisan migrate --force` and `php artisan saas:migrate --force` after taking the normal database backup. These create the new `candidate_reply_mailboxes` table in the original and existing client databases. Run `php artisan optimize:clear` and `php artisan config:cache` after setting the environment values. New workspaces inherit the schema, never another client's connection tokens.
+Deploy with both `php artisan migrate --force` and `php artisan saas:migrate --force` after taking the normal database backup. These create the new `candidate_reply_mailboxes` table in the original and existing client databases. No additional migration is needed for saving client app credentials in Super Admin. Run `php artisan optimize:clear` and `php artisan config:cache` after deployment or changing optional environment defaults. New workspaces inherit the schema, never another client's connection tokens or app credentials.
 
 In each client, open **Workspace Integrations → Candidate reply inbox → Connect Outlook**. Sign in to the mailbox that actually receives replies to the client's outgoing emails and approve read access. The callback binds state, PKCE, expiry, local user and workspace to the initiating session. Access/refresh tokens and sync cursors are encrypted in that client's database and excluded from serialized settings. Only users with `manage_settings` permission can connect or disconnect.
 

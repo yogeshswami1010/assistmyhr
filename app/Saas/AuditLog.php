@@ -28,6 +28,7 @@ class AuditLog extends LandlordModel
             'platform.settings_changed' => 'Platform settings updated',
             'telephony.provider_updated' => 'Calling and SMS provider updated',
             'telephony.client_updated' => 'Client calling and SMS settings updated',
+            'email.microsoft_app_updated' => 'Client Outlook app settings updated',
         ][$this->action] ?? ucfirst(str_replace(['.', '_'], ' ', $this->action ?? 'Activity recorded'));
     }
 }

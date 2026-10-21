@@ -186,10 +186,18 @@ class PlatformController extends Controller
         $tenant->setAttribute('owner_email_verified', $this->ownerEmailVerified($tenant));
         $context = app(TenantContext::class);
         $usage = null;
-        try { $context->activate($tenant); $usage = app(QuotaService::class)->usage(); }
+        $outlookMailbox = null;
+        try {
+            $context->activate($tenant);
+            $usage = app(QuotaService::class)->usage();
+            if (\Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes')) {
+                $outlookMailbox = \App\CandidateReplyMailbox::first(['email', 'last_synced_at', 'sync_error']);
+            }
+        }
         catch (\Throwable $e) { report($e); }
         finally { $context->reset(); }
-        return $this->platformView('saas.platform-tenant', ['tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get()]);
+        return $this->platformView('saas.platform-tenant', ['tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get(),
+            'microsoftApp' => app(\App\Services\MicrosoftReplyAppSettings::class)->metadata($tenant), 'outlookMailbox' => $outlookMailbox]);
     }
     public function updateTenant(Request $request, Tenant $tenant)
     {
@@ -263,7 +271,7 @@ class PlatformController extends Controller
     public function saveSettings(Request $request)
     {
         $data = $request->validate(['signup_enabled' => ['required', 'boolean'], 'trial_days' => ['required', 'integer', 'min:1', 'max:90'], 'trial_plan_id' => ['required', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)->where('public', true)]]);
-        $before = PlatformSetting::pluck('value', 'key')->all();
+        $before = PlatformSetting::whereIn('key', array_keys($data))->pluck('value', 'key')->all();
         foreach ($data as $key => $value) { PlatformSetting::updateOrCreate(['key' => $key], ['value' => (string) $value]); }
         AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'platform.settings_changed', 'reason' => 'Signup and trial settings changed.', 'before' => $before, 'after' => $data]);
         return back()->with('status', 'Platform settings saved.');
@@ -296,6 +304,63 @@ class PlatformController extends Controller
         AuditLog::create(['tenant_id'=>$tenant->id,'admin_id'=>Auth::guard('platform')->id(),'action'=>'telephony.client_updated','reason'=>'Client calling and SMS permissions updated.','after'=>$data]);
         return back()->with('status','Client calling and SMS settings saved.');
     }
+
+    public function saveClientMicrosoftInbox(Request $request, Tenant $tenant)
+    {
+        abort_unless(Auth::guard('platform')->check(), 403);
+        abort_if(in_array($tenant->status, ['failed', 'provisioning']), 422, 'This workspace must be repaired before configuring Outlook.');
+        foreach (['microsoft_client_id', 'microsoft_client_secret'] as $field) {
+            if (is_string($request->input($field))) $request->merge([$field => trim($request->input($field))]);
+        }
+        if (is_string($request->input('microsoft_client_id'))) {
+            $request->merge(['microsoft_client_id' => strtolower($request->input('microsoft_client_id'))]);
+        }
+        $adminId = Auth::guard('platform')->id();
+        $context = app(TenantContext::class);
+        $previous = $context->current();
+        $lock = null;
+        $locked = false;
+        try {
+            $context->activate($tenant);
+            $lock = \Illuminate\Support\Facades\Cache::lock('candidate-outlook-inbox', 300);
+            if (!($locked = $lock->get())) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['microsoft_client_id' => 'An Outlook sync is in progress for this client. Try saving again shortly.']);
+            }
+            $requiresReconnect = DB::connection('saas_landlord')->transaction(function () use ($request, $tenant, $adminId) {
+                Tenant::whereKey($tenant->id)->lockForUpdate()->firstOrFail();
+                $settings = app(\App\Services\MicrosoftReplyAppSettings::class);
+                $before = $settings->forTenant($tenant);
+                $metadata = $settings->metadata($tenant);
+                $data = $request->validate([
+                    'microsoft_client_id' => ['required', 'uuid'],
+                    'microsoft_client_secret' => [Rule::requiredIf(!$metadata['has_secret'] || $before['client_secret'] === '' || $request->input('microsoft_client_id') !== $metadata['client_id']), 'nullable', 'string', 'max:8192'],
+                ]);
+                $appChanged = strtolower($before['client_id']) !== $data['microsoft_client_id'];
+                $reconnect = false;
+                if ($appChanged && \Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes')) {
+                    $reconnect = \App\CandidateReplyMailbox::whereKey(1)->delete() > 0;
+                }
+                PlatformSetting::updateOrCreate(['key' => 'microsoft_reply.'.$tenant->id], ['value' => json_encode([
+                    'client_id' => $data['microsoft_client_id'],
+                    'client_secret' => \Illuminate\Support\Facades\Crypt::encryptString(($data['microsoft_client_secret'] ?? null) ?: $before['client_secret']),
+                ])]);
+                AuditLog::create([
+                    'tenant_id' => $tenant->id, 'admin_id' => $adminId, 'action' => 'email.microsoft_app_updated',
+                    'reason' => 'Microsoft inbox app settings updated for this client.',
+                    'after' => ['client_id' => $data['microsoft_client_id'], 'secret_updated' => !empty($data['microsoft_client_secret']), 'reconnect_required' => $reconnect],
+                ]);
+                return $reconnect;
+            });
+            return redirect()->route('superadmin.tenants.show', $tenant)->with('client_tab', 'outlook')
+                ->with('status', $requiresReconnect
+                    ? 'Microsoft app settings saved. The client must reconnect Outlook to use the new application.'
+                    : 'Microsoft app settings saved for this client. They can connect Outlook from Workspace Integrations.');
+        } finally {
+            if ($lock && $locked) $lock->release();
+            $previous ? $context->activate($previous) : $context->reset();
+        }
+    }
+
     private function auditMutation(Request $request, Tenant $tenant, string $action, string $reason, callable $mutation): void
     {
         DB::connection('saas_landlord')->transaction(function () use ($tenant, $action, $reason, $mutation) {
