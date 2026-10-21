@@ -31,6 +31,11 @@
 
 @section('content')
 <div class="mx-auto  pb-8">
+    @if(session('company_created'))
+        <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700" role="status">
+            {{ session('company_created') }}
+        </div>
+    @endif
     <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <a href="javascript:;" class="changeSatus company-filter-tile company-filter-tile--active block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2" data-status="" aria-pressed="true">
             <div class="company-filter-tile-inner dark relative cursor-pointer overflow-hidden rounded-xl bg-[#0F1F3D] px-3.5 py-3 text-white shadow-sm transition">

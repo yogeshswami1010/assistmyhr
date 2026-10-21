@@ -85,21 +85,18 @@ class AdminCompanyController extends AdminBaseController
     // Create Company
     $company = Company::create($data);
 
-    // AJAX RESPONSE
-    if (request()->ajax()) {
+    $message = __('messages.companyCreated');
+    $response = ['id' => $company->id, 'company_name' => $company->company_name];
 
-        return response()->json([
-            'status' => 'success',
-            'id' => $company->id,
-            'company_name' => $company->company_name
-        ]);
+    // The full create page returns to the table. Inline job-form creation
+    // keeps the new company available to the existing dropdown callback.
+    if (!$request->ajax() || $request->boolean('redirect_to_company_table')) {
+        $request->session()->flash('company_created', $message);
+        if (!$request->ajax()) return redirect()->route('admin.company.index');
+        $response += ['action' => 'redirect', 'url' => route('admin.company.index')];
     }
 
-    // NORMAL RESPONSE
-    return Reply::redirect(
-        route('admin.company.index'),
-        __('menu.companies') . ' ' . __('messages.createdSuccessfully')
-    );
+    return response()->json(Reply::successWithData($message, $response));
 }
     public function show($id)
     {

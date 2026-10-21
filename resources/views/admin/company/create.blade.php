@@ -30,8 +30,9 @@
         </div>
 
         <div class="p-4">
-            <form id="editSettings" class="ajax-form space-y-3">
+            <form id="editSettings" class="ajax-form space-y-3" method="post" action="{{ route('admin.company.store') }}" enctype="multipart/form-data">
                 @csrf
+                <input type="hidden" name="redirect_to_company_table" value="1">
 
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div>
@@ -70,7 +71,7 @@
                 </div>
 
                 <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <button type="button" id="save-form" class="inline-flex items-center justify-center gap-2 rounded-[11px] bg-[#2563EB] px-6 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#1d4ed8]">
+                    <button type="submit" id="save-form" class="inline-flex items-center justify-center gap-2 rounded-[11px] bg-[#2563EB] px-6 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#1d4ed8]">
                         <i class="fa fa-check"></i>
                         @lang('app.save')
                     </button>
@@ -103,7 +104,8 @@
 
        
 
-        $('#save-form').click(function () {
+        $('#editSettings').on('submit', function (event) {
+            event.preventDefault();
             $.easyAjax({
                 url: '{{route("admin.company.store")}}',
                 container: '#editSettings',

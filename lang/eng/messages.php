@@ -2,6 +2,7 @@
 
 return [
     'createdSuccessfully' => 'created successfully.',
+    'companyCreated' => 'Company created successfully.',
     'recordDeleted' => 'Record deleted successfully.',
     'itemsSelected' => 'selected',
     'updatedSuccessfully' => 'Updated successfully.',
