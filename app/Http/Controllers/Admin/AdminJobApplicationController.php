@@ -379,7 +379,7 @@ class AdminJobApplicationController extends AdminBaseController
 
         $jobApplications = $jobApplications->where('job_applications.is_candidate', 0);
 
-        // Keep normal duplicate-email applications merged, but always show
+        // Merge duplicate-email applications within the same job, but always show
         // applications explicitly created by a Consortium job assignment.
         $jobApplications = $jobApplications->where(function ($visible) {
             $visible->whereIn('job_applications.id', function ($sub) {
@@ -387,6 +387,9 @@ class AdminJobApplicationController extends AdminBaseController
                     ->from('job_applications as ja2')
                     ->where('ja2.is_candidate', 0)
                     ->whereColumn('ja2.email', 'job_applications.email')
+                    ->whereColumn('ja2.job_id', 'job_applications.job_id')
+                    ->whereNull('ja2.deleted_at')
+                    ->whereNull('ja2.moved_to_trash_at')
                     ->groupBy('ja2.email');
             })->orWhereExists(function ($moves) {
                 $moves->selectRaw('1')
@@ -672,6 +675,9 @@ class AdminJobApplicationController extends AdminBaseController
                 $sub->selectRaw('MAX(ja2.id)')->from('job_applications as ja2')
                     ->where('ja2.is_candidate', 0)
                     ->whereColumn('ja2.email', 'job_applications.email')
+                    ->whereColumn('ja2.job_id', 'job_applications.job_id')
+                    ->whereNull('ja2.deleted_at')
+                    ->whereNull('ja2.moved_to_trash_at')
                     ->groupBy('ja2.email');
             })->orWhereExists(function ($moves) {
                 $moves->selectRaw('1')
@@ -713,6 +719,9 @@ class AdminJobApplicationController extends AdminBaseController
                     $sub->selectRaw('MAX(ja2.id)')->from('job_applications as ja2')
                         ->where('ja2.is_candidate', 0)
                         ->whereColumn('ja2.email', 'job_applications.email')
+                        ->whereColumn('ja2.job_id', 'job_applications.job_id')
+                        ->whereNull('ja2.deleted_at')
+                        ->whereNull('ja2.moved_to_trash_at')
                         ->groupBy('ja2.email');
                 })->orWhereExists(function ($moves) {
                     $moves->selectRaw('1')
@@ -966,7 +975,8 @@ class AdminJobApplicationController extends AdminBaseController
         ->map(fn($word) => ucfirst(strtolower($word)))
         ->join(' ');
         $jobApplication->job_id = $request->job_id;
-        $jobApplication->status_id = ($request->entry_type === 'candidate')
+        $jobApplication->is_candidate = !$request->filled('job_id');
+        $jobApplication->status_id = $jobApplication->is_candidate
             ? null
             : ApplicationStatus::initialForJob((int) $request->job_id)?->id;
         $jobApplication->email = $request->email;
@@ -975,10 +985,6 @@ class AdminJobApplicationController extends AdminBaseController
         $jobApplication->address = $request->address;
         $jobApplication->cover_letter = $request->cover_letter;
         $jobApplication->column_priority = 0;
-
-        if ($request->entry_type === 'candidate') {
-            $jobApplication->is_candidate = 1;  // add this column via migration
-        }
 
         if ($request->has('gender')) {
             $jobApplication->gender = $request->gender;
@@ -1135,6 +1141,7 @@ class AdminJobApplicationController extends AdminBaseController
         ->map(fn($word) => ucfirst(strtolower($word)))
         ->join(' ');
         $jobApplication->job_id = $request->job_id;
+        $jobApplication->is_candidate = 0;
         $jobApplication->status_id = $selectedStatus->id;
         $jobApplication->location_id = $request->location_id;
         $jobApplication->email = $request->email;
@@ -3070,38 +3077,48 @@ class AdminJobApplicationController extends AdminBaseController
     {
         abort_if(! $this->user->cans('edit_job_applications'), 403);
 
-        $request->validate(['job_id' => 'required|exists:jobs,id']);
+        $request->validate(['job_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('jobs', 'id')->whereNull('deleted_at')]]);
 
-        $application = JobApplication::with('job:id,title')->findOrFail($id);
+        DB::transaction(function () use ($request, $id) {
+            $application = JobApplication::with('job:id,title')->lockForUpdate()->findOrFail($id);
+            $job = Job::lockForUpdate()->findOrFail((int) $request->job_id);
+            $oldJobId = (int) $application->job_id;
+            $oldJobTitle = $application->job?->title ?? 'Unassigned';
+            $oldStatusId = $application->status_id;
+            $wasDatabaseOnly = (bool) $application->is_candidate;
 
-        $newJobId = (int) $request->job_id;
-        $oldJobId = (int) $application->job_id;
+            $application->job_id = $job->id;
+            $application->is_candidate = 0;
+            if ($oldJobId !== (int) $job->id || !ApplicationStatus::forJob($job->id)->whereKey($oldStatusId)->exists()) {
+                $application->status_id = ApplicationStatus::initialForJob($job->id)?->id;
+            }
 
-        // No-op — nothing to log or save
-        if ($oldJobId === $newJobId) {
-            return Reply::success('Job assigned successfully.');
-        }
+            $locationIds = JobJobLocation::where('job_id', $job->id)->orderBy('id')->pluck('location_id');
+            if ($locationIds->isEmpty() && $job->location_id) $locationIds->push($job->location_id);
+            if (!$locationIds->contains(fn ($locationId) => (int) $locationId === (int) $application->location_id)) {
+                $application->location_id = $locationIds->first();
+            }
+            if ($oldJobId !== (int) $job->id || $wasDatabaseOnly) $application->column_priority = 0;
 
-        $oldJobTitle = $application->job?->title ?? 'Unassigned';
-        $newJobTitle = Job::find($newJobId)?->title ?? 'Unknown job';
+            // Re-selecting the same job can repair an old database-only flag,
+            // but a valid assignment should not create duplicate history.
+            if (!$application->isDirty()) return;
+            $application->save();
 
-        $application->job_id = $newJobId;
-        $application->save();
+            if ($application->status_id) {
+                \App\JobApplicationStatusHistory::create([
+                    'job_application_id' => $application->id,
+                    'from_status_id' => $oldStatusId,
+                    'to_status_id' => $application->status_id,
+                    'user_id' => $this->user->id,
+                    'notes' => $oldJobId && $oldJobId !== (int) $job->id
+                        ? 'Switched job from "'.ucwords($oldJobTitle).'" to "'.ucwords($job->title).'"'
+                        : 'Assigned to "'.ucwords($job->title).'" and added to Job Applications.',
+                ]);
+            }
+        });
 
-        // Log into the History tab. Uses the applicant's current status for
-        // both from/to (same trick as toggleMarketing) so the FK is satisfied
-        // without needing a schema change — the notes field carries the message.
-        if ($application->status_id) {
-            \App\JobApplicationStatusHistory::create([
-                'job_application_id' => $application->id,
-                'from_status_id'     => $application->status_id,
-                'to_status_id'       => $application->status_id,
-                'user_id'            => $this->user->id,
-                'notes'              => 'Switched job from "' . ucwords($oldJobTitle) . '" to "' . ucwords($newJobTitle) . '"',
-            ]);
-        }
-
-        return Reply::success('Job assigned successfully.');
+        return Reply::success('Job assigned successfully. The candidate is now in Job Applications.');
     }
     public function bulkParseResume(Request $request)
     {
