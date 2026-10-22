@@ -8,8 +8,6 @@ class ApplicationStatus extends Model
 {
     public const DEFAULT_PIPELINE = [
         ['status' => 'Applied', 'color' => '#2563EB'],
-        ['status' => 'CSS Phone Screen', 'color' => '#2563EB'],
-        ['status' => 'Client Reviewed', 'color' => '#7C3AED'],
         ['status' => 'Interview', 'color' => '#D97706'],
         ['status' => 'Hired', 'color' => '#059669'],
         ['status' => 'Rejected', 'color' => '#DC2626'],
