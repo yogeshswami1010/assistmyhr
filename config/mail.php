@@ -57,7 +57,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'name' => \App\Support\Branding::displayName(env('MAIL_FROM_NAME', 'AssistMyHR')),
     ],
 
     /*
@@ -129,7 +129,7 @@ return [
         'password' => env('AI_SEARCH_MAIL_PASSWORD'),
         'from' => [
             'address' => env('AI_SEARCH_MAIL_FROM_ADDRESS'),
-            'name' => env('AI_SEARCH_MAIL_FROM_NAME', env('APP_NAME', 'AssistMyHR')),
+            'name' => \App\Support\Branding::displayName(env('AI_SEARCH_MAIL_FROM_NAME', env('APP_NAME', 'AssistMyHR'))),
         ],
     ],
 ];

@@ -85,7 +85,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => \App\Support\Branding::displayName(env('APP_NAME', 'AssistMyHR')),
 
     /*
     |--------------------------------------------------------------------------
