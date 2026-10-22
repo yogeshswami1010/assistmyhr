@@ -38,10 +38,14 @@
 <section class="mb-4 rounded-2xl border border-slate-200 bg-white p-4" aria-labelledby="dashboard-login-title">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div><h2 id="dashboard-login-title" class="text-sm font-semibold">Your company login URL</h2><p class="mt-1 text-xs text-slate-500">Save this link to sign in to your company's ATS.</p></div>
-        <button type="button" id="dashboard-copy-login" class="rounded-xl px-4 py-2 text-xs font-semibold" style="background:#eff6ff;color:#2563eb">Copy link</button>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" data-ats-install class="rounded-xl px-4 py-2 text-xs font-semibold" style="background:#2563eb;color:#fff">Install ATS app</button>
+            <button type="button" id="dashboard-copy-login" class="rounded-xl px-4 py-2 text-xs font-semibold" style="background:#eff6ff;color:#2563eb">Copy link</button>
+        </div>
     </div>
     <a id="dashboard-login-url" href="{{ route('saas.workspace', $dashboardTenant->slug) }}" class="mt-3 block text-sm" style="color:#2563eb;overflow-wrap:anywhere">{{ route('saas.workspace', $dashboardTenant->slug) }}</a>
     <span id="dashboard-copy-status" role="status" aria-live="polite" class="text-xs text-slate-500"></span>
+    <p class="mt-3 text-xs text-slate-500" data-ats-install-status role="status" aria-live="polite">Install your ATS on your desktop or home screen for quick access.</p>
 </section>
 <script>
 async function copyDashboardLogin(event){

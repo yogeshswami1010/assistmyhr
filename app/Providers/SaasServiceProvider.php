@@ -15,6 +15,7 @@ class SaasServiceProvider extends ServiceProvider
         config(['database.connections.saas_landlord' => config('database.connections.'.config('database.default'))]);
         $this->app->singleton(TenantContext::class);
         if (config('saas.enabled')) {
+            config(['auth.guards.web.driver' => 'tenant-session', 'auth.guards.web.remember' => 60 * 24 * 30]);
             config(['mail.mailers.platform' => [
                 'transport' => config('mail.driver', 'smtp'),
                 'host' => config('mail.host'), 'port' => config('mail.port'),
@@ -31,6 +32,22 @@ class SaasServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (!config('saas.enabled')) { return; }
+        $this->app['auth']->extend('tenant-session', function ($app, $name, $config) {
+            $guard = new \App\Saas\TenantSessionGuard(
+                $name,
+                $app['auth']->createUserProvider($config['provider'] ?? null),
+                $app['session.store'],
+                rehashOnLogin: $app['config']->get('hashing.rehash_on_login', true),
+                timeboxDuration: $app['config']->get('auth.timebox_duration', 200000),
+                hashKey: $app['config']->get('app.key'),
+            );
+            $guard->setCookieJar($app['cookie']);
+            $guard->setDispatcher($app['events']);
+            $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+            $guard->setRememberDuration($config['remember']);
+
+            return $guard;
+        });
         \Illuminate\Auth\Notifications\VerifyEmail::createUrlUsing(fn ($user) => \Illuminate\Support\Facades\URL::temporarySignedRoute(
             'verification.verify', now()->addMinutes(60), tenant_parameters(['id' => $user->id, 'hash' => sha1($user->getEmailForVerification())])
         ));

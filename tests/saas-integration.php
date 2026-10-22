@@ -393,5 +393,6 @@ Illuminate\Support\Facades\Http::assertSentCount(1);
 PlatformSetting::create(['key'=>'telnyx_api_key','value'=>$savedProviderKey]);
 $context->reset();
 rejected(fn()=>$platform->saveClientTelephony(Request::create('/superadmin/tenants/'.$gamma->id.'/telephony','POST',['sms_enabled'=>1,'calls_enabled'=>0,'sms_number'=>'+14165551234']),$gamma),'SMS numbers cannot be assigned to two clients');
+require __DIR__.'/saas-app-install-checks.php';
 Carbon\Carbon::setTestNow();
 echo "SaaS integration checks passed: $checks\n";

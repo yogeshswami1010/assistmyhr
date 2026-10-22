@@ -29,7 +29,7 @@ class InitializeSaasTenant
         abort_if($request->isMethod('GET') && $request->is('admin/settings/application-setting'), 404);
         $context = app(TenantContext::class);
         $context->reset();
-        if ($request->is('superadmin*', 'register', 'pricing', 'saas/workspace/*') || $request->path() === '/') {
+        if ($request->is('superadmin*', 'register', 'pricing', 'saas/workspace/*', 'ats-app/*') || $request->path() === '/') {
             try { return $this->privateResponse($next($request)); } finally { $context->reset(); }
         }
         $api = $request->is('api/jobs', 'api/jobs/*');
@@ -78,6 +78,8 @@ class InitializeSaasTenant
                 }
             }
             $recaller = $guard->getRecallerName();
+            // Retire the old shared cookie. TenantSessionGuard only recalls the
+            // selected client's cookie after context activation below.
             $request->cookies->remove($recaller);
             Cookie::queue(Cookie::forget($recaller));
             if ($request->session()->get('saas_tenant_id') !== $tenant->id) {

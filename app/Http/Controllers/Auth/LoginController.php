@@ -158,7 +158,7 @@ class LoginController extends Controller
 
     protected function attemptLogin(Request $request)
     {
-        return $this->guard()->attempt($this->credentials($request), config('saas.enabled') ? false : $request->boolean('remember'));
+        return $this->guard()->attempt($this->credentials($request), $request->boolean('remember'));
     }
 
     public function logout(Request $request)
@@ -166,6 +166,7 @@ class LoginController extends Controller
         $this->guard()->logout();
 
         $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect(tenant_route('login'));
     }

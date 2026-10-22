@@ -6,6 +6,7 @@
     $authFieldEye = ' pr-11';
     $authBtn = 'flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-bold tracking-wide text-white transition-all hover:-translate-y-px hover:bg-blue-700 hover:shadow-[0_6px_22px_rgba(37,99,235,0.4)] active:translate-y-0';
     $authSecondary = 'flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-[#E2DED8] bg-white py-[13px] text-[13.5px] font-semibold text-[#1A1E2E] no-underline transition-[border-color,box-shadow] hover:border-blue-600 hover:shadow-[0_4px_14px_rgba(37,99,235,0.12)]';
+    $rememberDevice = (bool) old('remember', config('saas.enabled'));
 @endphp
 
 @section('content')
@@ -62,15 +63,19 @@
 
         <div class="flex animate-auth-fade-up flex-wrap items-center justify-between gap-3 opacity-0 [animation-delay:190ms]">
             <div class="flex items-center gap-2.5">
-                <input type="checkbox" name="remember" id="remember" value="1" class="sr-only" {{ old('remember') ? 'checked' : '' }}>
-                <button type="button" class="group relative h-5 w-9 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-slate-200 p-0 transition-colors data-[on=true]:bg-blue-600" id="rememberToggle" data-on="{{ old('remember') ? 'true' : 'false' }}" role="switch" aria-checked="{{ old('remember') ? 'true' : 'false' }}" tabindex="0" aria-labelledby="remember-label">
+                <input type="hidden" name="remember" value="0">
+                <input type="checkbox" name="remember" id="remember" value="1" class="sr-only" @checked($rememberDevice)>
+                <button type="button" class="group relative h-5 w-9 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-slate-200 p-0 transition-colors data-[on=true]:bg-blue-600" id="rememberToggle" data-on="{{ $rememberDevice ? 'true' : 'false' }}" role="switch" aria-checked="{{ $rememberDevice ? 'true' : 'false' }}" tabindex="0" aria-labelledby="remember-label">
                     <span class="pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 group-data-[on=true]:translate-x-4"></span>
                 </button>
-                <label for="remember" id="remember-label" class="cursor-pointer select-none text-[13px] font-medium text-[#5A6478]">{{ __('Remember Me') }}</label>
+                <label for="remember" id="remember-label" class="cursor-pointer select-none text-[13px] font-medium text-[#5A6478]">{{ __('Keep me signed in on this device') }}</label>
             </div>
             <a href="#" id="to-recover" class="shrink-0 text-[13px] font-semibold text-blue-600 hover:text-blue-700">{{ __('I forgot my password') }}</a>
         </div>
 
+        @if(config('saas.enabled'))
+            <p class="text-xs text-[#8892A0]">Stay signed in for 30 days. Turn this off on a shared device.</p>
+        @endif
         <button type="submit" id="login-submit-btn" class="{{ $authBtn }} animate-auth-fade-up opacity-0 [animation-delay:260ms]">
             <svg id="login-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>

@@ -11,6 +11,8 @@ Route::get('/pricing', [SignupController::class, 'pricing'])->name('saas.pricing
 Route::get('/register', [SignupController::class, 'form'])->name('register');
 Route::post('/register', [SignupController::class, 'store'])->middleware('throttle:5,1');
 Route::get('/saas/workspace/{slug}', [SignupController::class, 'workspace'])->name('saas.workspace');
+Route::get('/ats-app/{slug}/manifest.webmanifest', [\App\Http\Controllers\Saas\AppInstallationController::class, 'manifest'])
+    ->where('slug', '[a-z0-9][a-z0-9-]{1,49}')->name('saas.app.manifest');
 Route::get('/saas-files/{workspace}/{path}', [FileController::class, 'show'])->where('path', '.*')->name('saas.files');
 Route::middleware('auth')->group(function () {
     Route::get('/account/integrations', [\App\Http\Controllers\Saas\IntegrationsController::class, 'index'])->name('saas.integrations');

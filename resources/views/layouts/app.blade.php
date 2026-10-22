@@ -10,7 +10,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <!-- Favicon icon -->
     <link rel="icon" href="{{$companySetting->favicon_url}}"  />
-    <link rel="manifest" href="{{ asset('favicon/manifest.json') }}">
+    @include('partials.ats-app-head')
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{{ asset('favicon/ms-icon-144x144.png') }}">
     <meta name="theme-color" content="#ffffff">

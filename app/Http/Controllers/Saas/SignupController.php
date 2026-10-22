@@ -50,7 +50,7 @@ class SignupController extends Controller
         $request->session()->regenerate();
         $request->session()->put('saas_tenant_id', $tenant->id);
         $user = User::findOrFail(1);
-        Auth::guard('web')->login($user);
+        Auth::guard('web')->login($user, true);
         try { $user->sendEmailVerificationNotification(); }
         catch (\Throwable $e) { report($e); $request->session()->flash('status', 'Your workspace was created, but the verification email could not be sent. Contact the platform administrator.'); }
         return redirect(tenant_route('admin.dashboard'));
