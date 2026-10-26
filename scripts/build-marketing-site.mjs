@@ -23,19 +23,17 @@ const footerStart = previewScript.indexOf("document.querySelector('.footer-top')
 if (contactStart < 0 || footerStart < contactStart) throw new Error('Preview runtime boundaries changed.');
 let navigation = previewScript.slice(0, contactStart);
 navigation = navigation.replace(
-  "  const target = location.hash.slice(1) || 'home';",
+  "  const requested = location.hash.slice(1) || 'home';",
   `  const requested = location.hash.slice(1) || 'home';
   if (requested === 'signin' || requested === 'signup') {
     location.replace(requested === 'signin' ? '/login' : '/register');
     return;
-  }
-  const legacyAnchors = { top: 'home', dashboard: 'home', features: 'why-features', how: 'how-it-works', communications: 'why-communications' };
-  const target = legacyAnchors[requested] || requested;`,
+  }`,
 );
 navigation = navigation.replace(
   "  views.forEach(view => view.hidden = view.id !== selected);",
   `  views.forEach(view => view.hidden = view.id !== selected);
-  const pageTitles = { home: 'Applicant Tracking System', 'why-choose-us': 'Why choose us?', 'how-it-works': 'How it works', pricing: 'Pricing', 'request-demo': 'Request a demo', contact: 'Contact us' };
+  const pageTitles = { home: 'Applicant Tracking System', 'why-choose-us': 'Why choose us?', pricing: 'Pricing', 'request-demo': 'Request a demo', contact: 'Contact us' };
   document.title = 'AssistMyHR – ' + pageTitles[selected];`,
 );
 const enquiry = fs.readFileSync(path.join(root, 'resources/frontend/enquiry.js'), 'utf8');

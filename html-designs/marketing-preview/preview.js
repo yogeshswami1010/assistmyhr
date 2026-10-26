@@ -30,7 +30,9 @@ window.matchMedia('(max-width: 1340px)').addEventListener('change', closeHeaderM
 
 function navigate() {
   closeHeaderMenu();
-  const target = location.hash.slice(1) || 'home';
+  const requested = location.hash.slice(1) || 'home';
+  const legacyAnchors = { top: 'home', dashboard: 'home', features: 'why-features', how: 'hiring-steps', 'how-it-works': 'hiring-steps', communications: 'why-communications' };
+  const target = legacyAnchors[requested] || requested;
   const scrollTarget = document.getElementById(target === 'modules' ? 'why-features' : target);
   const parentView = scrollTarget?.closest('.view');
   const page = parentView?.id || target;
@@ -39,7 +41,7 @@ function navigate() {
   document.body.classList.toggle('is-home', selected === 'home');
   document.body.classList.toggle('is-light', !['home', 'signin'].includes(selected));
   document.querySelectorAll('nav a, .header-login, .header-trial').forEach(link => {
-    const active = link.hash === '#' + target || (link.hash === '#why-choose-us' && selected === 'why-choose-us') || (link.classList.contains('header-pricing') && selected === 'pricing');
+    const active = link.hash === '#' + target || (link.hash === '#home' && selected === 'home') || (link.hash === '#why-choose-us' && selected === 'why-choose-us') || (link.classList.contains('header-pricing') && selected === 'pricing');
     link.classList.toggle('active', active);
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');

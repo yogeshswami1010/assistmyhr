@@ -1,0 +1,8 @@
+/* The former How it works content now ends the homepage, before the shared footer. */
+.home-hiring { color: #17365c; background: #fbfcff; }
+.home-hiring-inner { max-width: 1320px; margin: 0 auto; padding: 40px 5% 65px; }
+#home-hiring, #hiring-steps, #ai { scroll-margin-top: 125px; }
+@media (max-width: 820px) {
+  .home-hiring-inner { padding: 24px 6% 45px; }
+  #home-hiring, #hiring-steps, #ai { scroll-margin-top: 105px; }
+}

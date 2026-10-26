@@ -6,11 +6,11 @@
     </div>
     <div class="footer-main">
       <div class="footer-about">
-        <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=6ac2f089f25c" width="1600" height="438" alt="AssistMyHR"></a>
+        <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=00ac9190c9e6" width="1600" height="438" alt="AssistMyHR"></a>
         <p>A connected workspace for your jobs, candidates and team. More time for people. Less time on the process.</p>
         <span class="footer-tagline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>Hiring, with a human touch.</span>
       </div>
-      <nav aria-label="Footer platform links"><h3>Explore the platform</h3><ul><li><a href="/#home">Home</a></li><li><a href="/#why-choose-us">Why choose us?</a></li><li><a href="/#how-it-works">How it works</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/#ai">AI screening</a></li></ul></nav>
+      <nav aria-label="Footer platform links"><h3>Explore the platform</h3><ul><li><a href="/#home">Home</a></li><li><a href="/#why-choose-us">Why choose us?</a></li><li><a href="/pricing">Pricing</a></li><li><a href="/#ai">AI screening</a></li></ul></nav>
       <nav aria-label="Footer getting started links"><h3>Let’s get started</h3><ul><li><a href="/#request-demo">Request a demo</a></li><li><a href="/register">Start a free trial</a></li><li><a href="/login">Log in</a></li><li><a href="/#contact">Contact us</a></li><li><a class="footer-privacy" href="/privacy-policy">Privacy policy</a></li></ul></nav>
       <div class="footer-connect"><h3>A little help goes a long way.</h3><p>Have a question about your hiring process? Tell us what your team needs.</p><a class="footer-email" href="mailto:support@assistmyhr.com"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>support@assistmyhr.com</a></div>
     </div>

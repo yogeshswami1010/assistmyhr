@@ -62,6 +62,11 @@ The footer's Privacy policy link appears under **Let’s get started**. Public e
 links, enquiry fallback messages and the enquiry recipient in `public/contact-config.php`
 use **support@assistmyhr.com**.
 
+The four hiring steps and AI screening panel are now the final section of Home.
+The separate How it works page, hero and menu entries are removed. Old
+`/#how-it-works` and `/#how` links still open Home and scroll to `#hiring-steps`;
+`/#ai` opens the AI panel on Home.
+
 For this frontend-only replacement, update the VPS with:
 
 ```bash
@@ -71,7 +76,7 @@ sudo -u assis2045 php artisan optimize:clear
 ```
 
 No database migration or Composer dependency change is required for the homepage.
-Check `/`, the Why choose us and How it works views, the three feature tabs,
+Check `/`, its final hiring/AI section, the Why choose us view, the three feature tabs,
 `/login`, `/register`, and the contact service after deployment. Only submit a
 real enquiry when you intend to send it to the business mailbox.
 
