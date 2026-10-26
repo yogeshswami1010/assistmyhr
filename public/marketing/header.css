@@ -132,7 +132,7 @@ body.is-light .site-header {
   .site-header .header-actions .header-trial,
   .site-header .header-actions > .button { font-size: var(--text-button); padding-inline: 13px; line-height: 1.5; font-weight: 600; }
 }
-@media (max-width: 1100px) {
+@media (max-width: 1340px) {
   .site-header,
   body.is-light .site-header { width: calc(100% - 28px); border-radius: 13px; }
   .header-inner { grid-template-columns: auto 1fr; gap: 14px; padding: 15px 18px; }

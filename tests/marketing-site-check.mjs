@@ -11,6 +11,8 @@ const html = fs.readFileSync(path.join(root, 'resources/frontend/index.html'), '
 const script = fs.readFileSync(path.join(root, 'public/marketing/site.js'), 'utf8');
 new vm.Script(script, { filename: 'site.js' });
 new vm.Script(fs.readFileSync(path.join(root, 'public/marketing/platform-section.js'), 'utf8'), { filename: 'platform-section.js' });
+const pricingScript = fs.readFileSync(path.join(root, 'public/marketing/pricing.js'), 'utf8');
+new vm.Script(pricingScript, { filename: 'pricing.js' });
 const chromeScript = fs.readFileSync(path.join(root, 'public/marketing/chrome.js'), 'utf8');
 new vm.Script(chromeScript, { filename: 'chrome.js' });
 assert(html.includes('href="/login"') && html.includes('href="/register"'));
@@ -31,6 +33,34 @@ for (const field of ['name', 'email', 'company', 'phone', 'topic', 'message']) {
   assert(form.includes(`for="contact-${field}"`), `Contact label missing: ${field}`);
 }
 assert(form.includes('aria-live="polite"'));
+const pricingView = fs.readFileSync(path.join(root, 'resources/views/saas/pricing.blade.php'), 'utf8');
+assert.equal((html.match(/data-pricing-plan/g) || []).length, 1, 'Show one plan');
+assert(html.includes('href="/pricing"'));
+assert(pricingView.includes('class="pricing-page" id="pricing"') && !pricingView.includes(' hidden>'));
+assert(pricingView.includes('href="/register"') && pricingView.includes('href="/#request-demo"'));
+assert(pricingView.includes('href="/#why-features"'));
+assert(pricingView.includes('$75') && pricingView.includes('per user / month'));
+assert(pricingView.includes('$600') && pricingView.includes('per user / year'));
+const pricingLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-page.blade.php'), 'utf8');
+for (const contract of ["@include('marketing.header')", "@include('marketing.footer')", "@include('marketing.styles')", "@stack('styles')", "@stack('scripts')"]) assert(pricingLayout.includes(contract));
+
+// Compare billing options without creating a subscription or collecting payment.
+const billingOptions = ['monthly', 'annual'].map(value => ({ value, checked: value === 'monthly', addEventListener(_event, callback) { this.change = callback; } }));
+const billingSummary = { textContent: 'Monthly billing: $75 per user, billed each month.' };
+const pricingPlan = { dataset: { billing: 'monthly' }, querySelector: () => billingSummary, querySelectorAll: () => billingOptions };
+vm.runInNewContext(pricingScript, { document: { querySelectorAll: () => [pricingPlan] } });
+billingOptions[0].checked = false; billingOptions[1].checked = true; billingOptions[1].change();
+assert.equal(pricingPlan.dataset.billing, 'annual');
+assert.equal(billingSummary.textContent, 'Annual billing: $600 per user, billed once a year ($50/month). Save $300 per user each year.');
+billingOptions[0].change(); // An unchecked option must not change the comparison.
+assert.equal(pricingPlan.dataset.billing, 'annual');
+billingOptions[0].checked = true; billingOptions[1].checked = false; billingOptions[0].change();
+assert.equal(pricingPlan.dataset.billing, 'monthly');
+assert.equal(billingSummary.textContent, 'Monthly billing: $75 per user, billed each month.');
+billingOptions[0].checked = false; billingOptions[1].checked = true;
+vm.runInNewContext(pricingScript, { document: { querySelectorAll: () => [pricingPlan] } });
+assert.equal(pricingPlan.dataset.billing, 'annual', 'Reflect restored billing selection on load');
+vm.runInNewContext(pricingScript, { document: { querySelectorAll: () => [] } });
 
 const loginView = fs.readFileSync(path.join(root, 'resources/views/auth/login.blade.php'), 'utf8');
 const loginLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-auth.blade.php'), 'utf8');
@@ -58,30 +88,31 @@ assert(!authParts[2].includes('/marketing/site.js'), 'Public enquiry runtime mus
 assert(authParts[2].includes('/marketing/chrome.js'));
 
 // Shared navigation must work on both account pages, with the correct active action.
-function chromeHarness(register) {
+function chromeHarness(page) {
   const element = () => ({
     dataset: {}, attributes: {}, listeners: {}, focused: false,
     classList: { values: new Set(), add(value) { this.values.add(value); }, contains(value) { return this.values.has(value); } },
     setAttribute(key, value) { this.attributes[key] = value; }, getAttribute(key) { return this.attributes[key]; },
     addEventListener(event, callback) { this.listeners[event] = callback; }, focus() { this.focused = true; }, contains() { return false; },
   });
-  const header = element(), toggle = element(), footer = element(), login = element(), trial = [element(), element()], body = element();
-  if (register) body.classList.add('marketing-register');
+  const header = element(), toggle = element(), footer = element(), login = element(), pricing = element(), trial = [element(), element()], body = element();
+  if (page !== 'login') body.classList.add('marketing-' + page);
   const listeners = {};
   vm.runInNewContext(chromeScript, {
     document: {
       body, querySelector: selector => ({ '.site-header': header, '.header-menu-toggle': toggle, '.footer-top': footer })[selector],
-      querySelectorAll: selector => selector === '.header-trial' ? trial : selector === '.header-login' ? [login] : [],
+      querySelectorAll: selector => selector === '.header-trial' ? trial : selector === '.header-login' ? [login] : selector === '.header-pricing' ? [pricing] : [],
       addEventListener(event, callback) { listeners[event] = callback; },
     },
     window: { matchMedia: () => ({ matches: false, addEventListener() {} }), scrollTo() {} },
   });
-  return { header, toggle, login, trial, listeners };
+  return { header, toggle, login, pricing, trial, listeners };
 }
-for (const register of [false, true]) {
-  const page = chromeHarness(register);
-  assert.equal(page.login.attributes['aria-current'] === 'page', !register);
-  assert(page.trial.every(link => (link.attributes['aria-current'] === 'page') === register));
+for (const name of ['login', 'register', 'pricing']) {
+  const page = chromeHarness(name);
+  assert.equal(page.login.attributes['aria-current'] === 'page', name === 'login');
+  assert.equal(page.pricing.attributes['aria-current'] === 'page', name === 'pricing');
+  assert(page.trial.every(link => (link.attributes['aria-current'] === 'page') === (name === 'register')));
   page.toggle.listeners.click();
   assert.equal(page.header.dataset.menuOpen, 'true');
   page.listeners.keydown({ key: 'Escape' });
@@ -117,7 +148,7 @@ function routeHarness(hash) {
     setAttribute(name, value) { this.attributes[name] = value; }, removeAttribute(name) { delete this.attributes[name]; },
     addEventListener() {}, scrollIntoView() {},
   });
-  const views = ['home', 'why-choose-us', 'how-it-works', 'request-demo', 'contact'].map(id => {
+  const views = ['home', 'why-choose-us', 'how-it-works', 'pricing', 'request-demo', 'contact'].map(id => {
     const view = makeElement(id); view.classList.values.add('view'); view.closest = () => view; return view;
   });
   const targets = new Map(views.map(view => [view.id, view]));
@@ -138,16 +169,17 @@ function routeHarness(hash) {
   });
   return { visible: views.filter(view => !view.hidden).map(view => view.id), redirect, title: document.title };
 }
-for (const [hash, expected] of [['#home', 'home'], ['#why-choose-us', 'why-choose-us'], ['#why-ai', 'why-choose-us'], ['#features', 'why-choose-us'], ['#ai', 'how-it-works'], ['#how', 'how-it-works'], ['#hiring-steps', 'how-it-works'], ['#request-demo', 'request-demo'], ['#contact', 'contact']]) {
+for (const [hash, expected] of [['#home', 'home'], ['#why-choose-us', 'why-choose-us'], ['#why-ai', 'why-choose-us'], ['#features', 'why-choose-us'], ['#ai', 'how-it-works'], ['#how', 'how-it-works'], ['#hiring-steps', 'how-it-works'], ['#pricing', 'pricing'], ['#request-demo', 'request-demo'], ['#contact', 'contact']]) {
   assert.deepEqual(routeHarness(hash).visible, [expected], `Page navigation ${hash}`);
 }
 assert.equal(routeHarness('#request-demo').title, 'AssistMyHR – Request a demo');
+assert.equal(routeHarness('#pricing').title, 'AssistMyHR – Pricing');
 assert.equal(routeHarness('#signin').redirect, '/login');
 assert.equal(routeHarness('#signup').redirect, '/register');
 
 const publishedFiles = new Set();
 for (const match of html.matchAll(/(?:src|href)="(\/marketing\/[^"?#]+)(?:\?[^"#]*)?"/g)) publishedFiles.add(match[1]);
-for (const partial of authParts) {
+for (const partial of [...authParts, pricingView]) {
   for (const match of partial.matchAll(/(?:src|href)="(\/marketing\/[^"?#]+)(?:\?[^"#]*)?"/g)) publishedFiles.add(match[1]);
 }
 assert(publishedFiles.size >= 14, 'All stylesheets, scripts and screenshots should be published');
@@ -258,4 +290,4 @@ try {
 } finally {
   await new Promise(resolve => server.close(resolve));
 }
-console.log('PASS: login and registration form contracts, shared account navigation and mobile menu, demo/contact routing, both enquiry forms, success/error/offline/duplicate/timeout handling, section links, ARIA, CSS, original screenshots and published assets over HTTP. No enquiries sent.');
+console.log('PASS: monthly/annual pricing and savings, shared page navigation and mobile menu, login/registration form contracts, pricing/demo/contact routing, both enquiry forms, success/error/offline/duplicate/timeout handling, section links, ARIA, CSS, original screenshots and published assets over HTTP. No enquiries sent.');

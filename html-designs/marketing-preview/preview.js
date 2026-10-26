@@ -26,7 +26,7 @@ document.addEventListener('keydown', event => {
 document.addEventListener('pointerdown', event => {
   if (!siteHeader.contains(event.target)) closeHeaderMenu();
 });
-window.matchMedia('(max-width: 1100px)').addEventListener('change', closeHeaderMenu);
+window.matchMedia('(max-width: 1340px)').addEventListener('change', closeHeaderMenu);
 
 function navigate() {
   closeHeaderMenu();
@@ -39,7 +39,7 @@ function navigate() {
   document.body.classList.toggle('is-home', selected === 'home');
   document.body.classList.toggle('is-light', !['home', 'signin'].includes(selected));
   document.querySelectorAll('nav a, .header-login, .header-trial').forEach(link => {
-    const active = link.hash === '#' + target || (link.hash === '#why-choose-us' && selected === 'why-choose-us');
+    const active = link.hash === '#' + target || (link.hash === '#why-choose-us' && selected === 'why-choose-us') || (link.classList.contains('header-pricing') && selected === 'pricing');
     link.classList.toggle('active', active);
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');

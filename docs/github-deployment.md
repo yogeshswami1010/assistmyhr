@@ -36,6 +36,15 @@ The redesigned Contact us view includes direct email/phone links, a demo link
 and a responsive enquiry form. It retains the existing contact service field
 limits and supported topics; no mail configuration changes are needed.
 
+`/pricing` now displays the single-plan marketing page instead of redirecting
+to registration. Its generated Blade content comes from `pricing.html` in the
+preview folder and uses `layouts.marketing-page` with the shared header/footer.
+The approved rates are $75 per user/month or $600 per user/year (equivalent to
+$50/month, saving $300/year versus monthly billing). The selector compares these
+rates; trial signup and existing manual subscription management are unchanged.
+No payment processor, stored plans, tenant limits or active subscriptions are
+modified by this page. The public route retains the SaaS-enabled check.
+
 For this frontend-only replacement, update the VPS with:
 
 ```bash

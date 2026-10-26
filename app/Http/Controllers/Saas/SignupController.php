@@ -17,7 +17,7 @@ class SignupController extends Controller
     public function pricing()
     {
         abort_unless(config('saas.enabled'), 404);
-        return redirect()->route('register');
+        return view('saas.pricing');
     }
 
     public function form()

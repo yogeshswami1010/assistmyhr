@@ -25,7 +25,7 @@ document.addEventListener('keydown', event => {
 document.addEventListener('pointerdown', event => {
   if (!siteHeader.contains(event.target)) closeHeaderMenu();
 });
-window.matchMedia('(max-width: 1100px)').addEventListener('change', closeHeaderMenu);
+window.matchMedia('(max-width: 1340px)').addEventListener('change', closeHeaderMenu);
 
 
 document.querySelector('.footer-top').addEventListener('click', () => {
@@ -33,7 +33,7 @@ document.querySelector('.footer-top').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' });
 });
 
-const accountLink = document.body.classList.contains('marketing-register') ? '.header-trial' : '.header-login';
+const accountLink = document.body.classList.contains('marketing-pricing') ? '.header-pricing' : document.body.classList.contains('marketing-register') ? '.header-trial' : '.header-login';
 document.querySelectorAll(accountLink).forEach(link => {
   link.classList.add('active');
   link.setAttribute('aria-current', 'page');
