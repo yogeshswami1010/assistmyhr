@@ -17,7 +17,7 @@
     @include('marketing.styles')
     <noscript><style>.site-header nav{display:flex}.header-menu-toggle,.footer-top{display:none}</style></noscript>
 </head>
-<body class="marketing-auth is-light font-jakarta antialiased">
+<body class="marketing-auth marketing-login is-light font-jakarta antialiased">
     @include('marketing.header')
     <main class="customer-auth-main">
         <div class="customer-auth-shell">

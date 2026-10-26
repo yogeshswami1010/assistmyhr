@@ -53,6 +53,8 @@ body.is-light .site-footer {
 .footer-bottom { display: flex; align-items: center; gap: 24px; min-height: 76px; padding: 19px 0; border-top: 1px solid #b3cfff1c; }
 .footer-bottom > p { margin: 0; color: #839bbd; font-size: var(--text-meta); line-height: 1.6; }
 .footer-bottom .footer-bottom-note { margin-left: auto; color: #839bbd; }
+.footer-privacy { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 0; color: #b2c9ec; font-size: var(--text-button); font-weight: 600; line-height: 1.5; }
+.footer-privacy:hover, .footer-privacy.active { color: #fff; text-decoration: underline; text-underline-offset: 5px; }
 .footer-top { display: inline-flex; align-items: center; justify-content: center; gap: 9px; margin-left: 10px; padding: 8px 0 8px 12px; border: 0; background: none; color: #b2c9ec; font-size: var(--text-button); cursor: pointer; white-space: nowrap; line-height: 1.5; font-weight: 600; }
 .footer-top > span { display: grid; place-items: center; width: 27px; height: 27px; background: #8fb7f00b; border: 1px solid #aacaff26; border-radius: 6px; }
 .footer-top:hover { color: #fff; }
@@ -86,6 +88,7 @@ body.is-light .site-footer {
   .footer-connect > p { max-width: 340px; margin: 0 0 8px; }
   .footer-email { margin: 0; }
   .footer-bottom { flex-wrap: wrap; justify-content: space-between; gap: 5px 14px; padding: 18px 0 23px; }
+  .footer-bottom > p:first-child { width: 100%; }
   .footer-bottom .footer-bottom-note { margin: 0; width: 100%; order: 3; font-size: var(--text-meta); line-height: 1.6; }
   .footer-top { margin-left: 0; padding-left: 0; }
 }

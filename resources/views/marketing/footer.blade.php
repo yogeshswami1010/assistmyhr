@@ -6,7 +6,7 @@
     </div>
     <div class="footer-main">
       <div class="footer-about">
-        <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=2aeb511ff1b6" width="1600" height="438" alt="AssistMyHR"></a>
+        <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=82c8e909c6d7" width="1600" height="438" alt="AssistMyHR"></a>
         <p>A connected workspace for your jobs, candidates and team. More time for people. Less time on the process.</p>
         <span class="footer-tagline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>Hiring, with a human touch.</span>
       </div>
@@ -14,6 +14,6 @@
       <nav aria-label="Footer getting started links"><h3>Let’s get started</h3><ul><li><a href="/#request-demo">Request a demo</a></li><li><a href="/register">Start a free trial</a></li><li><a href="/login">Log in</a></li><li><a href="/#contact">Contact us</a></li></ul></nav>
       <div class="footer-connect"><h3>A little help goes a long way.</h3><p>Have a question about your hiring process? Tell us what your team needs.</p><a class="footer-email" href="mailto:assistmyday@gmail.com"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>assistmyday@gmail.com</a></div>
     </div>
-    <div class="footer-bottom"><p>© 2026 AssistMyHR. All rights reserved.</p><p class="footer-bottom-note">Good people. A more connected team.</p><button class="footer-top" type="button">Back to top <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></span></button></div>
+    <div class="footer-bottom"><p>© 2026 AssistMyHR. All rights reserved.</p><a class="footer-privacy" href="/privacy-policy">Privacy policy</a><p class="footer-bottom-note">Good people. A more connected team.</p><button class="footer-top" type="button">Back to top <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></span></button></div>
   </div>
 </footer>

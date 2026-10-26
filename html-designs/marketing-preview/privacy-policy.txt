@@ -1,0 +1,326 @@
+PRIVACY POLICY
+ASSIST MY HR
+Effective Date: [To Be Confirmed]
+Last Updated: October 22, 2026
+Version: 1.0 — Draft
+
+1. INTRODUCTION
+Welcome to Assist My HR.
+At Assist My HR ("Assist My HR," "we," "us," or "our"), we recognize that privacy, confidentiality, and the responsible management of personal information are fundamental to the recruitment process.
+Assist My HR is a software platform designed to assist recruitment agencies, staffing organizations, human resources professionals, and employers in managing recruitment activities, candidate information, job applications, and hiring workflows.
+This Privacy Policy explains how Assist My HR collects, receives, accesses, uses, stores, processes, discloses, retains, and protects personal information when individuals interact with our website, Applicant Tracking System ("ATS"), and related services (collectively, the "Services").
+Our objective is to handle personal information transparently, responsibly, and in accordance with applicable privacy legislation.
+For organizations and individuals in Canada, relevant legislation may include:
+The Personal Information Protection and Electronic Documents Act (PIPEDA).
+Alberta's Personal Information Protection Act.
+British Columbia's Personal Information Protection Act.
+Quebec's Act respecting the protection of personal information in the private sector, as amended by Law 25.
+Other applicable federal and provincial privacy and employment legislation.
+The specific legislation applicable to a particular activity may depend on the organization involved, the jurisdiction, the nature of the information, and the circumstances of its collection or processing.
+By using our Services, individuals acknowledge that their information may be handled as described in this Privacy Policy. Where consent is legally required, Assist My HR or the relevant customer will seek appropriate consent rather than relying solely on use of the Services.
+2. SCOPE OF THIS PRIVACY POLICY
+This Privacy Policy applies to personal information processed in connection with:
+Visitors accessing the Assist My HR website.
+Recruitment agencies and staffing companies subscribing to the Services.
+Employers and human resources departments using the Platform.
+Recruiters, hiring managers, administrators, and authorized users.
+Candidates and job applicants whose information is processed through the Platform.
+Individuals contacting our sales, support, or administrative teams.
+Authorized third-party integrations connected to the Platform.
+This Privacy Policy distinguishes between information that Assist My HR manages for its own business purposes and recruitment information that customers manage using our software.
+2.1 Information Controlled by Assist My HR
+Assist My HR generally determines the purposes and methods of processing information collected directly for account administration, subscriptions, customer relationships, website operations, security, billing, and customer support.
+2.2 Information Controlled by Customers
+Recruitment agencies, staffing companies, and employers using Assist My HR may collect and upload candidate information to the Platform.
+These customers generally determine why candidate information is collected, how it is used in recruitment, who may access it, and how long it should be retained.
+Assist My HR generally processes this information on the customer's behalf in accordance with contractual obligations, authorized instructions, and applicable law.
+The exact legal responsibilities of each organization may vary by jurisdiction and processing activity.
+3. INFORMATION WE COLLECT
+Assist My HR may process different categories of personal information depending on the individual's relationship with the Platform.
+3.1 Candidate and Applicant Information
+Information processed through the Platform may include:
+Full name and preferred name.
+Email address and telephone number.
+Mailing address, city, province, and country.
+Resume, curriculum vitae (CV), and cover letter.
+Employment history and previous employers.
+Job titles, responsibilities, and professional achievements.
+Educational qualifications and certifications.
+Professional skills and technical competencies.
+Languages and professional licenses.
+Employment preferences and desired job opportunities.
+Expected compensation or salary requirements.
+Availability and notice periods.
+Work authorization or immigration-related employment eligibility.
+Interview schedules and recruitment communications.
+Recruiter notes, candidate assessments, and interview feedback.
+Application history and recruitment status.
+Professional references and related contact information.
+Other information voluntarily provided by candidates or authorized customers.
+Depending on the recruitment process, customer-uploaded information may contain sensitive personal information.
+Customers are responsible for ensuring that collection and processing of such information are appropriate, necessary, and legally permitted.
+3.2 Recruiter and Customer Account Information
+When an organization creates an account or subscribes to Assist My HR, we may collect:
+Organization name and business address.
+Recruiter or administrator name.
+Business email address and telephone number.
+Account credentials and authentication information.
+Subscription plan and billing details.
+Account settings and user preferences.
+Team membership and assigned permissions.
+Support requests and communications.
+Account usage and administrative activity.
+3.3 Website and Technical Information
+When individuals access our website or Platform, certain technical information may be collected, including:
+Internet Protocol (IP) address.
+Browser type and operating system.
+Device identifiers and technical characteristics.
+Login activity and session information.
+Date, time, and duration of access.
+Pages or features accessed.
+Application performance and diagnostic information.
+Security logs and system error reports.
+Cookie information and related identifiers.
+Such information may be used for security, troubleshooting, service operation, and other disclosed purposes.
+3.4 Information From Third Parties
+Where authorized and supported by the Services, information may be received through integrations or other sources, such as:
+Job boards and recruitment platforms.
+Professional networking platforms.
+Email and calendar applications.
+Customer-authorized recruitment systems.
+Resume parsing services.
+Other authorized business applications.
+The collection and use of third-party information must comply with applicable law, contractual restrictions, and the permissions granted by the relevant individual or organization.
+4. HOW WE USE PERSONAL INFORMATION
+Assist My HR uses personal information only for identified and appropriate purposes.
+4.1 Recruitment Management
+Customer recruitment information may be processed to enable:
+Creation and management of candidate profiles.
+Storage and organization of resumes.
+Candidate searching and filtering.
+Job requisition and vacancy management.
+Recruitment pipeline tracking.
+Interview scheduling and coordination.
+Candidate communication.
+Application status updates.
+Recruitment reporting and analytics.
+Collaboration between authorized recruitment team members.
+4.2 Platform Administration
+We may use account and technical information to:
+Create and maintain customer accounts.
+Authenticate users.
+Manage subscriptions and payments.
+Provide technical support.
+Resolve software errors.
+Maintain service performance.
+Communicate operational notices.
+Manage customer relationships.
+Detect suspicious or unauthorized activity.
+4.3 Service Improvement
+We may analyze appropriately authorized usage information to understand how our Services perform and identify opportunities for improvement.
+Where customer recruitment data is involved, any use for product improvement, analytics, or development must be permitted by the applicable customer agreement, privacy notices, and law.
+We will not assume that customer-provided recruitment information may be used for unrelated commercial purposes.
+4.4 Legal and Compliance Purposes
+Information may also be processed where necessary to:
+Comply with applicable legal obligations.
+Respond to lawful requests from competent authorities.
+Investigate suspected fraud or misuse.
+Protect the security of our Services.
+Establish, exercise, or defend legal claims.
+Enforce applicable contractual terms.
+5. CONSENT AND PRIVACY CHOICES
+Assist My HR recognizes that meaningful consent is an important requirement under Canadian privacy legislation, subject to applicable statutory exceptions.
+Where Assist My HR collects personal information directly, we will provide appropriate information about the purposes of collection and seek consent where required.
+Where customers collect candidate information, those customers are generally responsible for providing appropriate notices and obtaining any necessary consent or other legal authorization.
+Consent may be express or implied where permitted by applicable law and appropriate to the sensitivity and context of the information.
+Individuals may withdraw consent where permitted, subject to applicable legal or contractual restrictions and reasonable notice.
+Withdrawal of consent may limit the ability of Assist My HR or a customer to provide certain services or continue particular recruitment activities.
+We will not treat acceptance of this Privacy Policy as blanket consent for all possible uses of personal information.
+6. AI-ASSISTED RECRUITMENT AND AUTOMATED PROCESSING
+Assist My HR may introduce or provide artificial intelligence, machine learning, or automated recruitment features.
+Depending on the functionality enabled, these may include:
+Resume parsing and extraction of structured candidate information.
+Candidate search and relevance matching.
+Job-description analysis.
+Candidate profile categorization.
+Recruitment workflow recommendations.
+Assistance with drafting recruitment communications.
+Recruitment analytics and reporting.
+Where these features process personal information, Assist My HR will implement appropriate privacy measures and provide disclosures required by applicable law.
+AI-generated outputs may contain errors, omissions, or inaccuracies. Customers should independently assess their suitability and ensure that recruitment decisions are fair, appropriate, and compliant with applicable employment and human rights legislation.
+Where automated processing produces decisions subject to specific legal transparency or individual rights requirements, Assist My HR and its customers must address those requirements according to their respective responsibilities.
+AI training: Whether customer recruitment information is used to train or improve AI models must be expressly disclosed and supported by the actual product configuration, provider agreements, and applicable legal permissions.
+Implementation note: This section must be revised before publication to reflect the AI features actually deployed by Assist My HR.
+7. DATA OWNERSHIP AND CUSTOMER RESPONSIBILITIES
+Assist My HR recognizes the importance of customer control over recruitment records.
+As between Assist My HR and its customers, customers retain their contractual rights in candidate information and other recruitment data submitted to the Platform.
+Assist My HR does not claim ownership of customer-uploaded resumes, candidate records, interview notes, or other recruitment content.
+Customers are generally responsible for:
+Determining lawful recruitment purposes.
+Providing appropriate candidate privacy notices.
+Obtaining required consent or other legal authorization.
+Maintaining accurate candidate records.
+Managing authorized user access.
+Determining appropriate retention periods.
+Responding to candidate privacy requests where they are responsible.
+Complying with applicable recruitment, employment, and privacy legislation.
+Assist My HR will process customer recruitment information in accordance with applicable agreements, authorized instructions, and legal obligations.
+8. DISCLOSURE AND SHARING OF INFORMATION
+Assist My HR may disclose personal information where reasonably necessary for the provision, administration, security, or lawful operation of the Services.
+8.1 Authorized Customer Users
+Recruitment information may be accessible to recruiters, hiring managers, administrators, and other users authorized by the relevant customer.
+Customers are responsible for configuring and managing user permissions appropriately.
+8.2 Service Providers
+Assist My HR may engage third-party service providers for activities such as:
+Cloud infrastructure and hosting.
+Database management and storage.
+Email delivery and communications.
+Payment processing.
+Customer support.
+Security monitoring.
+Software analytics.
+Authorized AI or resume processing.
+Service providers must be subject to appropriate confidentiality, security, and data protection obligations.
+8.3 Customer-Authorized Integrations
+Where customers enable integrations, information may be transmitted to external systems as necessary for the requested functionality.
+The customer is responsible for reviewing the integration's suitability and ensuring appropriate authorization.
+8.4 Legal Disclosures
+We may disclose information when required or permitted by applicable law, including in response to valid legal processes or lawful government requests.
+Where legally permitted and appropriate, we may notify affected customers before disclosing customer-controlled information.
+8.5 Business Transactions
+If Assist My HR participates in a merger, acquisition, financing, restructuring, or sale of business assets, personal information may be disclosed or transferred where permitted by law and subject to applicable safeguards and confidentiality obligations.
+Any additional notice or consent requirements will be addressed as applicable.
+9. DATA SECURITY AND PROTECTION
+Assist My HR recognizes that recruitment information requires appropriate safeguards against unauthorized access, loss, misuse, alteration, or disclosure.
+Our security program should include administrative, technical, and organizational controls appropriate to the sensitivity and volume of information processed.
+Such controls may include:
+Encryption of information in transit.
+Encryption of stored information.
+Role-based access controls.
+Secure user authentication.
+Restricted administrator privileges.
+Audit logging and activity monitoring.
+Backup and recovery procedures.
+Secure software development practices.
+Vulnerability assessment and remediation.
+Employee confidentiality requirements.
+Security incident response procedures.
+Appropriate third-party service provider oversight.
+Access to personal information should be limited to authorized individuals who require it for legitimate purposes.
+No information system can guarantee absolute security. However, Assist My HR is committed to implementing safeguards appropriate to its operations and applicable legal requirements.
+Implementation note: This section describes intended safeguards. Before publication, Assist My HR must verify which measures are actually operational and remove or qualify any unsupported claims.
+10. DATA STORAGE AND INTERNATIONAL TRANSFERS
+Assist My HR may use cloud infrastructure and service providers to host and process personal information.
+The jurisdictions in which information is stored or accessed will depend on the actual hosting architecture and authorized service providers.
+Personal information processed outside Canada may be subject to the laws of the jurisdiction where it is stored or accessed, including lawful access requests by public authorities.
+Where cross-border processing occurs, Assist My HR will assess applicable legal requirements and implement appropriate contractual, technical, and organizational protections.
+Where required by law, additional notices, assessments, or consent procedures will be implemented.
+Hosting disclosure to be completed:
+Primary data hosting location: [To Be Confirmed]
+Backup storage location: [To Be Confirmed]
+Cloud hosting provider: [To Be Confirmed]
+Countries from which support personnel may access data: [To Be Confirmed]
+Assist My HR will not represent that all candidate information remains in Canada unless that statement is supported by its actual infrastructure and access arrangements.
+11. DATA RETENTION
+Assist My HR retains personal information only for as long as necessary for identified purposes, subject to applicable legal, operational, and contractual requirements.
+11.1 Candidate Information
+Retention of customer-controlled candidate records is generally determined by the customer, subject to the Platform's functionality, customer agreements, and applicable law.
+Customers should establish retention periods appropriate to their recruitment activities and legal obligations.
+11.2 Account Information
+Customer account and administrative information may be retained while an account remains active and for an appropriate period afterward where necessary for billing, legal compliance, dispute resolution, security, or other legitimate purposes.
+11.3 Technical Records
+Security logs, diagnostic information, and technical records may be retained for periods reasonably necessary for security, troubleshooting, and compliance.
+11.4 Backup Information
+Information removed from active systems may remain in protected backups for a limited period until the applicable backup retention cycle expires.
+Implementation note: Specific retention periods must be established and documented before this Policy is finalized.
+12. DATA DELETION AND ACCOUNT TERMINATION
+Customers may request the deletion or export of their recruitment information, subject to applicable contractual terms, technical capabilities, and legal obligations.
+Following account termination, Assist My HR will handle customer information according to the applicable service agreement and documented deletion or return procedures.
+Where deletion is required, Assist My HR will take reasonable steps to remove relevant information from active systems and address residual backup copies through established retention processes.
+Some information may need to be retained where required or permitted by law, including records relevant to billing, security incidents, or legal disputes.
+Candidates seeking deletion of information held by a recruiting agency or employer should ordinarily direct their requests to that organization.
+Assist My HR will provide appropriate assistance to customers in responding to such requests where required.
+13. INDIVIDUAL PRIVACY RIGHTS
+Depending on applicable law and the circumstances, individuals may have rights to:
+Request access to personal information.
+Request correction of inaccurate information.
+Obtain information about how personal information is used or disclosed.
+Withdraw consent where permitted.
+Challenge an organization's compliance with applicable privacy obligations.
+Request deletion or cessation of certain processing where legally available.
+Exercise applicable rights concerning automated decisions.
+Exercise applicable data portability rights.
+Requests relating to information controlled by Assist My HR may be submitted to our designated privacy contact.
+Requests relating to recruitment information controlled by a customer should generally be submitted to that customer.
+Assist My HR will assist customers with such requests as required by applicable law and contractual obligations.
+Requests will be assessed and answered within applicable statutory timeframes.
+Certain requests may be subject to lawful exceptions or limitations.
+14. COOKIES AND WEBSITE TECHNOLOGIES
+Assist My HR may use cookies and similar technologies to operate its website and Platform.
+These technologies may support:
+User authentication.
+Session management.
+Security and fraud prevention.
+User preferences.
+Website functionality.
+Performance measurement.
+Analytics, where implemented and authorized.
+Where required, users will be provided with appropriate information and choices concerning non-essential tracking technologies.
+Users may be able to manage cookies through browser settings, although disabling essential cookies may affect the operation of certain Platform features.
+Implementation note: The final Policy must identify the actual cookie categories and relevant analytics or advertising technologies used by Assist My HR.
+15. THIRD-PARTY LINKS AND INTEGRATIONS
+The Assist My HR Platform may contain links to external websites or support integrations with third-party services.
+These services may have independent privacy policies, security practices, and terms of use.
+Assist My HR is not responsible for the independent privacy practices of third parties except to the extent required by applicable law or contractual obligations.
+Customers should review relevant third-party terms and privacy practices before enabling integrations or transferring information.
+Where Assist My HR engages third parties to process information on its behalf, we will apply appropriate service provider oversight and contractual protections.
+16. PRIVACY BREACHES AND INCIDENT RESPONSE
+Assist My HR will establish and maintain procedures for identifying, investigating, containing, documenting, and responding to suspected or confirmed privacy incidents.
+When an incident involves personal information, we will assess the nature of the incident, the information affected, the potential risk of harm, and applicable legal or contractual obligations.
+Where required, Assist My HR will notify relevant customers, affected individuals, regulators, or other parties.
+For incidents involving customer-controlled recruitment data, Assist My HR will cooperate with affected customers and provide information reasonably necessary to support their response obligations.
+Applicable Canadian laws may require breach reporting, individual notification, or recordkeeping in specified circumstances.
+Assist My HR will maintain incident records and procedures appropriate to its legal responsibilities.
+17. PRIVACY OF CHILDREN AND MINORS
+Assist My HR is intended primarily for professional recruitment, staffing, and business-related activities.
+The Platform is not directed toward children for independent consumer use.
+Recruitment information involving minors may be subject to additional legal requirements depending on the individual's age, jurisdiction, and circumstances.
+Customers are responsible for ensuring that recruitment activities involving minors comply with applicable consent, employment, and privacy requirements.
+If Assist My HR becomes aware of personal information collected or processed in violation of applicable requirements, appropriate corrective steps will be taken.
+18. CHANGES TO THIS PRIVACY POLICY
+Assist My HR may update this Privacy Policy periodically to reflect:
+Changes to our Services.
+New or modified software features.
+Changes in information-processing practices.
+Developments in privacy legislation.
+Changes to security or infrastructure arrangements.
+Operational or contractual requirements.
+When this Policy is updated, the revised version will be made available through our website or other appropriate communication channels.
+Material changes will be communicated through additional notice where required.
+Where a change requires new consent, Assist My HR or the relevant customer will seek that consent as applicable.
+Continued use of the Services will not be treated as a substitute for legally required consent.
+19. PRIVACY GOVERNANCE AND ACCOUNTABILITY
+Assist My HR will designate an individual or function responsible for overseeing its privacy management program.
+Responsibilities may include:
+Maintaining privacy policies and procedures.
+Responding to privacy inquiries and complaints.
+Coordinating access and correction requests.
+Supporting security and privacy incident management.
+Reviewing service provider privacy arrangements.
+Monitoring relevant legal developments.
+Supporting employee privacy awareness.
+Reviewing material changes to information-processing practices.
+Assist My HR will maintain appropriate internal accountability measures consistent with applicable legal requirements and the scale and nature of its operations.
+20. COMPLAINTS AND REGULATORY CONTACTS
+Individuals who have concerns about Assist My HR's handling of personal information may contact our designated privacy representative.
+We will review complaints within a reasonable period and take appropriate corrective action where warranted.
+Individuals may also have the right to raise privacy concerns with the appropriate Canadian privacy regulator, depending on the jurisdiction and nature of the complaint.
+Relevant regulators include:
+Office of the Privacy Commissioner of Canada.
+Office of the Information and Privacy Commissioner of Alberta.
+Office of the Information and Privacy Commissioner for British Columbia.
+Commission d'accès à l'information du Québec.
+Individuals are encouraged to contact the responsible organization regarding their concerns, but nothing in this Policy limits their rights to approach an appropriate regulator.
+21. CONTACT US
+For questions about this Privacy Policy, privacy complaints, or requests concerning personal information for which Assist My HR is responsible, please contact:
+Assist My HR — Privacy Office

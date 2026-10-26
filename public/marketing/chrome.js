@@ -33,8 +33,12 @@ document.querySelector('.footer-top').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' });
 });
 
-const accountLink = document.body.classList.contains('marketing-pricing') ? '.header-pricing' : document.body.classList.contains('marketing-register') ? '.header-trial' : '.header-login';
-document.querySelectorAll(accountLink).forEach(link => {
-  link.classList.add('active');
-  link.setAttribute('aria-current', 'page');
-});
+const currentPageLinks = { 'marketing-pricing': '.header-pricing', 'marketing-register': '.header-trial', 'marketing-login': '.header-login', 'marketing-privacy': '.footer-privacy' };
+for (const [pageClass, selector] of Object.entries(currentPageLinks)) {
+  if (document.body.classList.contains(pageClass)) {
+    document.querySelectorAll(selector).forEach(link => {
+      link.classList.add('active');
+      link.setAttribute('aria-current', 'page');
+    });
+  }
+}

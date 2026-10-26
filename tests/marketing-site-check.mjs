@@ -5,9 +5,31 @@ import vm from 'node:vm';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import postcss from 'postcss';
+import { renderPrivacyPolicy } from '../scripts/marketing-policy.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const html = fs.readFileSync(path.join(root, 'resources/frontend/index.html'), 'utf8');
+const policyHtml = fs.readFileSync(path.join(root, 'resources/frontend/privacy-policy.html'), 'utf8');
+const policyPreview = fs.readFileSync(path.join(root, 'html-designs/marketing-preview/privacy-policy.html'), 'utf8');
+const policySource = fs.readFileSync(path.join(root, 'html-designs/marketing-preview/privacy-policy.txt'), 'utf8');
+const decode = text => text.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&');
+const policyLines = policySource.replace(/^\uFEFF/, '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+for (const page of [policyHtml, policyPreview]) {
+  const article = page.match(/<article class="privacy-document"[^>]*>([\s\S]*?)<\/article>/)[1];
+  const visibleLines = [...article.matchAll(/<(h2|h3|p|li)\b[^>]*>([\s\S]*?)<\/\1>/g)].map(match => decode(match[2]));
+  assert.deepEqual(visibleLines, policyLines.slice(5), 'Every supplied policy heading, paragraph and list item must remain intact');
+  assert.equal((article.match(/<h2\b/g) || []).length, 21);
+  const policyIds = [...page.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(new Set(policyIds).size, policyIds.length);
+  for (const match of page.matchAll(/href="#([^"]+)"/g)) assert(policyIds.includes(match[1]), 'Unknown policy contents target: ' + match[1]);
+  for (const line of policyLines.slice(2, 5)) assert(decode(page).includes(line.slice(line.indexOf(': ') + 2)), 'Keep the supplied policy metadata');
+}
+assert(policyHtml.includes('href="/privacy-policy"'));
+assert(policyPreview.includes('href="privacy-policy.html"') && policyPreview.includes('href="index.html#home"'));
+assert(!policyHtml.includes('/marketing/site.js'), 'Policy section links must use native page navigation');
+const unsafePolicy = renderPrivacyPolicy(policySource.replace('Welcome to Assist My HR.', '<script>alert("example")</script>'));
+assert(unsafePolicy.includes('&lt;script&gt;alert(&quot;example&quot;)&lt;/script&gt;'));
+assert(!unsafePolicy.includes('<script>'), 'Treat supplied policy text as content, never executable markup');
 const script = fs.readFileSync(path.join(root, 'public/marketing/site.js'), 'utf8');
 new vm.Script(script, { filename: 'site.js' });
 new vm.Script(fs.readFileSync(path.join(root, 'public/marketing/platform-section.js'), 'utf8'), { filename: 'platform-section.js' });
@@ -84,10 +106,11 @@ for (const match of signupView.matchAll(/<script>([\s\S]*?)<\/script>/g)) new vm
 const authParts = ['header', 'footer', 'styles'].map(part => fs.readFileSync(path.join(root, `resources/views/marketing/${part}.blade.php`), 'utf8'));
 assert(authParts[0].includes('href="/#why-choose-us"') && authParts[0].includes('href="/#request-demo"'));
 assert(authParts[1].includes('href="/#contact"'));
+assert(authParts[1].includes('class="footer-privacy" href="/privacy-policy"'));
 assert(!authParts[2].includes('/marketing/site.js'), 'Public enquiry runtime must not intercept login forms');
 assert(authParts[2].includes('/marketing/chrome.js'));
 
-// Shared navigation must work on both account pages, with the correct active action.
+// Shared navigation marks the current page and supports the mobile menu.
 function chromeHarness(page) {
   const element = () => ({
     dataset: {}, attributes: {}, listeners: {}, focused: false,
@@ -95,23 +118,24 @@ function chromeHarness(page) {
     setAttribute(key, value) { this.attributes[key] = value; }, getAttribute(key) { return this.attributes[key]; },
     addEventListener(event, callback) { this.listeners[event] = callback; }, focus() { this.focused = true; }, contains() { return false; },
   });
-  const header = element(), toggle = element(), footer = element(), login = element(), pricing = element(), trial = [element(), element()], body = element();
-  if (page !== 'login') body.classList.add('marketing-' + page);
+  const header = element(), toggle = element(), footer = element(), login = element(), pricing = element(), privacy = element(), trial = [element(), element()], body = element();
+  body.classList.add('marketing-' + page);
   const listeners = {};
   vm.runInNewContext(chromeScript, {
     document: {
       body, querySelector: selector => ({ '.site-header': header, '.header-menu-toggle': toggle, '.footer-top': footer })[selector],
-      querySelectorAll: selector => selector === '.header-trial' ? trial : selector === '.header-login' ? [login] : selector === '.header-pricing' ? [pricing] : [],
+      querySelectorAll: selector => selector === '.header-trial' ? trial : selector === '.header-login' ? [login] : selector === '.header-pricing' ? [pricing] : selector === '.footer-privacy' ? [privacy] : [],
       addEventListener(event, callback) { listeners[event] = callback; },
     },
     window: { matchMedia: () => ({ matches: false, addEventListener() {} }), scrollTo() {} },
   });
-  return { header, toggle, login, pricing, trial, listeners };
+  return { header, toggle, login, pricing, privacy, trial, listeners };
 }
-for (const name of ['login', 'register', 'pricing']) {
+for (const name of ['login', 'register', 'pricing', 'privacy']) {
   const page = chromeHarness(name);
   assert.equal(page.login.attributes['aria-current'] === 'page', name === 'login');
   assert.equal(page.pricing.attributes['aria-current'] === 'page', name === 'pricing');
+  assert.equal(page.privacy.attributes['aria-current'] === 'page', name === 'privacy');
   assert(page.trial.every(link => (link.attributes['aria-current'] === 'page') === (name === 'register')));
   page.toggle.listeners.click();
   assert.equal(page.header.dataset.menuOpen, 'true');
@@ -132,13 +156,15 @@ for (const match of html.matchAll(/aria-(?:controls|labelledby)="([^"]+)"/g)) {
 }
 const elements = [];
 const voidElements = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
-for (const match of html.replace(/<!--[\s\S]*?-->/g, '').matchAll(/<\/?([a-z][a-z0-9-]*)\b[^>]*>/gi)) {
-  const name = match[1].toLowerCase();
-  if (voidElements.has(name) || /\/>$/.test(match[0])) continue;
-  if (match[0].startsWith('</')) assert.equal(elements.pop(), name, 'HTML nesting');
-  else elements.push(name);
+for (const documentHtml of [html, policyHtml, policyPreview]) {
+  for (const match of documentHtml.replace(/<!--[\s\S]*?-->/g, '').matchAll(/<\/?([a-z][a-z0-9-]*)\b[^>]*>/gi)) {
+    const name = match[1].toLowerCase();
+    if (voidElements.has(name) || /\/>$/.test(match[0])) continue;
+    if (match[0].startsWith('</')) assert.equal(elements.pop(), name, 'HTML nesting');
+    else elements.push(name);
+  }
+  assert.equal(elements.length, 0, 'No unclosed HTML elements');
 }
-assert.equal(elements.length, 0, 'No unclosed HTML elements');
 
 // Exercise the actual page router, including the dedicated demo view and legacy links.
 function routeHarness(hash) {
@@ -179,7 +205,7 @@ assert.equal(routeHarness('#signup').redirect, '/register');
 
 const publishedFiles = new Set();
 for (const match of html.matchAll(/(?:src|href)="(\/marketing\/[^"?#]+)(?:\?[^"#]*)?"/g)) publishedFiles.add(match[1]);
-for (const partial of [...authParts, pricingView]) {
+for (const partial of [...authParts, pricingView, policyHtml]) {
   for (const match of partial.matchAll(/(?:src|href)="(\/marketing\/[^"?#]+)(?:\?[^"#]*)?"/g)) publishedFiles.add(match[1]);
 }
 assert(publishedFiles.size >= 14, 'All stylesheets, scripts and screenshots should be published');
@@ -270,6 +296,7 @@ assert(!timedOut.button.disabled && timedOut.cleared);
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, 'http://localhost').pathname;
   if (pathname === '/') { response.setHeader('Content-Type', 'text/html; charset=utf-8'); response.end(html); return; }
+  if (pathname === '/privacy-policy') { response.setHeader('Content-Type', 'text/html; charset=utf-8'); response.end(policyHtml); return; }
   if (!publishedFiles.has(pathname)) { response.writeHead(404); response.end(); return; }
   const file = path.join(root, 'public', pathname);
   const types = { '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.webp': 'image/webp' };
@@ -282,6 +309,9 @@ try {
   const home = await fetch(origin);
   assert.equal(home.status, 200);
   assert((await home.text()).includes('AI Candidate Search'));
+  const policy = await fetch(origin + '/privacy-policy');
+  assert.equal(policy.status, 200);
+  assert((await policy.text()).includes('21. CONTACT US'));
   for (const url of publishedFiles) {
     const response = await fetch(origin + url);
     assert.equal(response.status, 200, url);
@@ -290,4 +320,4 @@ try {
 } finally {
   await new Promise(resolve => server.close(resolve));
 }
-console.log('PASS: monthly/annual pricing and savings, shared page navigation and mobile menu, login/registration form contracts, pricing/demo/contact routing, both enquiry forms, success/error/offline/duplicate/timeout handling, section links, ARIA, CSS, original screenshots and published assets over HTTP. No enquiries sent.');
+console.log('PASS: complete supplied privacy text, draft metadata, safe text rendering, policy contents and footer links, pricing and shared navigation, login/registration form contracts, enquiry handling, ARIA, CSS, screenshots and published assets over HTTP. No enquiries sent.');

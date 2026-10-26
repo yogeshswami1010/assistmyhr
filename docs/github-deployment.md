@@ -50,6 +50,15 @@ Before offering this publicly, set **Trial length in days** to **30** under
 the page copy does not override it (the code fallback is 14 days). Signup does
 not collect credit card details.
 
+The public `/privacy-policy` route serves `resources/frontend/privacy-policy.html`.
+The marketing build formats `html-designs/marketing-preview/privacy-policy.txt`
+into that page and the standalone local preview, and adds the policy link to the
+shared footer. All 21 supplied sections, metadata, placeholders and implementation
+notes are preserved as document content. The supplied version is explicitly
+**1.0 — Draft**, with an unconfirmed effective date and hosting details; the contact
+section ends at “Assist My HR — Privacy Office” without further contact details.
+Those details have not been guessed or finalized by this website change.
+
 For this frontend-only replacement, update the VPS with:
 
 ```bash

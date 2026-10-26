@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { renderPrivacyPolicy } from './marketing-policy.mjs';
 
 // Build the hosted homepage from the approved standalone design. No dependencies needed.
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -10,6 +11,9 @@ const destination = path.join(root, 'public/marketing');
 const read = file => fs.readFileSync(path.join(preview, file), 'utf8');
 let html = read('index.html');
 if (!html.includes(read('pricing.html').trim())) throw new Error('Pricing preview must match pricing.html before building.');
+const policySource = read('privacy-policy.txt');
+const policyMarkup = renderPrivacyPolicy(policySource);
+const policyStyles = read('privacy-policy.css');
 const styles = [...html.matchAll(/<link rel="stylesheet" href="([^"/]+\.css)"/g)].map(match => match[1]);
 const assets = [...new Set([...html.matchAll(/(?:src|href)="(assets\/[^"?#]+)"/g)].map(match => match[1]))];
 
@@ -39,11 +43,15 @@ const siteScript = navigation + '\n' + enquiry + '\n' + previewScript.slice(foot
 const chromeScript = previewScript.slice(0, previewScript.indexOf('function navigate()'))
   .replace("const views = [...document.querySelectorAll('.view')];\n", '')
   + '\n' + previewScript.slice(footerStart)
-  + `\nconst accountLink = document.body.classList.contains('marketing-pricing') ? '.header-pricing' : document.body.classList.contains('marketing-register') ? '.header-trial' : '.header-login';
-document.querySelectorAll(accountLink).forEach(link => {
-  link.classList.add('active');
-  link.setAttribute('aria-current', 'page');
-});\n`;
+  + `\nconst currentPageLinks = { 'marketing-pricing': '.header-pricing', 'marketing-register': '.header-trial', 'marketing-login': '.header-login', 'marketing-privacy': '.footer-privacy' };
+for (const [pageClass, selector] of Object.entries(currentPageLinks)) {
+  if (document.body.classList.contains(pageClass)) {
+    document.querySelectorAll(selector).forEach(link => {
+      link.classList.add('active');
+      link.setAttribute('aria-current', 'page');
+    });
+  }
+}\n`;
 const tabScript = read('platform-section.js');
 const pricingScript = read('pricing.js');
 const formStyles = `.contact-honeypot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
@@ -51,6 +59,7 @@ const formStyles = `.contact-honeypot{position:absolute;width:1px;height:1px;ove
 .form-card button:disabled{opacity:.65;cursor:wait;transform:none}.noscript-note{max-width:1296px;margin:20px auto;padding:20px;color:#16365e;background:#eef4ff;border-radius:8px}
 `;
 const hash = crypto.createHash('sha256').update(html).update(siteScript).update(chromeScript).update(tabScript).update(pricingScript).update(formStyles);
+hash.update(policyMarkup).update(policyStyles);
 styles.forEach(file => hash.update(read(file)));
 assets.forEach(file => hash.update(fs.readFileSync(path.join(preview, file))));
 const version = hash.digest('hex').slice(0, 12);
@@ -62,6 +71,7 @@ html = html.replace(/<section class="auth view" id="signin">[\s\S]*?<\/section>\
 html = html.replace(/<section class="signup light view" id="signup">[\s\S]*?<\/section>\s*/, '');
 html = html.replaceAll('href="#signin"', 'href="/login"').replaceAll('href="#signup"', 'href="/register"');
 html = html.replaceAll('href="#pricing"', 'href="/pricing"');
+html = html.replaceAll('href="privacy-policy.html"', 'href="/privacy-policy"');
 html = html.replace(/<!-- Local preview section\.[\s\S]*?-->/g, '<!-- Hiring platform -->');
 html = html.replace(/<!-- Dedicated local page\.[\s\S]*?-->/g, '<!-- Why choose AssistMyHR -->');
 html = html.replaceAll('Product screenshots supplied for this preview. Other product examples are illustrative.', 'Screenshots show an example workspace.');
@@ -103,6 +113,7 @@ fs.writeFileSync(path.join(destination, 'chrome.js'), chromeScript);
 fs.writeFileSync(path.join(destination, 'platform-section.js'), tabScript);
 fs.writeFileSync(path.join(destination, 'pricing.js'), pricingScript);
 fs.writeFileSync(path.join(destination, 'forms.css'), formStyles);
+fs.writeFileSync(path.join(destination, 'privacy-policy.css'), policyStyles);
 fs.writeFileSync(path.join(root, 'resources/frontend/index.html'), html);
 // Reuse the same navigation and footer on Laravel's real login and registration pages.
 const partials = path.join(root, 'resources/views/marketing');
@@ -135,4 +146,26 @@ ${pricingView}
 <script defer src="${publicUrl('pricing.js')}"></script>
 @endpush
 `);
-console.log(`Built public homepage ${version}: ${styles.length} stylesheets, ${assets.length} images, real auth links and contact submission.`);
+// Standalone policy pages keep native section links rather than the homepage hash router.
+const policyDocument = (content, pageHeader, pageFooter, cssFiles, scriptFile, canonical = '') => `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy policy | AssistMyHR</title><meta name="description" content="Read the Assist My HR Privacy Policy covering personal information, privacy choices and data protection.">
+${canonical ? `<link rel="canonical" href="${canonical}"><link rel="icon" href="/favicon/assistmyhr.svg">` : ''}
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+${cssFiles.map(file => `<link rel="stylesheet" href="${file}">`).join('\n')}
+<script defer src="${scriptFile}"></script><noscript><style>.site-header nav{display:flex}.header-menu-toggle,.footer-top{display:none}</style></noscript>
+</head><body class="marketing-auth marketing-privacy is-light">
+${pageHeader}
+<main>${content}</main>
+${pageFooter}
+</body></html>
+`;
+fs.writeFileSync(path.join(root, 'resources/frontend/privacy-policy.html'), policyDocument(policyMarkup, rootLinks(header), rootLinks(footer), [...authStyles, 'privacy-policy.css'].map(publicUrl), publicUrl('chrome.js'), 'https://assistmyhr.com/privacy-policy'));
+const previewHtml = read('index.html');
+const previewLinks = markup => markup.replaceAll('href="#', 'href="index.html#');
+const previewHeader = previewHtml.match(/<header\b[\s\S]*?<\/header>/)[0];
+const previewFooter = previewHtml.match(/<footer\b[\s\S]*?<\/footer>/)[0];
+fs.writeFileSync(path.join(preview, 'privacy-policy.html'), policyDocument(renderPrivacyPolicy(policySource, 'index.html#home'), previewLinks(previewHeader), previewLinks(previewFooter), [...authStyles, 'privacy-policy.css'], 'page-chrome.js'));
+fs.writeFileSync(path.join(preview, 'page-chrome.js'), chromeScript);
+console.log(`Built public website ${version}: homepage, privacy policy, ${styles.length + 1} stylesheets, ${assets.length} images, real auth links and contact submission.`);

@@ -6,6 +6,13 @@ use Illuminate\Routing\Controller;
 
 class PublicWebsiteController extends Controller
 {
+    public function privacyPolicy()
+    {
+        return response()->file(resource_path('frontend/privacy-policy.html'), [
+            'Content-Type' => 'text/html; charset=UTF-8',
+        ]);
+    }
+
     public function index()
     {
         if (config('saas.enabled')) {
