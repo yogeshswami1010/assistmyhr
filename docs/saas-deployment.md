@@ -10,6 +10,7 @@ Billing is manual. Payment checkout, automatic charging, invoices and automatic 
 | --- | --- |
 | `/` | Public frontend, including SaaS signup links when enabled |
 | `/register` | Company and owner signup |
+| `/email/verify` | Required email verification, resend and sign out |
 | `/pricing` | Public plans |
 | `/saas/workspace/company-slug` | Shareable company login link |
 | `/login?workspace=company-slug` | Company login |
@@ -78,6 +79,8 @@ SAAS_TENANT_DB_PASSWORD=YOUR_RUNTIME_PASSWORD
 ```
 
 Configure `MAIL_DRIVER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS` and `MAIL_FROM_NAME` for signup verification. Client recruitment emails use each company's ATS SMTP settings. If verification email delivery fails, super admin can approve the owner after independently verifying their identity, with a reason recorded.
+
+New registrations must verify their email before entering the ATS. Signup and subsequent sign-ins send unverified owners to the verification notice. Direct ATS and account requests are blocked as well, including AJAX requests (HTTP 403). Signed links expire after 60 minutes, and resending is limited to six requests per minute. Failed email delivery keeps access locked; users can resend or contact support. Existing verified accounts and independently authenticated platform support sessions continue to work.
 
 6. Install while the website is in maintenance mode:
 

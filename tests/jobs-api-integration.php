@@ -80,7 +80,7 @@ namespace {
         $table->integer('starting_salary')->nullable(); $table->integer('maximum_salary')->nullable();
         $table->string('pay_according')->nullable(); $table->boolean('show_on_consortium')->default(false);
         $table->boolean('show_on_assistmyday')->default(false); $table->text('internal_notes')->nullable();
-        $table->timestamps();
+        $table->timestamps(); $table->softDeletes();
     });
     foreach (['job_categories' => 'name', 'job_types' => 'job_type', 'work_experiences' => 'work_experience', 'currencies' => 'currency_symbol', 'job_locations' => 'location'] as $table => $field) {
         Schema::create($table, function (Blueprint $schema) use ($field) { $schema->increments('id'); $schema->string($field); });

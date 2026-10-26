@@ -73,6 +73,16 @@ $session->flush();
 $gammaAppCookie = $appRememberedCookie($appSignIn($gamma, true), $gamma);
 check(key($alphaAppCookie) !== key($gammaAppCookie), 'Each client has its own cookie name');
 $allAppCookies = $alphaAppCookie + $gammaAppCookie;
+
+$context->activate($gamma);
+App\User::whereKey(1)->update(['email_verified_at' => null]);
+$context->reset();
+$session->flush();
+$unverifiedRemembered = $appHttp($gamma->slug, $gammaAppCookie, fn() => throw new RuntimeException('Remembered login bypassed email verification'));
+check(str_contains($unverifiedRemembered->headers->get('Location'), '/email/verify?workspace='.$gamma->slug), 'Remembered app sign-in cannot bypass mandatory email verification');
+$context->activate($gamma);
+App\User::findOrFail(1)->markEmailAsVerified();
+$context->reset();
 $session->flush();
 $appHttp($gamma->slug, $allAppCookies, $appAuthenticated($gamma));
 $appHttp($alpha->slug, $allAppCookies, $appAuthenticated($alpha));

@@ -24,6 +24,9 @@ class RedirectIfAuthenticated
 //            }
 
             $user = auth()->user();
+            if (config('saas.enabled') && !$user->hasVerifiedEmail()) {
+                return redirect(tenant_route('verification.notice'));
+            }
             if($user->hasRole('admin')){
                 return redirect(route('admin.dashboard'));
             }

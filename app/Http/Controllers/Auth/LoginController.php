@@ -153,6 +153,9 @@ class LoginController extends Controller
     }
     protected function redirectTo()
     {
+        if (config('saas.enabled') && !$this->guard()->user()->hasVerifiedEmail()) {
+            return tenant_route('verification.notice');
+        }
         return 'admin/dashboard';
     }
 

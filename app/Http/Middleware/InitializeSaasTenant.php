@@ -98,6 +98,16 @@ class InitializeSaasTenant
         }
         $context->activate($tenant);
         try {
+            // Enforce verification before any ATS controller or write can run,
+            // including remembered logins and direct AJAX/download requests.
+            // Machine integrations authenticate independently of browser users.
+            if (!$api && !$supportAccess && !$request->is('telnyx-webhook', 'login', 'logout', 'email/verify', 'email/verify/*', 'email/verification-notification', 'password/*')
+                && ($user = Auth::guard('web')->user()) && !$user->hasVerifiedEmail()) {
+                $verificationUrl = tenant_route('verification.notice');
+                return $this->privateResponse($request->expectsJson()
+                    ? response()->json(['message' => 'Verify your email address before accessing the ATS.', 'verification_url' => $verificationUrl], 403)
+                    : redirect($verificationUrl));
+            }
             if ($request->is('admin/settings/language-settings*', 'admin/settings/update-application*') && !$request->isMethod('GET')) { abort(403, 'Shared application files are managed by the platform administrator.'); }
             if (!$request->isMethodSafe()) {
                 // Serialize tenant writes so concurrent signups/imports cannot bypass model quotas.

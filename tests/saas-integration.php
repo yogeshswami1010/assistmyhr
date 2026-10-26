@@ -204,7 +204,7 @@ $svc->extend($beta,$admin,['expires_at'=>now()->addDays(20)->toDateString(),'rea
 check($beta->fresh()->subscription->expires_at->format('Y-m-d H:i:s')===now()->addDays(20)->endOfDay()->format('Y-m-d H:i:s'),'Exact expiry date supported');
 $beta->status='suspended';$beta->save();check(!$beta->fresh()->hasAccess(),'Suspension overrides subscription');
 $middleware=new App\Http\Middleware\InitializeSaasTenant;
-function middlewareRequest($url,$session){global $app;$r=Request::create('https://ats.example.test'.$url);$r->setLaravelSession($session);$app->instance('request',$r);$app['url']->setRequest($r);return $r;}
+function middlewareRequest($url,$session){global $app;$r=Request::create('https://ats.example.test'.$url);$r->setLaravelSession($session);$r->setUserResolver(fn($guard=null)=>Auth::guard($guard)->user());$app->instance('request',$r);$app['url']->setRequest($r);return $r;}
 $session->put('saas_tenant_id',$alpha->id);$session->put(Auth::guard('web')->getName(),1);$session->put('user','OLD CACHE');
 $response=$middleware->handle(middlewareRequest('/login?workspace=beta',$session),function(){check(!Auth::guard('web')->check(),'Changing workspace clears client authentication');check(!session()->has('user'),'Changing workspace clears cached user');return response('Login');});
 check($response->getStatusCode()===200&&$session->get('saas_tenant_id')===$beta->id,'Suspended clients can access login/billing');
@@ -292,13 +292,13 @@ $context->reset();
 PlatformSetting::create(['key'=>'signup_enabled','value'=>'1']);
 $request=middlewareRequest('/register',$session);$signup=new App\Http\Controllers\Saas\SignupController;
 check(str_contains($signup->form()->render(),'Create your ATS workspace'),'Signup page renders');
-check(str_ends_with($signup->pricing()->getTargetUrl(),'/register'),'Pricing redirects to registration while hidden');
+check($signup->pricing()->name()==='saas.pricing','Pricing renders the current public pricing page');
 $context->activate($beta);check(config('services.candidate_email_imap.host')===null,'Other client cannot inherit IMAP host');$context->reset();
 Illuminate\Support\Facades\Notification::fake();
 $signupRequest=Request::create('https://ats.example.test/register','POST',array_replace($data,['company_name'=>'Client Gamma','email'=>'gamma@example.test','password_confirmation'=>$data['password']]));
 $signupRequest->setLaravelSession($session);$app->instance('request',$signupRequest);$app['url']->setRequest($signupRequest);
 $response=$middleware->handle($signupRequest,fn($request)=>$signup->store($request));
-check($response->isRedirect()&&str_contains($response->headers->get('Location'),'/admin/dashboard'),'Signup directs owner to dashboard while verification is pending');
+check($response->isRedirect()&&str_contains($response->headers->get('Location'),'/email/verify?workspace='),'Signup requires email verification before the dashboard');
 $gamma=Tenant::where('owner_email','gamma@example.test')->firstOrFail();
 check($session->get('saas_tenant_id')===$gamma->id&&$context->current()===null,'Signup persists correct workspace and resets global context');
 check(str_starts_with($gamma->slug,'client-gamma-'),'Registration generates workspace automatically');
@@ -329,15 +329,7 @@ try{$signup->store($duplicateRequest);throw new RuntimeException('Duplicate owne
 check(!str_contains($signup->form()->render(),'name="slug"'),'Registration has no workspace input');
 $context->activate($gamma);
 check(Illuminate\Support\Facades\Notification::sent(App\User::find(1),Illuminate\Auth\Notifications\VerifyEmail::class)->count()===1,'Signup sends verification notification');
-$verificationRequest=middlewareRequest('/email/verify?workspace='.$gamma->slug,$session);$verificationRequest->setUserResolver(fn()=>Auth::guard('web')->user());
-check(str_contains((new App\Http\Controllers\Saas\VerificationController)->show($verificationRequest)->getTargetUrl(),'/admin/dashboard'),'Verification notice redirects to dashboard');
-$context->reset();
-$response=$middleware->handle(middlewareRequest('/admin/dashboard?workspace='.$gamma->slug,$session),fn()=>response('Unverified owner can enter ATS'));
-check($response->getStatusCode()===200&&$response->getContent()==='Unverified owner can enter ATS','Unverified owner can enter ATS without being marked verified');
-$context->activate($gamma);$verificationRequest=middlewareRequest('/email/verify?workspace='.$gamma->slug,$session);$verificationRequest->setUserResolver(fn()=>Auth::guard('web')->user());
-(new App\Http\Controllers\Saas\VerificationController)->verify($verificationRequest,'1',sha1('gamma@example.test'));
-check(App\User::find(1)->hasVerifiedEmail(),'Owner verification updates only their workspace');
-$context->reset();
+require __DIR__.'/saas-email-verification-checks.php';
 $app['router']->aliasMiddleware('auth',Illuminate\Auth\Middleware\Authenticate::class);
 $deleteRequest=Request::create('https://ats.example.test/superadmin/tenants/'.$beta->id,'DELETE');
 $deleteRequest->setLaravelSession($session);
