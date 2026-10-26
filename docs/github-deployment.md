@@ -44,6 +44,11 @@ $50/month, saving $300/year versus monthly billing). The selector compares these
 rates; trial signup and existing manual subscription management are unchanged.
 No payment processor, stored plans, tenant limits or active subscriptions are
 modified by this page. The public route retains the SaaS-enabled check.
+The pricing page advertises a 30-day free trial with no credit card required.
+Before offering this publicly, set **Trial length in days** to **30** under
+**Super admin → Settings**. The live database setting controls new trial expiry;
+the page copy does not override it (the code fallback is 14 days). Signup does
+not collect credit card details.
 
 For this frontend-only replacement, update the VPS with:
 

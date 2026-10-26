@@ -68,6 +68,9 @@
 .pricing-switch input:focus-visible + span { outline: 3px solid #94baff; outline-offset: 2px; }
 .pricing-selection { margin: 13px 0 15px; text-align: center; color: #526f92; font-size: var(--text-meta); line-height: 1.7; }
 .pricing-plan .pricing-trial { display: flex; width: 100%; gap: 20px; }
+.pricing-trial-assurance { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 8px; margin: 15px 0 0; color: #496e9b; font-size: var(--text-button); line-height: 1.7; text-align: center; }
+.pricing-trial-assurance strong { font-weight: 650; }
+.pricing-trial-assurance > span:first-child { color: #24714f; font-weight: 700; }
 .pricing-plan-note { margin: 14px 0 0; color: #607795; font-size: var(--text-meta); line-height: 1.75; text-align: center; }
 .pricing-plan-note a { color: #356fca; text-underline-offset: 3px; text-decoration: underline; }
 .pricing-benefits { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px; padding-top: 40px; }
