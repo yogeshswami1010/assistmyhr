@@ -146,11 +146,6 @@
 .insights-bottom { display: flex; justify-content: space-between; font-size: 6px; color: #9dbde8; margin: 12px 0 3px; gap: 8px; }
 .insights-bottom > span:first-child { display: inline-flex; align-items: center; gap: 5px; }
 .insights-bottom i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #8bb8f8; }
-.platform-cta { display: flex; align-items: center; justify-content: space-between; gap: 25px; padding: 36px 0 24px; border-bottom: 1px solid #e2eaf6; margin-top: 14px; }
-.platform-cta .platform-kicker { font-size: var(--text-eyebrow); letter-spacing: 1.5px; color: #768fae; line-height: 1.55; font-weight: 700; }
-.platform-cta h3 { font-size: var(--text-feature); letter-spacing: -.75px; line-height: 1.25; margin: 8px 0 0; font-weight: 650; }
-.platform-cta .button { white-space: nowrap; }
-.platform-disclaimer { font-size: var(--text-meta); color: #8093ad; text-align: center; margin: 19px 0 0; line-height: 1.6; }
 @media (max-width: 1000px) {
   .platform-section { padding: 65px 4% 30px; }
   .platform-showcase { grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr); gap: 25px; padding-left: 28px; }
@@ -235,10 +230,6 @@
   .platform-tool h3 { font-size: var(--text-feature); margin: 20px 0 13px; line-height: 1.25; font-weight: 650; }
   .platform-tool > p { font-size: var(--text-body); max-width: 380px; line-height: 1.75; }
   .job-illustration, .calendar-illustration, .insights-illustration { padding: 20px; min-height: 180px; }
-  .platform-cta { flex-direction: column; align-items: flex-start; gap: 20px; padding: 25px 0; margin-top: 5px; }
-  .platform-cta h3 { font-size: var(--text-feature); line-height: 1.25; font-weight: 650; }
-  .platform-cta .button { width: 100%; }
-  .platform-disclaimer { font-size: var(--text-meta); line-height: 1.6; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

@@ -104,11 +104,6 @@ body.is-home .home { background: transparent; }
 }
 .hero-actions > .button > span { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 5px; background: #ffffff17; }
 .hero-modern .hero-actions > .button:hover { box-shadow: 0 6px 26px #236aff55, inset 0 1px #ffffff30; background: linear-gradient(110deg, #2a75ff, #4b74ff); }
-.hero-tour { display: inline-flex; align-items: center; gap: 9px; color: #c5d2e8; font-size: var(--text-button); font-weight: 600; padding: 8px 0; line-height: 1.5; }
-.hero-tour > span { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; border: 1px solid #9db9e749; background: #a2bdff06; color: #b5d1ff; }
-.hero-tour > span svg { width: 12px; height: 12px; fill: currentColor; stroke-width: 1; margin-left: 2px; }
-.hero-tour:hover { color: #fff; }
-.hero-tour:hover > span { background: #1e4e9f; border-color: #729cde; }
 .hero-assurances { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 24px; }
 .hero-assurances > span { display: inline-flex; align-items: center; gap: 6px; color: #7287a8; font-size: var(--text-meta); line-height: 1.6; }
 .hero-assurances svg { width: 12px; height: 12px; color: #5e98ed; }
@@ -192,8 +187,6 @@ body.is-home .home { background: transparent; }
   .hero-modern .hero-copy > .hero-description { font-size: var(--text-lead); max-width: 310px; line-height: 1.75; }
   .hero-modern .hero-actions { gap: 13px; }
   .hero-modern .hero-actions > .button { font-size: var(--text-button); gap: 14px; padding-left: 16px; line-height: 1.5; font-weight: 600; }
-  .hero-tour { font-size: var(--text-button); gap: 7px; line-height: 1.5; font-weight: 600; }
-  .hero-tour > span { width: 27px; height: 27px; }
   .hero-announcement { font-size: var(--text-eyebrow); gap: 7px; line-height: 1.55; font-weight: 700; }
   .hero-modern .hero-visual { margin-right: -12px; }
   .hero-floating-note { padding: 12px 13px; right: 0; gap: 9px; }
@@ -210,7 +203,6 @@ body.is-home .home { background: transparent; }
   .hero-modern .hero-copy > .hero-description { max-width: 440px; margin: 0 auto 26px; font-size: var(--text-lead); line-height: 1.75; }
   .hero-modern .hero-actions { justify-content: center; gap: 22px; }
   .hero-modern .hero-actions > .button { font-size: var(--text-button); gap: 20px; line-height: 1.5; font-weight: 600; }
-  .hero-tour { font-size: var(--text-button); line-height: 1.5; font-weight: 600; }
   .hero-assurances { justify-content: center; gap: 12px 20px; margin-top: 23px; }
   .hero-modern .hero-visual { max-width: 670px; width: 100%; margin: 0 auto; padding: 20px 9px 77px; }
   .hero-visual-label { margin-bottom: 25px; font-size: var(--text-eyebrow); letter-spacing: 1.4px; line-height: 1.55; font-weight: 700; }
@@ -227,8 +219,6 @@ body.is-home .home { background: transparent; }
   .hero-modern .hero-copy > .hero-description { font-size: var(--text-lead); line-height: 1.75; padding: 0 4px; }
   .hero-modern .hero-actions { gap: 16px; }
   .hero-modern .hero-actions > .button { min-height: 47px; font-size: var(--text-button); gap: 14px; padding: 10px 11px 10px 15px; line-height: 1.5; font-weight: 600; }
-  .hero-tour { font-size: var(--text-button); line-height: 1.5; font-weight: 600; }
-  .hero-tour > span { width: 28px; height: 28px; }
   .hero-assurances { gap: 10px 14px; margin-top: 20px; }
   .hero-assurances > span { font-size: var(--text-meta); gap: 5px; line-height: 1.6; }
   .hero-modern .hero-visual { padding: 12px 5px 70px; }
