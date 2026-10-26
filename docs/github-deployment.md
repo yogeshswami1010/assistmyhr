@@ -17,10 +17,15 @@ the generated assets, navigation references and contact submission handling.
 Its enquiry transport is mocked and does not send email.
 
 The homepage links to the existing `/login` and `/register` routes. Registration
-continues to respect the platform's existing signup settings. Enquiries use the
-existing `/contact.php` service and its hosting mail configuration.
-The dedicated `/#request-demo` view submits a Live demo enquiry through the same
-service. General contact enquiries remain on `/#contact`.
+continues to respect the platform's existing signup settings. Both `/#request-demo`
+and `/#contact` submit to the CSRF-protected `/website/enquiries` endpoint.
+Submissions are saved in the central `saas_website_enquiries` table, then emailed
+to **support@assistmyhr.com** using the platform SMTP settings (`MAIL_*`). The
+sender's address is Reply-To; it cannot change the recipient or authenticated From.
+Super admin has a **Website enquiries** inbox, unread filters, full request details,
+and recent entries on the dashboard. A failed email notification leaves the entry
+saved and flagged in the inbox. The previous `/contact.php` URL redirects to the
+new endpoint; `contact-config.php` is no longer used.
 
 The customer login uses `layouts.marketing-auth`, with a dark form on the left
 and an original office photograph on the right. Generated header, footer, login
@@ -36,7 +41,8 @@ Log in or Start a free trial as current on the corresponding page.
 
 The redesigned Contact us view includes direct email/phone links, a demo link
 and a responsive enquiry form. It retains the existing contact service field
-limits and supported topics; no mail configuration changes are needed.
+limits and supported topics. Requests are limited to three per IP in ten minutes
+and include a honeypot field. Server-side validation rejects malformed submissions.
 
 `/pricing` now displays the single-plan marketing page instead of redirecting
 to registration. Its generated Blade content comes from `pricing.html` in the
@@ -66,7 +72,7 @@ is omitted from the displayed page as requested; its original metadata remains
 in the text source for reference. The Contact us section includes clickable
 support@assistmyhr.com and +1 (905) 374-8878 links supplied by the user.
 The footer's Privacy policy link appears under **Let’s get started**. Public email
-links, enquiry fallback messages and the enquiry recipient in `public/contact-config.php`
+links, enquiry fallback messages and the website enquiry recipient
 use **support@assistmyhr.com**.
 
 The four hiring steps and AI screening panel are now the final section of Home.
@@ -74,15 +80,17 @@ The separate How it works page, hero and menu entries are removed. Old
 `/#how-it-works` and `/#how` links still open Home and scroll to `#hiring-steps`;
 `/#ai` opens the AI panel on Home.
 
-For this frontend-only replacement, update the VPS with:
+For the website and enquiries inbox, update the VPS with:
 
 ```bash
 cd /home/assistmyhr.com/public_html/ats
 sudo -u assis2045 -H git pull --ff-only origin main
 sudo -u assis2045 php artisan optimize:clear
+sudo -u assis2045 php artisan migrate --force
 ```
 
-No database migration or Composer dependency change is required for the homepage.
+The enquiries inbox requires the new central database migration. No Composer
+dependency change is required. Existing platform SMTP credentials are used.
 Check `/`, its final hiring/AI section, the Why choose us view, the three feature tabs,
 `/login`, `/register`, and the contact service after deployment. Only submit a
 real enquiry when you intend to send it to the business mailbox.

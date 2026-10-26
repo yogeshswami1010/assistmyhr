@@ -10,6 +10,7 @@ use App\Saas\Subscription;
 use App\Saas\SubscriptionService;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
+use App\Saas\WebsiteEnquiry;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -121,8 +122,28 @@ class PlatformController extends Controller
             'suspended' => Tenant::where('status', 'suspended')->count(),
             'expired' => Subscription::whereNotNull('expires_at')->where('expires_at', '<=', now())->count(),
             'tenants' => $tenants,
+            'newEnquiryCount' => WebsiteEnquiry::whereNull('read_at')->count(),
+            'latestEnquiries' => WebsiteEnquiry::latest('id')->limit(5)->get(),
         ]);
     }
+    public function enquiries(Request $request)
+    {
+        $filters = $request->validate(['kind' => ['nullable', Rule::in(['demo', 'contact'])], 'unread' => ['nullable', Rule::in(['1'])]]);
+        $query = WebsiteEnquiry::latest('id');
+        if (!empty($filters['kind'])) $query->where('kind', $filters['kind']);
+        if (!empty($filters['unread'])) $query->whereNull('read_at');
+        return $this->platformView('saas.platform-enquiries', [
+            'pageTitle' => 'Website enquiries', 'enquiries' => $query->paginate(25)->withQueryString(),
+            'newEnquiryCount' => WebsiteEnquiry::whereNull('read_at')->count(), 'filters' => $filters,
+        ]);
+    }
+
+    public function enquiry(WebsiteEnquiry $enquiry)
+    {
+        if (!$enquiry->read_at) $enquiry->update(['read_at' => now()]);
+        return $this->platformView('saas.platform-enquiry', ['pageTitle' => $enquiry->kind_label.' #'.$enquiry->id, 'enquiry' => $enquiry]);
+    }
+
     public function loginAsClient(Request $request, Tenant $tenant)
     {
         abort_if(in_array($tenant->status, ['provisioning', 'failed'], true), 422, 'This workspace is not ready.');

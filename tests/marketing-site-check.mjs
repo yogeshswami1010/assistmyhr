@@ -42,13 +42,15 @@ new vm.Script(chromeScript, { filename: 'chrome.js' });
 assert(html.includes('href="/login"') && html.includes('href="/register"'));
 assert(!/Design preview|Preview enquiry|Preview only|id="signin"|id="signup"/.test(html));
 assert(!/signin-form|Password recovery is not connected|enquiry preview is complete/.test(script));
-assert(html.includes('action="/contact.php" method="post"'));
+assert(html.includes('action="/website/enquiries" method="post"'));
 const form = html.match(/<form\b[^>]*id="contact-form"[^>]*>[\s\S]*?<\/form>/)[0];
-assert.deepEqual([...form.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'message', 'name', 'phone', 'topic', 'website']);
+assert.deepEqual([...form.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'kind', 'message', 'name', 'phone', 'topic', 'website']);
 assert.deepEqual([...form.matchAll(/<option>([^<]+)<\/option>/g)].map(match => match[1]), ['Live demo', 'Pricing', 'AI CV Search', 'Temp Staffing', 'Something else']);
 const demoForm = html.match(/<form class="form-card demo-form"[\s\S]*?<\/form>/)[0];
-assert(demoForm.includes('data-enquiry-form action="/contact.php" method="post"'));
-assert.deepEqual([...demoForm.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'message', 'name', 'phone', 'topic', 'website']);
+assert(demoForm.includes('data-enquiry-form action="/website/enquiries" method="post"'));
+assert(demoForm.includes('name="kind" value="demo"'));
+assert(form.includes('name="kind" value="contact"'));
+assert.deepEqual([...demoForm.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'kind', 'message', 'name', 'phone', 'topic', 'website']);
 assert(demoForm.includes('type="hidden" name="topic" value="Live demo"'));
 assert(html.includes('class="demo-page view" id="request-demo"'));
 assert(html.includes('class="contact-page view" id="contact"'));
@@ -256,7 +258,7 @@ function routeHarness(hash) {
     querySelector: selector => selector === '.site-header' ? header : toggle,
   };
   let redirect;
-  vm.runInNewContext(script.slice(0, script.indexOf('// The existing contact.php service')), {
+  vm.runInNewContext(script.slice(0, script.indexOf('// Website enquiry forms')), {
     document, location: { hash, replace: url => redirect = url },
     window: { matchMedia: () => ({ matches: false, addEventListener() {} }), scrollTo() {}, addEventListener() {} },
   });
@@ -292,15 +294,15 @@ for (const url of publishedFiles) {
 
 // Exercise the actual contact handler with a mock transport: no email is sent.
 const enquirySource = fs.readFileSync(path.join(root, 'resources/frontend/enquiry.js'), 'utf8');
-function contactHarness(fetchResponse) {
+function contactHarness(fetchResponse, csrfToken = 'example-csrf-token') {
   const button = { disabled: false, textContent: 'Send enquiry →' };
   const status = { textContent: '', dataset: {} };
   const attributes = new Map();
   const calls = [];
   let submit, timeoutCallback, cleared = false, resets = 0, valid = true;
   const form = {
-    action: 'https://example.test/contact.php',
-    values: { name: 'Example Tester', email: 'tester@example.test', phone: '', company: '', topic: 'Live demo', message: 'Example enquiry', website: '' },
+    action: 'https://example.test/website/enquiries',
+    values: { kind: 'contact', name: 'Example Tester', email: 'tester@example.test', phone: '', company: '', topic: 'Live demo', message: 'Example enquiry', website: '' },
     querySelector: selector => selector.startsWith('button') ? button : status,
     reportValidity: () => valid,
     addEventListener: (_event, callback) => submit = callback,
@@ -309,7 +311,7 @@ function contactHarness(fetchResponse) {
     reset: () => resets++,
   };
   vm.runInNewContext(enquirySource, {
-    document: { querySelectorAll: () => [form] },
+    document: { querySelectorAll: () => [form], querySelector: () => csrfToken ? ({ content: csrfToken }) : null },
     FormData: class { constructor(form) { this.values = form.values; } *[Symbol.iterator]() { yield* Object.entries(this.values); } },
     fetch: (url, options) => { calls.push({ url, options }); return fetchResponse(url, options); },
     AbortController, TypeError, SyntaxError,
@@ -321,8 +323,9 @@ function contactHarness(fetchResponse) {
 const successResponse = { ok: true, json: async () => ({ success: true, message: 'Accepted for delivery' }) };
 const success = contactHarness(async () => successResponse);
 await success.submit();
-assert.equal(success.calls[0].url, 'https://example.test/contact.php');
+assert.equal(success.calls[0].url, 'https://example.test/website/enquiries');
 assert.equal(success.calls[0].options.headers['Content-Type'], 'application/json');
+assert.equal(success.calls[0].options.headers['X-CSRF-TOKEN'], 'example-csrf-token');
 assert.deepEqual(JSON.parse(success.calls[0].options.body), success.form.values);
 assert.equal(success.resets, 1);
 assert.equal(success.status.dataset.state, 'success');
@@ -334,6 +337,17 @@ assert.equal(rejected.status.textContent, 'Please check the email address.');
 assert.equal(rejected.resets, 0);
 assert.equal(rejected.status.dataset.state, 'error');
 assert(!rejected.button.disabled);
+
+const expiredSession = contactHarness(async () => ({ ok: false, status: 419 }));
+await expiredSession.submit();
+assert(expiredSession.status.textContent.includes('session has expired'));
+assert.equal(expiredSession.resets, 0);
+
+const missingToken = contactHarness(async () => successResponse, null);
+await missingToken.submit();
+assert.equal(missingToken.calls.length, 0);
+assert.equal(missingToken.resets, 0);
+assert(missingToken.status.textContent.includes('reload this page'));
 
 const offline = contactHarness(async () => { throw new TypeError('Network unavailable'); });
 await offline.submit();

@@ -88,6 +88,7 @@ DB::table('company_settings')->insert(['company_name'=>'Original','company_email
 DB::table('smtp_settings')->insert(['mail_password'=>'ORIGINAL-MAIL-SECRET']);
 DB::table('google_captcha_settings')->insert(['secret'=>'ORIGINAL-CAPTCHA-SECRET']);
 $migration=require $root.'/database/migrations/2026_10_06_000003_create_saas_platform.php';$migration->up();
+(require $root.'/database/migrations/2026_10_27_000001_create_website_enquiries.php')->up();
 Schema::create('currencies',function(Blueprint $t){$t->increments('id');$t->string('currency_name');$t->string('currency_symbol');$t->string('currency_code');$t->boolean('default')->default(false);});
 Schema::table('company_settings',function(Blueprint $t){$t->integer('currency_id')->nullable();});
 DB::table('currencies')->insert(['currency_name'=>'US Dollar','currency_symbol'=>'$','currency_code'=>'USD']);

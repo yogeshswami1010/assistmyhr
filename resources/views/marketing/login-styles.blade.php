@@ -1,1 +1,1 @@
-<link rel="stylesheet" href="/marketing/login.css?v=f7c54cff6aff">
+<link rel="stylesheet" href="/marketing/login.css?v=a67967f820f4">

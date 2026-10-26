@@ -80,7 +80,8 @@ let formCount = 0;
 html = html.replace(/<form\b[^>]*id="(?:contact|demo)-form"[^>]*>[\s\S]*?<\/form>/g, originalForm => {
 let form = originalForm;
 formCount++;
-form = form.replace(/id="((?:contact|demo)-form)"/, 'id="$1" data-enquiry-form action="/contact.php" method="post"');
+form = form.replace(/id="((?:contact|demo)-form)"/, 'id="$1" data-enquiry-form action="/website/enquiries" method="post"');
+form = form.replace(/(<form\b[^>]*>)/, '$1<input type="hidden" name="kind" value="' + (originalForm.includes('id="demo-form"') ? 'demo' : 'contact') + '">');
 form = form.replace('<input required autocomplete="name"', '<input name="name" maxlength="150" required autocomplete="name"');
 form = form.replace('<input required type="email"', '<input name="email" maxlength="254" required type="email"');
 form = form.replace('<input type="tel"', '<input name="phone" maxlength="60" type="tel"');

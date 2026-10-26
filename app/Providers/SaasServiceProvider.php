@@ -31,6 +31,14 @@ class SaasServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Resolve the limiter after tenant selection so existing ATS limits keep
+        // their tenant-specific cache; the public enquiry route uses the platform cache.
+        $this->app->afterResolving(\Illuminate\Cache\RateLimiter::class, function ($limiter) {
+            $limiter->for('website-enquiries', fn ($request) =>
+                \Illuminate\Cache\RateLimiting\Limit::perMinutes(10, 3)->by($request->ip())
+                    ->response(fn ($request, $headers) => response()->json(['success' => false, 'message' => 'Too many attempts. Please wait a few minutes or email support@assistmyhr.com.'], 429, $headers))
+            );
+        });
         if (!config('saas.enabled')) { return; }
         $this->app['auth']->extend('tenant-session', function ($app, $name, $config) {
             $guard = new \App\Saas\TenantSessionGuard(

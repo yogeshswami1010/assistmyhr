@@ -20,6 +20,7 @@ Billing is manual. Payment checkout, automatic charging, invoices and automatic 
 | `/account/integrations` | Company mailbox import configuration |
 | `/superadmin/login` | Separate platform admin login |
 | `/superadmin` | Clients and recent requests |
+| `/superadmin/enquiries` | Saved demo requests and contact enquiries |
 | `/superadmin/tenants/ID` | Access, plan, manual expiry extensions and audit history |
 | `/superadmin/plans` | Create/edit plans and limits |
 | `/superadmin/settings` | Signup and trial settings |
@@ -144,9 +145,17 @@ Never run `migrate:fresh` or a destructive rollback against production. Setting 
 
 ## Developer tests
 
+Website demo and contact submissions are stored centrally before sending a notification
+to support@assistmyhr.com using the platform mailer. Super admin → Website enquiries
+shows full messages, contact details, unread state and email delivery status. The
+dashboard shows the five latest entries. Run `php artisan migrate --force` after
+pulling this change; the new table is not copied into tenant databases. Check real
+SMTP delivery on the VPS with an intentional test submission.
+
 ```bash
 php tests/saas-integration.php /path/to/vendor/autoload.php
 php tests/jobs-api-integration.php /path/to/vendor/autoload.php
+php tests/website-enquiries-integration.php /path/to/vendor/autoload.php
 ```
 
 Tests require Laravel 12, cviebrock/eloquent-sluggable and shanmuga/laravel-entrust. They create temporary databases and cover isolation, platform authentication, quotas, workspace switching, API routing, expiry/suspension, extensions and signed files. They do not verify VPS MySQL grants, SMTP delivery or OpenLiteSpeed; complete the launch checks.

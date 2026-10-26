@@ -61,7 +61,7 @@ function navigate() {
 window.addEventListener('hashchange', navigate);
 navigate();
 
-// The existing contact.php service accepts JSON and validates all fields server-side.
+// Website enquiry forms submit to the app with CSRF protection.
 document.querySelectorAll('[data-enquiry-form]').forEach(contactForm => {
 contactForm.addEventListener('submit', async event => {
   event.preventDefault();
@@ -83,13 +83,16 @@ contactForm.addEventListener('submit', async event => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
   try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!csrfToken) throw new Error('Please reload this page before submitting. Your message is still in the form.');
     const response = await fetch(contactForm.action, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
       body: JSON.stringify(payload),
       credentials: 'same-origin',
       signal: controller.signal,
     });
+    if (response.status === 419) throw new Error('Your session has expired. Reload this page and try again. Your message is still in the form.');
     const result = await response.json();
     if (!response.ok || result.success !== true) {
       throw new Error(result.message || 'Unable to send your enquiry. Please try again.');

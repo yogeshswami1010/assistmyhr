@@ -57,7 +57,6 @@ use App\Http\Controllers\ZoomWebhookController;
 use App\Http\Controllers\TelnyxWebhookController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Front\PublicWebsiteController;
 use App\Http\Controllers\Admin\AdminJobClientNoteController;
 
 /*
@@ -73,8 +72,7 @@ Route::post('/telnyx-webhook', TelnyxWebhookController::class)
     ->name('telnyx-webhook');
 
 // ── Front public job board ─────────────────────────────────────────────────
-Route::get('/', [PublicWebsiteController::class, 'index'])->name('home');
-Route::get('/privacy-policy', [PublicWebsiteController::class, 'privacyPolicy'])->name('privacy-policy');
+require __DIR__.'/website.php';
 
 Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');
 
