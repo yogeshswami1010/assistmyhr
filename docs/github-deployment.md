@@ -53,11 +53,11 @@ not collect credit card details.
 The public `/privacy-policy` route serves `resources/frontend/privacy-policy.html`.
 The marketing build formats `html-designs/marketing-preview/privacy-policy.txt`
 into that page and the standalone local preview, and adds the policy link to the
-shared footer. All 21 supplied sections, metadata, placeholders and implementation
-notes are preserved as document content. The supplied version is explicitly
-**1.0 — Draft**, with an unconfirmed effective date and hosting details; the contact
-section ends at “Assist My HR — Privacy Office” without further contact details.
-Those details have not been guessed or finalized by this website change.
+shared footer. All 21 sections, body placeholders and implementation notes are
+preserved as document content. The effective-date, last-updated and version block
+is omitted from the displayed page as requested; its original metadata remains
+in the text source for reference. The Contact us section includes clickable
+support@assistmyhr.com and +1 (905) 374-8878 links supplied by the user.
 
 For this frontend-only replacement, update the VPS with:
 

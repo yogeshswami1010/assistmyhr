@@ -1,4 +1,4 @@
-// Format the supplied policy without changing its wording or resolving its draft notes.
+// Format the policy body and contact links; source header metadata is not displayed.
 const escapeHtml = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 
 const listBoundaries = [
@@ -25,11 +25,8 @@ const listBoundaries = [
 export function renderPrivacyPolicy(source, homeHref = '/') {
   const lines = source.replace(/^\uFEFF/, '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
   if (lines[0] !== 'PRIVACY POLICY' || lines[1] !== 'ASSIST MY HR') throw new Error('Unexpected policy title.');
-  const metadata = ['Effective Date', 'Last Updated', 'Version'].map((label, index) => {
-    const prefix = label + ': ';
-    if (!lines[index + 2].startsWith(prefix)) throw new Error('Missing policy metadata: ' + label);
-    return { label, value: lines[index + 2].slice(prefix.length) };
-  });
+  const bodyStart = lines.findIndex(line => /^1\. /.test(line));
+  if (bodyStart < 2) throw new Error('Policy introduction not found.');
   const listEnds = new Map(listBoundaries.map(([first, last]) => {
     const start = lines.indexOf(first), end = lines.indexOf(last, start);
     if (start < 0 || end < start) throw new Error('Policy list not found: ' + first);
@@ -37,11 +34,13 @@ export function renderPrivacyPolicy(source, homeHref = '/') {
   }));
   const contents = [], blocks = [];
   let sectionOpen = false;
-  for (let index = 5; index < lines.length; index++) {
+  let sectionNumber;
+  for (let index = bodyStart; index < lines.length; index++) {
     const line = lines[index], heading = line.match(/^(\d+)\. (.+)$/);
     if (heading) {
       if (sectionOpen) blocks.push('      </section>');
       const number = heading[1];
+      sectionNumber = number;
       contents.push(`<li><a href="#privacy-section-${number}"><span>${number.padStart(2, '0')}</span>${escapeHtml(heading[2])}</a></li>`);
       blocks.push(`      <section id="privacy-section-${number}" aria-labelledby="privacy-heading-${number}">\n        <h2 id="privacy-heading-${number}">${escapeHtml(line)}</h2>`);
       sectionOpen = true;
@@ -52,6 +51,16 @@ export function renderPrivacyPolicy(source, homeHref = '/') {
       blocks.push('        <ul>\n' + lines.slice(index, end + 1).map(item => `          <li>${escapeHtml(item)}</li>`).join('\n') + '\n        </ul>');
       index = end;
     } else {
+      const email = sectionNumber === '21' && line.match(/^Email: ([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})$/);
+      const phone = sectionNumber === '21' && line.match(/^Phone: (\+[\d ()-]+)$/);
+      if (email) {
+        blocks.push(`        <p class="privacy-contact-line">Email: <a href="mailto:${escapeHtml(email[1])}">${escapeHtml(email[1])}</a></p>`);
+        continue;
+      }
+      if (phone) {
+        blocks.push(`        <p class="privacy-contact-line">Phone: <a href="tel:${phone[1].replace(/[^\d+]/g, '')}">${escapeHtml(phone[1])}</a></p>`);
+        continue;
+      }
       const className = line.startsWith('Implementation note:') ? ' class="privacy-editorial-note"' : line.includes('[To Be Confirmed]') ? ' class="privacy-placeholder"' : '';
       blocks.push(`        <p${className}>${escapeHtml(line)}</p>`);
     }
@@ -63,7 +72,6 @@ export function renderPrivacyPolicy(source, homeHref = '/') {
     <nav class="privacy-breadcrumb" aria-label="Breadcrumb"><a href="${escapeHtml(homeHref)}">Home</a><span aria-hidden="true">/</span><span aria-current="page">Privacy policy</span></nav>
     <span class="privacy-eyebrow">${escapeHtml(lines[1])}</span>
     <h1 id="privacy-title">${escapeHtml(lines[0])}</h1>
-    <dl class="privacy-metadata">${metadata.map(item => `<div><dt>${escapeHtml(item.label)}</dt><dd>${escapeHtml(item.value)}</dd></div>`).join('')}</dl>
     <a class="privacy-read-link" href="#privacy-content">Read the policy <span aria-hidden="true">↓</span></a>
   </div></div>
   <div class="privacy-layout privacy-inner">

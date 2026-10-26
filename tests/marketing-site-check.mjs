@@ -16,13 +16,15 @@ const decode = text => text.replaceAll('&lt;', '<').replaceAll('&gt;', '>').repl
 const policyLines = policySource.replace(/^\uFEFF/, '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 for (const page of [policyHtml, policyPreview]) {
   const article = page.match(/<article class="privacy-document"[^>]*>([\s\S]*?)<\/article>/)[1];
-  const visibleLines = [...article.matchAll(/<(h2|h3|p|li)\b[^>]*>([\s\S]*?)<\/\1>/g)].map(match => decode(match[2]));
-  assert.deepEqual(visibleLines, policyLines.slice(5), 'Every supplied policy heading, paragraph and list item must remain intact');
+  const visibleLines = [...article.matchAll(/<(h2|h3|p|li)\b[^>]*>([\s\S]*?)<\/\1>/g)].map(match => decode(match[2].replace(/<[^>]*>/g, '')));
+  assert.deepEqual(visibleLines, policyLines.slice(policyLines.indexOf('1. INTRODUCTION')), 'Every policy heading, paragraph and list item must remain intact');
   assert.equal((article.match(/<h2\b/g) || []).length, 21);
   const policyIds = [...page.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(new Set(policyIds).size, policyIds.length);
   for (const match of page.matchAll(/href="#([^"]+)"/g)) assert(policyIds.includes(match[1]), 'Unknown policy contents target: ' + match[1]);
-  for (const line of policyLines.slice(2, 5)) assert(decode(page).includes(line.slice(line.indexOf(': ') + 2)), 'Keep the supplied policy metadata');
+  assert(!/privacy-metadata|Effective Date|Last Updated|1\.0 — Draft/.test(page), 'Remove the requested metadata block');
+  assert(article.includes('href="mailto:support@assistmyhr.com"'));
+  assert(article.includes('href="tel:+19053748878"'));
 }
 assert(policyHtml.includes('href="/privacy-policy"'));
 assert(policyPreview.includes('href="privacy-policy.html"') && policyPreview.includes('href="index.html#home"'));
@@ -320,4 +322,4 @@ try {
 } finally {
   await new Promise(resolve => server.close(resolve));
 }
-console.log('PASS: complete supplied privacy text, draft metadata, safe text rendering, policy contents and footer links, pricing and shared navigation, login/registration form contracts, enquiry handling, ARIA, CSS, screenshots and published assets over HTTP. No enquiries sent.');
+console.log('PASS: complete privacy body, updated contact links, removed metadata block, safe text rendering, policy contents and footer links, pricing and shared navigation, login/registration form contracts, enquiry handling, ARIA, CSS, screenshots and published assets over HTTP. No enquiries sent.');
