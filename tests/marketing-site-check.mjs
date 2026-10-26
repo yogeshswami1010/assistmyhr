@@ -121,7 +121,7 @@ function routeHarness(hash) {
     const view = makeElement(id); view.classList.values.add('view'); view.closest = () => view; return view;
   });
   const targets = new Map(views.map(view => [view.id, view]));
-  for (const [id, owner] of [['why-features', 'why-choose-us'], ['why-ai', 'why-choose-us'], ['why-communications', 'why-choose-us'], ['ai', 'how-it-works'], ['platform-overview', 'home']]) {
+  for (const [id, owner] of [['why-features', 'why-choose-us'], ['why-ai', 'why-choose-us'], ['why-communications', 'why-choose-us'], ['ai', 'how-it-works'], ['hiring-steps', 'how-it-works'], ['platform-overview', 'home']]) {
     const target = makeElement(id); target.closest = () => targets.get(owner); targets.set(id, target);
   }
   const header = makeElement('header'), toggle = makeElement('menu'), body = makeElement('body');
@@ -138,7 +138,7 @@ function routeHarness(hash) {
   });
   return { visible: views.filter(view => !view.hidden).map(view => view.id), redirect, title: document.title };
 }
-for (const [hash, expected] of [['#home', 'home'], ['#why-choose-us', 'why-choose-us'], ['#why-ai', 'why-choose-us'], ['#features', 'why-choose-us'], ['#ai', 'how-it-works'], ['#how', 'how-it-works'], ['#request-demo', 'request-demo'], ['#contact', 'contact']]) {
+for (const [hash, expected] of [['#home', 'home'], ['#why-choose-us', 'why-choose-us'], ['#why-ai', 'why-choose-us'], ['#features', 'why-choose-us'], ['#ai', 'how-it-works'], ['#how', 'how-it-works'], ['#hiring-steps', 'how-it-works'], ['#request-demo', 'request-demo'], ['#contact', 'contact']]) {
   assert.deepEqual(routeHarness(hash).visible, [expected], `Page navigation ${hash}`);
 }
 assert.equal(routeHarness('#request-demo').title, 'AssistMyHR – Request a demo');

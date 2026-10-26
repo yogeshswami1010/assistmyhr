@@ -11,6 +11,7 @@ Open `index.html` directly in a browser. No installation or build needed.
 - `contact.css` and `contact.html`: general enquiries page with email/phone cards, a guided-demo link and an accessible responsive form
 - `auth-shell.css`: shared website chrome and responsive layouts around the real Laravel login and registration forms
 - `hero.css`: modern homepage hero with blue typography, a subtle grid backdrop, a dashboard screenshot rotated toward the left on its vertical axis and responsive layouts. The screenshot has no diagonal rotation. Its background spans the full viewport width and continues behind the homepage header; the content remains centered.
+- `how-hero.css` and `how-hero.html`: How it works hero with the original applications screenshot, a four-step journey graphic, a demo action and a link to the detailed hiring steps. The layout stacks on smaller screens.
 - `preview.js`: preview navigation and local form feedback
 - `platform-section.html`: reusable markup for the new illustrated hiring platform section (also included in `index.html`)
 - `platform-section.css`: blue theme and responsive layouts for that section

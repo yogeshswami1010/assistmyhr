@@ -1,0 +1,79 @@
+/* A dedicated How it works hero, above the existing hiring steps and AI section. */
+.how-page.light { padding: 0; background: #fbfcff; color: #17365c; }
+.how-hero { position: relative; overflow: hidden; padding: 35px 5% 42px; background: radial-gradient(ellipse at 90% 40%, #dbeaff 0, transparent 58%), linear-gradient(120deg, #f9fbff, #edf4ff); border-bottom: 1px solid #dfe9f7; }
+.how-hero::before { content: ''; position: absolute; inset: 0 0 0 48%; pointer-events: none; opacity: .35; background-image: radial-gradient(#9cbce6 1px, transparent 1px); background-size: 22px 22px; mask-image: radial-gradient(ellipse, #000, transparent 70%); }
+.how-hero-inner { max-width: 1296px; margin: 0 auto; position: relative; }
+.how-breadcrumb { display: flex; justify-content: flex-start; align-items: center; width: auto; gap: 10px; margin: 0 0 34px; padding: 0; color: #7388a4; font-size: var(--text-meta); font-weight: 500; line-height: 1.6; }
+.how-breadcrumb a { padding: 0; color: #426da7; border: 0; opacity: 1; }
+.how-breadcrumb a:hover { color: #1c5dc9; text-decoration: underline; text-underline-offset: 4px; }
+.how-hero-grid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); align-items: center; gap: 65px; padding: 12px 0 20px; }
+.how-hero-copy { min-width: 0; padding: 5px 0 22px; }
+.how-kicker { display: inline-flex; align-items: center; gap: 9px; padding: 7px 12px; border: 1px solid #d4e3fb; border-radius: 30px; background: #ffffffa6; color: #386cba; font-size: var(--text-eyebrow); font-weight: 700; line-height: 1.6; letter-spacing: .08em; }
+.how-kicker > span { width: 6px; height: 6px; border-radius: 50%; background: #3378ed; }
+.how-hero-copy h1 { margin: 23px 0 22px; font-size: var(--text-display); font-weight: 650; line-height: 1.08; letter-spacing: -.045em; color: #15345c; }
+.how-hero-copy h1 > span { color: #2468dd; }
+.how-hero-copy > p { max-width: 470px; margin: 0; color: #607b9c; font-size: var(--text-lead); line-height: 1.85; }
+.how-hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 20px 25px; margin-top: 29px; }
+.how-hero-actions .button { gap: 20px; min-height: 50px; padding: 14px 19px; border-radius: 9px; background: #1c63ec; border-color: #1c63ec; box-shadow: 0 7px 20px #1c63ec1a; }
+.how-hero-actions .button:hover { background: #1455ce; }
+.how-hero svg { display: block; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.how-explore { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; color: #365c8c; font-size: var(--text-button); font-weight: 600; line-height: 1.5; }
+.how-explore:hover { color: #1659c8; }
+.how-explore svg { width: 16px; height: 16px; }
+.how-hero-note { display: flex; align-items: center; gap: 9px; margin-top: 25px; color: #6e85a3; font-size: var(--text-meta); line-height: 1.75; }
+.how-hero-note > span { display: grid; place-items: center; width: 19px; height: 19px; flex-shrink: 0; border-radius: 50%; background: #e1ecfc; color: #467bc5; }
+.how-hero-visual { position: relative; min-width: 0; padding: 16px 0 100px 24px; }
+.how-workspace { position: relative; margin: 0; border: 1px solid #cbdcf4; border-radius: 15px; padding: 7px; background: #ffffffb8; box-shadow: 0 28px 65px #1b4c9520, 0 6px 15px #1b4c9508; }
+.how-workspace-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 11px 16px; color: #537aa8; }
+.how-workspace-bar > span { display: flex; align-items: center; gap: 8px; font-size: var(--text-eyebrow); font-weight: 650; letter-spacing: .045em; line-height: 1.6; }
+.how-workspace-bar i { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: #4b8af0; box-shadow: 0 0 0 4px #dceaff; }
+.how-workspace-bar > svg { width: 16px; height: 16px; color: #7f9cbe; }
+.how-workspace > a { display: block; overflow: hidden; border: 1px solid #dce5f3; border-radius: 8px; }
+.how-workspace img { display: block; width: 100%; height: auto; }
+.how-workspace figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 5px 12px; padding: 13px 7px 7px; color: #7189a8; font-size: var(--text-meta); line-height: 1.6; }
+.how-workspace figcaption a { display: inline-flex; align-items: center; gap: 9px; margin-left: auto; color: #4779bf; font-weight: 600; }
+.how-journey-card { position: absolute; left: 0; bottom: 12px; width: min(420px, calc(100% - 30px)); padding: 18px 20px; border: 1px solid #d5e3f8; border-radius: 13px; background: #fff; box-shadow: 0 13px 35px #1d4a8b14; }
+.how-journey-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; color: #617fa7; font-size: 10px; font-weight: 700; letter-spacing: .06em; line-height: 1.6; }
+.how-journey-heading > span:last-child { color: #9bb1ce; flex-shrink: 0; }
+.how-journey-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
+.how-journey-track li { display: flex; flex-direction: column; align-items: center; gap: 9px; position: relative; min-width: 0; color: #52739e; font-size: var(--text-meta); font-weight: 600; line-height: 1.6; }
+.how-journey-track li:not(:last-child)::after { content: ''; position: absolute; top: 19px; left: calc(50% + 24px); width: calc(100% - 48px); border-top: 1px dashed #bdd3f1; }
+.how-journey-track li > span { display: grid; place-items: center; width: 39px; height: 39px; color: #467bd0; background: #eff5ff; border: 1px solid #dbe8fc; border-radius: 11px; }
+.how-journey-track li:last-child > span { color: #fff; background: #3275e7; border-color: #3275e7; }
+.how-content { max-width: 1320px; margin: 0 auto; padding: 40px 5% 65px; }
+#hiring-steps { scroll-margin-top: 125px; }
+@media (max-width: 1100px) {
+  .how-hero-grid { gap: 35px; }
+  .how-hero-copy h1 { font-size: clamp(42px, 5.2vw, 60px); }
+  .how-hero-copy > p { font-size: var(--text-body); }
+  .how-hero-visual { padding-left: 10px; padding-bottom: 115px; }
+  .how-journey-card { width: calc(100% - 15px); }
+}
+@media (max-width: 820px) {
+  .how-hero { padding: 30px 6% 25px; }
+  .how-hero-grid { grid-template-columns: 1fr; gap: 26px; padding-top: 0; }
+  .how-breadcrumb { margin-bottom: 27px; }
+  .how-hero-copy { padding-bottom: 0; }
+  .how-hero-copy h1 { font-size: var(--text-display); margin: 20px 0; }
+  .how-hero-copy > p { max-width: 580px; }
+  .how-hero-visual { width: 100%; max-width: 620px; justify-self: center; padding: 5px 0 100px 16px; }
+  .how-journey-card { width: min(420px, calc(100% - 25px)); }
+  .how-content { padding: 24px 6% 45px; }
+  #hiring-steps { scroll-margin-top: 105px; }
+}
+@media (max-width: 480px) {
+  .how-hero { padding-top: 25px; }
+  .how-hero-actions { align-items: stretch; flex-direction: column; gap: 10px; }
+  .how-hero-actions .button { justify-content: space-between; }
+  .how-explore { align-self: center; }
+  .how-hero-note { margin-top: 17px; }
+  .how-hero-visual { padding-left: 7px; padding-bottom: 108px; }
+  .how-workspace { padding: 5px; border-radius: 11px; }
+  .how-workspace-bar { padding: 9px 7px 13px; }
+  .how-workspace-bar > span { font-size: 10px; }
+  .how-journey-card { width: calc(100% - 13px); bottom: 0; padding: 16px 12px; }
+  .how-journey-heading { gap: 7px; letter-spacing: .02em; font-size: 9px; }
+  .how-journey-track li { font-size: 10px; }
+  .how-journey-track li > span { width: 34px; height: 34px; border-radius: 9px; }
+  .how-journey-track li:not(:last-child)::after { top: 17px; left: calc(50% + 20px); width: calc(100% - 40px); }
+}
