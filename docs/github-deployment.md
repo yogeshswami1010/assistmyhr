@@ -47,8 +47,8 @@ and include a honeypot field. Server-side validation rejects malformed submissio
 `/pricing` now displays the single-plan marketing page instead of redirecting
 to registration. Its generated Blade content comes from `pricing.html` in the
 preview folder and uses `layouts.marketing-page` with the shared header/footer.
-The approved rates are $75 per user/month or $600 per user/year (equivalent to
-$50/month, saving $300/year versus monthly billing). The selector compares these
+The approved rates are $75 per user/month or $720 per user/year (equivalent to
+$60/month, saving $180/year versus monthly billing). The selector compares these
 rates; trial signup and existing manual subscription management are unchanged.
 No payment processor, stored plans, tenant limits or active subscriptions are
 modified by this page. The public route retains the SaaS-enabled check.

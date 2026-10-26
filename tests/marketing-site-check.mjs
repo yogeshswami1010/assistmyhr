@@ -69,7 +69,7 @@ const pricingIds = [...pricingView.matchAll(/\bid="([^"]+)"/g)].map(match => mat
 for (const match of pricingView.matchAll(/href="#([^"]+)"/g)) assert(pricingIds.includes(match[1]), 'Unknown local pricing feature target: ' + match[1]);
 assert(!pricingView.includes('href="/#pricing-feature'), 'Feature navigation should stay on the pricing page');
 assert(pricingView.includes('$75') && pricingView.includes('per user / month'));
-assert(pricingView.includes('$600') && pricingView.includes('per user / year'));
+assert(pricingView.includes('$720') && pricingView.includes('per user / year'));
 const pricingLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-page.blade.php'), 'utf8');
 for (const contract of ["@include('marketing.header')", "@include('marketing.footer')", "@include('marketing.styles')", "@stack('styles')", "@stack('scripts')"]) assert(pricingLayout.includes(contract));
 
@@ -80,7 +80,7 @@ const pricingPlan = { dataset: { billing: 'monthly' }, querySelector: () => bill
 vm.runInNewContext(pricingScript, { document: { querySelectorAll: () => [pricingPlan] } });
 billingOptions[0].checked = false; billingOptions[1].checked = true; billingOptions[1].change();
 assert.equal(pricingPlan.dataset.billing, 'annual');
-assert.equal(billingSummary.textContent, 'Annual billing: $600 per user, billed once a year ($50/month). Save $300 per user each year.');
+assert.equal(billingSummary.textContent, 'Annual billing: $720 per user, billed once a year ($60/month). Save $180 per user each year.');
 billingOptions[0].change(); // An unchecked option must not change the comparison.
 assert.equal(pricingPlan.dataset.billing, 'annual');
 billingOptions[0].checked = true; billingOptions[1].checked = false; billingOptions[0].change();
