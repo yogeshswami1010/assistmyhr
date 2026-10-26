@@ -46,7 +46,8 @@ No payment processor, stored plans, tenant limits or active subscriptions are
 modified by this page. The public route retains the SaaS-enabled check.
 Below the plan, Pricing includes the supplied Product Features overview, ten
 categories, all feature checklist items and their key benefits. Category links
-scroll within the page; the layout uses two columns on desktop and one on mobile.
+scroll within the page. Candidate Management and AI use wide blue highlight
+cards; the other categories use two columns on desktop. All cards stack on mobile.
 This is a marketing content update, rather than implementation of the listed tools.
 The pricing page advertises a 30-day free trial with no credit card required.
 Before offering this publicly, set **Trial length in days** to **30** under
