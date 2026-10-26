@@ -1,0 +1,73 @@
+/* Shared type scale for every page in the standalone preview. */
+:root {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --text-display: clamp(2.75rem, 4.7vw, 4.25rem);
+  --text-section: clamp(1.875rem, 3vw, 2.625rem);
+  --text-subsection: clamp(1.5rem, 2.4vw, 2.125rem);
+  --text-feature: 1.625rem;
+  --text-card: 1.25rem;
+  --text-lead: 1.125rem;
+  --text-body: 1rem;
+  --text-secondary: .9375rem;
+  --text-nav: 1rem;
+  --text-button: .875rem;
+  --text-label: .875rem;
+  --text-input: 1rem;
+  --text-eyebrow: .75rem;
+  --text-meta: .75rem;
+}
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font-family: inherit; }
+
+/* Give enlarged labels and copy room to wrap without changing the artwork. */
+.tool-caption { min-height: 44px; letter-spacing: .075em; color: #42638f; }
+.tool-caption > span:last-child { min-width: 0; }
+.platform-kicker, .platform-number, .why-eyebrow, .footer-eyebrow { letter-spacing: .1em; }
+.hero-visual-label, .hero-bottom-line > span { letter-spacing: .08em; }
+.hero-announcement { flex-wrap: wrap; row-gap: 8px; }
+.hero-announcement > span:first-child { flex-shrink: 0; }
+.hero-announcement > span:nth-child(2) { flex: 1 1 130px; min-width: 0; }
+.hero-announcement > svg { margin-left: auto; }
+.hero-modern .hero-copy > .hero-description { max-width: 410px; }
+.hero-modern .hero-visual { padding-bottom: 110px; }
+.hero-floating-note > div { min-width: 0; }
+.hero-note-icon, .hero-note-check { flex-shrink: 0; }
+.product-screenshot figcaption { flex-wrap: wrap; }
+.product-screenshot figcaption > a { margin-left: auto; }
+.platform-tabs button { line-height: 1.5; }
+.platform-tool h3 { min-height: 2.5em; }
+.candidate > div { min-width: 0; }
+.candidate em { flex-shrink: 0; }
+.candidate small { overflow-wrap: anywhere; }
+.form-grid > label { min-width: 0; }
+.form-options { flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 820px) {
+  :root { --text-display: clamp(2.5rem, 7.6vw, 4rem); }
+}
+@media (max-width: 720px) {
+  :root {
+    --text-section: clamp(1.75rem, 6vw, 2rem);
+    --text-subsection: 1.75rem;
+    --text-feature: 1.5rem;
+    --text-lead: 1rem;
+    --text-body: .9375rem;
+  }
+  .hero-bottom-line { flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+  .hero-bottom-line > span { max-width: none; }
+  .hero-modern .hero-visual { padding-bottom: 120px; }
+  .platform-tabs button { padding-inline: 7px; }
+  .platform-tool h3 { min-height: 0; }
+  .product-screenshot figcaption { gap: 8px 12px; }
+}
+@media (max-width: 480px) {
+  :root { --text-display: clamp(2.25rem, 10vw, 2.75rem); }
+  .hero-modern .hero-actions { flex-direction: column; gap: 12px; }
+  .hero-modern .hero-actions > .button { width: 100%; max-width: 320px; }
+  .hero-floating-note { max-width: calc(100% - 12px); }
+}

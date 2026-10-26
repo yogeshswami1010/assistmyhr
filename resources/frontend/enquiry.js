@@ -1,0 +1,49 @@
+// The existing contact.php service accepts JSON and validates all fields server-side.
+const contactForm = document.getElementById('contact-form');
+contactForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = contactForm.querySelector('button[type="submit"]');
+  if (button.disabled || !contactForm.reportValidity()) return;
+
+  const status = contactForm.querySelector('[role="status"]');
+  const show = (message, state) => {
+    status.textContent = message;
+    status.dataset.state = state;
+  };
+  const payload = Object.fromEntries(new FormData(contactForm));
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Sending…';
+  contactForm.setAttribute('aria-busy', 'true');
+  show('Sending your enquiry…', 'pending');
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(contactForm.action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload),
+      credentials: 'same-origin',
+      signal: controller.signal,
+    });
+    const result = await response.json();
+    if (!response.ok || result.success !== true) {
+      throw new Error(result.message || 'Unable to send your enquiry. Please try again.');
+    }
+    show(result.message || 'Thank you! Your enquiry has been submitted.', 'success');
+    contactForm.reset();
+  } catch (error) {
+    const message = error.name === 'AbortError'
+      ? 'The request timed out. Delivery could not be confirmed; please email assistmyday@gmail.com before submitting again.'
+      : error instanceof SyntaxError || error instanceof TypeError
+        ? 'Unable to reach the contact service. Your message is still in the form. Please try again or email assistmyday@gmail.com.'
+        : error.message;
+    show(message, 'error');
+  } finally {
+    clearTimeout(timeout);
+    button.disabled = false;
+    button.textContent = originalLabel;
+    contactForm.removeAttribute('aria-busy');
+  }
+});

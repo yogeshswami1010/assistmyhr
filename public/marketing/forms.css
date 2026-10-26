@@ -1,0 +1,3 @@
+.contact-honeypot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.form-status[data-state="error"]{color:#b2364c}.form-status[data-state="success"]{color:#21754c}
+.form-card button:disabled{opacity:.65;cursor:wait;transform:none}.noscript-note{max-width:1296px;margin:20px auto;padding:20px;color:#16365e;background:#eef4ff;border-radius:8px}
