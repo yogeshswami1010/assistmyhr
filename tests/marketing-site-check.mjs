@@ -62,7 +62,10 @@ assert.equal((html.match(/data-pricing-plan/g) || []).length, 1, 'Show one plan'
 assert(html.includes('href="/pricing"'));
 assert(pricingView.includes('class="pricing-page" id="pricing"') && !pricingView.includes(' hidden>'));
 assert(pricingView.includes('href="/register"') && pricingView.includes('href="/#request-demo"'));
-assert(pricingView.includes('href="/#why-features"'));
+assert(pricingView.includes('href="#pricing-features"'));
+const pricingIds = [...pricingView.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+for (const match of pricingView.matchAll(/href="#([^"]+)"/g)) assert(pricingIds.includes(match[1]), 'Unknown local pricing feature target: ' + match[1]);
+assert(!pricingView.includes('href="/#pricing-feature'), 'Feature navigation should stay on the pricing page');
 assert(pricingView.includes('$75') && pricingView.includes('per user / month'));
 assert(pricingView.includes('$600') && pricingView.includes('per user / year'));
 const pricingLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-page.blade.php'), 'utf8');
@@ -198,7 +201,7 @@ function routeHarness(hash) {
     const view = makeElement(id); view.classList.values.add('view'); view.closest = () => view; return view;
   });
   const targets = new Map(views.map(view => [view.id, view]));
-  for (const [id, owner] of [['why-features', 'why-choose-us'], ['why-ai', 'why-choose-us'], ['why-communications', 'why-choose-us'], ['ai', 'home'], ['hiring-steps', 'home'], ['home-hiring', 'home'], ['platform-overview', 'home']]) {
+  for (const [id, owner] of [['why-features', 'why-choose-us'], ['why-ai', 'why-choose-us'], ['why-communications', 'why-choose-us'], ['ai', 'home'], ['hiring-steps', 'home'], ['home-hiring', 'home'], ['platform-overview', 'home'], ['pricing-features', 'pricing'], ['pricing-feature-ai', 'pricing']]) {
     const target = makeElement(id); target.closest = () => targets.get(owner); targets.set(id, target);
   }
   const header = makeElement('header'), toggle = makeElement('menu'), body = makeElement('body');
@@ -215,13 +218,14 @@ function routeHarness(hash) {
   });
   return { visible: views.filter(view => !view.hidden).map(view => view.id), redirect, title: document.title, scrolled };
 }
-for (const [hash, expected] of [['#home', 'home'], ['#why-choose-us', 'why-choose-us'], ['#why-ai', 'why-choose-us'], ['#features', 'why-choose-us'], ['#ai', 'home'], ['#how', 'home'], ['#how-it-works', 'home'], ['#hiring-steps', 'home'], ['#home-hiring', 'home'], ['#pricing', 'pricing'], ['#request-demo', 'request-demo'], ['#contact', 'contact']]) {
+for (const [hash, expected] of [['#home', 'home'], ['#why-choose-us', 'why-choose-us'], ['#why-ai', 'why-choose-us'], ['#features', 'why-choose-us'], ['#ai', 'home'], ['#how', 'home'], ['#how-it-works', 'home'], ['#hiring-steps', 'home'], ['#home-hiring', 'home'], ['#pricing', 'pricing'], ['#pricing-features', 'pricing'], ['#pricing-feature-ai', 'pricing'], ['#request-demo', 'request-demo'], ['#contact', 'contact']]) {
   assert.deepEqual(routeHarness(hash).visible, [expected], `Page navigation ${hash}`);
 }
 assert.equal(routeHarness('#request-demo').title, 'AssistMyHR – Request a demo');
 assert.equal(routeHarness('#pricing').title, 'AssistMyHR – Pricing');
 for (const hash of ['#how', '#how-it-works', '#hiring-steps']) assert.deepEqual(routeHarness(hash).scrolled, ['hiring-steps']);
 assert.deepEqual(routeHarness('#ai').scrolled, ['ai']);
+for (const id of ['pricing-features', 'pricing-feature-ai']) assert.deepEqual(routeHarness('#' + id).scrolled, [id]);
 assert.equal(routeHarness('#how-it-works').title, 'AssistMyHR – Applicant Tracking System');
 assert.equal(routeHarness('#signin').redirect, '/login');
 assert.equal(routeHarness('#signup').redirect, '/register');

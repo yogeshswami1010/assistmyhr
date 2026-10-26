@@ -5,7 +5,7 @@
 @section('body-class', 'marketing-pricing')
 @push('styles')
 <link rel="canonical" href="https://assistmyhr.com/pricing">
-<link rel="stylesheet" href="/marketing/pricing.css?v=8a5b42dc7dc6">
+<link rel="stylesheet" href="/marketing/pricing.css?v=c0f5d9b680d2">
 @endpush
 @section('content')
 <section class="pricing-page" id="pricing" aria-labelledby="pricing-hero-title">
@@ -22,7 +22,7 @@
         <div class="pricing-orbit" aria-hidden="true"></div>
         <figure class="pricing-product">
           <div class="pricing-product-bar"><span><i></i><i></i><i></i></span><span>YOUR CONNECTED WORKSPACE</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></div>
-          <a href="/marketing/assets/dashboard-screenshot.png?v=8a5b42dc7dc6" target="_blank" rel="noopener" aria-label="View the AssistMyHR dashboard at full size (opens in a new tab)"><img src="/marketing/assets/dashboard-screenshot.png?v=8a5b42dc7dc6" width="1921" height="866" loading="lazy" decoding="async" alt="AssistMyHR dashboard with hiring statistics, candidate totals, team members and a task list."></a>
+          <a href="/marketing/assets/dashboard-screenshot.png?v=c0f5d9b680d2" target="_blank" rel="noopener" aria-label="View the AssistMyHR dashboard at full size (opens in a new tab)"><img src="/marketing/assets/dashboard-screenshot.png?v=c0f5d9b680d2" width="1921" height="866" loading="lazy" decoding="async" alt="AssistMyHR dashboard with hiring statistics, candidate totals, team members and a task list."></a>
           <figcaption>Your jobs, candidates and team. All together.</figcaption>
         </figure>
         <div class="pricing-visual-note"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"/></svg></span><div><strong>More room for great hires.</strong><small>One plan. Every hiring tool.</small></div></div>
@@ -50,10 +50,174 @@
       <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7l8-4Zm-4 9 3 3 5-6"/></svg></span><div><h3>One workspace</h3><p>Keep your hiring connected.</p></div></article>
       <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3M6 12H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h2v-7Zm12 0h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2v-7Zm0 7a3 3 0 0 1-3 3h-3"/></svg></span><div><h3>Help getting started</h3><p>Setup and onboarding support.</p></div></article>
     </div>
-    <a class="pricing-feature-link" href="/#why-features">Explore the features in your plan <span aria-hidden="true">→</span></a>
+    <a class="pricing-feature-link" href="#pricing-features">Explore the features in your plan <span aria-hidden="true">→</span></a>
+    <div class="pricing-feature-section" id="pricing-features" aria-labelledby="pricing-features-title">
+      <div class="pricing-feature-intro">
+        <div><span class="pricing-eyebrow">ASSIST MY HR — PRODUCT FEATURES</span><h2 id="pricing-features-title">Smarter Recruiting.<br><span>Simplified Hiring.</span></h2><p class="pricing-feature-lead">One powerful platform to manage candidates, jobs, clients, and recruitment workflows.</p></div>
+        <div class="pricing-feature-overview"><p>Assist My HR is an Applicant Tracking System designed to help recruitment agencies, staffing companies, and hiring teams streamline their recruitment operations.</p><p>From resume management and AI-powered candidate matching to interview scheduling, client submissions, and placement tracking, Assist My HR brings essential recruitment activities together in one platform.</p><span class="pricing-feature-count"><span aria-hidden="true">✓</span> 10 feature categories. One complete plan.</span></div>
+      </div>
+      <nav class="pricing-feature-nav" aria-label="Browse product feature categories">
+        <a href="#pricing-feature-candidates">Candidates</a>
+        <a href="#pricing-feature-jobs">Jobs</a>
+        <a href="#pricing-feature-workflow">Hiring workflow</a>
+        <a href="#pricing-feature-clients">Clients</a>
+        <a href="#pricing-feature-communication">Communication</a>
+        <a href="#pricing-feature-ai">AI recruitment</a>
+        <a href="#pricing-feature-reports">Reports</a>
+        <a href="#pricing-feature-team">Team &amp; access</a>
+        <a href="#pricing-feature-privacy">Data &amp; privacy</a>
+        <a href="#pricing-feature-support">Plans &amp; support</a>
+      </nav>
+      <div class="pricing-feature-grid">
+        <article class="pricing-feature-card" id="pricing-feature-candidates" aria-labelledby="pricing-feature-candidates-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m5 10v-3a6 6 0 0 0-3-5"/></svg></span><span class="pricing-feature-number">01 / 10</span></div>
+          <h3 id="pricing-feature-candidates-title">Candidate Management</h3>
+          <p class="pricing-feature-description">Build, organize, and manage your candidate database with ease.</p>
+          <ul class="pricing-feature-list">
+            <li>Candidate profile creation</li>
+            <li>Centralized candidate database</li>
+            <li>Resume/CV upload and storage</li>
+            <li>Resume parsing</li>
+            <li>Candidate search and filters</li>
+            <li>Candidate notes and comments</li>
+            <li>Duplicate candidate detection</li>
+            <li>Candidate activity history</li>
+            <li>Candidate status tracking</li>
+            <li>Bulk candidate upload</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Keep candidate information organized, searchable, and accessible to authorized team members.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-jobs" aria-labelledby="pricing-feature-jobs-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M3 12a20 20 0 0 0 18 0m-9-1v3"/></svg></span><span class="pricing-feature-number">02 / 10</span></div>
+          <h3 id="pricing-feature-jobs-title">Job Management</h3>
+          <p class="pricing-feature-description">Manage vacancies and track recruitment requirements from one place.</p>
+          <ul class="pricing-feature-list">
+            <li>Job creation and management</li>
+            <li>Active and closed job tracking</li>
+            <li>Job posting to career page</li>
+            <li>Job board integrations</li>
+            <li>Multiple job locations</li>
+            <li>Job status and priority tracking</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Organize open positions and manage recruitment activity across multiple job requirements.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-workflow" aria-labelledby="pricing-feature-workflow-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="2"/><rect x="15" y="15" width="6" height="6" rx="2"/><path d="M9 6h6a3 3 0 0 1 3 3v6m-3-3 3 3 3-3M6 9v12"/></svg></span><span class="pricing-feature-number">03 / 10</span></div>
+          <h3 id="pricing-feature-workflow-title">Recruitment Pipeline &amp; Hiring Workflow</h3>
+          <p class="pricing-feature-description">Move candidates through the hiring process with greater visibility and control.</p>
+          <ul class="pricing-feature-list">
+            <li>Customizable hiring stages</li>
+            <li>Drag-and-drop recruitment pipeline</li>
+            <li>Candidate-to-job association</li>
+            <li>Interview scheduling</li>
+            <li>Candidate shortlisting</li>
+            <li>Candidate submission to clients</li>
+            <li>Placement tracking</li>
+            <li>Candidate rejection tracking</li>
+            <li>Task management and reminders</li>
+            <li>Recruitment activity timeline</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Track candidate progress from initial screening through placement while keeping recruitment tasks organized.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-clients" aria-labelledby="pricing-feature-clients-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16M17 9h3a1 1 0 0 1 1 1v11H2M8 7h5M8 11h5m-5 4h5m-4 6v-3h3v3"/></svg></span><span class="pricing-feature-number">04 / 10</span></div>
+          <h3 id="pricing-feature-clients-title">Client Relationship Management</h3>
+          <p class="pricing-feature-description">Keep client communication and candidate submissions organized.</p>
+          <ul class="pricing-feature-list">
+            <li>Client account notes</li>
+            <li>Client submission tracking</li>
+            <li>Client feedback tracking</li>
+            <li>Client communication history</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Maintain visibility into client interactions, submitted candidates, and hiring feedback.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-communication" aria-labelledby="pricing-feature-communication-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H8l-5 3V11a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/><path d="M7 9h10M7 13h6"/></svg></span><span class="pricing-feature-number">05 / 10</span></div>
+          <h3 id="pricing-feature-communication-title">Email, SMS &amp; Communication</h3>
+          <p class="pricing-feature-description">Communicate with candidates and clients without constantly switching between applications.</p>
+          <ul class="pricing-feature-list">
+            <li>Gmail and Outlook email integration</li>
+            <li>Send emails directly from the ATS</li>
+            <li>Email templates</li>
+            <li>Bulk email campaigns</li>
+            <li>Candidate email history</li>
+            <li>Interview invitation emails</li>
+            <li>SMS integration</li>
+            <li>Calendar synchronization</li>
+            <li>Email open and click tracking</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Simplify recruiter communication and keep relevant correspondence connected to recruitment workflows.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-ai" aria-labelledby="pricing-feature-ai-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Zm7-1v4m-2-2h4M3 18v4m-2-2h4"/></svg></span><span class="pricing-feature-number">06 / 10</span></div>
+          <h3 id="pricing-feature-ai-title">AI-Powered Recruitment</h3>
+          <p class="pricing-feature-description">Use intelligent tools to accelerate candidate discovery and evaluation.</p>
+          <ul class="pricing-feature-list">
+            <li>AI resume parsing</li>
+            <li>AI candidate matching</li>
+            <li>AI candidate ranking</li>
+            <li>AI-powered candidate search</li>
+            <li>Candidate recommendations</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Help recruiters identify potentially relevant candidates more efficiently while retaining human oversight of hiring decisions.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-reports" aria-labelledby="pricing-feature-reports-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v18h17M8 16v-5m5 5V7m5 9v-7"/></svg></span><span class="pricing-feature-number">07 / 10</span></div>
+          <h3 id="pricing-feature-reports-title">Recruitment Reports &amp; Analytics</h3>
+          <p class="pricing-feature-description">Gain visibility into recruiter activity and hiring performance.</p>
+          <ul class="pricing-feature-list">
+            <li>Recruiter activity dashboard</li>
+            <li>Job pipeline dashboard</li>
+            <li>Placement performance reporting</li>
+            <li>Data export to Excel/CSV</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Monitor recruitment operations and export data for further reporting and analysis.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-team" aria-labelledby="pricing-feature-team-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M2 20v-2a7 7 0 0 1 10-6m5 0 5 2v3c0 3-5 5-5 5s-5-2-5-5v-3l5-2Zm-2 5 1.5 1.5L19 16"/></svg></span><span class="pricing-feature-number">08 / 10</span></div>
+          <h3 id="pricing-feature-team-title">Team Management &amp; Administration</h3>
+          <p class="pricing-feature-description">Support collaboration while managing user access.</p>
+          <ul class="pricing-feature-list">
+            <li>Multiple recruiter accounts</li>
+            <li>Role-based access permissions</li>
+            <li>Admin dashboard</li>
+            <li>Team management</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Manage recruitment teams and assign appropriate access permissions.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-privacy" aria-labelledby="pricing-feature-privacy-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7l8-4Zm-4 9 3 3 5-6"/></svg></span><span class="pricing-feature-number">09 / 10</span></div>
+          <h3 id="pricing-feature-privacy-title">Data Protection &amp; Privacy Controls</h3>
+          <p class="pricing-feature-description">Manage recruitment information with privacy and security in mind.</p>
+          <ul class="pricing-feature-list">
+            <li>Data encryption</li>
+            <li>Candidate data deletion</li>
+            <li>Data retention controls</li>
+            <li>Backup and recovery</li>
+            <li>Privacy request management</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Support responsible candidate-data management through built-in security and privacy controls.</p>
+        </article>
+        <article class="pricing-feature-card" id="pricing-feature-support" aria-labelledby="pricing-feature-support-title">
+          <div class="pricing-feature-card-top"><span class="pricing-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3M6 12H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h2v-7Zm12 0h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2v-7Zm0 7a3 3 0 0 1-3 3h-3"/></svg></span><span class="pricing-feature-number">10 / 10</span></div>
+          <h3 id="pricing-feature-support-title">Subscription Management &amp; Customer Support</h3>
+          <p class="pricing-feature-description">Flexible subscription options and support for your recruitment operations.</p>
+          <ul class="pricing-feature-list">
+            <li>Monthly subscription billing</li>
+            <li>Annual subscription billing</li>
+            <li>Free trial</li>
+            <li>Help center</li>
+            <li>Live chat support</li>
+            <li>Customer support ticketing</li>
+            <li>Product updates and release notes</li>
+          </ul>
+          <p class="pricing-feature-benefit"><span>Key benefit</span>Choose a subscription arrangement that suits your organization and access support resources when needed.</p>
+        </article>
+      </div>
+    </div>
   </div>
 </section>
 @endsection
 @push('scripts')
-<script defer src="/marketing/pricing.js?v=8a5b42dc7dc6"></script>
+<script defer src="/marketing/pricing.js?v=c0f5d9b680d2"></script>
 @endpush
