@@ -38,13 +38,17 @@ const siteScript = navigation + '\n' + enquiry + '\n' + previewScript.slice(foot
 const chromeScript = previewScript.slice(0, previewScript.indexOf('function navigate()'))
   .replace("const views = [...document.querySelectorAll('.view')];\n", '')
   + '\n' + previewScript.slice(footerStart)
-  + "\ndocument.querySelector('.header-login')?.classList.add('active');\ndocument.querySelector('.header-login')?.setAttribute('aria-current', 'page');\n";
+  + `\nconst accountLink = document.body.classList.contains('marketing-register') ? '.header-trial' : '.header-login';
+document.querySelectorAll(accountLink).forEach(link => {
+  link.classList.add('active');
+  link.setAttribute('aria-current', 'page');
+});\n`;
 const tabScript = read('platform-section.js');
 const formStyles = `.contact-honeypot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .form-status[data-state="error"]{color:#b2364c}.form-status[data-state="success"]{color:#21754c}
 .form-card button:disabled{opacity:.65;cursor:wait;transform:none}.noscript-note{max-width:1296px;margin:20px auto;padding:20px;color:#16365e;background:#eef4ff;border-radius:8px}
 `;
-const hash = crypto.createHash('sha256').update(html).update(siteScript).update(tabScript).update(formStyles);
+const hash = crypto.createHash('sha256').update(html).update(siteScript).update(chromeScript).update(tabScript).update(formStyles);
 styles.forEach(file => hash.update(read(file)));
 assets.forEach(file => hash.update(fs.readFileSync(path.join(preview, file))));
 const version = hash.digest('hex').slice(0, 12);
@@ -95,7 +99,7 @@ fs.writeFileSync(path.join(destination, 'chrome.js'), chromeScript);
 fs.writeFileSync(path.join(destination, 'platform-section.js'), tabScript);
 fs.writeFileSync(path.join(destination, 'forms.css'), formStyles);
 fs.writeFileSync(path.join(root, 'resources/frontend/index.html'), html);
-// Reuse the same navigation and footer on Laravel's real login page.
+// Reuse the same navigation and footer on Laravel's real login and registration pages.
 const partials = path.join(root, 'resources/views/marketing');
 fs.mkdirSync(partials, { recursive: true });
 const rootLinks = markup => markup.replaceAll('href="#', 'href="/#');

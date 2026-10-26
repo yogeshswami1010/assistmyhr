@@ -8,7 +8,8 @@ Open `index.html` directly in a browser. No installation or build needed.
 - `header.css`: wider shared floating header (up to 1600px), centered desktop navigation with shared 16px menu text, and a responsive mobile menu
 - `footer.css`: shared blue footer with a demo call to action, platform and account navigation, the existing contact email, and responsive columns
 - `demo.css` and `request-demo.html`: dedicated modern walkthrough request page
-- `auth-shell.css`: shared website chrome and layout around the real Laravel login form
+- `contact.css` and `contact.html`: general enquiries page with email/phone cards, a guided-demo link and an accessible responsive form
+- `auth-shell.css`: shared website chrome and responsive layouts around the real Laravel login and registration forms
 - `hero.css`: modern homepage hero with blue typography, a subtle grid backdrop, a dashboard screenshot rotated toward the left on its vertical axis and responsive layouts. The screenshot has no diagonal rotation. Its background spans the full viewport width and continues behind the homepage header; the content remains centered.
 - `preview.js`: preview navigation and local form feedback
 - `platform-section.html`: reusable markup for the new illustrated hiring platform section (also included in `index.html`)
@@ -23,7 +24,7 @@ The hero uses the supplied dashboard screenshot (`assets/dashboard-screenshot.pn
 
 Uses the Plus Jakarta Sans font with `ui-sans-serif, system-ui, sans-serif` fallbacks. Google Fonts supplies the font, so an internet connection is needed for the custom font. The header, footer, sign-in page and other branding placements use the supplied `assets/assistmyhr-logo.webp`, copied unchanged from the uploaded logo. A white background keeps its original dark lettering readable in dark sections. The shared header and footer appear on every preview page.
 
-The footer links use existing local views. Its Back to top button scrolls the current page without changing the selected view and respects reduced-motion preferences. The email link uses the contact address already present in the preview. Request a demo opens a dedicated local page. The production build connects that page's form to the existing enquiry endpoint with the Live demo topic. The build also generates Laravel header/footer/style includes for the real login page, whose authentication and recovery forms remain server-handled.
+The footer links use existing local views. Its Back to top button scrolls the current page without changing the selected view and respects reduced-motion preferences. The email link uses the contact address already present in the preview. Request a demo opens a dedicated local page. The production build connects that page's form to the existing enquiry endpoint with the Live demo topic. The build also generates Laravel header/footer/style includes for the real login and registration pages, whose authentication, recovery and signup forms remain server-handled.
 
 This folder remains the standalone editing preview; its forms do not send data. The production homepage is generated from it into `resources/frontend/index.html` and `public/marketing/` using `node scripts/build-marketing-site.mjs`. The hosted copy links to the real login and registration routes and submits enquiries to the existing contact service. Commit the generated files along with design changes, then deploy through the repository's normal Git workflow. Architectural illustrations replace the photographic backgrounds in the original reference.
 

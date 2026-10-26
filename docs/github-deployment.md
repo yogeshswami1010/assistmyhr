@@ -27,6 +27,14 @@ and asset includes under `resources/views/marketing/`. Run the marketing build
 after editing shared navigation so the homepage and login stay in sync. Only the
 login view's layout selection changes; its POST forms, CSRF, workspace context,
 CAPTCHA, password recovery and remember-device controls are preserved.
+The SaaS registration view uses `layouts.marketing-register` and the same shared
+header/footer. Its existing signup fields, password controls, CSRF, errors and
+platform availability rules are preserved. The shared account navigation marks
+Log in or Start a free trial as current on the corresponding page.
+
+The redesigned Contact us view includes direct email/phone links, a demo link
+and a responsive enquiry form. It retains the existing contact service field
+limits and supported topics; no mail configuration changes are needed.
 
 For this frontend-only replacement, update the VPS with:
 

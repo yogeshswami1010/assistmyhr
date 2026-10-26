@@ -33,5 +33,8 @@ document.querySelector('.footer-top').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' });
 });
 
-document.querySelector('.header-login')?.classList.add('active');
-document.querySelector('.header-login')?.setAttribute('aria-current', 'page');
+const accountLink = document.body.classList.contains('marketing-register') ? '.header-trial' : '.header-login';
+document.querySelectorAll(accountLink).forEach(link => {
+  link.classList.add('active');
+  link.setAttribute('aria-current', 'page');
+});

@@ -6,7 +6,7 @@
     </div>
     <div class="footer-main">
       <div class="footer-about">
-        <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=92ee5385befa" width="1600" height="438" alt="AssistMyHR"></a>
+        <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=f3bd6c3637ef" width="1600" height="438" alt="AssistMyHR"></a>
         <p>A connected workspace for your jobs, candidates and team. More time for people. Less time on the process.</p>
         <span class="footer-tagline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>Hiring, with a human touch.</span>
       </div>

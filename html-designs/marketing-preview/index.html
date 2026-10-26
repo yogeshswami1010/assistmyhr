@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>AssistMyHR · Design preview</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="platform-section.css"><link rel="stylesheet" href="header.css"><link rel="stylesheet" href="hero.css"><link rel="stylesheet" href="footer.css"><link rel="stylesheet" href="why-choose-us.css"><link rel="stylesheet" href="demo.css"><link rel="stylesheet" href="auth-shell.css"><link rel="stylesheet" href="typography.css"><script defer src="preview.js"></script><script defer src="platform-section.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>AssistMyHR · Design preview</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="platform-section.css"><link rel="stylesheet" href="header.css"><link rel="stylesheet" href="hero.css"><link rel="stylesheet" href="footer.css"><link rel="stylesheet" href="why-choose-us.css"><link rel="stylesheet" href="demo.css"><link rel="stylesheet" href="contact.css"><link rel="stylesheet" href="auth-shell.css"><link rel="stylesheet" href="typography.css"><script defer src="preview.js"></script><script defer src="platform-section.js"></script></head>
 <body class="is-home">
 <header class="site-header" data-menu-open="false">
   <div class="header-inner">
@@ -188,7 +188,51 @@
     </div>
   </div>
 </section>
-<section class="contact light view" id="contact"><div><span class="eyebrow">GET IN TOUCH</span><h2>Let’s build a faster<br>hiring process<br>together.</h2><p>Tell us about your hiring needs. Explore how a connected workspace could work for your team.</p><a class="contact-link" href="mailto:assistmyday@gmail.com"><span>✉</span> assistmyday@gmail.com</a><div class="contact-benefits"><p>✓ &nbsp; Free demo of the dashboard</p><p>✓ &nbsp; Help with setup and onboarding</p><p>✓ &nbsp; Custom requirements welcome</p></div></div><form class="form-card" id="contact-form"><h3>Send your enquiry directly to our team.</h3><div class="form-grid"><label>Full name<input required autocomplete="name" placeholder="Your name"></label><label>Email<input required type="email" autocomplete="email" placeholder="you@company.com"></label><label>Phone<input type="tel" autocomplete="tel" placeholder="+91 …"></label><label>Company<input autocomplete="organization" placeholder="Company name"></label></div><label>I’m interested in<select><option>Live demo</option><option>AI Screening</option><option>Setup & onboarding</option><option>Custom requirements</option></select></label><label>Message<textarea required rows="4" placeholder="Tell us about your hiring needs…"></textarea></label><button class="button" type="submit">Preview enquiry <span>→</span></button><p class="form-status" role="status">Preview only. Your enquiry will not be sent.</p></form><div class="contact-backdrop" aria-hidden="true"><span><img class="brand-logo" src="assets/assistmyhr-logo.webp" width="1600" height="438" alt=""></span></div></section>
+<section class="contact-page view" id="contact" aria-labelledby="contact-heading">
+  <div class="contact-inner">
+    <nav class="contact-breadcrumb" aria-label="Breadcrumb"><a href="#home">Home</a><span aria-hidden="true">/</span><span aria-current="page">Contact us</span></nav>
+    <div class="contact-grid">
+      <div class="contact-copy">
+        <span class="contact-kicker"><span aria-hidden="true"></span> LET’S CONNECT</span>
+        <h1 id="contact-heading">Good hiring starts<br>with <span>a conversation.</span></h1>
+        <p>Tell us what your team needs. Whether you’re exploring AssistMyHR, getting started or planning your next step, we’re here to help.</p>
+        <div class="contact-channels" aria-label="Contact details">
+          <a class="contact-channel" href="mailto:assistmyday@gmail.com">
+            <span class="contact-channel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <span><small>Email our team</small><strong>assistmyday@gmail.com</strong></span><span class="contact-channel-arrow" aria-hidden="true">↗</span>
+          </a>
+          <a class="contact-channel" href="tel:+14372199151">
+            <span class="contact-channel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 3 3 5-3 3c1.4 2.7 3.3 4.6 6 6l3-3 5 3-1 4C10.6 22 2 13.4 3 4l4-1Z"/></svg></span>
+            <span><small>Give us a call</small><strong>+1 (437) 219-9151</strong></span><span class="contact-channel-arrow" aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <div class="contact-demo-note">
+          <span class="contact-demo-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4m-2-14 5 3-5 3V7Z"/></svg></span>
+          <div><h2>Prefer to see it in action?</h2><p>Explore the workspace with a guided demo.</p><a href="#request-demo">Request a demo <span aria-hidden="true">→</span></a></div>
+        </div>
+      </div>
+      <form class="form-card contact-form" id="contact-form" aria-labelledby="contact-form-heading">
+        <div class="contact-form-intro"><span class="contact-form-label">YOUR NEXT STEP</span><h2 id="contact-form-heading">How can we help?</h2><p>Share a few details and we’ll get back to you.</p></div>
+        <div class="form-grid">
+          <label for="contact-name">Full name<input id="contact-name" name="name" maxlength="150" required autocomplete="name" placeholder="Your full name"></label>
+          <label for="contact-email">Email address<input id="contact-email" name="email" maxlength="254" required type="email" autocomplete="email" placeholder="you@company.com"></label>
+          <label for="contact-company">Company <span class="contact-optional">(optional)</span><input id="contact-company" name="company" maxlength="200" autocomplete="organization" placeholder="Your company"></label>
+          <label for="contact-phone">Phone <span class="contact-optional">(optional)</span><input id="contact-phone" name="phone" maxlength="60" type="tel" autocomplete="tel" placeholder="Include country code"></label>
+        </div>
+        <label for="contact-topic">What would you like to discuss?<select id="contact-topic" name="topic"><option>Live demo</option><option>Pricing</option><option>AI CV Search</option><option>Temp Staffing</option><option>Something else</option></select></label>
+        <label for="contact-message">Your message<textarea id="contact-message" name="message" maxlength="10000" required rows="4" placeholder="Tell us about your team, your hiring needs or your question…"></textarea></label>
+        <button class="button contact-submit" type="submit">Send enquiry <span aria-hidden="true">→</span></button>
+        <p class="contact-form-note">Name, email and message are required. We’ll use these details to respond to your enquiry.</p>
+        <p class="form-status" role="status">Preview only. Your enquiry will not be sent.</p>
+      </form>
+    </div>
+    <div class="contact-help" aria-label="Ways we can help">
+      <article><span aria-hidden="true">01</span><div><h2>Find your fit</h2><p>Explore the features that support your hiring process.</p></div></article>
+      <article><span aria-hidden="true">02</span><div><h2>Get started together</h2><p>Talk through workspace setup and team onboarding.</p></div></article>
+      <article><span aria-hidden="true">03</span><div><h2>Make it work for you</h2><p>Discuss your workflows and custom requirements.</p></div></article>
+    </div>
+  </div>
+</section>
 <section class="auth view" id="signin"><div class="auth-form"><a class="brand" href="#home"><img class="brand-logo" src="assets/assistmyhr-logo.webp" width="1600" height="438" alt="AssistMyHR"></a><div><span class="eyebrow">YOUR CONNECTED WORKSPACE</span><h2>Welcome back</h2><p>Sign in to your AssistMyHR account.</p><form id="signin-form"><label>Email address<input required type="email" autocomplete="username" placeholder="you@company.com"></label><label>Password<div class="password-field"><input required type="password" autocomplete="current-password" placeholder="Enter your password"><button type="button" class="reveal" aria-label="Show password">◉</button></div></label><div class="form-options"><label><input type="checkbox"> Remember me</label><button type="button" class="text-button" id="forgot">Forgot password?</button></div><button class="button" type="submit">Sign in <span>→</span></button><p class="form-status" role="status"></p></form><p class="signup-note">New to AssistMyHR?<br><a href="#signup">Create a company account</a></p></div><small>Local design preview · No authentication connected</small></div><div class="auth-art"><div class="window-lines"></div><div class="auth-message"><h2>Hiring is human.<br>Let’s keep it that way.</h2><span class="rule"></span><p>Bring your team and talent together.</p></div></div></section>
 <section class="signup light view" id="signup"><span class="eyebrow">LET’S GET STARTED</span><h2>A better way to hire<br>starts with your team.</h2><p>This account screen is a design preview. Book a demo to explore the concept.</p><a class="button" href="#request-demo">Book a free demo →</a><a href="#signin">Already have an account? Sign in</a></section>
 </main><footer class="site-footer" aria-label="Site footer">

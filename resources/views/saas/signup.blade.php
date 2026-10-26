@@ -1,4 +1,4 @@
-@extends('saas.public-layout')
+@extends('layouts.marketing-register')
 @section('title', 'Create your ATS workspace | AssistMyHR')
 @section('content')
 <div class="signup"><aside class="signup-story"><span class="eyebrow">Your next great hire starts here</span><h1>Build your team.<br><em>Simplify your hiring.</em></h1><p>A dedicated recruitment workspace for your company, from the first application to the final offer.</p><ul class="features"><li>Organize jobs and candidates in one place</li><li>Bring your recruiting team together</li><li>Keep company data in a single workspace</li></ul><p>Start with a trial. Grow at your own pace.</p></aside><section class="signup-form" aria-labelledby="signup-title"><h2 id="signup-title">Create your ATS workspace</h2><p class="muted">Tell us a little about your company to get started.</p><form method="post" action="{{ route('register') }}">@csrf

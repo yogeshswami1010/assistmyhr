@@ -30,6 +30,52 @@ body.marketing-auth { margin: 0; color: #203b5d; background: #f5f8ff; }
 .customer-auth-content #recoverform > div:first-of-type > p { font-size: var(--text-secondary); line-height: 1.8; }
 .customer-auth-content .animate-auth-fade-up { opacity: 1; }
 .customer-auth-content #captcha_container { max-width: 100%; overflow-x: auto; }
+/* Registration uses the same public navigation without the ATS application bundle. */
+.marketing-register *, .marketing-register *::before, .marketing-register *::after { box-sizing: border-box; }
+.registration-main { padding: 35px 5% 64px; background: radial-gradient(ellipse at 100% 0, #e5efff, transparent 65%); }
+.registration-inner { max-width: 1260px; margin: 0 auto; }
+.registration-breadcrumb { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; font-size: var(--text-meta); color: #758aa6; }
+.registration-breadcrumb a { color: #426da7; }
+.marketing-register .signup { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); background: #fff; border: 1px solid #dce7f5; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 65px #163c7910; }
+.marketing-register .signup-story { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 42px; color: #d7e6fb; background: radial-gradient(ellipse at 85% 10%, #2558a955, transparent 70%), #102b53; }
+.marketing-register .eyebrow { color: #9cbfe9; font-size: var(--text-eyebrow); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; line-height: 1.8; }
+.marketing-register h1 { color: #f5f9ff; font-size: clamp(32px, 3.1vw, 43px); line-height: 1.2; letter-spacing: -1.5px; font-weight: 650; margin: 23px 0 20px; }
+.marketing-register h1 em { color: #8ebdff; font-style: normal; }
+.marketing-register .signup-story p { margin: 0; color: #aac2e1; font-size: var(--text-body); line-height: 1.85; }
+.marketing-register .features { display: grid; gap: 18px; list-style: none; padding: 27px 0; margin: 27px 0; border-block: 1px solid #b3cfff24; color: #d4e3f7; font-size: var(--text-secondary); line-height: 1.75; }
+.marketing-register .features li { display: flex; align-items: flex-start; gap: 10px; }
+.marketing-register .features li::before { content: '✓'; color: #8ebdff; }
+.marketing-register .signup-form { min-width: 0; padding: 38px 40px; }
+.marketing-register .signup-form h2 { font-size: var(--text-subsection); color: #1e426e; font-weight: 650; line-height: 1.2; letter-spacing: -.8px; margin: 0 0 12px; }
+.marketing-register .muted { color: #69809e; font-size: var(--text-secondary); line-height: 1.8; margin: 0 0 25px; }
+.marketing-register .fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.marketing-register .field { min-width: 0; margin-bottom: 18px; }
+.marketing-register .field label { display: block; margin-bottom: 8px; color: #385778; font-size: var(--text-label); font-weight: 600; line-height: 1.5; }
+.marketing-register .field input { display: block; width: 100%; min-height: 49px; padding: 12px; font-family: inherit; font-size: var(--text-input); line-height: 1.5; color: #244368; border: 1px solid #dbe5f2; border-radius: 8px; background: #fcfdff; }
+.marketing-register .field input:focus { outline: 2px solid #9dbffd; outline-offset: 1px; border-color: #83aef6; }
+.marketing-register .field input[aria-invalid="true"] { border-color: #be3452; }
+.marketing-register .hint { margin: 7px 0 0; color: #7186a1; font-size: var(--text-meta); line-height: 1.7; overflow-wrap: anywhere; }
+.marketing-register #password-hint { white-space: normal; overflow: visible; margin-bottom: 18px; }
+.marketing-register .field-error { margin: 6px 0 0; color: #b02a49; font-size: var(--text-meta); line-height: 1.7; }
+.marketing-register .signup-form .button { width: 100%; min-height: 49px; padding: 13px 18px; border: 1px solid #1d63e8; border-radius: 8px; background: #1d63e8; color: #fff; font-family: inherit; font-size: var(--text-button); font-weight: 650; gap: 12px; }
+.marketing-register .signup-form .button:hover { background: #1757ce; }
+.marketing-register .login-note { margin: 22px 0 0; color: #7186a1; text-align: center; font-size: var(--text-secondary); line-height: 1.75; }
+.marketing-register .login-note a { color: #2162c8; font-weight: 600; }
+.registration-notice { padding: 15px 20px; border: 1px solid #a8d8c1; border-radius: 10px; background: #edf9f2; color: #246147; margin-bottom: 24px; font-size: var(--text-secondary); }
+.registration-error { border-color: #efc5cf; background: #fff3f5; color: #982640; }
+@media (max-width: 1000px) {
+  .marketing-register .signup-story { padding: 30px; }
+  .marketing-register .signup-form { padding: 32px 28px; }
+  .marketing-register .fields { grid-template-columns: 1fr; gap: 0; }
+}
+@media (max-width: 820px) {
+  .registration-main { padding: 28px 6% 40px; }
+  .marketing-register .signup { grid-template-columns: 1fr; max-width: 600px; margin: 0 auto; }
+  .marketing-register .signup-story { padding: 28px; }
+  .marketing-register h1 { margin: 16px 0 12px; font-size: 32px; }
+  .marketing-register .features, .marketing-register .signup-story > p:last-child { display: none; }
+  .marketing-register .signup-form { padding: 28px 24px; }
+}
 @media (max-width: 1000px) {
   .customer-auth-story { padding: 32px; }
   .customer-auth-content { padding: 32px; }

@@ -11,12 +11,13 @@ const html = fs.readFileSync(path.join(root, 'resources/frontend/index.html'), '
 const script = fs.readFileSync(path.join(root, 'public/marketing/site.js'), 'utf8');
 new vm.Script(script, { filename: 'site.js' });
 new vm.Script(fs.readFileSync(path.join(root, 'public/marketing/platform-section.js'), 'utf8'), { filename: 'platform-section.js' });
-new vm.Script(fs.readFileSync(path.join(root, 'public/marketing/chrome.js'), 'utf8'), { filename: 'chrome.js' });
+const chromeScript = fs.readFileSync(path.join(root, 'public/marketing/chrome.js'), 'utf8');
+new vm.Script(chromeScript, { filename: 'chrome.js' });
 assert(html.includes('href="/login"') && html.includes('href="/register"'));
 assert(!/Design preview|Preview enquiry|Preview only|id="signin"|id="signup"/.test(html));
 assert(!/signin-form|Password recovery is not connected|enquiry preview is complete/.test(script));
 assert(html.includes('action="/contact.php" method="post"'));
-const form = html.match(/<form class="form-card"[\s\S]*?<\/form>/)[0];
+const form = html.match(/<form\b[^>]*id="contact-form"[^>]*>[\s\S]*?<\/form>/)[0];
 assert.deepEqual([...form.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'message', 'name', 'phone', 'topic', 'website']);
 assert.deepEqual([...form.matchAll(/<option>([^<]+)<\/option>/g)].map(match => match[1]), ['Live demo', 'Pricing', 'AI CV Search', 'Temp Staffing', 'Something else']);
 const demoForm = html.match(/<form class="form-card demo-form"[\s\S]*?<\/form>/)[0];
@@ -24,6 +25,12 @@ assert(demoForm.includes('data-enquiry-form action="/contact.php" method="post"'
 assert.deepEqual([...demoForm.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'message', 'name', 'phone', 'topic', 'website']);
 assert(demoForm.includes('type="hidden" name="topic" value="Live demo"'));
 assert(html.includes('class="demo-page view" id="request-demo"'));
+assert(html.includes('class="contact-page view" id="contact"'));
+for (const field of ['name', 'email', 'company', 'phone', 'topic', 'message']) {
+  assert(form.includes(`id="contact-${field}"`), `Contact label target missing: ${field}`);
+  assert(form.includes(`for="contact-${field}"`), `Contact label missing: ${field}`);
+}
+assert(form.includes('aria-live="polite"'));
 
 const loginView = fs.readFileSync(path.join(root, 'resources/views/auth/login.blade.php'), 'utf8');
 const loginLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-auth.blade.php'), 'utf8');
@@ -34,11 +41,57 @@ for (const contract of ["route('login')", "route('password.email')", '@csrf', 'n
 for (const contract of ["@include('marketing.header')", "@include('marketing.footer')", "@include('marketing.styles')", "@yield('content')", "@stack('scripts')", "@include('partials.ats-app-head')", 'to-recover', 'back-to-login']) {
   assert(loginLayout.includes(contract), `Login layout contract missing: ${contract}`);
 }
+const signupView = fs.readFileSync(path.join(root, 'resources/views/saas/signup.blade.php'), 'utf8');
+const signupLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-register.blade.php'), 'utf8');
+assert(signupView.startsWith("@extends('layouts.marketing-register')"));
+for (const contract of ["route('register')", '@csrf', 'name="company_name"', 'name="name"', 'name="email"', 'name="password"', 'name="password_confirmation"', 'autocomplete="new-password"', "@error('password')", "old('company_name')", 'data-password-target="password"', 'id="password-strength-bar"']) {
+  assert(signupView.includes(contract), `Registration contract missing: ${contract}`);
+}
+for (const contract of ["@include('marketing.header')", "@include('marketing.footer')", "@include('marketing.styles')", "@yield('content')", "session('status')", '$errors->any()', 'role="alert"']) {
+  assert(signupLayout.includes(contract), `Registration layout contract missing: ${contract}`);
+}
+for (const match of signupView.matchAll(/<script>([\s\S]*?)<\/script>/g)) new vm.Script(match[1], { filename: 'registration-inline.js' });
 const authParts = ['header', 'footer', 'styles'].map(part => fs.readFileSync(path.join(root, `resources/views/marketing/${part}.blade.php`), 'utf8'));
 assert(authParts[0].includes('href="/#why-choose-us"') && authParts[0].includes('href="/#request-demo"'));
 assert(authParts[1].includes('href="/#contact"'));
 assert(!authParts[2].includes('/marketing/site.js'), 'Public enquiry runtime must not intercept login forms');
 assert(authParts[2].includes('/marketing/chrome.js'));
+
+// Shared navigation must work on both account pages, with the correct active action.
+function chromeHarness(register) {
+  const element = () => ({
+    dataset: {}, attributes: {}, listeners: {}, focused: false,
+    classList: { values: new Set(), add(value) { this.values.add(value); }, contains(value) { return this.values.has(value); } },
+    setAttribute(key, value) { this.attributes[key] = value; }, getAttribute(key) { return this.attributes[key]; },
+    addEventListener(event, callback) { this.listeners[event] = callback; }, focus() { this.focused = true; }, contains() { return false; },
+  });
+  const header = element(), toggle = element(), footer = element(), login = element(), trial = [element(), element()], body = element();
+  if (register) body.classList.add('marketing-register');
+  const listeners = {};
+  vm.runInNewContext(chromeScript, {
+    document: {
+      body, querySelector: selector => ({ '.site-header': header, '.header-menu-toggle': toggle, '.footer-top': footer })[selector],
+      querySelectorAll: selector => selector === '.header-trial' ? trial : selector === '.header-login' ? [login] : [],
+      addEventListener(event, callback) { listeners[event] = callback; },
+    },
+    window: { matchMedia: () => ({ matches: false, addEventListener() {} }), scrollTo() {} },
+  });
+  return { header, toggle, login, trial, listeners };
+}
+for (const register of [false, true]) {
+  const page = chromeHarness(register);
+  assert.equal(page.login.attributes['aria-current'] === 'page', !register);
+  assert(page.trial.every(link => (link.attributes['aria-current'] === 'page') === register));
+  page.toggle.listeners.click();
+  assert.equal(page.header.dataset.menuOpen, 'true');
+  page.listeners.keydown({ key: 'Escape' });
+  assert.equal(page.header.dataset.menuOpen, 'false');
+  assert.equal(page.toggle.attributes['aria-expanded'], 'false');
+  assert(page.toggle.focused);
+  page.toggle.listeners.click();
+  page.header.listeners.click({ target: { closest: () => ({}) } });
+  assert.equal(page.header.dataset.menuOpen, 'false');
+}
 
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
 assert.equal(new Set(ids).size, ids.length, 'IDs must be unique');
@@ -205,4 +258,4 @@ try {
 } finally {
   await new Promise(resolve => server.close(resolve));
 }
-console.log('PASS: login shell and auth form contracts, dedicated demo navigation, both enquiry forms, success/error/offline/duplicate/timeout handling, section links, ARIA, CSS, original screenshots and published assets over HTTP. No enquiries sent.');
+console.log('PASS: login and registration form contracts, shared account navigation and mobile menu, demo/contact routing, both enquiry forms, success/error/offline/duplicate/timeout handling, section links, ARIA, CSS, original screenshots and published assets over HTTP. No enquiries sent.');
