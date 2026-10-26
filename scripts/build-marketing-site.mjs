@@ -124,6 +124,9 @@ fs.writeFileSync(path.join(partials, 'header.blade.php'), rootLinks(header) + '\
 fs.writeFileSync(path.join(partials, 'footer.blade.php'), rootLinks(footer) + '\n');
 const authStyles = ['header.css', 'footer.css', 'typography.css', 'auth-shell.css'];
 fs.writeFileSync(path.join(partials, 'styles.blade.php'), authStyles.map(file => `<link rel="stylesheet" href="${publicUrl(file)}">`).join('\n') + `\n<script defer src="${publicUrl('chrome.js')}"></script>\n`);
+fs.writeFileSync(path.join(partials, 'login-styles.blade.php'), `<link rel="stylesheet" href="${publicUrl('login.css')}">\n`);
+fs.writeFileSync(path.join(partials, 'login-image.blade.php'), `<img class="customer-auth-photo" src="${publicUrl('assets/login-office-dusk.webp')}" width="1122" height="1402" alt="" decoding="async">\n`);
+fs.writeFileSync(path.join(partials, 'login-brand.blade.php'), rootLinks(header.match(/<a class="brand"[^>]*>[\s\S]*?<\/a>/)[0]) + '\n');
 // The public /pricing route uses the same approved content, with real auth and root links.
 const pricingSection = html.match(/<section class="pricing-page view" id="pricing"[\s\S]*?<\/section>/)?.[0];
 if (!pricingSection) throw new Error('Pricing content not found.');

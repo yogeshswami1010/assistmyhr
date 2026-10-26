@@ -15,29 +15,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('marketing.styles')
+    @include('marketing.login-styles')
     <noscript><style>.site-header nav{display:flex}.header-menu-toggle,.footer-top{display:none}</style></noscript>
 </head>
 <body class="marketing-auth marketing-login is-light font-jakarta antialiased">
     @include('marketing.header')
     <main class="customer-auth-main">
         <div class="customer-auth-shell">
-            <aside class="customer-auth-story" aria-labelledby="auth-story-title">
-                <span class="customer-auth-eyebrow">{{ __('YOUR CONNECTED WORKSPACE') }}</span>
-                <h1 id="auth-story-title">{{ __('Your team.') }}<br> <span>{{ __('Your next great hire.') }}</span></h1>
-                <p>{{ __('Bring your jobs, candidates and conversations together. Pick up where you left off, and keep your hiring moving.') }}</p>
-                <ul class="customer-auth-benefits">
-                    <li>{{ __('A clearer candidate pipeline') }}</li>
-                    <li>{{ __('AI candidate search and recruitment reporting') }}</li>
-                    <li>{{ __('Your team, on the same page') }}</li>
-                </ul>
-                <a href="{{ url('/') }}#request-demo">{{ __('New to AssistMyHR? See it in a demo') }} <span aria-hidden="true">↗</span></a>
-            </aside>
             <div class="customer-auth-content">
-                @if(config('saas.enabled') && app(\App\Saas\TenantContext::class)->current())
-                    <div class="customer-auth-workspace">{{ __('Signing in to your company workspace') }}<strong>{{ $setting->company_name }}</strong></div>
-                @endif
-                @yield('content')
+                <div class="customer-auth-topline">
+                    @include('marketing.login-brand')
+                    <a href="mailto:support@assistmyhr.com">{{ __('Need help?') }}</a>
+                </div>
+                <div class="customer-auth-form-area">
+                    @if(config('saas.enabled') && app(\App\Saas\TenantContext::class)->current())
+                        <div class="customer-auth-workspace">{{ __('Signing in to your company workspace') }}<strong>{{ $setting->company_name }}</strong></div>
+                    @endif
+                    @yield('content')
+                </div>
+                <a class="customer-auth-privacy" href="{{ route('privacy-policy') }}">{{ __('Privacy policy') }}</a>
             </div>
+            <aside class="customer-auth-story" aria-labelledby="auth-story-title">
+                @include('marketing.login-image')
+                <div class="customer-auth-story-copy">
+                    <span class="customer-auth-eyebrow">{{ __('HIRING IS HUMAN') }}</span>
+                    <h2 id="auth-story-title">{{ __('Let’s keep it') }}<br>{{ __('that way.') }}</h2>
+                    <span class="customer-auth-rule" aria-hidden="true"></span>
+                    <p>{{ __('Bring your team and talent together.') }}</p>
+                </div>
+            </aside>
         </div>
     </main>
     @include('marketing.footer')

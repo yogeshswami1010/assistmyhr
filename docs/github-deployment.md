@@ -22,11 +22,13 @@ existing `/contact.php` service and its hosting mail configuration.
 The dedicated `/#request-demo` view submits a Live demo enquiry through the same
 service. General contact enquiries remain on `/#contact`.
 
-The customer login uses `layouts.marketing-auth`, with generated header, footer
-and asset includes under `resources/views/marketing/`. Run the marketing build
-after editing shared navigation so the homepage and login stay in sync. Only the
-login view's layout selection changes; its POST forms, CSRF, workspace context,
-CAPTCHA, password recovery and remember-device controls are preserved.
+The customer login uses `layouts.marketing-auth`, with a dark form on the left
+and an original office photograph on the right. Generated header, footer, login
+styles, branding and image includes live under `resources/views/marketing/`.
+Run the marketing build after design edits so the homepage and login stay in sync.
+The POST forms, CSRF, workspace context, CAPTCHA, password recovery and remember-device
+controls are preserved. The optimized WebP image and its generation prompt are
+in the preview's `assets/` folder. This design needs no new Vite build or migration.
 The SaaS registration view uses `layouts.marketing-register` and the same shared
 header/footer. Its existing signup fields, password controls, CSRF, errors and
 platform availability rules are preserved. The shared account navigation marks

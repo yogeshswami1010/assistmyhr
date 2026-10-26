@@ -14,14 +14,13 @@
         @csrf
         @if(config('saas.enabled'))
         <input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">
-        <a href="{{ route('register') }}" class="text-sm text-blue-600">Create a company account</a>
         @endif
 
         <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
-            <h2 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">
+            <h1 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">
                 {{ __('Welcome back') }}
-            </h2>
-            <p class="mt-2 text-sm text-[#8892A0]">{{ __('Sign in to your admin account to continue.') }}</p>
+            </h1>
+            <p class="mt-2 text-sm text-[#8892A0]">{{ __('Sign in to your Assist My HR account.') }}</p>
         </div>
 
         @if ($errors->any())
@@ -32,12 +31,12 @@
         @endif
 
         <div class="animate-auth-fade-up opacity-0 [animation-delay:120ms]">
-            <label for="login_email" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-[#5A6478]">{{ __('E-Mail Address') }}</label>
+            <label for="login_email" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-[#5A6478]">{{ __('Email address') }}</label>
             <div class="group relative">
                 <svg class="pointer-events-none absolute left-3.5 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-[#B0B8C4] transition-colors group-focus-within:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                 <input type="email" name="email" id="login_email" value="{{ old('email') }}"
                     class="{{ $authField }} {{ $errors->has('email') ? $authFieldErr : '' }}"
-                    placeholder="{{ __('E-Mail Address') }}" required autofocus autocomplete="username">
+                    placeholder="you@company.com" required autofocus autocomplete="username">
             </div>
         </div>
 
@@ -47,8 +46,8 @@
                 <svg class="pointer-events-none absolute left-3.5 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-[#B0B8C4] transition-colors group-focus-within:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 <input id="password" type="password" name="password" required autocomplete="current-password"
                     class="{{ $authField }}{{ $authFieldEye }} {{ $errors->has('password') ? $authFieldErr : '' }}"
-                    placeholder="{{ __('Password') }}">
-                <button type="button" class="absolute right-3.5 top-1/2 flex -translate-y-1/2 border-0 bg-transparent p-0 text-[#B0B8C4] transition-colors hover:text-slate-600 focus:outline-none" id="toggle-password" aria-label="{{ __('Show password') }}">
+                    placeholder="{{ __('Enter your password') }}">
+                <button type="button" class="absolute right-3.5 top-1/2 flex -translate-y-1/2 border-0 bg-transparent p-0 text-[#B0B8C4] transition-colors hover:text-slate-600 focus:outline-none" id="toggle-password" aria-label="{{ __('Show password') }}" aria-controls="password" aria-pressed="false" data-show-label="{{ __('Show password') }}" data-hide-label="{{ __('Hide password') }}">
                     <svg id="eyeIcon" width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 </button>
             </div>
@@ -68,9 +67,9 @@
                 <button type="button" class="group relative h-5 w-9 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-slate-200 p-0 transition-colors data-[on=true]:bg-blue-600" id="rememberToggle" data-on="{{ $rememberDevice ? 'true' : 'false' }}" role="switch" aria-checked="{{ $rememberDevice ? 'true' : 'false' }}" tabindex="0" aria-labelledby="remember-label">
                     <span class="pointer-events-none absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 group-data-[on=true]:translate-x-4"></span>
                 </button>
-                <label for="remember" id="remember-label" class="cursor-pointer select-none text-[13px] font-medium text-[#5A6478]">{{ __('Keep me signed in on this device') }}</label>
+                <label for="remember" id="remember-label" class="cursor-pointer select-none text-[13px] font-medium text-[#5A6478]">{{ __('Remember me') }}</label>
             </div>
-            <a href="#" id="to-recover" class="shrink-0 text-[13px] font-semibold text-blue-600 hover:text-blue-700">{{ __('I forgot my password') }}</a>
+            <a href="#" id="to-recover" class="shrink-0 text-[13px] font-semibold text-blue-600 hover:text-blue-700">{{ __('Forgot password?') }}</a>
         </div>
 
         @if(config('saas.enabled'))
@@ -81,20 +80,13 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
                 <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"></path>
             </svg>
-            <span id="login-submit-text">{{ __('Login') }}</span>
+            <span id="login-submit-text">{{ __('Sign in') }}</span>
             <svg id="login-submit-arrow" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
         </button>
 
-        <div class="my-2 flex animate-auth-fade-up items-center gap-3 text-xs font-semibold text-[#C4CBD4] opacity-0 before:h-px before:flex-1 before:bg-[#E8E6E1] before:content-[''] after:h-px after:flex-1 after:bg-[#E8E6E1] after:content-[''] [animation-delay:260ms]">{{ __('OR') }}</div>
-
-        <!-- <a href="{{ tenant_route('jobs.jobOpenings') }}" class="{{ $authSecondary }} animate-auth-fade-up opacity-0 [animation-delay:320ms]">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-            {{ __('messages.VisitJobOpening') }}
-        </a> -->
-
-        <!-- <p class="mt-6 animate-auth-fade-up text-center text-xs text-[#C4CBD4] opacity-0 [animation-delay:320ms]">
-            © {{ date('Y') }} {{ $setting->company_name }}
-        </p> -->
+        @if(config('saas.enabled'))
+            <p class="customer-auth-signup">{{ __('New to Assist My HR?') }}<a href="{{ route('register') }}">{{ __('Create a company account') }}</a></p>
+        @endif
     </form>
 
     <form class="hidden flex flex-col gap-4" method="post" id="recoverform" action="{{ route('password.email') }}">
@@ -102,7 +94,7 @@
         @if(config('saas.enabled'))<input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">@endif
 
         <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
-            <h2 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">@lang('app.recoverPassword')</h2>
+            <h1 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">@lang('app.recoverPassword')</h1>
             <p class="mt-2 text-sm text-[#8892A0]">@lang('app.enterEmailInstruction')</p>
         </div>
 
@@ -199,6 +191,8 @@
     btn.addEventListener('click', function () {
         visible = !visible;
         pwd.type = visible ? 'text' : 'password';
+        btn.setAttribute('aria-pressed', String(visible));
+        btn.setAttribute('aria-label', visible ? btn.dataset.hideLabel : btn.dataset.showLabel);
         icon.innerHTML = visible ? eyeShut : eyeOpen;
         btn.classList.toggle('text-blue-600', visible);
         btn.classList.toggle('text-[#B0B8C4]', !visible);

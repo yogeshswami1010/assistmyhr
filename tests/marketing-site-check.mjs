@@ -95,9 +95,53 @@ assert(loginView.startsWith("@extends('layouts.marketing-auth')"));
 for (const contract of ["route('login')", "route('password.email')", '@csrf', 'name="workspace"', 'name="remember"', 'id="captcha_container"', 'autocomplete="current-password"']) {
   assert(loginView.includes(contract), `Login contract missing: ${contract}`);
 }
-for (const contract of ["@include('marketing.header')", "@include('marketing.footer')", "@include('marketing.styles')", "@yield('content')", "@stack('scripts')", "@include('partials.ats-app-head')", 'to-recover', 'back-to-login']) {
+for (const contract of ["@include('marketing.header')", "@include('marketing.footer')", "@include('marketing.styles')", "@include('marketing.login-styles')", "@include('marketing.login-brand')", "@include('marketing.login-image')", "@yield('content')", "@stack('scripts')", "@include('partials.ats-app-head')", 'to-recover', 'back-to-login']) {
   assert(loginLayout.includes(contract), `Login layout contract missing: ${contract}`);
 }
+assert.equal((loginView.match(/@csrf/g) || []).length, 2, 'Login and recovery retain CSRF');
+// Exercise the real login controls without credentials or requests to the server.
+const loginElements = new Map();
+for (const id of ['loginform', 'recoverform', 'login-submit-btn', 'login-submit-spinner', 'login-submit-arrow', 'login-submit-text', 'password', 'toggle-password', 'eyeIcon', 'remember', 'rememberToggle', 'to-recover', 'back-to-login', 'recover_email', 'login_email']) {
+  loginElements.set(id, {
+    attributes: {}, dataset: {}, listeners: {}, type: 'password', checked: true, disabled: false,
+    classList: { values: new Set(), add(...values) { values.forEach(value => this.values.add(value)); }, remove(...values) { values.forEach(value => this.values.delete(value)); }, contains(value) { return this.values.has(value); }, toggle(value, on) { on ? this.values.add(value) : this.values.delete(value); } },
+    addEventListener(event, callback) { this.listeners[event] = callback; },
+    setAttribute(name, value) { this.attributes[name] = value; },
+    dispatchEvent(event) { this.listeners[event.type]?.(event); }, focus() { this.focused = true; },
+  });
+}
+loginElements.get('recoverform').classList.add('hidden');
+loginElements.get('login-submit-spinner').classList.add('hidden');
+loginElements.get('toggle-password').dataset = { showLabel: 'Show password', hideLabel: 'Hide password' };
+const loginContext = { document: { getElementById: id => loginElements.get(id) }, Event: class { constructor(type) { this.type = type; } } };
+const loginUx = [...loginView.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]).find(source => source.includes("var loginForm = document.getElementById('loginform')"));
+vm.runInNewContext(loginUx.replaceAll("{{ __('Signing in...') }}", 'Signing in...'), loginContext);
+loginElements.get('toggle-password').listeners.click();
+assert.equal(loginElements.get('password').type, 'text');
+assert.equal(loginElements.get('toggle-password').attributes['aria-label'], 'Hide password');
+assert.equal(loginElements.get('toggle-password').attributes['aria-pressed'], 'true');
+loginElements.get('toggle-password').listeners.click();
+assert.equal(loginElements.get('password').type, 'password');
+assert.equal(loginElements.get('toggle-password').attributes['aria-label'], 'Show password');
+loginElements.get('rememberToggle').listeners.click({ preventDefault() {} });
+assert.equal(loginElements.get('remember').checked, false);
+assert.equal(loginElements.get('rememberToggle').attributes['aria-checked'], 'false');
+loginElements.get('rememberToggle').listeners.keydown({ key: ' ', preventDefault() {} });
+assert.equal(loginElements.get('remember').checked, true);
+loginElements.get('loginform').listeners.submit();
+assert(loginElements.get('login-submit-btn').disabled);
+assert.equal(loginElements.get('login-submit-btn').attributes['aria-busy'], 'true');
+assert(!loginElements.get('login-submit-spinner').classList.contains('hidden'));
+assert(loginElements.get('login-submit-arrow').classList.contains('hidden'));
+vm.runInNewContext(loginLayout.match(/<script>([\s\S]*?)<\/script>/)[1], loginContext);
+loginElements.get('to-recover').listeners.click({ preventDefault() {} });
+assert(loginElements.get('loginform').classList.contains('hidden'));
+assert(!loginElements.get('recoverform').classList.contains('hidden'));
+assert(loginElements.get('recover_email').focused);
+loginElements.get('back-to-login').listeners.click({ preventDefault() {} });
+assert(!loginElements.get('loginform').classList.contains('hidden'));
+assert(loginElements.get('recoverform').classList.contains('hidden'));
+assert(loginElements.get('login_email').focused);
 const signupView = fs.readFileSync(path.join(root, 'resources/views/saas/signup.blade.php'), 'utf8');
 const signupLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-register.blade.php'), 'utf8');
 assert(signupView.startsWith("@extends('layouts.marketing-register')"));
@@ -108,7 +152,7 @@ for (const contract of ["@include('marketing.header')", "@include('marketing.foo
   assert(signupLayout.includes(contract), `Registration layout contract missing: ${contract}`);
 }
 for (const match of signupView.matchAll(/<script>([\s\S]*?)<\/script>/g)) new vm.Script(match[1], { filename: 'registration-inline.js' });
-const authParts = ['header', 'footer', 'styles'].map(part => fs.readFileSync(path.join(root, `resources/views/marketing/${part}.blade.php`), 'utf8'));
+const authParts = ['header', 'footer', 'styles', 'login-styles', 'login-image', 'login-brand'].map(part => fs.readFileSync(path.join(root, `resources/views/marketing/${part}.blade.php`), 'utf8'));
 assert(authParts[0].includes('href="/#why-choose-us"') && authParts[0].includes('href="/#request-demo"'));
 assert(authParts[1].includes('href="/#contact"'));
 assert(authParts[1].includes('class="footer-privacy" href="/privacy-policy"'));

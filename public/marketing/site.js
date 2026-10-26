@@ -45,7 +45,7 @@ function navigate() {
   const pageTitles = { home: 'Applicant Tracking System', 'why-choose-us': 'Why choose us?', pricing: 'Pricing', 'request-demo': 'Request a demo', contact: 'Contact us' };
   document.title = 'AssistMyHR – ' + pageTitles[selected];
   document.body.classList.toggle('is-home', selected === 'home');
-  document.body.classList.toggle('is-light', !['home', 'signin'].includes(selected));
+  document.body.classList.toggle('is-light', selected !== 'home');
   document.querySelectorAll('nav a, .header-login, .header-trial').forEach(link => {
     const active = link.hash === '#' + target || (link.hash === '#home' && selected === 'home') || (link.hash === '#why-choose-us' && selected === 'why-choose-us') || (link.classList.contains('header-pricing') && selected === 'pricing');
     link.classList.toggle('active', active);

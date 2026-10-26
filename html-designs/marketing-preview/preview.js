@@ -39,7 +39,7 @@ function navigate() {
   const selected = views.some(view => view.id === page) ? page : 'home';
   views.forEach(view => view.hidden = view.id !== selected);
   document.body.classList.toggle('is-home', selected === 'home');
-  document.body.classList.toggle('is-light', !['home', 'signin'].includes(selected));
+  document.body.classList.toggle('is-light', selected !== 'home');
   document.querySelectorAll('nav a, .header-login, .header-trial').forEach(link => {
     const active = link.hash === '#' + target || (link.hash === '#home' && selected === 'home') || (link.hash === '#why-choose-us' && selected === 'why-choose-us') || (link.classList.contains('header-pricing') && selected === 'pricing');
     link.classList.toggle('active', active);
