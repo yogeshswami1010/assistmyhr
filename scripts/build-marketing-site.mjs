@@ -102,7 +102,7 @@ html = html.replace('src="preview.js"', `src="${publicUrl('site.js')}"`);
 html = html.replace('src="platform-section.js"', `src="${publicUrl('platform-section.js')}"`);
 html = html.replace('src="pricing.js"', `src="${publicUrl('pricing.js')}"`);
 html = html.replace('<body class="is-home">', `<body class="is-home">
-<noscript><style>.view[hidden]{display:block!important}.platform-showcase[hidden]{display:block!important}.site-header nav{display:flex}.header-menu-toggle,.footer-top,#contact-form,#demo-form,.pricing-switch,.pricing-selection{display:none}</style><p class="noscript-note">For enquiries, email <a href="mailto:assistmyday@gmail.com">assistmyday@gmail.com</a> or call <a href="tel:+14372199151">+1 (437) 219-9151</a>.</p></noscript>`);
+<noscript><style>.view[hidden]{display:block!important}.platform-showcase[hidden]{display:block!important}.site-header nav{display:flex}.header-menu-toggle,.footer-top,#contact-form,#demo-form,.pricing-switch,.pricing-selection{display:none}</style><p class="noscript-note">For enquiries, email <a href="mailto:support@assistmyhr.com">support@assistmyhr.com</a> or call <a href="tel:+14372199151">+1 (437) 219-9151</a>.</p></noscript>`);
 if (/Design preview|Preview enquiry|Preview only|id="signin"|id="signup"/.test(html)) throw new Error('Preview-only content remains in the hosted homepage.');
 
 fs.mkdirSync(path.join(destination, 'assets'), { recursive: true });

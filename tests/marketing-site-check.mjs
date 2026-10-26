@@ -109,6 +109,10 @@ const authParts = ['header', 'footer', 'styles'].map(part => fs.readFileSync(pat
 assert(authParts[0].includes('href="/#why-choose-us"') && authParts[0].includes('href="/#request-demo"'));
 assert(authParts[1].includes('href="/#contact"'));
 assert(authParts[1].includes('class="footer-privacy" href="/privacy-policy"'));
+const gettingStartedMenu = authParts[1].match(/<nav aria-label="Footer getting started links">[\s\S]*?<\/nav>/)[0];
+assert(gettingStartedMenu.includes('href="/privacy-policy"'));
+assert(!authParts[1].match(/<div class="footer-bottom">[\s\S]*?<\/div>/)[0].includes('href="/privacy-policy"'));
+assert(authParts[1].includes('href="mailto:support@assistmyhr.com"'));
 assert(!authParts[2].includes('/marketing/site.js'), 'Public enquiry runtime must not intercept login forms');
 assert(authParts[2].includes('/marketing/chrome.js'));
 

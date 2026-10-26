@@ -52,7 +52,7 @@ $ratePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'assistmyhr-' . $key . '.
 $handle = @fopen($ratePath, 'c+');
 if (!$handle || !flock($handle, LOCK_EX)) {
     if ($handle) fclose($handle);
-    respond(503, false, 'The contact service is temporarily unavailable. Please email assistmyday@gmail.com.');
+    respond(503, false, 'The contact service is temporarily unavailable. Please email support@assistmyhr.com.');
 }
 $rate = json_decode(stream_get_contents($handle), true);
 $now = time();
@@ -63,7 +63,7 @@ if ((int) $rate['count'] >= 3) {
     flock($handle, LOCK_UN);
     fclose($handle);
     header('Retry-After: ' . max(1, 600 - ($now - (int) $rate['start'])));
-    respond(429, false, 'Too many attempts. Please wait a few minutes or email assistmyday@gmail.com.');
+    respond(429, false, 'Too many attempts. Please wait a few minutes or email support@assistmyhr.com.');
 }
 $rate['count']++;
 rewind($handle);
@@ -81,13 +81,13 @@ if ($from === '') {
     $domain = strtolower($_SERVER['SERVER_NAME'] ?? '');
     if (strpos($domain, '.') === false || filter_var($domain, FILTER_VALIDATE_IP) ||
         !filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
-        respond(503, false, 'Email delivery needs hosting configuration. Please email assistmyday@gmail.com.');
+        respond(503, false, 'Email delivery needs hosting configuration. Please email support@assistmyhr.com.');
     }
     $from = 'website@' . $domain;
 }
 foreach ([$to, $from] as $address) {
     if (!is_string($address) || !filter_var($address, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $address)) {
-        respond(503, false, 'Email delivery needs hosting configuration. Please email assistmyday@gmail.com.');
+        respond(503, false, 'Email delivery needs hosting configuration. Please email support@assistmyhr.com.');
     }
 }
 $body = "New AssistMyHR website enquiry\n\n";
@@ -110,6 +110,6 @@ try {
 }
 if (!$accepted) {
     error_log('AssistMyHR: mail transport did not accept the enquiry.');
-    respond(503, false, 'Unable to send right now. Your message is still in the form. Please try again or email assistmyday@gmail.com.');
+    respond(503, false, 'Unable to send right now. Your message is still in the form. Please try again or email support@assistmyhr.com.');
 }
 respond(200, true, 'Thank you! Your enquiry has been submitted. Our team will get back to you soon.');

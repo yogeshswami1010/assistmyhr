@@ -98,9 +98,9 @@ contactForm.addEventListener('submit', async event => {
     contactForm.reset();
   } catch (error) {
     const message = error.name === 'AbortError'
-      ? 'The request timed out. Delivery could not be confirmed; please email assistmyday@gmail.com before submitting again.'
+      ? 'The request timed out. Delivery could not be confirmed; please email support@assistmyhr.com before submitting again.'
       : error instanceof SyntaxError || error instanceof TypeError
-        ? 'Unable to reach the contact service. Your message is still in the form. Please try again or email assistmyday@gmail.com.'
+        ? 'Unable to reach the contact service. Your message is still in the form. Please try again or email support@assistmyhr.com.'
         : error.message;
     show(message, 'error');
   } finally {

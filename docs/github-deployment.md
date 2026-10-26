@@ -58,6 +58,9 @@ preserved as document content. The effective-date, last-updated and version bloc
 is omitted from the displayed page as requested; its original metadata remains
 in the text source for reference. The Contact us section includes clickable
 support@assistmyhr.com and +1 (905) 374-8878 links supplied by the user.
+The footer's Privacy policy link appears under **Let’s get started**. Public email
+links, enquiry fallback messages and the enquiry recipient in `public/contact-config.php`
+use **support@assistmyhr.com**.
 
 For this frontend-only replacement, update the VPS with:
 

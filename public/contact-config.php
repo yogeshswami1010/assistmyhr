@@ -1,6 +1,6 @@
 <?php
 
 return [
-    'to' => 'assistmyday@gmail.com',
+    'to' => 'support@assistmyhr.com',
     'from' => 'website@assistmyhr.com',
 ];
