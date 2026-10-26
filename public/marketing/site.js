@@ -39,10 +39,10 @@ function navigate() {
   const target = legacyAnchors[requested] || requested;
   const scrollTarget = document.getElementById(target === 'modules' ? 'why-features' : target);
   const parentView = scrollTarget?.closest('.view');
-  const page = target === 'request-demo' ? 'contact' : parentView?.id || target;
+  const page = parentView?.id || target;
   const selected = views.some(view => view.id === page) ? page : 'home';
   views.forEach(view => view.hidden = view.id !== selected);
-  const pageTitles = { home: 'Applicant Tracking System', 'why-choose-us': 'Why choose us?', 'how-it-works': 'How it works', contact: 'Contact us' };
+  const pageTitles = { home: 'Applicant Tracking System', 'why-choose-us': 'Why choose us?', 'how-it-works': 'How it works', 'request-demo': 'Request a demo', contact: 'Contact us' };
   document.title = 'AssistMyHR – ' + pageTitles[selected];
   document.body.classList.toggle('is-home', selected === 'home');
   document.body.classList.toggle('is-light', !['home', 'signin'].includes(selected));
@@ -52,8 +52,6 @@ function navigate() {
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
-  document.querySelector('#contact-form h3').textContent = target === 'request-demo' ? 'Request a free demo for your team.' : 'Send your enquiry directly to our team.';
-  if (target === 'request-demo') document.querySelector('#contact-form select').value = 'Live demo';
   if (scrollTarget && !scrollTarget.classList.contains('view')) {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     scrollTarget.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' });
@@ -64,7 +62,7 @@ window.addEventListener('hashchange', navigate);
 navigate();
 
 // The existing contact.php service accepts JSON and validates all fields server-side.
-const contactForm = document.getElementById('contact-form');
+document.querySelectorAll('[data-enquiry-form]').forEach(contactForm => {
 contactForm.addEventListener('submit', async event => {
   event.preventDefault();
   const button = contactForm.querySelector('button[type="submit"]');
@@ -111,6 +109,7 @@ contactForm.addEventListener('submit', async event => {
     button.textContent = originalLabel;
     contactForm.removeAttribute('aria-busy');
   }
+});
 });
 
 document.querySelector('.footer-top').addEventListener('click', () => {

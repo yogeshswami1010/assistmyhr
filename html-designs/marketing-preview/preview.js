@@ -33,7 +33,7 @@ function navigate() {
   const target = location.hash.slice(1) || 'home';
   const scrollTarget = document.getElementById(target === 'modules' ? 'why-features' : target);
   const parentView = scrollTarget?.closest('.view');
-  const page = target === 'request-demo' ? 'contact' : parentView?.id || target;
+  const page = parentView?.id || target;
   const selected = views.some(view => view.id === page) ? page : 'home';
   views.forEach(view => view.hidden = view.id !== selected);
   document.body.classList.toggle('is-home', selected === 'home');
@@ -44,8 +44,6 @@ function navigate() {
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
-  document.querySelector('#contact-form h3').textContent = target === 'request-demo' ? 'Request a free demo for your team.' : 'Send your enquiry directly to our team.';
-  if (target === 'request-demo') document.querySelector('#contact-form select').value = 'Live demo';
   if (scrollTarget && !scrollTarget.classList.contains('view')) {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     scrollTarget.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth' });
@@ -57,6 +55,10 @@ navigate();
 document.getElementById('contact-form').addEventListener('submit', event => {
   event.preventDefault();
   event.currentTarget.querySelector('[role="status"]').textContent = 'Your enquiry preview is complete. This demo does not send or store your information.';
+});
+document.getElementById('demo-form').addEventListener('submit', event => {
+  event.preventDefault();
+  event.currentTarget.querySelector('[role="status"]').textContent = 'Your demo request preview is complete. This preview does not send your information.';
 });
 document.getElementById('signin-form').addEventListener('submit', event => {
   event.preventDefault();

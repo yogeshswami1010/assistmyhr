@@ -19,6 +19,14 @@ Its enquiry transport is mocked and does not send email.
 The homepage links to the existing `/login` and `/register` routes. Registration
 continues to respect the platform's existing signup settings. Enquiries use the
 existing `/contact.php` service and its hosting mail configuration.
+The dedicated `/#request-demo` view submits a Live demo enquiry through the same
+service. General contact enquiries remain on `/#contact`.
+
+The customer login uses `layouts.marketing-auth`, with generated header, footer
+and asset includes under `resources/views/marketing/`. Run the marketing build
+after editing shared navigation so the homepage and login stay in sync. Only the
+login view's layout selection changes; its POST forms, CSRF, workspace context,
+CAPTCHA, password recovery and remember-device controls are preserved.
 
 For this frontend-only replacement, update the VPS with:
 

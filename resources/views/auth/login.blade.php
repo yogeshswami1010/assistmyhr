@@ -1,4 +1,4 @@
-@extends('layouts.auth')
+@extends('layouts.marketing-auth')
 
 @php
     $authField = 'w-full rounded-xl border-[1.5px] border-[#E2DED8] bg-white py-[13px] pl-11 pr-4 text-[13.5px] leading-normal text-[#1A1E2E] outline-none transition-[border-color,box-shadow] placeholder:text-[#B0B8C4] focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/10';

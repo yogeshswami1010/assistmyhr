@@ -1,5 +1,5 @@
 // The existing contact.php service accepts JSON and validates all fields server-side.
-const contactForm = document.getElementById('contact-form');
+document.querySelectorAll('[data-enquiry-form]').forEach(contactForm => {
 contactForm.addEventListener('submit', async event => {
   event.preventDefault();
   const button = contactForm.querySelector('button[type="submit"]');
@@ -46,4 +46,5 @@ contactForm.addEventListener('submit', async event => {
     button.textContent = originalLabel;
     contactForm.removeAttribute('aria-busy');
   }
+});
 });

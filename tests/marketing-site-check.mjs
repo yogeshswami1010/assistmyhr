@@ -11,6 +11,7 @@ const html = fs.readFileSync(path.join(root, 'resources/frontend/index.html'), '
 const script = fs.readFileSync(path.join(root, 'public/marketing/site.js'), 'utf8');
 new vm.Script(script, { filename: 'site.js' });
 new vm.Script(fs.readFileSync(path.join(root, 'public/marketing/platform-section.js'), 'utf8'), { filename: 'platform-section.js' });
+new vm.Script(fs.readFileSync(path.join(root, 'public/marketing/chrome.js'), 'utf8'), { filename: 'chrome.js' });
 assert(html.includes('href="/login"') && html.includes('href="/register"'));
 assert(!/Design preview|Preview enquiry|Preview only|id="signin"|id="signup"/.test(html));
 assert(!/signin-form|Password recovery is not connected|enquiry preview is complete/.test(script));
@@ -18,6 +19,26 @@ assert(html.includes('action="/contact.php" method="post"'));
 const form = html.match(/<form class="form-card"[\s\S]*?<\/form>/)[0];
 assert.deepEqual([...form.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'message', 'name', 'phone', 'topic', 'website']);
 assert.deepEqual([...form.matchAll(/<option>([^<]+)<\/option>/g)].map(match => match[1]), ['Live demo', 'Pricing', 'AI CV Search', 'Temp Staffing', 'Something else']);
+const demoForm = html.match(/<form class="form-card demo-form"[\s\S]*?<\/form>/)[0];
+assert(demoForm.includes('data-enquiry-form action="/contact.php" method="post"'));
+assert.deepEqual([...demoForm.matchAll(/\bname="([^"]+)"/g)].map(match => match[1]).sort(), ['company', 'email', 'message', 'name', 'phone', 'topic', 'website']);
+assert(demoForm.includes('type="hidden" name="topic" value="Live demo"'));
+assert(html.includes('class="demo-page view" id="request-demo"'));
+
+const loginView = fs.readFileSync(path.join(root, 'resources/views/auth/login.blade.php'), 'utf8');
+const loginLayout = fs.readFileSync(path.join(root, 'resources/views/layouts/marketing-auth.blade.php'), 'utf8');
+assert(loginView.startsWith("@extends('layouts.marketing-auth')"));
+for (const contract of ["route('login')", "route('password.email')", '@csrf', 'name="workspace"', 'name="remember"', 'id="captcha_container"', 'autocomplete="current-password"']) {
+  assert(loginView.includes(contract), `Login contract missing: ${contract}`);
+}
+for (const contract of ["@include('marketing.header')", "@include('marketing.footer')", "@include('marketing.styles')", "@yield('content')", "@stack('scripts')", "@include('partials.ats-app-head')", 'to-recover', 'back-to-login']) {
+  assert(loginLayout.includes(contract), `Login layout contract missing: ${contract}`);
+}
+const authParts = ['header', 'footer', 'styles'].map(part => fs.readFileSync(path.join(root, `resources/views/marketing/${part}.blade.php`), 'utf8'));
+assert(authParts[0].includes('href="/#why-choose-us"') && authParts[0].includes('href="/#request-demo"'));
+assert(authParts[1].includes('href="/#contact"'));
+assert(!authParts[2].includes('/marketing/site.js'), 'Public enquiry runtime must not intercept login forms');
+assert(authParts[2].includes('/marketing/chrome.js'));
 
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
 assert.equal(new Set(ids).size, ids.length, 'IDs must be unique');
@@ -35,8 +56,47 @@ for (const match of html.replace(/<!--[\s\S]*?-->/g, '').matchAll(/<\/?([a-z][a-
 }
 assert.equal(elements.length, 0, 'No unclosed HTML elements');
 
+// Exercise the actual page router, including the dedicated demo view and legacy links.
+function routeHarness(hash) {
+  const makeElement = id => ({
+    id, dataset: {}, attributes: {}, hidden: false,
+    classList: { values: new Set(), contains(name) { return this.values.has(name); }, toggle(name, on) { on ? this.values.add(name) : this.values.delete(name); } },
+    setAttribute(name, value) { this.attributes[name] = value; }, removeAttribute(name) { delete this.attributes[name]; },
+    addEventListener() {}, scrollIntoView() {},
+  });
+  const views = ['home', 'why-choose-us', 'how-it-works', 'request-demo', 'contact'].map(id => {
+    const view = makeElement(id); view.classList.values.add('view'); view.closest = () => view; return view;
+  });
+  const targets = new Map(views.map(view => [view.id, view]));
+  for (const [id, owner] of [['why-features', 'why-choose-us'], ['why-ai', 'why-choose-us'], ['why-communications', 'why-choose-us'], ['ai', 'how-it-works'], ['platform-overview', 'home']]) {
+    const target = makeElement(id); target.closest = () => targets.get(owner); targets.set(id, target);
+  }
+  const header = makeElement('header'), toggle = makeElement('menu'), body = makeElement('body');
+  const document = {
+    body, title: '', addEventListener() {},
+    getElementById: id => targets.get(id),
+    querySelectorAll: selector => selector === '.view' ? views : [],
+    querySelector: selector => selector === '.site-header' ? header : toggle,
+  };
+  let redirect;
+  vm.runInNewContext(script.slice(0, script.indexOf('// The existing contact.php service')), {
+    document, location: { hash, replace: url => redirect = url },
+    window: { matchMedia: () => ({ matches: false, addEventListener() {} }), scrollTo() {}, addEventListener() {} },
+  });
+  return { visible: views.filter(view => !view.hidden).map(view => view.id), redirect, title: document.title };
+}
+for (const [hash, expected] of [['#home', 'home'], ['#why-choose-us', 'why-choose-us'], ['#why-ai', 'why-choose-us'], ['#features', 'why-choose-us'], ['#ai', 'how-it-works'], ['#how', 'how-it-works'], ['#request-demo', 'request-demo'], ['#contact', 'contact']]) {
+  assert.deepEqual(routeHarness(hash).visible, [expected], `Page navigation ${hash}`);
+}
+assert.equal(routeHarness('#request-demo').title, 'AssistMyHR – Request a demo');
+assert.equal(routeHarness('#signin').redirect, '/login');
+assert.equal(routeHarness('#signup').redirect, '/register');
+
 const publishedFiles = new Set();
 for (const match of html.matchAll(/(?:src|href)="(\/marketing\/[^"?#]+)(?:\?[^"#]*)?"/g)) publishedFiles.add(match[1]);
+for (const partial of authParts) {
+  for (const match of partial.matchAll(/(?:src|href)="(\/marketing\/[^"?#]+)(?:\?[^"#]*)?"/g)) publishedFiles.add(match[1]);
+}
 assert(publishedFiles.size >= 14, 'All stylesheets, scripts and screenshots should be published');
 for (const url of publishedFiles) {
   const file = path.join(root, 'public', url);
@@ -67,7 +127,7 @@ function contactHarness(fetchResponse) {
     reset: () => resets++,
   };
   vm.runInNewContext(enquirySource, {
-    document: { getElementById: () => form },
+    document: { querySelectorAll: () => [form] },
     FormData: class { constructor(form) { this.values = form.values; } *[Symbol.iterator]() { yield* Object.entries(this.values); } },
     fetch: (url, options) => { calls.push({ url, options }); return fetchResponse(url, options); },
     AbortController, TypeError, SyntaxError,
@@ -145,4 +205,4 @@ try {
 } finally {
   await new Promise(resolve => server.close(resolve));
 }
-console.log('PASS: auth links, contact contract and success/error/offline/duplicate/timeout handling, section links, ARIA, CSS, original screenshots, homepage HTTP and all published assets. No enquiries sent.');
+console.log('PASS: login shell and auth form contracts, dedicated demo navigation, both enquiry forms, success/error/offline/duplicate/timeout handling, section links, ARIA, CSS, original screenshots and published assets over HTTP. No enquiries sent.');
