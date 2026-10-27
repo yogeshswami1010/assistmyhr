@@ -1,9 +1,14 @@
 /* Marketing chrome around the existing Laravel customer authentication forms. */
+.marketing-auth *, .marketing-auth *::before, .marketing-auth *::after { box-sizing: border-box; }
 body.marketing-auth { margin: 0; color: #203b5d; background: #f5f8ff; }
 .marketing-auth a { text-decoration: none; }
 .marketing-auth .brand { display: inline-flex; align-items: center; justify-content: center; width: max-content; line-height: 0; }
 .marketing-auth .brand-logo { display: block; max-width: 100%; height: auto; object-fit: contain; }
-.marketing-auth .button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; cursor: pointer; }
+.marketing-auth :where(.button) { display: inline-flex; align-items: center; justify-content: center; gap: 26px; padding: 16px 23px; border: 1px solid #286eff; border-radius: 7px; background: #0755ff; color: #fff; font-family: inherit; font-size: var(--text-button); font-weight: 600; line-height: 1.5; text-decoration: none; cursor: pointer; box-shadow: 0 5px 24px #0051ff20; }
+.marketing-auth :where(.button:hover) { background: #236aff; }
+.marketing-auth .site-footer .button { color: #fff; }
+.marketing-auth button, .marketing-auth input, .marketing-auth select, .marketing-auth textarea { font: inherit; }
+.marketing-auth .site-header .button, .marketing-auth .site-footer .button { font-size: var(--text-button); }
 .marketing-auth a:focus-visible, .marketing-auth button:focus-visible { outline: 3px solid #86b1fb; outline-offset: 4px; }
 /* Registration uses the same public navigation without the ATS application bundle. */
 .marketing-register *, .marketing-register *::before, .marketing-register *::after { box-sizing: border-box; }
