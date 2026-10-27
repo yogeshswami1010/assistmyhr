@@ -5,7 +5,7 @@
 @section('body-class', 'marketing-pricing')
 @push('styles')
 <link rel="canonical" href="https://assistmyhr.com/pricing">
-<link rel="stylesheet" href="/marketing/pricing.css?v=899f52057ec2">
+<link rel="stylesheet" href="/marketing/pricing.css?v=757c8a66702e">
 @endpush
 @section('content')
 <section class="pricing-page" id="pricing" aria-labelledby="pricing-hero-title">
@@ -22,7 +22,7 @@
         <div class="pricing-orbit" aria-hidden="true"></div>
         <figure class="pricing-product">
           <div class="pricing-product-bar"><span><i></i><i></i><i></i></span><span>YOUR CONNECTED WORKSPACE</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></div>
-          <a href="/marketing/assets/dashboard-screenshot.png?v=899f52057ec2" target="_blank" rel="noopener" aria-label="View the AssistMyHR dashboard at full size (opens in a new tab)"><img src="/marketing/assets/dashboard-screenshot.png?v=899f52057ec2" width="1921" height="866" loading="lazy" decoding="async" alt="AssistMyHR dashboard with hiring statistics, candidate totals, team members and a task list."></a>
+          <a href="/marketing/assets/dashboard-screenshot.png?v=757c8a66702e" target="_blank" rel="noopener" aria-label="View the AssistMyHR dashboard at full size (opens in a new tab)"><img src="/marketing/assets/dashboard-screenshot.png?v=757c8a66702e" width="1921" height="866" loading="lazy" decoding="async" alt="AssistMyHR dashboard with hiring statistics, candidate totals, team members and a task list."></a>
           <figcaption>Your jobs, candidates and team. All together.</figcaption>
         </figure>
         <div class="pricing-visual-note"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"/></svg></span><div><strong>More room for great hires.</strong><small>One plan. Every hiring tool.</small></div></div>
@@ -52,21 +52,19 @@
     </div>
     <a class="pricing-feature-link" href="#pricing-features">Explore the features in your plan <span aria-hidden="true">→</span></a>
     <div class="pricing-feature-section" id="pricing-features" aria-labelledby="pricing-features-title">
-      <div class="pricing-feature-intro">
-        <div><span class="pricing-eyebrow">ASSIST MY HR — PRODUCT FEATURES</span><h2 id="pricing-features-title">Smarter Recruiting.<br><span>Simplified Hiring.</span></h2><p class="pricing-feature-lead">One powerful platform to manage candidates, jobs, clients, and recruitment workflows.</p></div>
-        <div class="pricing-feature-overview"><p>Assist My HR is an Applicant Tracking System designed to help recruitment agencies, staffing companies, and hiring teams streamline their recruitment operations.</p><p>From resume management and AI-powered candidate matching to interview scheduling, client submissions, and placement tracking, Assist My HR brings essential recruitment activities together in one platform.</p><span class="pricing-feature-count"><span aria-hidden="true">✓</span> 10 feature categories. One complete plan.</span></div>
-      </div>
+      <div class="pricing-feature-intro"><span class="pricing-eyebrow">TAKE A CLOSER LOOK</span><h2 id="pricing-features-title">Explore the features.</h2><p class="pricing-feature-lead">Select a category to preview the capabilities included in your plan.</p></div>
+      <div class="pricing-feature-explorer">
       <nav class="pricing-feature-nav" aria-label="Browse product feature categories">
-        <a href="#pricing-feature-candidates">Candidates</a>
-        <a href="#pricing-feature-jobs">Jobs</a>
-        <a href="#pricing-feature-workflow">Hiring workflow</a>
-        <a href="#pricing-feature-clients">Clients</a>
+        <a href="#pricing-feature-candidates">Candidate Management</a>
+        <a href="#pricing-feature-jobs">Job Management</a>
+        <a href="#pricing-feature-workflow">Hiring Pipeline</a>
+        <a href="#pricing-feature-clients">Client Relationships</a>
         <a href="#pricing-feature-communication">Communication</a>
-        <a href="#pricing-feature-ai">AI recruitment</a>
-        <a href="#pricing-feature-reports">Reports</a>
-        <a href="#pricing-feature-team">Team &amp; access</a>
-        <a href="#pricing-feature-privacy">Data &amp; privacy</a>
-        <a href="#pricing-feature-support">Plans &amp; support</a>
+        <a href="#pricing-feature-ai">AI Recruitment</a>
+        <a href="#pricing-feature-reports">Reports &amp; Analytics</a>
+        <a href="#pricing-feature-team">Team &amp; Access</a>
+        <a href="#pricing-feature-privacy">Data &amp; Privacy</a>
+        <a href="#pricing-feature-support">Plans &amp; Support</a>
       </nav>
       <div class="pricing-feature-grid">
         <article class="pricing-feature-card pricing-feature-card--featured" id="pricing-feature-candidates" aria-labelledby="pricing-feature-candidates-title">
@@ -213,10 +211,11 @@
           <p class="pricing-feature-benefit"><span>Key benefit</span>Choose a subscription arrangement that suits your organization and access support resources when needed.</p>
         </article>
       </div>
+      </div>
     </div>
   </div>
 </section>
 @endsection
 @push('scripts')
-<script defer src="/marketing/pricing.js?v=899f52057ec2"></script>
+<script defer src="/marketing/pricing.js?v=757c8a66702e"></script>
 @endpush
