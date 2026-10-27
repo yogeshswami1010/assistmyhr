@@ -62,10 +62,15 @@ class SaasServiceProvider extends ServiceProvider
         \Illuminate\Auth\Notifications\VerifyEmail::toMailUsing(fn ($user, $url) => (new \Illuminate\Notifications\Messages\MailMessage)
             ->mailer('platform')
             ->from(config('mail.mailers.platform.from.address'), config('mail.mailers.platform.from.name'))
-            ->subject('Verify your email address')
+            ->subject('Verify your email address | AssistMyHR')
             ->line('Please verify your email address to start using your ATS.')
             ->action('Verify email address', $url)
-            ->line('If you did not create an account, no action is required.'));
+            ->line('If you did not create an account, no action is required.')
+            ->view(['html' => 'email.verify-account', 'text' => 'email.verify-account-text'], [
+                'recipientName' => $user->name,
+                'verificationUrl' => $url,
+                'websiteUrl' => rtrim(config('app.url'), '/'),
+            ]));
         \Illuminate\Auth\Notifications\ResetPassword::createUrlUsing(fn ($user, $token) => tenant_route('password.reset', ['token' => $token, 'email' => $user->getEmailForPasswordReset()]));
         foreach ([\App\User::class => 'users', \App\Job::class => 'jobs', \App\JobApplication::class => 'job_applications'] as $model => $table) {
             $model::creating(fn () => app(QuotaService::class)->assertCanCreate($table));
