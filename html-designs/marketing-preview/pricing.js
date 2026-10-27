@@ -29,13 +29,23 @@ document.querySelectorAll('.pricing-feature-explorer').forEach(explorer => {
   const updateOrientation = () => nav.setAttribute('aria-orientation', mobileLayout.matches ? 'horizontal' : 'vertical');
   updateOrientation();
   mobileLayout.addEventListener('change', updateOrientation);
+  const actions = explorer.querySelector('.pricing-feature-actions');
+  const nextButton = actions.querySelector('.pricing-feature-next');
+  const nextName = nextButton.querySelector('[data-next-feature-name]');
+  let activeIndex = 0;
+  actions.hidden = false;
   const select = index => {
+    activeIndex = index;
+    const nextIndex = (index + 1) % tabs.length;
+    nextName.textContent = tabs[nextIndex].textContent.trim();
+    nextButton.setAttribute('aria-controls', panels[nextIndex].id);
     tabs.forEach((tab, i) => {
       tab.setAttribute('aria-selected', String(i === index));
       tab.tabIndex = i === index ? 0 : -1;
       panels[i].hidden = i !== index;
     });
   };
+  nextButton.addEventListener('click', () => select((activeIndex + 1) % tabs.length));
   tabs.forEach((tab, index) => {
     tab.id = panels[index].id + '-tab';
     tab.setAttribute('role', 'tab');
