@@ -31,9 +31,10 @@ class SignupController extends Controller
         abort_unless(config('saas.enabled') && PlatformSetting::valueFor('signup_enabled', '0') === '1', 403);
         $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
         $data = $request->validate([
+            'privacy_policy' => ['required', 'accepted'],
             'company_name' => ['required', 'string', 'max:150'], 'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:254', Rule::unique('saas_landlord.saas_tenants', 'owner_email')->where(fn ($query) => $query->where('status', '!=', 'failed'))], 'password' => ['required', 'string', 'min:8', 'max:200', 'confirmed', 'regex:/[^\p{L}\p{N}\s]/u'],
-        ], ['password.regex' => 'Include at least one special character, such as !, @ or #.']);
+        ], ['privacy_policy.required' => 'Please accept the Privacy Policy to create your workspace.', 'privacy_policy.accepted' => 'Please accept the Privacy Policy to create your workspace.', 'password.regex' => 'Include at least one special character, such as !, @ or #.']);
         do {
             $data['slug'] = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['company_name'])), '-') ?: 'company', 0, 32).'-'.strtolower(\Illuminate\Support\Str::random(10));
         } while (\App\Saas\Tenant::where('slug', $data['slug'])->exists());

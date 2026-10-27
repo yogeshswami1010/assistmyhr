@@ -296,7 +296,7 @@ check(str_contains($signup->form()->render(),'Create your ATS workspace'),'Signu
 check($signup->pricing()->name()==='saas.pricing','Pricing renders the current public pricing page');
 $context->activate($beta);check(config('services.candidate_email_imap.host')===null,'Other client cannot inherit IMAP host');$context->reset();
 Illuminate\Support\Facades\Notification::fake();
-$signupRequest=Request::create('https://ats.example.test/register','POST',array_replace($data,['company_name'=>'Client Gamma','email'=>'gamma@example.test','password_confirmation'=>$data['password']]));
+$signupRequest=Request::create('https://ats.example.test/register','POST',array_replace($data,['company_name'=>'Client Gamma','email'=>'gamma@example.test','password_confirmation'=>$data['password'],'privacy_policy'=>'1']));
 $signupRequest->setLaravelSession($session);$app->instance('request',$signupRequest);$app['url']->setRequest($signupRequest);
 $response=$middleware->handle($signupRequest,fn($request)=>$signup->store($request));
 check($response->isRedirect()&&str_contains($response->headers->get('Location'),'/email/verify?workspace='),'Signup requires email verification before the dashboard');
@@ -325,7 +325,7 @@ foreach(['missing-workspace','INVALID WORKSPACE'] as $badWorkspace){
     check($session->get('errors')->first('email')==='The email address or password is incorrect.','Failed login has readable credential message');
     check(!array_key_exists('password',$session->get('_old_input',[])),'Failed login never flashes password');
 }
-$duplicateRequest=Request::create('https://ats.example.test/register','POST',array_replace($data,['email'=>'gamma@example.test','password_confirmation'=>$data['password']]));
+$duplicateRequest=Request::create('https://ats.example.test/register','POST',array_replace($data,['email'=>'gamma@example.test','password_confirmation'=>$data['password'],'privacy_policy'=>'1']));
 try{$signup->store($duplicateRequest);throw new RuntimeException('Duplicate owner accepted');}catch(Illuminate\Validation\ValidationException $e){check(isset($e->errors()['email']),'Duplicate owner email rejected');}
 check(!str_contains($signup->form()->render(),'name="slug"'),'Registration has no workspace input');
 $context->activate($gamma);
