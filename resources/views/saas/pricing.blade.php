@@ -5,7 +5,7 @@
 @section('body-class', 'marketing-pricing')
 @push('styles')
 <link rel="canonical" href="https://assistmyhr.com/pricing">
-<link rel="stylesheet" href="/marketing/pricing.css?v=5fdcad9daf57">
+<link rel="stylesheet" href="/marketing/pricing.css?v=eff5721a6722">
 @endpush
 @section('content')
 <section class="pricing-page" id="pricing" aria-labelledby="pricing-hero-title">
@@ -22,7 +22,7 @@
         <div class="pricing-orbit" aria-hidden="true"></div>
         <figure class="pricing-product">
           <div class="pricing-product-bar"><span><i></i><i></i><i></i></span><span>YOUR CONNECTED WORKSPACE</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/></svg></div>
-          <a href="/marketing/assets/dashboard-screenshot.png?v=5fdcad9daf57" target="_blank" rel="noopener" aria-label="View the AssistMyHR dashboard at full size (opens in a new tab)"><img src="/marketing/assets/dashboard-screenshot.png?v=5fdcad9daf57" width="1921" height="866" loading="lazy" decoding="async" alt="AssistMyHR dashboard with hiring statistics, candidate totals, team members and a task list."></a>
+          <a href="/marketing/assets/dashboard-screenshot.png?v=eff5721a6722" target="_blank" rel="noopener" aria-label="View the AssistMyHR dashboard at full size (opens in a new tab)"><img src="/marketing/assets/dashboard-screenshot.png?v=eff5721a6722" width="1921" height="866" loading="lazy" decoding="async" alt="AssistMyHR dashboard with hiring statistics, candidate totals, team members and a task list."></a>
           <figcaption>Your jobs, candidates and team. All together.</figcaption>
         </figure>
         <div class="pricing-visual-note"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"/></svg></span><div><strong>More room for great hires.</strong><small>One plan. Every hiring tool.</small></div></div>
@@ -218,5 +218,5 @@
 </section>
 @endsection
 @push('scripts')
-<script defer src="/marketing/pricing.js?v=5fdcad9daf57"></script>
+<script defer src="/marketing/pricing.js?v=eff5721a6722"></script>
 @endpush

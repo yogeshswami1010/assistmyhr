@@ -1,6 +1,6 @@
 <header class="site-header" data-menu-open="false">
   <div class="header-inner">
-    <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=5fdcad9daf57" width="1600" height="438" alt="AssistMyHR"></a>
+    <a class="brand" href="/#home" aria-label="AssistMyHR home"><img class="brand-logo" src="/marketing/assets/assistmyhr-logo.webp?v=eff5721a6722" width="1600" height="438" alt="AssistMyHR"></a>
     <nav id="header-navigation" aria-label="Main navigation">
       <div class="header-menu-links"><a href="/#home">Home</a><a href="/#why-choose-us">Why choose us?</a><a class="header-pricing" href="/pricing">Pricing</a><a class="header-mobile-contact" href="/#contact">Contact us</a></div>
       <div class="header-mobile-actions"><a class="header-trial" href="/register">Start a free trial</a><a class="button header-demo" href="/#request-demo">Request a demo</a></div>
