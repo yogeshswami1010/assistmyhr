@@ -6,3 +6,8 @@
   .home-hiring-inner { padding: 24px 6% 45px; }
   #home-hiring, #hiring-steps, #ai { scroll-margin-top: 105px; }
 }
+
+.ai-panel .ai-results-preview { min-width: 0; width: 100%; max-width: 580px; margin: 0; justify-self: center; overflow: hidden; border: 1px solid #dce5f2; border-radius: 16px; background: #fff; box-shadow: 0 12px 32px #17365c0c; }
+.ai-results-preview > a { display: block; }
+.ai-results-preview img { display: block; width: 100%; height: auto; }
+.ai-results-preview figcaption { padding: 12px 16px; color: #617796; font-size: var(--text-meta); line-height: 1.6; }
