@@ -1,3 +1,11 @@
 .contact-honeypot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-.form-status[data-state="error"]{color:#b2364c}.form-status[data-state="success"]{color:#21754c}
+.form-status[data-state="error"]{color:#b2364c}
+.form-status[data-state="success"]{padding:16px 18px;border:1px solid #a5ddbf;border-radius:10px;background:#edf9f1;color:#17643d;font-weight:600;line-height:1.7}
+.enquiry-notification{position:fixed;top:110px;right:24px;z-index:10000;display:flex;align-items:flex-start;gap:18px;width:420px;max-width:calc(100vw - 32px);padding:20px;border:1px solid #a5ddbf;border-left:5px solid #22965a;border-radius:12px;background:#f2fcf6;color:#175c39;box-shadow:0 12px 40px #102b5426}
+.enquiry-notification strong{display:block;font-size:16px;line-height:1.5}.enquiry-notification strong::before{content:'✓';margin-right:8px}
+.enquiry-notification p{margin:7px 0 0;color:#32664b;font-size:14px;line-height:1.7}
+.enquiry-notification button{flex-shrink:0;margin:0;padding:0 5px;border:0;background:transparent;color:#32664b;font-size:25px;line-height:1;cursor:pointer}
+.enquiry-notification button:focus-visible{outline:3px solid #22965a;outline-offset:4px}
+@media(max-width:680px){.enquiry-notification{top:auto;bottom:16px;right:16px}}
+
 .form-card button:disabled{opacity:.65;cursor:wait;transform:none}.noscript-note{max-width:1296px;margin:20px auto;padding:20px;color:#16365e;background:#eef4ff;border-radius:8px}

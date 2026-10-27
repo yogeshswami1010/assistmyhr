@@ -62,6 +62,29 @@ window.addEventListener('hashchange', navigate);
 navigate();
 
 // Website enquiry forms submit to the app with CSRF protection.
+// Keep confirmation visible until dismissed, including when the form is below the fold.
+let enquiryNotification;
+const notifyEnquirySuccess = message => {
+  enquiryNotification?.remove();
+  enquiryNotification = document.createElement('div');
+  enquiryNotification.className = 'enquiry-notification';
+  const confirmation = document.createElement('div');
+  confirmation.setAttribute('role', 'status');
+  confirmation.setAttribute('aria-live', 'polite');
+  const heading = document.createElement('strong');
+  heading.textContent = 'Submitted successfully';
+  const detail = document.createElement('p');
+  detail.textContent = message;
+  confirmation.append(heading, detail);
+  const dismiss = document.createElement('button');
+  dismiss.type = 'button';
+  dismiss.setAttribute('aria-label', 'Dismiss submission notification');
+  dismiss.textContent = '×';
+  dismiss.addEventListener('click', () => enquiryNotification.remove());
+  enquiryNotification.append(confirmation, dismiss);
+  document.body.append(enquiryNotification);
+};
+
 document.querySelectorAll('[data-enquiry-form]').forEach(contactForm => {
 contactForm.addEventListener('submit', async event => {
   event.preventDefault();
@@ -97,7 +120,11 @@ contactForm.addEventListener('submit', async event => {
     if (!response.ok || result.success !== true) {
       throw new Error(result.message || 'Unable to send your enquiry. Please try again.');
     }
-    show(result.message || 'Thank you! Your enquiry has been submitted.', 'success');
+    const successMessage = payload.kind === 'demo'
+      ? 'Thank you! Your demo request has been submitted successfully. Our team will contact you shortly.'
+      : 'Thank you! Your message has been submitted successfully. Our team will get back to you shortly.';
+    show(successMessage, 'success');
+    notifyEnquirySuccess(successMessage);
     contactForm.reset();
   } catch (error) {
     const message = error.name === 'AbortError'
