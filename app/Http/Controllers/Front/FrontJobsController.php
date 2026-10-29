@@ -276,8 +276,10 @@ class FrontJobsController extends FrontBaseController
 
         Session::put('lastPageUrl', $slug);
 
-        $locationId       = JobJobLocation::where('job_id', $this->job->id)->where('location_id', $location)->first()?->id;
-        $this->location   = JobJobLocation::withoutGlobalScope('company')->find($locationId);
+        $this->location = JobJobLocation::where('job_id', $this->job->id)
+            ->when($location !== null, fn ($query) => $query->where('location_id', $location))
+            ->orderBy('id')
+            ->first();
         $this->locations  = ($this->location && $this->location->location_id)
             ? JobLocation::withoutGlobalScope('company')->where('id', $this->location->location_id)->first()
             : null;
@@ -599,9 +601,10 @@ class FrontJobsController extends FrontBaseController
 
         Session::put('lastPageUrl', $slug);
 
-        $locationId     = JobJobLocation::where('job_id', $this->job->id)
-                            ->where('location_id', $location)->first()?->id;
-        $this->location  = JobJobLocation::withoutGlobalScope('company')->find($locationId);
+        $this->location = JobJobLocation::where('job_id', $this->job->id)
+            ->when($location !== null, fn ($query) => $query->where('location_id', $location))
+            ->orderBy('id')
+            ->first();
         $this->locations = ($this->location && $this->location->location_id)
             ? JobLocation::withoutGlobalScope('company')->where('id', $this->location->location_id)->first()
             : null;
