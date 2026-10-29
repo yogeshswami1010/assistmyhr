@@ -158,36 +158,45 @@
                                 </select>
 
                                 {{-- New Category Field --}}
-                                <div id="new-category-wrapper" class="mt-3 hidden">
+                                <div id="new-category-wrapper" class="relative hidden">
                                     <input
                                         type="text"
                                         id="category_new"
                                         name="category_new"
+                                        aria-label="{{ __('Add New Category') }}"
+                                        style="padding-right: 2.75rem"
                                         placeholder="{{ __('Add New Category') }}"
                                         class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
                                         value="{{ old('category_new') }}"
                                     >
+                                    <button type="button" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-[#2563EB]" onclick="resetCategoryField()" aria-label="{{ __('Choose job Categories') }}" title="{{ __('Choose job Categories') }}">&times;</button>
                                 </div>
                             </div>
 
                             <script>
                                 function toggleNewCategoryField(select) {
                                     const wrapper = document.getElementById('new-category-wrapper');
+                                    const input = document.getElementById('category_new');
+                                    const isNew = select.value === 'new';
 
-                                    if (select.value === 'new') {
-                                        wrapper.classList.remove('hidden');
-                                    } else {
-                                        wrapper.classList.add('hidden');
-                                    }
+                                    select.style.display = isNew ? 'none' : '';
+                                    wrapper.classList.toggle('hidden', !isNew);
+                                    input.disabled = !isNew;
+                                    if (isNew) input.focus();
+                                }
+
+                                function resetCategoryField() {
+                                    const select = document.getElementById('category_id');
+                                    document.getElementById('category_new').value = '';
+                                    select.value = '';
+                                    $(select).trigger('change');
+                                    select.focus();
                                 }
 
                                 document.addEventListener('DOMContentLoaded', function () {
                                     const categorySelect = document.getElementById('category_id');
 
-                                    if (categorySelect.value === 'new') {
-                                        document.getElementById('new-category-wrapper')
-                                            .classList.remove('hidden');
-                                    }
+                                    toggleNewCategoryField(categorySelect);
                                 });
                             </script>
                             </div>
