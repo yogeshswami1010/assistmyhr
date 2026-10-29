@@ -459,7 +459,6 @@
                                             });
                                             if ($(select).data('select2')) {
                                                 $(select).select2('close');
-                                                $(select).trigger('change.select2');
                                             }
                                         }
                                         document.getElementById('location-select-wrapper').classList.toggle('hidden', isNew);

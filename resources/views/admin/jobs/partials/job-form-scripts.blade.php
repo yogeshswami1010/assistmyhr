@@ -152,6 +152,12 @@
 
             initJobFormSelect2();
 
+            // Bind after jQuery and Select2 load; the form markup is rendered before them.
+            $('#location_id').on('change.jobLocation', function () {
+                toggleNewLocationField(this);
+            });
+            toggleNewLocationField(document.getElementById('location_id'));
+
             if (typeof $.fn.bootstrapMaterialDatePicker === 'function') {
                 $('#date-end').bootstrapMaterialDatePicker({ weekStart: 0, time: false });
                 $('#date-start').bootstrapMaterialDatePicker({ weekStart: 0, time: false }).on('change', function (e, date) {
