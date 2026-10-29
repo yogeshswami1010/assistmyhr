@@ -143,7 +143,7 @@ class AdminJobsController extends AdminBaseController
         }
         $this->categories = JobCategory::all();
         $this->locations = JobLocation::all();
-        $this->jobTypes = JobType::all();
+        $this->jobTypes = JobType::forJobForm();
         $this->workExperiences = WorkExperience::all();
         $this->questions = $this->getQuestionsForCategory($selectedCategoryId);
         $this->jobUsageCounts = $this->getQuestionJobUsageCounts($this->questions->pluck('id')->toArray()); 
@@ -321,7 +321,7 @@ class AdminJobsController extends AdminBaseController
         $this->questions = $this->getQuestionsForCategory((int) $this->job->category_id);
         $this->jobUsageCounts = $this->getQuestionJobUsageCounts($this->questions->pluck('id')->toArray());
         $this->companies = Company::all();
-        $this->jobTypes = JobType::all();
+        $this->jobTypes = JobType::forJobForm();
         $this->workExperiences = WorkExperience::all();
         ApplicationStatus::ensureAppliedForJob((int) $id);
         $this->jobStatuses = ApplicationStatus::where('job_id', $id)->orderBy('position')->get();
