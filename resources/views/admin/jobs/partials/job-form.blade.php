@@ -212,6 +212,7 @@
                             <div class="form-group mb-0">
                                 <div class="mb-1.5 flex items-center justify-between gap-2">
                                     <label for="title" class="block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
+                                    @if ($isEdit)
                                     <button
                                         type="button"
                                         id="ai-generate-job-content-btn"
@@ -221,6 +222,7 @@
                                         <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"/></svg>
                                         <span id="ai-generate-job-content-label">@lang('app.aiGenerate')</span>
                                     </button>
+                                    @endif
                                 </div>
                                 <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="title" id="title" value="{{ $job ? $job->title : '' }}">
                             </div>
