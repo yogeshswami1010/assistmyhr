@@ -61,7 +61,7 @@
     .ra-todos-board .modal-bg { display: none; position: fixed; inset: 0; background: rgba(15,31,61,0.5); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
     .ra-todos-board .modal-bg.show { display: flex; animation: raTodoFi 0.2s ease; }
     @keyframes raTodoFi { from { opacity: 0; } to { opacity: 1; } }
-    .ra-todos-board .modal-todo { display:flex;flex-direction:column; background: #fff; border-radius: 20px; width: 460px; max-width: 94vw; max-height: 90vh; overflow: hidden; animation: raTodoPi 0.28s cubic-bezier(0.22,1,0.36,1); }
+    .ra-todos-board .modal-todo { display:flex;flex-direction:column; background: #fff; border-radius: 20px; width: 640px; max-width: 94vw; max-height: 90vh; overflow: hidden; animation: raTodoPi 0.28s cubic-bezier(0.22,1,0.36,1); }
     @keyframes raTodoPi { from { opacity: 0; transform: scale(0.94) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .ra-todos-board .modal-hd { flex-shrink:0; padding: 20px 24px 16px; border-bottom: 1px solid #F0EEE9; display: flex; align-items: center; justify-content: space-between; }
     .ra-todos-board .modal-body { min-height:0;flex:1 1 auto;overscroll-behavior:contain;scrollbar-width:thin; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
@@ -153,17 +153,6 @@
                             class="fi"
                             placeholder="@lang('modules.module.todos.form.title')"
                         />
-                        <div class="flex justify-end mt-2">
-                            <button
-                                type="button"
-                                id="raTodoAiGenerateBtn"
-                                class="inline-flex items-center gap-1.5 rounded-lg border border-[#2563EB]/25 bg-[#EFF6FF] px-2.5 py-1.5 text-[11px] font-semibold text-[#2563EB] transition hover:bg-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-50"
-                                aria-label="@lang('app.aiGenerate')"
-                            >
-                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"/></svg>
-                                <span>@lang('app.aiGenerate')</span>
-                            </button>
-                        </div>
                     </div>
                     <p id="raTodoTitleErr" class="hidden text-[11.5px] text-red-500 mt-1.5">@lang('modules.module.todos.taskTitleRequired')</p>
                 </div>
@@ -254,7 +243,6 @@
         moveColumn: @json(route('admin.todo-items.move-column')),
         toggleComplete: @json(route('admin.todo-items.toggle-complete')),
         boardData: @json(route('admin.todo-items.board-data')),
-        aiGenerateDescription: @json(route('admin.todo-items.ai-generate-description')),
     };
     function todoItemUrl(id) {
         return TODO_BASE + '/' + id;
@@ -623,44 +611,6 @@
     document.getElementById('raTodoDelClose')?.addEventListener('click', closeDel);
     document.getElementById('raTodoDelCancel')?.addEventListener('click', closeDel);
     document.getElementById('raTodoDelConfirm')?.addEventListener('click', confirmDel);
-
-    document.getElementById('raTodoAiGenerateBtn')?.addEventListener('click', function () {
-        const titleEl = document.getElementById('raTodoTitle');
-        const descEl = document.getElementById('raTodoDesc');
-        const errEl = document.getElementById('raTodoTitleErr');
-        const btnEl = document.getElementById('raTodoAiGenerateBtn');
-
-        const title = (titleEl?.value || '').trim();
-        if (!title) {
-            errEl?.classList.remove('hidden');
-            titleEl?.focus();
-            showToast(@json(__('modules.module.todos.taskTitleRequired')), '#EF4444');
-            return;
-        }
-        errEl?.classList.add('hidden');
-
-        btnEl.disabled = true;
-        showToast(@json(__('app.aiGenerate')), '#2563EB');
-
-        $.easyAjax({
-            url: ROUTES.aiGenerateDescription,
-            type: 'POST',
-            data: { _token: CSRF, title: title },
-            success: function (res) {
-                btnEl.disabled = false;
-                if (res && res.status === 'success') {
-                    descEl.value = res.description || '';
-                    showToast('Description generated', '#059669');
-                } else {
-                    showToast(res && res.message ? res.message : 'AI generation failed', '#EF4444');
-                }
-            },
-            error: function () {
-                btnEl.disabled = false;
-                showToast('AI generation failed', '#EF4444');
-            }
-        });
-    });
 
     document.querySelectorAll('.ra-todos-board .tab-bar .tab').forEach(btn => {
         btn.addEventListener('click', () => {
