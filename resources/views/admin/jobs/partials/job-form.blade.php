@@ -83,36 +83,45 @@
                                     </select>
 
                                     {{-- New Company Text Field --}}
-                                    <div id="new-company-wrapper" class="mt-3 hidden">
+                                    <div id="new-company-wrapper" class="relative hidden">
                                         <input
                                             type="text"
                                             id="company_new"
                                             name="company_new"
+                                            aria-label="{{ __('Add New Company') }}"
+                                            style="padding-right: 2.75rem"
                                             placeholder="{{ __('Add New Company') }}"
                                             class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
                                             value="{{ old('company_new') }}"
                                         >
+                                        <button type="button" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-[#2563EB]" onclick="resetCompanyField()" aria-label="{{ __('Select Company') }}" title="{{ __('Select Company') }}">&times;</button>
                                     </div>
                                 </div>
 
                                 <script>
                                     function toggleNewCompanyField(select) {
                                         const wrapper = document.getElementById('new-company-wrapper');
+                                        const input = document.getElementById('company_new');
+                                        const isNew = select.value === 'new';
 
-                                        if (select.value === 'new') {
-                                            wrapper.classList.remove('hidden');
-                                        } else {
-                                            wrapper.classList.add('hidden');
-                                        }
+                                        select.style.display = isNew ? 'none' : '';
+                                        wrapper.classList.toggle('hidden', !isNew);
+                                        input.disabled = !isNew;
+                                        if (isNew) input.focus();
+                                    }
+
+                                    function resetCompanyField() {
+                                        const select = document.getElementById('company');
+                                        document.getElementById('company_new').value = '';
+                                        select.value = '';
+                                        $(select).trigger('change');
+                                        select.focus();
                                     }
 
                                     document.addEventListener('DOMContentLoaded', function () {
                                         const companySelect = document.getElementById('company');
 
-                                        if (companySelect.value === 'new') {
-                                            document.getElementById('new-company-wrapper')
-                                                .classList.remove('hidden');
-                                        }
+                                        toggleNewCompanyField(companySelect);
                                     });
                                 </script>
 
@@ -397,6 +406,7 @@
                                     </label>
 
                                     {{-- Location Dropdown --}}
+                                    <div id="location-select-wrapper">
                                     <select 
                                         name="location_id[]" 
                                         id="location_id" 
@@ -418,40 +428,59 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    </div>
 
                                     {{-- New Location Field --}}
-                                    <div id="new-location-wrapper" class="mt-3 hidden">
+                                    <div id="new-location-wrapper" class="relative hidden">
                                         <input
                                             type="text"
                                             id="location_new"
                                             name="location_new"
+                                            aria-label="{{ __('Add New Location') }}"
+                                            style="padding-right: 2.75rem"
                                             placeholder="{{ __('Add New Location') }}"
                                             class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
                                             value="{{ old('location_new') }}"
                                         >
+                                        <button type="button" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-[#2563EB]" onclick="resetLocationField()" aria-label="{{ __('Locations') }}" title="{{ __('Locations') }}">&times;</button>
                                     </div>
                                 </div>
 
                                 <script>
                                     function toggleNewLocationField(select) {
                                         const wrapper = document.getElementById('new-location-wrapper');
+                                        const input = document.getElementById('location_new');
+                                        const values = $(select).val() || [];
+                                        const isNew = values.includes('new');
 
-                                        let values = $(select).val();
+                                        if (isNew) {
+                                            Array.from(select.options).forEach(option => {
+                                                option.selected = option.value === 'new';
+                                            });
+                                            if ($(select).data('select2')) {
+                                                $(select).select2('close');
+                                                $(select).trigger('change.select2');
+                                            }
+                                        }
+                                        document.getElementById('location-select-wrapper').classList.toggle('hidden', isNew);
+                                        wrapper.classList.toggle('hidden', !isNew);
+                                        input.disabled = !isNew;
+                                        input.style.opacity = '1';
+                                        if (isNew) input.focus();
+                                    }
 
-                                        if (values && values.includes('new')) {
-                                            wrapper.classList.remove('hidden');
+                                    function resetLocationField() {
+                                        document.getElementById('location_new').value = '';
+                                        $('#location_id').val([]).trigger('change');
+                                        if ($('#location_id').data('select2')) {
+                                            $('#location_id').select2('open');
                                         } else {
-                                            wrapper.classList.add('hidden');
+                                            document.getElementById('location_id').focus();
                                         }
                                     }
 
                                     document.addEventListener('DOMContentLoaded', function () {
-                                        let values = $('#location_id').val();
-
-                                        if (values && values.includes('new')) {
-                                            document.getElementById('new-location-wrapper')
-                                                .classList.remove('hidden');
-                                        }
+                                        toggleNewLocationField(document.getElementById('location_id'));
                                     });
                                 </script>
                                 <div class="form-group mb-0">
@@ -1000,6 +1029,7 @@ $(document).ready(function () {
     });
     $('#company').on('change', function () {
         handleDualSelect(this, 'company');
+        toggleNewCompanyField(this);
     });
 });
 
