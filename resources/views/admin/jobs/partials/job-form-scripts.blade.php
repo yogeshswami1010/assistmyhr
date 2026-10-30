@@ -81,7 +81,7 @@
                     var nextSize = Math.max(1, Math.min(7, currentSize + (cmd === 'increaseFontSize' ? 1 : -1)));
                     document.execCommand('fontSize', false, String(nextSize));
                 } else if (cmd) {
-                    document.execCommand(cmd, false, null);
+                    document.execCommand(cmd, false, $(this).data('value') || null);
                 }
                 jobRichSyncAll();
             });

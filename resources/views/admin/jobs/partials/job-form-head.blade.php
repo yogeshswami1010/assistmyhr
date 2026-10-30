@@ -3,6 +3,7 @@
 <style>
     #createForm .job-rich-editor-editor ol { list-style-type: decimal; padding-left: 1.5rem; }
     #createForm .job-rich-editor-editor ul { list-style-type: disc; padding-left: 1.5rem; }
+    #createForm .job-rich-editor-editor h2 { font-size: 1.5em; font-weight: 700; margin: 0.75em 0 0.4em; }
     /* Rich editor placeholder */
     #createForm .job-rich-editor-editor:empty::before {
         content: attr(data-placeholder);
