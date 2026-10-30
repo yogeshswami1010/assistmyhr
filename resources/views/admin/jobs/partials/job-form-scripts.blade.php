@@ -57,6 +57,11 @@
                 }
             }
 
+            $(document).on('mousedown', '.job-rte-btn', function (e) {
+                // Keep the selected text active when using the toolbar.
+                e.preventDefault();
+            });
+
             $(document).on('click', '.job-rte-btn', function (e) {
                 e.preventDefault();
                 var $ed = $(this).closest('.job-rich-field').find('.job-rich-editor-editor');
@@ -71,6 +76,10 @@
                     if (url) {
                         document.execCommand('createLink', false, url);
                     }
+                } else if (cmd === 'increaseFontSize' || cmd === 'decreaseFontSize') {
+                    var currentSize = parseInt(document.queryCommandValue('fontSize'), 10) || 3;
+                    var nextSize = Math.max(1, Math.min(7, currentSize + (cmd === 'increaseFontSize' ? 1 : -1)));
+                    document.execCommand('fontSize', false, String(nextSize));
                 } else if (cmd) {
                     document.execCommand(cmd, false, null);
                 }

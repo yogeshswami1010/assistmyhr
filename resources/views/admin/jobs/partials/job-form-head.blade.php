@@ -1,6 +1,8 @@
 <link rel="stylesheet" href="{{ asset('assets/node_modules_files/select2/dist/css/select2.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/node_modules_files/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css') }}">
 <style>
+    #createForm .job-rich-editor-editor ol { list-style-type: decimal; padding-left: 1.5rem; }
+    #createForm .job-rich-editor-editor ul { list-style-type: disc; padding-left: 1.5rem; }
     /* Rich editor placeholder */
     #createForm .job-rich-editor-editor:empty::before {
         content: attr(data-placeholder);

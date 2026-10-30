@@ -26,8 +26,11 @@
                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             </button>
             <button type="button" class="job-rte-btn flex h-7 w-7 items-center justify-center rounded-md border-0 text-slate-500 transition-all hover:bg-gray-200 hover:text-[#0F1F3D]" data-cmd="insertOrderedList" title="@lang('modules.jobs.rteNumberedList')">
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span aria-hidden="true" style="font-size: 12px; font-weight: 600;">1.</span><svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M5 6h15M5 12h15M5 18h15"/></svg>
             </button>
+            <div class="mx-1 h-4 w-px bg-gray-300" aria-hidden="true"></div>
+            <button type="button" class="job-rte-btn flex h-7 w-7 items-center justify-center rounded-md border-0 text-slate-500 hover:bg-gray-200" data-cmd="decreaseFontSize" title="{{ __('Decrease font size') }}" aria-label="{{ __('Decrease font size') }}">A−</button>
+            <button type="button" class="job-rte-btn flex h-7 w-7 items-center justify-center rounded-md border-0 text-slate-500 hover:bg-gray-200" data-cmd="increaseFontSize" title="{{ __('Increase font size') }}" aria-label="{{ __('Increase font size') }}">A+</button>
             @if ($showLinkButton)
                 <div class="mx-1 h-4 w-px bg-gray-300" aria-hidden="true"></div>
                 <button type="button" class="job-rte-btn flex h-7 w-7 items-center justify-center rounded-md border-0 text-slate-500 transition-all hover:bg-gray-200 hover:text-[#0F1F3D]" data-cmd="createLink" title="@lang('modules.jobs.rteInsertLink')">
