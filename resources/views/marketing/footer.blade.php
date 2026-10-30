@@ -17,3 +17,4 @@
     <div class="footer-bottom"><p>© 2026 AssistMyHR. All rights reserved.</p><p class="footer-bottom-note">Good people. A more connected team.</p><button class="footer-top" type="button">Back to top <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></span></button></div>
   </div>
 </footer>
+<script src="https://widgets.leadconnectorhq.com/loader.js" data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js" data-widget-id="6ae4ad27efad0ef7c0e7dc32"></script>
