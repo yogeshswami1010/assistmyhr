@@ -529,12 +529,16 @@
                                     <label for="work_experience" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.workExperience')</label>
                                     <select name="work_experience_id" id="work_experience" class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
                                         <option value="">—</option>
+                                        <option value="new">{{ __('Add New Work Experience') }}</option>
                                         @foreach ($workExperiences as $workExperience)
                                             <option @if ($job && $job->work_experience_id == $workExperience->id) selected @endif value="{{ $workExperience->id }}">{{ $workExperience->work_experience }}</option>
                                         @endforeach
                                     </select>
+                                    <div id="new-work-experience-wrapper" class="relative hidden">
+                                        <input type="text" id="work_experience_new" name="work_experience_new" maxlength="191" disabled aria-label="{{ __('Add New Work Experience') }}" placeholder="{{ __('Add New Work Experience') }}" style="padding-right: 2.75rem" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]" value="{{ old('work_experience_new') }}">
+                                        <button type="button" id="reset-work-experience" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500" aria-label="{{ __('modules.jobs.workExperience') }}">&times;</button>
+                                    </div>
                                     <div class="mt-2.5 flex items-stretch gap-2.5">
-                                        <button type="button" title="@lang('app.add') @lang('modules.jobs.workExperience')" id="addWorkExperience" class="inline-flex h-11 w-11 shrink-0 items-center justify-center self-start rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="@lang('app.add') @lang('modules.jobs.workExperience')"><i class="fa fa-plus" aria-hidden="true"></i></button>
                                         <label class="flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-xl border border-gray-100 bg-[#F8F7F4]/40 px-3 py-2 text-left text-[12px] font-medium leading-snug text-slate-600 transition hover:border-gray-200">
                                             <input @if ($job && $job->show_work_experience) checked @endif type="checkbox" value="yes" name="show_work_experience" class="flat-red shrink-0 rounded border-gray-300 text-primary focus:ring-primary">
                                             <span class="min-w-0 flex-1">@lang('modules.jobs.showWorkExperience')</span>

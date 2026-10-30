@@ -316,11 +316,19 @@
                     $.ajaxModal('#addDepartmentModal', url);
                 });
 
-                $('#addWorkExperience').click(function () {
-                    var url = "{{ route('admin.work-experience.create') }}";
-                    $('#job-aux-modal-title').text(@json(__('modules.jobs.workExperience')));
-                    $.ajaxModal('#addDepartmentModal', url);
+                function toggleWorkExperienceField() {
+                    var isNew = $('#work_experience').val() === 'new';
+                    $('#work_experience').toggle(!isNew);
+                    $('#new-work-experience-wrapper').toggleClass('hidden', !isNew);
+                    $('#work_experience_new').prop('disabled', !isNew);
+                    if (isNew) $('#work_experience_new').trigger('focus');
+                }
+                $('#work_experience').on('change', toggleWorkExperienceField);
+                $('#reset-work-experience').on('click', function () {
+                    $('#work_experience_new').val('');
+                    $('#work_experience').val('').trigger('change').trigger('focus');
                 });
+                toggleWorkExperienceField();
             });
 
             $('#save-form').click(function () {

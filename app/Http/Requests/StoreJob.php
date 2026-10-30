@@ -32,7 +32,8 @@ class StoreJob extends CoreRequest
             'location_id'        => 'nullable|array',
 
             'job_type_id'        => 'required',
-            'work_experience_id' => 'required',
+            'work_experience_id' => 'nullable',
+            'work_experience_new' => 'nullable|string|max:191',
             'pay_type'           => 'required',
             'starting_salary'    => 'required',
             'pay_according'      => 'required',
@@ -49,6 +50,10 @@ class StoreJob extends CoreRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+            if (empty(trim((string) $this->work_experience_new)) && (empty($this->work_experience_id) || $this->work_experience_id === 'new')) {
+                $validator->errors()->add('work_experience_id', __('modules.jobs.workExperience').' '.__('errors.fieldRequired'));
+            }
+
             if (empty(trim((string) $this->company_new)) && empty($this->company)) {
                 $validator->errors()->add('company', __('app.company').' '.__('errors.fieldRequired'));
             }
