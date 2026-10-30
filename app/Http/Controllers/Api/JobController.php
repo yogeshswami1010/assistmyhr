@@ -79,7 +79,7 @@ class JobController extends Controller
             'company' => $job->company?->show_in_frontend === 'true' ? $job->company->company_name : '',
             'job_type' => $job->jobType?->job_type ?? '',
             'salary' => $salary,
-            'experience' => $job->workExperience?->work_experience ?? '',
+            'experience' => $job->work_experience_label,
             'start_date' => $job->start_date?->format('Y-m-d'),
             'end_date' => $job->end_date?->format('Y-m-d'),
             'detail_url' => tenant_route('jobs.jobDetail', [$job->slug, $location?->id]),

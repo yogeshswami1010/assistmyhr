@@ -317,8 +317,9 @@
                 });
 
                 function toggleWorkExperienceField() {
-                    var isNew = $('#work_experience').val() === 'new';
-                    $('#work_experience').toggle(!isNew);
+                    var isNew = ($('#work_experience').val() || []).includes('new');
+                    if (isNew) $('#work_experience').select2('close');
+                    $('#work-experience-select-wrapper').toggleClass('hidden', isNew);
                     $('#new-work-experience-wrapper').toggleClass('hidden', !isNew);
                     $('#work_experience_new').prop('disabled', !isNew);
                     if (isNew) $('#work_experience_new').trigger('focus');
@@ -326,7 +327,22 @@
                 $('#work_experience').on('change', toggleWorkExperienceField);
                 $('#reset-work-experience').on('click', function () {
                     $('#work_experience_new').val('');
-                    $('#work_experience').val('').trigger('change').trigger('focus');
+                    $('#work_experience').val(($('#work_experience').val() || []).filter(value => value !== 'new')).trigger('change');
+                });
+                $('#add-work-experience-inline').on('click', function () {
+                    var input = document.getElementById('work_experience_new');
+                    var name = input.value.trim();
+                    if (!name) { input.focus(); return; }
+                    var select = document.getElementById('work_experience');
+                    var option = Array.from(select.options).find(item => item.text.trim().toLowerCase() === name.toLowerCase());
+                    if (!option) { option = new Option(name, 'new:' + name, true, true); select.add(option); }
+                    option.selected = true;
+                    Array.from(select.options).forEach(item => { if (item.value === 'new') item.selected = false; });
+                    input.value = '';
+                    $(select).trigger('change');
+                });
+                $('#work_experience_new').on('keydown', function (event) {
+                    if (event.key === 'Enter') { event.preventDefault(); $('#add-work-experience-inline').trigger('click'); }
                 });
                 toggleWorkExperienceField();
             });

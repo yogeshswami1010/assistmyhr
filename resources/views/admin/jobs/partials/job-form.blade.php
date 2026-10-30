@@ -527,15 +527,16 @@
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div class="form-group mb-0 flex min-h-0 flex-col">
                                     <label for="work_experience" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.workExperience')</label>
-                                    <select name="work_experience_id" id="work_experience" class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
+                                    <div id="work-experience-select-wrapper"><select name="work_experience_ids[]" multiple id="work_experience" class="select2 form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
                                         <option value="">—</option>
                                         <option value="new">{{ __('Add New Work Experience') }}</option>
                                         @foreach ($workExperiences as $workExperience)
-                                            <option @if ($job && $job->work_experience_id == $workExperience->id) selected @endif value="{{ $workExperience->id }}">{{ $workExperience->work_experience }}</option>
+                                            <option @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id])) selected @endif value="{{ $workExperience->id }}">{{ $workExperience->work_experience }}</option>
                                         @endforeach
-                                    </select>
+                                    </select></div>
                                     <div id="new-work-experience-wrapper" class="relative hidden">
-                                        <input type="text" id="work_experience_new" name="work_experience_new" maxlength="191" disabled aria-label="{{ __('Add New Work Experience') }}" placeholder="{{ __('Add New Work Experience') }}" style="padding-right: 2.75rem" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]" value="{{ old('work_experience_new') }}">
+                                        <input type="text" id="work_experience_new" maxlength="191" disabled aria-label="{{ __('Add New Work Experience') }}" placeholder="{{ __('Add New Work Experience') }}" style="padding-right: 6rem" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]">
+                                        <button type="button" id="add-work-experience-inline" class="absolute inset-y-0 right-10 px-2 text-blue-600">{{ __('Add') }}</button>
                                         <button type="button" id="reset-work-experience" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500" aria-label="{{ __('modules.jobs.workExperience') }}">&times;</button>
                                     </div>
                                     <div class="mt-2.5 flex items-stretch gap-2.5">

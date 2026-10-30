@@ -87,7 +87,7 @@
                     @if($job->show_work_experience)
                     <div class="pt-4 border-t border-[#F0EEE9]">
                         <p class="fr-sidebar-label">@lang('modules.jobs.workExperience')</p>
-                        <p class="fr-sidebar-value">{{ $job->workExperience ? $job->workExperience->work_experience : '--' }}</p>
+                        <p class="fr-sidebar-value">{{ $job->work_experience_label ?: '--' }}</p>
                     </div>
                     @endif
                     @if($job->show_job_type && $job->jobType)

@@ -225,18 +225,23 @@ class AdminJobsController extends AdminBaseController
         $job->end_date = $request->end_date;
         $job->status = $request->status;
         $job->job_type_id = $request->job_type_id;
-        if ($request->filled('work_experience_new')) {
-            $name = trim($request->work_experience_new);
-            $experience = WorkExperience::where('work_experience', $name)->first();
-            if (! $experience) {
-                $experience = new WorkExperience;
-                $experience->work_experience = $name;
-                $experience->save();
+        $experienceIds = [];
+        foreach ($request->work_experience_ids as $value) {
+            if (str_starts_with($value, 'new:')) {
+                $name = trim(substr($value, 4));
+                $experience = WorkExperience::where('work_experience', $name)->first();
+                if (! $experience) {
+                    $experience = new WorkExperience;
+                    $experience->work_experience = $name;
+                    $experience->save();
+                }
+                $experienceIds[] = $experience->id;
+            } else {
+                $experienceIds[] = (int) $value;
             }
-            $job->work_experience_id = $experience->id;
-        } else {
-            $job->work_experience_id = $request->work_experience_id;
         }
+        $job->work_experience_ids = array_values(array_unique($experienceIds));
+        $job->work_experience_id = $experienceIds[0];
         $job->pay_type = $request->pay_type;
         $job->pay_according = $request->pay_according;
         $job->starting_salary = $request->starting_salary;
@@ -406,18 +411,23 @@ class AdminJobsController extends AdminBaseController
         $job->end_date = $request->end_date;
         $job->status = $request->status;
         $job->job_type_id = $request->job_type_id;
-        if ($request->filled('work_experience_new')) {
-            $name = trim($request->work_experience_new);
-            $experience = WorkExperience::where('work_experience', $name)->first();
-            if (! $experience) {
-                $experience = new WorkExperience;
-                $experience->work_experience = $name;
-                $experience->save();
+        $experienceIds = [];
+        foreach ($request->work_experience_ids as $value) {
+            if (str_starts_with($value, 'new:')) {
+                $name = trim(substr($value, 4));
+                $experience = WorkExperience::where('work_experience', $name)->first();
+                if (! $experience) {
+                    $experience = new WorkExperience;
+                    $experience->work_experience = $name;
+                    $experience->save();
+                }
+                $experienceIds[] = $experience->id;
+            } else {
+                $experienceIds[] = (int) $value;
             }
-            $job->work_experience_id = $experience->id;
-        } else {
-            $job->work_experience_id = $request->work_experience_id;
         }
+        $job->work_experience_ids = array_values(array_unique($experienceIds));
+        $job->work_experience_id = $experienceIds[0];
         $job->pay_type = $request->pay_type;
         $job->pay_according = $request->pay_according;
         $job->starting_salary = $request->starting_salary;

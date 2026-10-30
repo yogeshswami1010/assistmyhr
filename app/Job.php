@@ -15,6 +15,7 @@ class Job extends Model
     public function getJobRequirementAttribute($value) { return tenant_html($value); }
 
     protected $casts = [
+        'work_experience_ids' => 'array',
         'start_date' => 'date',
         'end_date' => 'date',
         'required_columns' => 'array',
@@ -98,6 +99,13 @@ class Job extends Model
     public function workExperience()
     {
         return $this->belongsTo(WorkExperience::class, 'work_experience_id');
+    }
+
+    public function getWorkExperienceLabelAttribute()
+    {
+        $ids = $this->work_experience_ids ?: array_filter([$this->work_experience_id]);
+
+        return WorkExperience::whereIn('id', $ids)->pluck('work_experience')->implode(', ');
     }
 
     public function jobType()
