@@ -166,24 +166,14 @@
                         </a>
                         @endunless
                     </li>
-                    <li>
-                        <a href="{{ route('admin.currency-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/currency-settings') ? 'on' : '' }}">
-                            <span class="ra-sublink-dot" aria-hidden="true"></span>
-                            <span>@lang('menu.currencySetting')</span>
-                        </a>
-                    </li>
+
                     <li>
                         <a href="{{ route('admin.role-permission.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/role-permission') ? 'on' : '' }}">
                             <span class="ra-sublink-dot" aria-hidden="true"></span>
                             <span>@lang('menu.rolesPermission')</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('admin.language-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/language-settings') ? 'on' : '' }}">
-                            <span class="ra-sublink-dot" aria-hidden="true"></span>
-                            <span>@lang('app.language') @lang('menu.settings')</span>
-                        </a>
-                    </li>
+
 
                     <li>
                         @unless(config('saas.enabled'))

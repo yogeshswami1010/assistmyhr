@@ -103,7 +103,7 @@ class TenantProvisioner
         }
         $this->updateKnown($target, 'company_settings', [
             'company_name' => $data['company_name'], 'company_email' => $data['email'],
-            'company_phone' => '', 'address' => '', 'website' => '', 'timezone' => 'UTC', 'locale' => 'eng',
+            'company_phone' => '', 'address' => '', 'website' => '', 'timezone' => 'UTC', 'locale' => 'en',
             'latitude' => 0, 'longitude' => 0, 'candidate_calls_enabled' => false,
         ]);
         if ($target->getSchemaBuilder()->hasTable('currencies')) {

@@ -165,22 +165,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label for="locale" class="mb-1.5 block text-[11.5px] font-bold text-[#5A6478]">@lang('modules.accountSettings.changeLanguage')</label>
-                        <select class="bs-f-sel w-full" name="locale" id="locale">
-                            @foreach ($languageSettings as $language)
-                                <option value="{{ $language->language_code }}" @selected($global->locale == $language->language_code)>{{ $language->language_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="currency_id" class="mb-1.5 block text-[11.5px] font-bold text-[#5A6478]">@lang('modules.accountSettings.currencySetting')</label>
-                        <select class="bs-f-sel w-full" name="currency_id" id="currency_id">
-                            @foreach ($currencySettings as $currency)
-                                <option value="{{ $currency->id }}" @selected($global->currency_id == $currency->id)>{{ $currency->currency_name }} ({{ $currency->currency_code }})</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <div><p class="mb-1.5 block text-[11.5px] font-bold text-[#5A6478]">{{ __('app.language') }}</p><p class="text-sm text-[#1A1E2E]">English</p></div>
+                    <div><p class="mb-1.5 block text-[11.5px] font-bold text-[#5A6478]">{{ __('modules.accountSettings.currencySetting') }}</p><p class="text-sm text-[#1A1E2E]">Canadian Dollar (CAD)</p></div>
                 </div>
             </div>
 

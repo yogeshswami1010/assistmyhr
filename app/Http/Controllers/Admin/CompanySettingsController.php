@@ -78,7 +78,7 @@ class CompanySettingsController extends AdminBaseController
         $data->front_language = $request->has('front_language') && $request->input('front_language') == '1' ? 1 : 0;
         }
         
-        $data->currency_id = $request->has('currency_id') ? $request->input('currency_id') : '1';
+        $data->currency_id = \App\Currency::where('currency_code', 'CAD')->firstOrFail()->id;
 
         if (!config('saas.enabled')) {
         $data->job_alert_status = $request->has('job_alert_status') && $request->input('job_alert_status') == '1' ? 1 : 0;
@@ -92,7 +92,7 @@ class CompanySettingsController extends AdminBaseController
 
         $data->timezone = $request->timezone;
 
-        $data->locale = $request->locale;
+        $data->locale = 'en';
 
         $data->website = $request->website;
 
