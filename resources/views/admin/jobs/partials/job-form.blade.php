@@ -534,10 +534,12 @@
                                             <option @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id])) selected @endif value="{{ $workExperience->id }}">{{ $workExperience->work_experience }}</option>
                                         @endforeach
                                     </select></div>
-                                    <div id="new-work-experience-wrapper" class="relative hidden">
-                                        <input type="text" id="work_experience_new" maxlength="191" disabled aria-label="{{ __('Add New Work Experience') }}" placeholder="{{ __('Add New Work Experience') }}" style="padding-right: 6rem" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]">
-                                        <button type="button" id="add-work-experience-inline" class="absolute inset-y-0 right-10 px-2 text-blue-600">{{ __('Add') }}</button>
-                                        <button type="button" id="reset-work-experience" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500" aria-label="{{ __('modules.jobs.workExperience') }}">&times;</button>
+                                    <div id="new-work-experience-wrapper" class="hidden">
+                                        <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
+                                            <input type="text" id="work_experience_new" maxlength="191" disabled aria-label="{{ __('Add New Work Experience') }}" placeholder="{{ __('Add New Work Experience') }}" style="flex: 1 1 0%; min-width: 0; width: 0;" class="form-control rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]">
+                                            <button type="button" id="add-work-experience-inline" style="flex: 0 0 auto; padding: 0 14px; border-radius: 12px; background: #2563EB; color: white; font-size: 13px; font-weight: 600;">{{ __('Add') }}</button>
+                                            <button type="button" id="reset-work-experience" style="flex: 0 0 36px; border: 1px solid #E5E7EB; border-radius: 12px; background: white; color: #64748B;" aria-label="{{ __('modules.jobs.workExperience') }}">&times;</button>
+                                        </div>
                                     </div>
                                     <div class="mt-2.5 flex items-stretch gap-2.5">
                                         <label class="flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-xl border border-gray-100 bg-[#F8F7F4]/40 px-3 py-2 text-left text-[12px] font-medium leading-snug text-slate-600 transition hover:border-gray-200">
