@@ -51,10 +51,7 @@ class InterviewScheduleController extends AdminBaseController
     {
         abort_if(! $this->user->cans('view_schedule'), 403);
 
-        $this->googleCalendarReady = \Illuminate\Support\Facades\Schema::hasTable('google_calendar_connections');
-        $this->googleCalendarConfigured = app(\App\Services\GoogleCalendarService::class)->configured();
-        $this->googleCalendarEmail = $this->googleCalendarReady
-            ? \App\GoogleCalendarConnection::where('user_id', $this->user->id)->value('email') : null;
+        $this->loadGoogleCalendarConnection();
 
         $currentDate = Carbon::now()->format('Y-m-d'); // Current Date
 
@@ -116,6 +113,7 @@ class InterviewScheduleController extends AdminBaseController
     {
 
         abort_if(! $this->user->cans('view_schedule'), 403);
+        $this->loadGoogleCalendarConnection();
         $this->candidates = JobApplication::all();
         $this->users = User::all();
 
@@ -559,4 +557,12 @@ class InterviewScheduleController extends AdminBaseController
         }
 
     }
+    private function loadGoogleCalendarConnection(): void
+    {
+        $this->googleCalendarReady = \Illuminate\Support\Facades\Schema::hasTable('google_calendar_connections');
+        $this->googleCalendarConfigured = app(\App\Services\GoogleCalendarService::class)->configured();
+        $this->googleCalendarEmail = $this->googleCalendarReady
+            ? \App\GoogleCalendarConnection::where('user_id', $this->user->id)->value('email') : null;
+    }
+
 }

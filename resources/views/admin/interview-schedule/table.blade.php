@@ -81,6 +81,7 @@
 @endsection
 
 @section('content')
+    @include('admin.interview-schedule.google-calendar-connection')
     <div id="interview-table-page" class="mx-auto pb-8">
         <div class="jc-table-card ra-dt-wrap overflow-hidden p-6">
             <div class="mb-5 flex justify-end">
