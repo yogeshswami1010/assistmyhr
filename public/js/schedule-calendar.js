@@ -35,7 +35,8 @@
 
     /* on click on event */
     CalendarApp.prototype.onEventClick = function (calEvent, jsEvent, view) {
-        getScheduleDetail(event, calEvent.id);
+        if (calEvent.sourceType === 'google') return false;
+        getScheduleDetail(jsEvent, calEvent.id);
     },
 
     /* on select */
@@ -83,9 +84,11 @@
     var $this = this;
     $this.$calendarObj = $this.$calendar.fullCalendar({
         slotDuration: '00:15:00', /* If we want to split day time each 15minutes */
-        minTime: '08:00:00',
-        maxTime: '19:00:00',
+        minTime: window.googleCalendarConnected ? '00:00:00' : '08:00:00',
+        maxTime: window.googleCalendarConnected ? '24:00:00' : '19:00:00',
+        scrollTime: '08:00:00',
         defaultView: 'month',
+        timezone: 'local',
         handleWindowResize: true,
 
         header: {
@@ -93,7 +96,7 @@
             center: 'title',
             right: 'month,agendaWeek,agendaDay'
         },
-        events: defaultEvents,
+        eventSources: [{events: defaultEvents}].concat(window.googleCalendarEventSource ? [window.googleCalendarEventSource] : []),
         editable: true,
         droppable: false, // this allows things to be dropped onto the calendar !!!
         eventLimit: true, // allow "more" link when too many events
@@ -111,7 +114,12 @@
             $this.onEventClick(calEvent, jsEvent, view);
         },
         eventRender: function (event, element) {
-            element.find('.fc-title').html(event.title);
+            var title = event.title;
+            if (event.sourceType === 'google') {
+                if (!event.allDay && event.start) title = event.start.format('HH:mm') + ' ' + title;
+                element.attr('title', title + ' (Google Calendar)');
+            }
+            element.find('.fc-title').text(title);
         }
 
 
@@ -146,9 +154,11 @@
         $this.$calendar.fullCalendar('destroy');
         $this.$calendarObj = $this.$calendar.fullCalendar({
             slotDuration: '00:15:00', /* If we want to split day time each 15minutes */
-            minTime: '08:00:00',
-            maxTime: '19:00:00',
+            minTime: window.googleCalendarConnected ? '00:00:00' : '08:00:00',
+            maxTime: window.googleCalendarConnected ? '24:00:00' : '19:00:00',
+            scrollTime: '08:00:00',
             defaultView: 'month',
+            timezone: 'local',
             handleWindowResize: true,
 
             header: {
@@ -156,7 +166,7 @@
                 center: 'title',
                 right: 'month,agendaWeek,agendaDay'
             },
-            events: defaultEvents,
+            eventSources: [{events: defaultEvents}].concat(window.googleCalendarEventSource ? [window.googleCalendarEventSource] : []),
             editable: true,
             droppable: false, // this allows things to be dropped onto the calendar !!!
             eventLimit: true, // allow "more" link when too many events
@@ -174,7 +184,12 @@
                 $this.onEventClick(calEvent, jsEvent, view);
             },
             eventRender: function (event, element) {
-                element.find('.fc-title').html(event.title);
+                var title = event.title;
+                if (event.sourceType === 'google') {
+                    if (!event.allDay && event.start) title = event.start.format('HH:mm') + ' ' + title;
+                    element.attr('title', title + ' (Google Calendar)');
+                }
+                element.find('.fc-title').text(title);
             }
 
 

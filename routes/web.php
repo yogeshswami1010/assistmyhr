@@ -369,6 +369,10 @@ Route::middleware('auth')->group(function () {
             Route::resource('application-status',   AdminApplicationStatusController::class);
 
             // Interview Schedule
+            Route::post('interview-schedule/google-calendar/connect', [\App\Http\Controllers\Admin\GoogleCalendarController::class, 'connect'])->middleware('throttle:10,1')->name('interview-schedule.google.connect');
+            Route::get('interview-schedule/google-calendar/callback', [\App\Http\Controllers\Admin\GoogleCalendarController::class, 'callback'])->middleware('throttle:10,1')->name('interview-schedule.google.callback');
+            Route::get('interview-schedule/google-calendar/events', [\App\Http\Controllers\Admin\GoogleCalendarController::class, 'events'])->middleware('throttle:60,1')->name('interview-schedule.google.events');
+            Route::delete('interview-schedule/google-calendar', [\App\Http\Controllers\Admin\GoogleCalendarController::class, 'disconnect'])->middleware('throttle:10,1')->name('interview-schedule.google.disconnect');
             Route::get('interview-schedule/data',                       [InterviewScheduleController::class, 'data'])->name('interview-schedule.data');
             Route::get('interview-schedule/table-view',                 [InterviewScheduleController::class, 'table'])->name('interview-schedule.table-view');
             Route::post('interview-schedule/change-status',             [InterviewScheduleController::class, 'changeStatus'])->name('interview-schedule.change-status');
