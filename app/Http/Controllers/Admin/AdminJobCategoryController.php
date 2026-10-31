@@ -160,13 +160,17 @@ class AdminJobCategoryController extends AdminBaseController
             ->flip()
             ->all();
 
-        $configuredKeys = AiApiKey::query()
+        $deepseekKey = trim((string) config('services.deepseek.key'));
+        $configuredKeys = $deepseekKey !== '' ? collect() : AiApiKey::query()
             ->active()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
-        $apiCandidates = [];
+        $apiCandidates = $deepseekKey !== '' ? [[
+            'provider' => 'deepseek',
+            'api_key' => $deepseekKey,
+        ]] : [];
         foreach ($configuredKeys as $row) {
             $plainKey = $this->resolvePlainApiKey((string) $row->api_key);
             if ($plainKey === '') {
@@ -433,6 +437,9 @@ class AdminJobCategoryController extends AdminBaseController
     private function normalizeProvider(string $provider): string
     {
         $provider = strtolower(trim($provider));
+        if (Str::contains($provider, 'deepseek')) {
+            return 'deepseek';
+        }
         if ($provider === '' || Str::contains($provider, 'openai') || Str::contains($provider, 'gpt')) {
             return 'openai';
         }
@@ -453,14 +460,18 @@ class AdminJobCategoryController extends AdminBaseController
     {
         $provider = $this->normalizeProvider($provider);
 
-        if ($provider === 'openai' || $provider === 'groq') {
-            $url = $provider === 'groq'
-                ? 'https://api.groq.com/openai/v1/chat/completions'
-                : 'https://api.openai.com/v1/chat/completions';
+        if (in_array($provider, ['openai', 'groq', 'deepseek'], true)) {
+            $url = match ($provider) {
+                'deepseek' => 'https://api.deepseek.com/chat/completions',
+                'groq' => 'https://api.groq.com/openai/v1/chat/completions',
+                default => 'https://api.openai.com/v1/chat/completions',
+            };
 
-            $model = $provider === 'groq'
-                ? env('AI_JOB_GENERATOR_GROQ_MODEL', 'llama-3.1-8b-instant')
-                : env('AI_JOB_GENERATOR_MODEL', 'gpt-5-nano');
+            $model = match ($provider) {
+                'deepseek' => config('services.deepseek.model', 'deepseek-chat'),
+                'groq' => env('AI_JOB_GENERATOR_GROQ_MODEL', 'llama-3.1-8b-instant'),
+                default => env('AI_JOB_GENERATOR_MODEL', 'gpt-5-nano'),
+            };
 
             $messages = array_merge(
                 [['role' => 'system', 'content' => $systemPrompt]],
