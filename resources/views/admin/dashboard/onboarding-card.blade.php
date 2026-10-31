@@ -20,6 +20,7 @@
                     <p class="text-[11px] mt-0.5 text-white/40">{{ __('messages.installationCongratulation') }}</p>
                 </div>
             </div>
+            @unless(config('saas.enabled'))
             <div class="rd-step-row">
                 @if(isset($progress['smtp_setting_completed']))
                     <div class="rd-sdot rd-sdot-ok">
@@ -39,6 +40,7 @@
                     <p class="text-[11px] mt-0.5 text-white/40">{{ __('messages.installationSmtp') }}</p>
                 </div>
             </div>
+            @endunless
             <div class="rd-step-row">
                 @if(isset($progress['company_setting_completed']))
                     <div class="rd-sdot rd-sdot-ok">

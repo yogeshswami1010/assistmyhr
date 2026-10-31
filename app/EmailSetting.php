@@ -60,6 +60,7 @@ class EmailSetting extends Authenticatable
     }
 
     public function getSetSmtpMessageAttribute(){
+        if (config('saas.enabled')) { return null; }
         if ($this->verified === 0 && $this->mail_driver == 'smtp') {
             return ' <div class="alert alert-danger">
                     '.__('messages.smtpNotSet').'

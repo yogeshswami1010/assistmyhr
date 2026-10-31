@@ -14,6 +14,7 @@ class AdminSmtpSettingController extends AdminBaseController
     public function __construct()
     {
         parent::__construct();
+        abort_if(config('saas.enabled'), 403, 'Email delivery is managed by the platform administrator.');
         $this->pageTitle = __('menu.mailSetting');
         $this->pageIcon = 'ti-user';
     }

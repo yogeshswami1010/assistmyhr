@@ -208,9 +208,11 @@ class PlatformController extends Controller
         $context = app(TenantContext::class);
         $usage = null;
         $outlookMailbox = null;
+        $clientSmtp = null;
         try {
             $context->activate($tenant);
             $usage = app(QuotaService::class)->usage();
+            $clientSmtp = \App\EmailSetting::first()?->only(['mail_host', 'mail_port', 'mail_encryption', 'mail_username', 'mail_from_name', 'mail_from_email', 'verified']);
             if (\Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes')) {
                 $outlookMailbox = \App\CandidateReplyMailbox::first(['email', 'last_synced_at', 'sync_error']);
             }
@@ -218,7 +220,7 @@ class PlatformController extends Controller
         catch (\Throwable $e) { report($e); }
         finally { $context->reset(); }
         return $this->platformView('saas.platform-tenant', ['tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get(),
-            'microsoftApp' => app(\App\Services\MicrosoftReplyAppSettings::class)->metadata($tenant), 'outlookMailbox' => $outlookMailbox]);
+            'microsoftApp' => app(\App\Services\MicrosoftReplyAppSettings::class)->metadata($tenant), 'outlookMailbox' => $outlookMailbox, 'clientSmtp' => $clientSmtp]);
     }
     public function updateTenant(Request $request, Tenant $tenant)
     {
@@ -324,6 +326,35 @@ class PlatformController extends Controller
         PlatformSetting::updateOrCreate(['key'=>'telephony.'.$tenant->id],['value'=>json_encode($data)]);
         AuditLog::create(['tenant_id'=>$tenant->id,'admin_id'=>Auth::guard('platform')->id(),'action'=>'telephony.client_updated','reason'=>'Client calling and SMS permissions updated.','after'=>$data]);
         return back()->with('status','Client calling and SMS settings saved.');
+    }
+
+    public function saveClientSmtp(Request $request, Tenant $tenant)
+    {
+        abort_unless(Auth::guard('platform')->check(), 403);
+        abort_if(in_array($tenant->status, ['failed', 'provisioning']), 422, 'Repair this workspace before configuring email.');
+        $request->merge(['mail_driver' => 'smtp']);
+        $data = $request->validate((new \App\Http\Requests\SmtpSetting\UpdateSmtpSetting())->rules());
+        $data['mail_encryption'] = \App\Services\SmtpConfiguration::encryption($data['mail_encryption'] ?? null, (int) $data['mail_port']);
+        if (empty($data['mail_password'])) unset($data['mail_password']);
+        $data['verified'] = 0;
+        $adminId = Auth::guard('platform')->id();
+        $context = app(TenantContext::class);
+        $previous = $context->current();
+        try {
+            $context->activate($tenant);
+            $smtp = \App\EmailSetting::firstOrFail();
+            $smtp->update($data);
+            cache()->forget('smtp_setting');
+            session()->forget('smtp_setting');
+            AuditLog::create(['tenant_id' => $tenant->id, 'admin_id' => $adminId,
+                'action' => 'email.smtp_updated', 'reason' => 'Client SMTP configuration updated.',
+                'after' => ['password_updated' => isset($data['mail_password'])]]);
+            $result = $smtp->verifySmtp();
+            return redirect()->route('superadmin.tenants.show', $tenant)->with('client_tab', 'smtp')
+                ->with('status', $result['success'] ? 'Client SMTP settings saved and connection verified.' : 'Settings saved. SMTP connection failed; check the host, port, encryption and credentials.');
+        } finally {
+            $previous ? $context->activate($previous) : $context->reset();
+        }
     }
 
     public function saveClientMicrosoftInbox(Request $request, Tenant $tenant)

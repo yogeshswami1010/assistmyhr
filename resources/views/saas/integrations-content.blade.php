@@ -1,10 +1,5 @@
 <div class="integration-grid">
-    <section class="card">
-        <span class="integration-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></span>
-        <h2>Company email</h2>
-        <p class="muted">Connect your company's SMTP account to send recruitment emails from your own mailbox.</p>
-        <a class="button secondary" href="{{ tenant_route('admin.smtp-settings.index') }}">Configure SMTP →</a>
-    </section>
+
     <section class="card">
         <span class="integration-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></svg></span>
         <h2>AI services</h2>
@@ -17,7 +12,7 @@
         <h2 id="mailbox-title">Candidate reply inbox</h2>
         <p class="muted">Connect the mailbox that receives replies to your recruitment emails. Candidate replies appear automatically in Email Conversation after each scheduled sync.</p>
         <div class="integration-note">For Outlook and Microsoft 365, use <strong>Connect Outlook</strong> and sign in with your company mailbox. Microsoft requires this sign-in to read incoming emails. Each workspace connects its own mailbox.</div>
-        <div class="integration-note">For Gmail, Zoho and other IMAP providers, use the IMAP settings. The connection uses your saved company SMTP username and password, which must also allow IMAP access.</div>
+        <div class="integration-note">For Gmail, Zoho and other IMAP providers, use the IMAP settings. Your platform administrator manages the email credentials, which must also allow IMAP access.</div>
     </div>
     <div>
         <h3 style="font-size:16px;margin:0 0 12px">Outlook / Microsoft 365</h3>
@@ -39,7 +34,7 @@
             @endif
         </div>
         @unless($outlookAvailable)<p class="hint">Microsoft inbox connection needs platform setup. Contact the platform administrator to enable it.</p>@endunless
-        <p class="hint">Outlook replies sync every minute while the server scheduler is running. Connecting Outlook keeps your saved SMTP settings.</p>
+        <p class="hint">Outlook replies sync every minute while the server scheduler is running. Connecting Outlook keeps your outgoing email setup.</p>
         <details style="margin-top:24px" @if(!$outlook) open @endif>
             <summary style="cursor:pointer;font-weight:600;margin-bottom:16px">Gmail, Zoho or other IMAP inbox</summary>
             @if($outlook)<p class="hint" style="margin-bottom:12px">Outlook is connected. IMAP settings are saved for use after disconnecting Outlook.</p>@endif

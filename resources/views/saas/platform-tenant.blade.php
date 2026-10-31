@@ -19,6 +19,7 @@
 <button type="button" role="tab" id="client-tab-overview" aria-controls="client-panel-overview" aria-selected="true" data-client-tab="overview" tabindex="0">Overview</button>
 <button type="button" role="tab" id="client-tab-subscription" aria-controls="client-panel-subscription" aria-selected="false" data-client-tab="subscription" tabindex="-1">Subscription & Plan</button>
 <button type="button" role="tab" id="client-tab-telephony" aria-controls="client-panel-telephony" aria-selected="false" data-client-tab="telephony" tabindex="-1">Calling & SMS</button>
+<button type="button" role="tab" id="client-tab-smtp" aria-controls="client-panel-smtp" aria-selected="false" data-client-tab="smtp" tabindex="-1">Email SMTP</button>
 <button type="button" role="tab" id="client-tab-outlook" aria-controls="client-panel-outlook" aria-selected="false" data-client-tab="outlook" tabindex="-1">Outlook Inbox</button>
 <button type="button" role="tab" id="client-tab-history" aria-controls="client-panel-history" aria-selected="false" data-client-tab="history" tabindex="-1">History</button>
 <button type="button" role="tab" id="client-tab-account" aria-controls="client-panel-account" aria-selected="false" data-client-tab="account" tabindex="-1">Account Controls</button>
@@ -57,6 +58,22 @@
 @if(!\App\Saas\PlatformSetting::valueFor('telnyx_public_key'))<p style="color:#b45309">Incoming replies also require the webhook public key in Super Admin Settings.</p>@endif
 <button>Save client calling and SMS</button></form></div>
 </section>
+<section class="client-panel" role="tabpanel" id="client-panel-smtp" aria-labelledby="client-tab-smtp" hidden>
+<div class="card"><h2>Email SMTP</h2><p class="muted">Manage outgoing email for this client. Clients cannot view or change these settings.</p>
+@if($clientSmtp !== null)
+<p>{{ !empty($clientSmtp['verified']) ? 'Connection verified' : 'Connection not verified' }}</p>
+<form method="post" action="{{ route('superadmin.tenants.smtp', $tenant) }}" autocomplete="off">@csrf
+<input type="hidden" name="client_tab" value="smtp">
+<label class="bs-set-lbl" for="mail_host">SMTP host</label><input class="bs-f-input" id="mail_host" name="mail_host" type="text" value="{{ old('mail_host', $clientSmtp['mail_host'] ?? '') }}" required>
+<label class="bs-set-lbl" for="mail_port">Port</label><input class="bs-f-input" id="mail_port" name="mail_port" type="number" value="{{ old('mail_port', $clientSmtp['mail_port'] ?? '') }}" required>
+<label class="bs-set-lbl" for="mail_username">Username</label><input class="bs-f-input" id="mail_username" name="mail_username" type="text" value="{{ old('mail_username', $clientSmtp['mail_username'] ?? '') }}" >
+<label class="bs-set-lbl" for="mail_from_name">Sender name</label><input class="bs-f-input" id="mail_from_name" name="mail_from_name" type="text" value="{{ old('mail_from_name', $clientSmtp['mail_from_name'] ?? '') }}" required>
+<label class="bs-set-lbl" for="mail_from_email">Sender email</label><input class="bs-f-input" id="mail_from_email" name="mail_from_email" type="email" value="{{ old('mail_from_email', $clientSmtp['mail_from_email'] ?? '') }}" required>
+<label class="bs-set-lbl" for="mail_encryption">Encryption</label><select class="bs-f-sel" id="mail_encryption" name="mail_encryption">@foreach(['tls' => 'STARTTLS', 'ssl' => 'SSL / TLS', 'none' => 'None'] as $value => $label)<option value="{{ $value }}" @selected(old('mail_encryption', $clientSmtp['mail_encryption'] ?? 'tls') === $value)>{{ $label }}</option>@endforeach</select>
+<label class="bs-set-lbl" for="mail_password">Password</label><input class="bs-f-input" type="password" id="mail_password" name="mail_password" autocomplete="new-password" maxlength="8192" placeholder="Leave blank to keep the saved password">
+<button type="submit">Save &amp; verify connection</button></form>
+@else<p class="muted">Email settings are unavailable for this workspace.</p>@endif
+</div></section>
 <section class="client-panel" role="tabpanel" id="client-panel-outlook" aria-labelledby="client-tab-outlook" hidden>
 @include('saas.platform-microsoft-inbox')
 </section>

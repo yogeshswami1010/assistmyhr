@@ -28,6 +28,7 @@ class Handler extends ExceptionHandler
         'password',
         'password_confirmation',
         'microsoft_client_secret',
+        'mail_password',
     ];
 
     /**

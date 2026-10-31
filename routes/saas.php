@@ -54,6 +54,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('admins', [PlatformController::class, 'createAdmin'])->middleware('throttle:5,1')->name('admins.store');
         Route::post('settings/telephony', [PlatformController::class, 'saveTelephony'])->name('telephony.save');
         Route::post('tenants/{tenant}/telephony', [PlatformController::class, 'saveClientTelephony'])->name('tenants.telephony');
+        Route::post('tenants/{tenant}/smtp', [PlatformController::class, 'saveClientSmtp'])->middleware('throttle:10,1')->name('tenants.smtp');
         Route::post('tenants/{tenant}/microsoft-inbox', [PlatformController::class, 'saveClientMicrosoftInbox'])->middleware('throttle:10,1')->name('tenants.microsoft-inbox');
         Route::get('settings', [PlatformController::class, 'settings'])->name('settings');
         Route::post('settings', [PlatformController::class, 'saveSettings'])->name('settings.save');

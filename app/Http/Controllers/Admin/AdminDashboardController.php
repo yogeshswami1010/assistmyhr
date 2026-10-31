@@ -82,7 +82,7 @@ class AdminDashboardController extends AdminBaseController
 
     private function progressbarPercent()
     {
-        $totalItems = 4;
+        $totalItems = config('saas.enabled') ? 3 : 4;
         $completedItem = 1;
         $progress = [];
         $progress['progress_completed'] = false;
@@ -93,7 +93,7 @@ class AdminDashboardController extends AdminBaseController
             $progress['company_setting_completed'] = true;
         }
 
-        if ($smtpSetting->verified !== 0 || $smtpSetting->mail_driver == 'mail') {
+        if (!config('saas.enabled') && ($smtpSetting->verified !== 0 || $smtpSetting->mail_driver == 'mail')) {
             $progress['smtp_setting_completed'] = true;
 
             $completedItem++;
