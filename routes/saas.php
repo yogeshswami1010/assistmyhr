@@ -15,8 +15,7 @@ Route::get('/ats-app/{slug}/manifest.webmanifest', [\App\Http\Controllers\Saas\A
     ->where('slug', '[a-z0-9][a-z0-9-]{1,49}')->name('saas.app.manifest');
 Route::get('/saas-files/{workspace}/{path}', [FileController::class, 'show'])->where('path', '.*')->name('saas.files');
 Route::middleware('auth')->group(function () {
-    Route::get('/account/integrations', [\App\Http\Controllers\Saas\IntegrationsController::class, 'index'])->name('saas.integrations');
-    Route::post('/account/integrations', [AccountController::class, 'saveIntegrations'])->name('saas.integrations.save');
+    Route::get('/account/outlook', [\App\Http\Controllers\Saas\IntegrationsController::class, 'index'])->name('saas.microsoft.index');
     Route::post('/account/integrations/microsoft/connect', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'connect'])->middleware('throttle:10,1')->name('saas.microsoft.connect');
     Route::get('/account/integrations/microsoft/callback', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'callback'])->name('saas.microsoft.callback');
     Route::delete('/account/integrations/microsoft', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'disconnect'])->name('saas.microsoft.disconnect');
@@ -54,6 +53,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('admins', [PlatformController::class, 'createAdmin'])->middleware('throttle:5,1')->name('admins.store');
         Route::post('settings/telephony', [PlatformController::class, 'saveTelephony'])->name('telephony.save');
         Route::post('tenants/{tenant}/telephony', [PlatformController::class, 'saveClientTelephony'])->name('tenants.telephony');
+        Route::post('tenants/{tenant}/imap', [PlatformController::class, 'saveClientImap'])->middleware('throttle:10,1')->name('tenants.imap');
         Route::post('tenants/{tenant}/smtp', [PlatformController::class, 'saveClientSmtp'])->middleware('throttle:10,1')->name('tenants.smtp');
         Route::post('tenants/{tenant}/microsoft-inbox', [PlatformController::class, 'saveClientMicrosoftInbox'])->middleware('throttle:10,1')->name('tenants.microsoft-inbox');
         Route::get('settings', [PlatformController::class, 'settings'])->name('settings');

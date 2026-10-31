@@ -281,8 +281,16 @@ check(App\Saas\AuditLog::where('tenant_id',$alpha->id)->where('action','subscrip
 check(str_contains($sentResponse->getTargetUrl(),'/account/subscription'),'Client request returns to subscription page');
 check(str_contains(view('saas.subscription-content',$account->subscription()->getData())->render(),'Please renew our subscription'),'Client sees submitted request history');
 check(str_contains(view('saas.subscription-content', $account->subscription()->getData())->render(),'Request a plan or renewal'),'Client billing page renders with renewal form');
-check(str_contains(view('saas.integrations-content', $account->integrations($request)->getData())->render(),'Candidate reply inbox'),'Client integrations page renders');
-$request->merge(['imap_host'=>'imap.client.example.test','imap_port'=>993]);$account->saveIntegrations($request);
+check(str_contains(view('saas.integrations-content', $account->integrations($request)->getData())->render(),'Candidate reply inbox'),'Client Outlook inbox page renders');
+$request->merge(['imap_host'=>'imap.client.example.test','imap_port'=>993]);
+Auth::guard('platform')->logout();
+try { $platform->saveClientImap($request,$alpha); throw new RuntimeException('Client was allowed to change IMAP settings'); }
+catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) { check($e->getStatusCode()===403,'Client cannot update IMAP settings'); }
+Auth::guard('platform')->login($admin);
+$platform->saveClientImap($request,$alpha);
+check($context->current()?->id===$alpha->id,'IMAP update restores the previous workspace context');
+check(App\Saas\AuditLog::where('tenant_id',$alpha->id)->where('action','email.imap_updated')->exists(),'Super admin IMAP update is audited');
+$context->activate($beta);check(config('services.candidate_email_imap.host')!=='imap.client.example.test','IMAP update does not affect another client');
 $context->activate($alpha);check(config('services.candidate_email_imap.host')==='imap.client.example.test','Own IMAP setting loaded in own workspace');
 $integration=new App\JobApiIntegration;$integration->token_hash=hash('sha256','ROTATED-KEY');$integration->save();
 check(App\Saas\ApiKey::where('token_hash',hash('sha256','ROTATED-KEY'))->where('tenant_id',$alpha->id)->exists(),'Creating jobs key updates central lookup');

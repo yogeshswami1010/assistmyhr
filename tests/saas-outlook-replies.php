@@ -91,7 +91,8 @@ check(!$outlookSession->has('microsoft_reply_oauth'), 'Successful authorization 
 Http::assertSent(fn ($r) => $r->url() === $tokenUrl && $r['code_verifier'] === $pending['verifier'] && $r['client_secret'] === 'TEST-APP-SECRET');
 check(!str_contains(DB::table('candidate_reply_mailboxes')->value('access_token'), 'ALPHA-ACCESS') && !str_contains(DB::table('candidate_reply_mailboxes')->value('refresh_token'), 'ALPHA-REFRESH'), 'Mailbox tokens are encrypted at rest');
 check(!str_contains($mailbox->toJson(), 'ALPHA-ACCESS') && !array_key_exists('refresh_token', $mailbox->toArray()), 'Mailbox tokens are hidden from serialized settings');
-$settingsView = view('saas.integrations-content', (new App\Http\Controllers\Saas\AccountController)->integrations($makeRequest('GET', '/account/integrations'))->getData())->render();
+$settingsView = view('saas.integrations-content', (new App\Http\Controllers\Saas\AccountController)->integrations($makeRequest('GET', '/account/outlook'))->getData())->render();
+check(!str_contains($settingsView, 'imap_host') && !str_contains($settingsView, 'Configure AI services'), 'Client Outlook page does not expose workspace integration settings');
 check(str_contains($settingsView, 'Connected:') && str_contains($settingsView, 'alpha@example.test') && !str_contains($settingsView, 'ALPHA-REFRESH'), 'Client UI shows connection state without tokens');
 $context->activate($gamma);
 check(!CandidateReplyMailbox::exists(), 'Another workspace never inherits a connected mailbox');

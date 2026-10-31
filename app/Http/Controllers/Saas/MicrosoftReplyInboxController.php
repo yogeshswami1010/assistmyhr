@@ -55,7 +55,7 @@ class MicrosoftReplyInboxController extends Controller
             \Illuminate\Support\Facades\Log::warning('Outlook connection could not be saved.', ['exception_type' => $e::class]);
             return $this->failure('The Outlook connection could not be saved. Try again later or contact the platform administrator.');
         }
-        return redirect(tenant_route('saas.integrations'))->with('status', 'Outlook connected. Candidate replies will sync automatically while the server scheduler is running.');
+        return redirect(tenant_route('saas.microsoft.index'))->with('status', 'Outlook connected. Candidate replies will sync automatically while the server scheduler is running.');
     }
 
     public function disconnect(Request $request, MicrosoftReplyInbox $inbox)
@@ -63,11 +63,11 @@ class MicrosoftReplyInboxController extends Controller
         abort_unless($request->user()->cans('manage_settings'), 403);
         if (!$inbox->disconnect()) return $this->failure('An inbox sync is in progress. Try disconnecting Outlook again shortly.');
         $request->session()->forget('microsoft_reply_oauth');
-        return redirect(tenant_route('saas.integrations'))->with('status', 'Outlook disconnected. Existing email conversations are saved.');
+        return redirect(tenant_route('saas.microsoft.index'))->with('status', 'Outlook disconnected. Existing email conversations are saved.');
     }
 
     private function failure(string $message)
     {
-        return redirect(tenant_route('saas.integrations'))->withErrors(['outlook' => $message]);
+        return redirect(tenant_route('saas.microsoft.index'))->withErrors(['outlook' => $message]);
     }
 }

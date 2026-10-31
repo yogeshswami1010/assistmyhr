@@ -7,7 +7,7 @@ class IntegrationsController extends AdminBaseController
     public function __construct()
     {
         parent::__construct();
-        $this->pageTitle = 'Workspace integrations';
+        $this->pageTitle = 'Outlook inbox';
         $this->pageIcon = 'icon-settings';
     }
     public function index(Request $request)

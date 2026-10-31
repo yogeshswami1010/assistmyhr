@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page-subtitle', 'Connect your company email, candidate reply inbox and AI services.')
+@section('page-subtitle', 'Authorize Outlook to receive candidate replies.')
 @push('head-script')
 @include('admin.partials.settings-design-styles')
 @include('saas.account-design-styles')

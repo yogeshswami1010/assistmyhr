@@ -16,22 +16,12 @@ class AccountController extends Controller
     {
         abort_unless($request->user()->cans('manage_settings'), 403);
         return view('saas.integrations', [
-            'settings' => \Illuminate\Support\Facades\DB::table('tenant_service_settings')->first(),
             'outlook' => \Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes') ? \App\CandidateReplyMailbox::find(1) : null,
             'outlookAvailable' => app(\App\Services\MicrosoftReplyInbox::class)->configured()
                 && \Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes'),
         ]);
     }
 
-    public function saveIntegrations(Request $request)
-    {
-        abort_unless($request->user()->cans('manage_settings'), 403);
-        $data = $request->validate(['imap_host' => ['nullable', 'string', 'max:253', 'regex:/\A[a-zA-Z0-9.-]+\z/'], 'imap_port' => ['required', 'integer', 'min:1', 'max:65535']]);
-        $table = \Illuminate\Support\Facades\DB::table('tenant_service_settings');
-        $id = $table->value('id');
-        $id ? $table->where('id', $id)->update($data + ['updated_at' => now()]) : $table->insert($data + ['created_at' => now(), 'updated_at' => now()]);
-        return back()->with('status', 'Mailbox settings saved. SMTP username and password are taken from your ATS SMTP settings.');
-    }
     public function subscription()
     {
         $tenant = app(TenantContext::class)->current();

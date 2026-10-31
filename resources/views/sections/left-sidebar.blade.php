@@ -122,8 +122,8 @@
             @endif
         @endif
 
-        <div x-data="{ open: {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/integrations*') ? 'true' : 'false' }} }">
-            <button data-tour-target="settings" type="button" @click.prevent="open = !open" class="ra-nav-link {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/integrations*') ? 'on' : '' }}">
+        <div x-data="{ open: {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/outlook*') ? 'true' : 'false' }} }">
+            <button data-tour-target="settings" type="button" @click.prevent="open = !open" class="ra-nav-link {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/outlook*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="settings" /></span>
                 <span class="ra-nl">@lang('menu.settings')</span>
                 <svg class="ra-settings-chevron h-2.5 w-2.5 shrink-0 text-white/40 transition-transform ml-auto" :class="open ? '-rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -133,7 +133,7 @@
             <ul x-show="open"
                 x-transition
                 class="ra-nav-sub"
-                style="display: {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/integrations*') ? 'block' : 'none' }};">
+                style="display: {{ \Request()->is('admin/settings/*') || \Request()->is('admin/profile') || request()->is('account/subscription*', 'account/outlook*') ? 'block' : 'none' }};">
                 <li>
                     <a href="@if(!$user->is_superadmin){{ route('admin.profile.index') }}@else{{ route('superadmin.profile.index') }}@endif"
                        class="ra-nav-sublink {{ request()->is('admin/profile*') ? 'on' : '' }}">
@@ -144,7 +144,7 @@
                 @if(in_array('manage_settings', $userPermissions))
                     @if(config('saas.enabled'))
                     <li><a href="{{ tenant_route('saas.subscription') }}" class="ra-nav-sublink {{ request()->is('account/subscription*') ? 'on' : '' }}"><span class="ra-sublink-dot" aria-hidden="true"></span><span>Subscription</span></a></li>
-                    <li><a href="{{ tenant_route('saas.integrations') }}" class="ra-nav-sublink {{ request()->is('account/integrations*') ? 'on' : '' }}"><span class="ra-sublink-dot" aria-hidden="true"></span><span>Workspace integrations</span></a></li>
+                    <li><a href="{{ tenant_route('saas.microsoft.index') }}" class="ra-nav-sublink {{ request()->is('account/outlook*') ? 'on' : '' }}"><span class="ra-sublink-dot" aria-hidden="true"></span><span>Outlook inbox</span></a></li>
                     @endif
                     <li>
                         <a href="{{ route('admin.job-api-settings.index') }}" class="ra-nav-sublink {{ request()->is('admin/settings/jobs-api*') ? 'on' : '' }}">

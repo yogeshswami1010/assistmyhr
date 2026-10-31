@@ -20,6 +20,7 @@
 <button type="button" role="tab" id="client-tab-subscription" aria-controls="client-panel-subscription" aria-selected="false" data-client-tab="subscription" tabindex="-1">Subscription & Plan</button>
 <button type="button" role="tab" id="client-tab-telephony" aria-controls="client-panel-telephony" aria-selected="false" data-client-tab="telephony" tabindex="-1">Calling & SMS</button>
 <button type="button" role="tab" id="client-tab-smtp" aria-controls="client-panel-smtp" aria-selected="false" data-client-tab="smtp" tabindex="-1">Email SMTP</button>
+<button type="button" role="tab" id="client-tab-imap" aria-controls="client-panel-imap" aria-selected="false" data-client-tab="imap" tabindex="-1">IMAP Inbox</button>
 <button type="button" role="tab" id="client-tab-outlook" aria-controls="client-panel-outlook" aria-selected="false" data-client-tab="outlook" tabindex="-1">Outlook Inbox</button>
 <button type="button" role="tab" id="client-tab-history" aria-controls="client-panel-history" aria-selected="false" data-client-tab="history" tabindex="-1">History</button>
 <button type="button" role="tab" id="client-tab-account" aria-controls="client-panel-account" aria-selected="false" data-client-tab="account" tabindex="-1">Account Controls</button>
@@ -73,6 +74,22 @@
 <label class="bs-set-lbl" for="mail_password">Password</label><input class="bs-f-input" type="password" id="mail_password" name="mail_password" autocomplete="new-password" maxlength="8192" placeholder="Leave blank to keep the saved password">
 <button type="submit">Save &amp; verify connection</button></form>
 @else<p class="muted">Email settings are unavailable for this workspace.</p>@endif
+</div></section>
+<section class="client-panel" role="tabpanel" id="client-panel-imap" aria-labelledby="client-tab-imap" hidden>
+<div class="card"><h2>Gmail, Zoho or other IMAP inbox</h2>
+<p class="muted">Configure this client's incoming candidate replies. The connection uses the username and password saved under Email SMTP. Enable IMAP access on the mailbox.</p>
+@if(!in_array($tenant->status, ['failed', 'provisioning']))
+<form method="post" action="{{ route('superadmin.tenants.imap', $tenant) }}">@csrf
+<input type="hidden" name="client_tab" value="imap">
+<label class="bs-set-lbl" for="imap_host">IMAP host</label>
+<input class="bs-f-input" id="imap_host" name="imap_host" maxlength="253" value="{{ old('imap_host', $clientImap?->imap_host) }}" placeholder="imap.example.com" autocomplete="off">
+<p class="muted">Leave blank for automatic Gmail / Zoho detection. Outlook requires Microsoft sign-in under Outlook Inbox.</p>
+<label class="bs-set-lbl" for="imap_port">IMAP TLS port</label>
+<input class="bs-f-input" id="imap_port" name="imap_port" type="number" min="1" max="65535" required value="{{ old('imap_port', $clientImap?->imap_port ?? 993) }}">
+<p class="muted">Replies sync while the server scheduler is running and PHP IMAP is installed. A connected Outlook inbox takes priority over IMAP.</p>
+<button type="submit">Save inbox settings</button>
+</form>
+@else<p class="muted">Repair this workspace before configuring email.</p>@endif
 </div></section>
 <section class="client-panel" role="tabpanel" id="client-panel-outlook" aria-labelledby="client-tab-outlook" hidden>
 @include('saas.platform-microsoft-inbox')

@@ -209,9 +209,11 @@ class PlatformController extends Controller
         $usage = null;
         $outlookMailbox = null;
         $clientSmtp = null;
+        $clientImap = null;
         try {
             $context->activate($tenant);
             $usage = app(QuotaService::class)->usage();
+            $clientImap = DB::table('tenant_service_settings')->first(['imap_host', 'imap_port']);
             $clientSmtp = \App\EmailSetting::first()?->only(['mail_host', 'mail_port', 'mail_encryption', 'mail_username', 'mail_from_name', 'mail_from_email', 'verified']);
             if (\Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes')) {
                 $outlookMailbox = \App\CandidateReplyMailbox::first(['email', 'last_synced_at', 'sync_error']);
@@ -220,7 +222,7 @@ class PlatformController extends Controller
         catch (\Throwable $e) { report($e); }
         finally { $context->reset(); }
         return $this->platformView('saas.platform-tenant', ['tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get(),
-            'microsoftApp' => app(\App\Services\MicrosoftReplyAppSettings::class)->metadata($tenant), 'outlookMailbox' => $outlookMailbox, 'clientSmtp' => $clientSmtp]);
+            'microsoftApp' => app(\App\Services\MicrosoftReplyAppSettings::class)->metadata($tenant), 'outlookMailbox' => $outlookMailbox, 'clientSmtp' => $clientSmtp, 'clientImap' => $clientImap]);
     }
     public function updateTenant(Request $request, Tenant $tenant)
     {
@@ -328,6 +330,35 @@ class PlatformController extends Controller
         return back()->with('status','Client calling and SMS settings saved.');
     }
 
+    public function saveClientImap(Request $request, Tenant $tenant)
+    {
+        abort_unless(Auth::guard('platform')->check(), 403);
+        abort_if(in_array($tenant->status, ['failed', 'provisioning']), 422, 'Repair this workspace before configuring email.');
+        $data = $request->validate([
+            'imap_host' => ['nullable', 'string', 'max:253', 'regex:/\A[a-zA-Z0-9.-]+\z/'],
+            'imap_port' => ['required', 'integer', 'min:1', 'max:65535'],
+        ]);
+        $adminId = Auth::guard('platform')->id();
+        $context = app(TenantContext::class);
+        $previous = $context->current();
+        try {
+            $context->activate($tenant);
+            DB::transaction(function () use ($data, $tenant, $adminId) {
+                $table = DB::table('tenant_service_settings');
+                $id = $table->value('id');
+                $id ? $table->where('id', $id)->update($data + ['updated_at' => now()])
+                    : $table->insert($data + ['created_at' => now(), 'updated_at' => now()]);
+                AuditLog::create(['tenant_id' => $tenant->id, 'admin_id' => $adminId,
+                    'action' => 'email.imap_updated', 'reason' => 'Client reply inbox configuration updated.',
+                    'after' => $data]);
+            });
+            return redirect()->route('superadmin.tenants.show', $tenant)->with('client_tab', 'imap')
+                ->with('status', 'Client IMAP inbox settings saved.');
+        } finally {
+            $previous ? $context->activate($previous) : $context->reset();
+        }
+    }
+
     public function saveClientSmtp(Request $request, Tenant $tenant)
     {
         abort_unless(Auth::guard('platform')->check(), 403);
@@ -406,7 +437,7 @@ class PlatformController extends Controller
             return redirect()->route('superadmin.tenants.show', $tenant)->with('client_tab', 'outlook')
                 ->with('status', $requiresReconnect
                     ? 'Microsoft app settings saved. The client must reconnect Outlook to use the new application.'
-                    : 'Microsoft app settings saved for this client. They can connect Outlook from Workspace Integrations.');
+                    : 'Microsoft app settings saved for this client. They can connect Outlook from Outlook inbox.');
         } finally {
             if ($lock && $locked) $lock->release();
             $previous ? $context->activate($previous) : $context->reset();

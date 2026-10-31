@@ -28,7 +28,7 @@
         @else
             <p class="muted">The client has not connected an Outlook mailbox yet.</p>
         @endif
-        <p class="muted">After saving, open the client account and go to <strong>Workspace Integrations → Connect Outlook</strong>. Sign in with the mailbox that receives candidate replies and approve inbox access.</p>
+        <p class="muted">After saving, open the client account and go to <strong>Outlook inbox → Connect Outlook</strong>. Sign in with the mailbox that receives candidate replies and approve inbox access.</p>
         <label class="bs-set-lbl" for="microsoft-callback-url">Microsoft Web redirect URI</label>
         <input class="bs-f-input" id="microsoft-callback-url" readonly value="{{ app(\App\Services\MicrosoftReplyInbox::class)->redirectUri() }}">
         <p class="muted">Add this redirect URI to the Microsoft app. Use delegated Microsoft Graph permissions <strong>User.Read</strong> and <strong>Mail.Read</strong>, and enable sign-in for multiple organizations and personal Microsoft accounts.</p>
