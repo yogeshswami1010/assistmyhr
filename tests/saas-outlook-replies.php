@@ -25,6 +25,7 @@ Illuminate\Support\Facades\Log::swap(Mockery::mock(Psr\Log\LoggerInterface::clas
 config(['services.microsoft_reply.client_id' => 'TEST-APP', 'services.microsoft_reply.client_secret' => 'TEST-APP-SECRET']);
 $inbox = new MicrosoftReplyInbox;
 $controller = new MicrosoftReplyInboxController;
+Illuminate\Support\Facades\Auth::guard('platform')->login($admin);
 $outlookSession = new Illuminate\Session\Store('outlook-test', new Illuminate\Session\ArraySessionHandler(120));
 $outlookSession->start();
 foreach ([$main, $alpha, $gamma] as $tenant) {
@@ -47,7 +48,7 @@ $makeRequest = function (string $method, string $path, array $data = []) use ($o
     $app->instance('request', $request); $app['url']->setRequest($request);
     return $request;
 };
-$start = fn () => $controller->connect($makeRequest('POST', '/account/integrations/microsoft/connect'), $inbox);
+$start = fn () => $controller->connect($makeRequest('POST', '/superadmin/tenants/'.$alpha->id.'/outlook/connect'), $inbox, $alpha);
 $callback = fn (array $parameters) => $controller->callback($makeRequest('GET', '/account/integrations/microsoft/callback', $parameters), $inbox);
 $tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
 $deltaUrl = 'https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages/delta?$deltatoken=next';
@@ -64,11 +65,11 @@ check($authQuery['redirect_uri'] === 'https://ats.example.test/account/integrati
 check($authQuery['state'] === $pending['state'] && $pending['tenant_id'] === $alpha->id, 'OAuth state belongs to the initiating workspace');
 check($authQuery['code_challenge'] === rtrim(strtr(base64_encode(hash('sha256', $pending['verifier'], true)), '+/', '-_'), '='), 'Microsoft authorization uses S256 PKCE');
 check(str_contains($authQuery['scope'], 'Mail.Read') && !str_contains($authQuery['scope'], 'Mail.ReadWrite'), 'Inbox access requests read-only delegated mail permissions');
-$context->activate($gamma);
+$outlookSession->put('microsoft_reply_oauth.admin_id', -1);
 $bad = $callback(['state' => $pending['state'], 'code' => 'wrong-workspace']);
-check(!CandidateReplyMailbox::exists() && $bad->getSession()->get('errors')->has('outlook'), 'An OAuth callback cannot write another workspace even with the same local user ID');
+check(!CandidateReplyMailbox::exists() && $bad->getSession()->get('errors')->has('outlook'), 'An OAuth callback cannot complete under another administrator');
 Http::assertNothingSent();
-$context->activate($alpha);
+$outlookSession->put('microsoft_reply_oauth.admin_id', $admin->id);
 $outlookSession->put('microsoft_reply_oauth.expires_at', now()->subSecond()->timestamp);
 $callback(['state' => $pending['state'], 'code' => 'expired']);
 Http::assertNothingSent();
@@ -83,17 +84,26 @@ fakeMicrosoft([
     'https://graph.microsoft.com/v1.0/me?*' => Http::response(['mail' => 'alpha@example.test']),
     'https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?*' => Http::response(['value' => []]),
 ]);
+$context->activate($gamma);
 $connected = $callback(['state' => $pending['state'], 'code' => 'authorization-code']);
-check($connected->isRedirect() && str_contains($connected->getTargetUrl(), 'workspace=alpha'), 'Successful connection returns to its client integration settings');
+check($context->current()?->id === $gamma->id && !CandidateReplyMailbox::exists(), 'Callback selects its session-bound client and restores the previous workspace');
+$context->activate($alpha);
+check($connected->isRedirect() && str_contains($connected->getTargetUrl(), '/superadmin/tenants/'.$alpha->id), 'Successful connection returns to the super admin client page');
 $mailbox = CandidateReplyMailbox::findOrFail(1);
 check($mailbox->email === 'alpha@example.test' && $mailbox->refresh_token === 'ALPHA-REFRESH', 'Microsoft mailbox and refresh token are saved for this client');
 check(!$outlookSession->has('microsoft_reply_oauth'), 'Successful authorization consumes OAuth state');
 Http::assertSent(fn ($r) => $r->url() === $tokenUrl && $r['code_verifier'] === $pending['verifier'] && $r['client_secret'] === 'TEST-APP-SECRET');
 check(!str_contains(DB::table('candidate_reply_mailboxes')->value('access_token'), 'ALPHA-ACCESS') && !str_contains(DB::table('candidate_reply_mailboxes')->value('refresh_token'), 'ALPHA-REFRESH'), 'Mailbox tokens are encrypted at rest');
 check(!str_contains($mailbox->toJson(), 'ALPHA-ACCESS') && !array_key_exists('refresh_token', $mailbox->toArray()), 'Mailbox tokens are hidden from serialized settings');
-$settingsView = view('saas.integrations-content', (new App\Http\Controllers\Saas\AccountController)->integrations($makeRequest('GET', '/account/outlook'))->getData())->render();
-check(!str_contains($settingsView, 'imap_host') && !str_contains($settingsView, 'Configure AI services'), 'Client Outlook page does not expose workspace integration settings');
-check(str_contains($settingsView, 'Connected:') && str_contains($settingsView, 'alpha@example.test') && !str_contains($settingsView, 'ALPHA-REFRESH'), 'Client UI shows connection state without tokens');
+$settingsView = view('saas.platform-microsoft-inbox', [
+    'tenant' => $alpha, 'outlookMailbox' => $mailbox,
+    'microsoftApp' => app(App\Services\MicrosoftReplyAppSettings::class)->metadata($alpha),
+])->render();
+check(str_contains($settingsView, 'Disconnect Outlook') && str_contains($settingsView, 'alpha@example.test') && !str_contains($settingsView, 'ALPHA-REFRESH'), 'Super admin UI shows connection controls without tokens');
+foreach (['superadmin.tenants.outlook.connect', 'superadmin.tenants.outlook.disconnect', 'saas.microsoft.callback'] as $routeName) {
+    check(in_array('auth:platform', $app['router']->getRoutes()->getByName($routeName)->gatherMiddleware(), true), 'Outlook route requires platform authentication: '.$routeName);
+}
+check($app['router']->getRoutes()->getByName('saas.microsoft.index') === null && $app['router']->getRoutes()->getByName('saas.microsoft.connect') === null, 'Client Outlook page and connection routes are removed');
 $context->activate($gamma);
 check(!CandidateReplyMailbox::exists(), 'Another workspace never inherits a connected mailbox');
 $context->activate($alpha);
@@ -167,14 +177,19 @@ CandidateReplyMailbox::create(['id' => 1, 'email' => 'gamma@example.test', 'acce
 $inbox->sync(CandidateReplyMailbox::find(1));
 Http::assertSent(fn ($r) => $r->hasHeader('Authorization', 'Bearer GAMMA-ACCESS'));
 check(CandidateEmailMessage::count() === 0, 'Other clients never receive this workspace conversation');
-$controller->disconnect($makeRequest('DELETE', '/account/integrations/microsoft'), $inbox);
+$controller->disconnect($makeRequest('DELETE', '/superadmin/tenants/'.$gamma->id.'/outlook'), $inbox, $gamma);
 check(!CandidateReplyMailbox::exists(), 'Disconnect deletes only the current workspace tokens');
 $context->activate($alpha);
 check(CandidateReplyMailbox::exists() && CandidateEmailMessage::where('direction', 'inbound')->count() === 1, 'Another client disconnecting preserves the connected client and conversation');
-$restricted = $makeRequest('POST', '/account/integrations/microsoft/connect');
+Illuminate\Support\Facades\Auth::guard('platform')->logout();
+$restricted = $makeRequest('POST', '/superadmin/tenants/'.$alpha->id.'/outlook/connect');
 $restricted->setUserResolver(fn () => new class { public function cans($permission) { return false; } });
-try { $controller->connect($restricted, $inbox); throw new RuntimeException('Missing permission accepted'); }
-catch (Symfony\Component\HttpKernel\Exception\HttpException $e) { check($e->getStatusCode() === 403, 'Only users who manage settings can connect a mailbox'); }
+try { $controller->connect($restricted, $inbox, $alpha); throw new RuntimeException('Missing permission accepted'); }
+catch (Symfony\Component\HttpKernel\Exception\HttpException $e) { check($e->getStatusCode() === 403, 'Only platform administrators can connect a mailbox'); }
+try { $controller->disconnect($restricted, $inbox, $alpha); throw new RuntimeException('Client disconnected Outlook'); }
+catch (Symfony\Component\HttpKernel\Exception\HttpException $e) { check($e->getStatusCode() === 403, 'Clients cannot disconnect Outlook'); }
+try { $callback(['state' => 'forged', 'code' => 'forged']); throw new RuntimeException('Client completed Outlook OAuth'); }
+catch (Symfony\Component\HttpKernel\Exception\HttpException $e) { check($e->getStatusCode() === 403, 'Clients cannot complete Outlook authorization'); }
 $context->reset();
 check(!CandidateReplyMailbox::exists(), 'Mailbox operations leave the platform database untouched');
 Carbon\Carbon::setTestNow();

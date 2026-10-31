@@ -34,7 +34,7 @@ class ImportCandidateEmailReplies extends Command
         $smtp = config('mail.ai_search_smtp');
         $host = $settings['host'] ?? null;
         if (in_array(strtolower((string) $host), ['outlook.office365.com', 'imap-mail.outlook.com'], true)) {
-            $this->error('Outlook requires Microsoft sign-in. Open Outlook inbox and use Connect Outlook; the SMTP password cannot receive Outlook replies.');
+            $this->error('Outlook requires Microsoft sign-in. Use Super Admin > Client > Outlook Inbox > Connect Outlook; the SMTP password cannot receive Outlook replies.');
             return self::FAILURE;
         }
         if (!function_exists('imap_open')) {

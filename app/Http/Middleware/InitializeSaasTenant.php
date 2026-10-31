@@ -29,7 +29,7 @@ class InitializeSaasTenant
         abort_if($request->isMethod('GET') && $request->is('admin/settings/application-setting'), 404);
         $context = app(TenantContext::class);
         $context->reset();
-        if ($request->is('superadmin*', 'register', 'pricing', 'website/enquiries', 'saas/workspace/*', 'ats-app/*') || $request->path() === '/') {
+        if ($request->is('superadmin*', 'account/integrations/microsoft/callback', 'register', 'pricing', 'website/enquiries', 'saas/workspace/*', 'ats-app/*') || $request->path() === '/') {
             try { return $this->privateResponse($next($request)); } finally { $context->reset(); }
         }
         $api = $request->is('api/jobs', 'api/jobs/*');

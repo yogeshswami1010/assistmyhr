@@ -12,16 +12,6 @@ use Illuminate\Validation\Rule;
 
 class AccountController extends Controller
 {
-    public function integrations(Request $request)
-    {
-        abort_unless($request->user()->cans('manage_settings'), 403);
-        return view('saas.integrations', [
-            'outlook' => \Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes') ? \App\CandidateReplyMailbox::find(1) : null,
-            'outlookAvailable' => app(\App\Services\MicrosoftReplyInbox::class)->configured()
-                && \Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes'),
-        ]);
-    }
-
     public function subscription()
     {
         $tenant = app(TenantContext::class)->current();

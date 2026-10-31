@@ -14,11 +14,9 @@ Route::get('/saas/workspace/{slug}', [SignupController::class, 'workspace'])->na
 Route::get('/ats-app/{slug}/manifest.webmanifest', [\App\Http\Controllers\Saas\AppInstallationController::class, 'manifest'])
     ->where('slug', '[a-z0-9][a-z0-9-]{1,49}')->name('saas.app.manifest');
 Route::get('/saas-files/{workspace}/{path}', [FileController::class, 'show'])->where('path', '.*')->name('saas.files');
+// Keep the registered Microsoft callback URL; only platform administrators may complete it.
+Route::get('/account/integrations/microsoft/callback', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'callback'])->middleware('auth:platform')->name('saas.microsoft.callback');
 Route::middleware('auth')->group(function () {
-    Route::get('/account/outlook', [\App\Http\Controllers\Saas\IntegrationsController::class, 'index'])->name('saas.microsoft.index');
-    Route::post('/account/integrations/microsoft/connect', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'connect'])->middleware('throttle:10,1')->name('saas.microsoft.connect');
-    Route::get('/account/integrations/microsoft/callback', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'callback'])->name('saas.microsoft.callback');
-    Route::delete('/account/integrations/microsoft', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'disconnect'])->name('saas.microsoft.disconnect');
     Route::get('/account/subscription', [\App\Http\Controllers\Saas\SubscriptionController::class, 'index'])->name('saas.subscription');
     Route::post('/account/subscription/request-plan', [AccountController::class, 'requestPlan'])->middleware('throttle:5,60')->name('saas.request-plan');
     Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
@@ -55,6 +53,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('tenants/{tenant}/telephony', [PlatformController::class, 'saveClientTelephony'])->name('tenants.telephony');
         Route::post('tenants/{tenant}/imap', [PlatformController::class, 'saveClientImap'])->middleware('throttle:10,1')->name('tenants.imap');
         Route::post('tenants/{tenant}/smtp', [PlatformController::class, 'saveClientSmtp'])->middleware('throttle:10,1')->name('tenants.smtp');
+        Route::post('tenants/{tenant}/outlook/connect', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'connect'])->middleware('throttle:10,1')->name('tenants.outlook.connect');
+        Route::delete('tenants/{tenant}/outlook', [\App\Http\Controllers\Saas\MicrosoftReplyInboxController::class, 'disconnect'])->middleware('throttle:10,1')->name('tenants.outlook.disconnect');
         Route::post('tenants/{tenant}/microsoft-inbox', [PlatformController::class, 'saveClientMicrosoftInbox'])->middleware('throttle:10,1')->name('tenants.microsoft-inbox');
         Route::get('settings', [PlatformController::class, 'settings'])->name('settings');
         Route::post('settings', [PlatformController::class, 'saveSettings'])->name('settings.save');

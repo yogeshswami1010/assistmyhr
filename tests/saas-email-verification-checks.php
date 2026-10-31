@@ -13,7 +13,7 @@ $verificationLink = $verificationMail->actionUrl;
 check(str_contains($verificationLink, 'workspace='.$gamma->slug), 'Signed email verification link includes its workspace');
 $context->reset();
 
-foreach (['/admin/dashboard', '/admin/jobs', '/account/outlook', '/account/subscription', '/saas-files/'.$gamma->slug.'/resume.txt'] as $path) {
+foreach (['/admin/dashboard', '/admin/jobs', '/account/subscription', '/saas-files/'.$gamma->slug.'/resume.txt'] as $path) {
     $response = $middleware->handle(middlewareRequest($path.'?workspace='.$gamma->slug, $session), fn() => throw new RuntimeException('Unverified user reached '.$path));
     check($response->isRedirect($verificationUrl), 'Unverified session cannot access '.$path);
     check(str_contains($response->headers->get('Cache-Control'), 'no-store') && $context->current() === null, 'Verification redirect is private and restores tenant context');

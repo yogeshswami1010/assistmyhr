@@ -281,7 +281,7 @@ check(App\Saas\AuditLog::where('tenant_id',$alpha->id)->where('action','subscrip
 check(str_contains($sentResponse->getTargetUrl(),'/account/subscription'),'Client request returns to subscription page');
 check(str_contains(view('saas.subscription-content',$account->subscription()->getData())->render(),'Please renew our subscription'),'Client sees submitted request history');
 check(str_contains(view('saas.subscription-content', $account->subscription()->getData())->render(),'Request a plan or renewal'),'Client billing page renders with renewal form');
-check(str_contains(view('saas.integrations-content', $account->integrations($request)->getData())->render(),'Candidate reply inbox'),'Client Outlook inbox page renders');
+check($app['router']->getRoutes()->getByName('saas.microsoft.index') === null, 'Client Outlook settings page is removed');
 $request->merge(['imap_host'=>'imap.client.example.test','imap_port'=>993]);
 Auth::guard('platform')->logout();
 try { $platform->saveClientImap($request,$alpha); throw new RuntimeException('Client was allowed to change IMAP settings'); }

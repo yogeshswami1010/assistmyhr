@@ -55,7 +55,7 @@ class Handler extends ExceptionHandler
             return redirect()->route('login')->withErrors($exception->errors())->withInput($request->only('email'));
         }
         if (config('saas.enabled') && $exception instanceof \Illuminate\Auth\AuthenticationException && !$request->expectsJson()) {
-            return redirect()->guest($request->is('superadmin*') ? route('superadmin.login') : tenant_route('login'));
+            return redirect()->guest($request->is('superadmin*', 'account/integrations/microsoft/callback') ? route('superadmin.login') : tenant_route('login'));
         }
         if ($request->routeIs('client-reviews.*') && (
             $exception instanceof InvalidSignatureException

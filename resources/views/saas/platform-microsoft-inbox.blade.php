@@ -26,9 +26,19 @@
             <p class="muted">{{ $outlookMailbox->last_synced_at ? 'Last inbox check: '.$outlookMailbox->last_synced_at->utc()->format('M j, Y H:i').' UTC' : 'Waiting for the first scheduled inbox sync.' }}</p>
             @if($outlookMailbox->sync_error)<div class="notice error">{{ $outlookMailbox->sync_error }}</div>@endif
         @else
-            <p class="muted">The client has not connected an Outlook mailbox yet.</p>
+            <p class="muted">No Outlook mailbox is connected for this client.</p>
         @endif
-        <p class="muted">After saving, open the client account and go to <strong>Outlook inbox → Connect Outlook</strong>. Sign in with the mailbox that receives candidate replies and approve inbox access.</p>
+        <p class="muted">Connect this client's mailbox here. Sign in with the mailbox that receives candidate replies and approve Microsoft's inbox permissions.</p>
+        @if(!in_array($tenant->status, ['failed', 'provisioning']))
+        <form method="post" action="{{ route('superadmin.tenants.outlook.connect', $tenant) }}">@csrf
+            <button type="submit" @disabled(!$microsoftApp['available'])>{{ $outlookMailbox ? 'Reconnect Outlook' : 'Connect Outlook' }}</button>
+        </form>
+        @if($outlookMailbox)
+        <form method="post" action="{{ route('superadmin.tenants.outlook.disconnect', $tenant) }}" style="margin-top:12px">@csrf @method('DELETE')
+            <button type="submit" class="secondary">Disconnect Outlook</button>
+        </form>
+        @endif
+        @endif
         <label class="bs-set-lbl" for="microsoft-callback-url">Microsoft Web redirect URI</label>
         <input class="bs-f-input" id="microsoft-callback-url" readonly value="{{ app(\App\Services\MicrosoftReplyInbox::class)->redirectUri() }}">
         <p class="muted">Add this redirect URI to the Microsoft app. Use delegated Microsoft Graph permissions <strong>User.Read</strong> and <strong>Mail.Read</strong>, and enable sign-in for multiple organizations and personal Microsoft accounts.</p>

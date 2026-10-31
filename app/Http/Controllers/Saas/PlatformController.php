@@ -436,8 +436,8 @@ class PlatformController extends Controller
             });
             return redirect()->route('superadmin.tenants.show', $tenant)->with('client_tab', 'outlook')
                 ->with('status', $requiresReconnect
-                    ? 'Microsoft app settings saved. The client must reconnect Outlook to use the new application.'
-                    : 'Microsoft app settings saved for this client. They can connect Outlook from Outlook inbox.');
+                    ? 'Microsoft app settings saved. Reconnect Outlook here to use the new application.'
+                    : 'Microsoft app settings saved for this client. Connect Outlook from the Outlook Inbox tab for this client.');
         } finally {
             if ($lock && $locked) $lock->release();
             $previous ? $context->activate($previous) : $context->reset();
