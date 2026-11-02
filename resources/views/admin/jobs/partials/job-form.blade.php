@@ -831,7 +831,7 @@
                     </div> -->
 
                     {{-- SEO --}}
-                    <div class="overflow-hidden rounded-2xl border border-[#E8E6E1] bg-white">
+                    <!-- <div class="overflow-hidden rounded-2xl border border-[#E8E6E1] bg-white">
                         <div class="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
                             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
                                 <svg class="h-[18px] w-[18px] text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -851,7 +851,7 @@
                                 <textarea id="meta-description" class="form-control min-h-[5.5rem] w-full resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="meta_description" rows="3">{{ $job ? data_get($job->meta_details, 'description', '') : '' }}</textarea>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                 </form>
             </div>
