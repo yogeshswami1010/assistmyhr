@@ -15,7 +15,7 @@
         <span class="pricing-eyebrow"><span aria-hidden="true"></span> SIMPLE, TRANSPARENT PRICING</span>
         <h1 id="pricing-hero-title">All features.<br><span>One simple price.</span></h1>
         <p>Give your team the complete AssistMyHR workspace. One plan, all your hiring tools, with straightforward pricing for every user.</p>
-        <div class="pricing-hero-actions"><a class="button" href="/register">Start your 30-day free trial <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a><a class="pricing-demo-link" href="/#request-demo">Book a live demo <span aria-hidden="true">↗</span></a></div>
+        <div class="pricing-hero-actions"><a class="button" href="/register">Start your {{ $pricing['trial_days'] }}-day free trial <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a><a class="pricing-demo-link" href="/#request-demo">Book a live demo <span aria-hidden="true">↗</span></a></div>
         <ul class="pricing-hero-points"><li>All features included</li><li>No credit card required</li><li>Monthly or annual</li></ul>
       </div>
       <div class="pricing-hero-visual">
@@ -34,13 +34,14 @@
     <article class="pricing-plan" data-pricing-plan data-billing="monthly" aria-labelledby="pricing-plan-title">
       <div class="pricing-plan-intro"><div><h3 id="pricing-plan-title">All features included</h3><p>Candidate management, job management, client reviews,<br class="pricing-desktop-break"> AI search, team collaboration, reporting and more.</p></div><div class="pricing-plan-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 7 4 3 5-7 5 7 4-3-3 13H6L3 7Zm3 9h12"/></svg><span>One plan.<br> All features.</span></div></div>
       <div class="pricing-prices">
-        <div class="pricing-price" data-period="monthly"><strong>$75</strong><div><span>per user / month</span><small>Billed monthly</small></div></div>
-        <div class="pricing-price" data-period="annual"><strong>$720</strong><div><span>per user / year</span><small>Equivalent to $60/month</small><span class="pricing-save">Save 20%</span></div></div>
-      </div>
-      <fieldset class="pricing-switch"><legend class="pricing-sr-only">Compare billing options</legend><label><input type="radio" name="pricing-billing" value="monthly" checked><span>Monthly<small>$75 per user / month</small></span></label><label><input type="radio" name="pricing-billing" value="annual"><span>Annual <em>Save $180/year</em><small>$720 per user / year</small></span></label></fieldset>
-      <p class="pricing-selection" role="status" aria-live="polite">Monthly billing: $75 per user, billed each month.</p>
-      <a class="button pricing-trial" href="/register">Start your 30-day free trial <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
-      <p class="pricing-trial-assurance"><span aria-hidden="true">✓</span><strong>30-day free trial</strong><span aria-hidden="true">·</span><span>No credit card required</span></p>
+        <div class="pricing-price" data-period="monthly"><strong>{{ $pricing['monthly'] }}</strong><div><span>per user / month</span><small>Billed monthly</small></div></div>
+<div class="pricing-price" data-period="annual"><strong>{{ $pricing['annual'] }}</strong><div><span>per user / year</span><small>Equivalent to {{ $pricing['annual_monthly'] }}/month</small>@if($pricing['discount'] > 0)<span class="pricing-save">Save {{ $pricing['discount'] }}%</span>@endif</div></div>      </div>
+      <fieldset class="pricing-switch"><legend class="pricing-sr-only">Compare billing options</legend><label><input type="radio" name="pricing-billing" value="monthly" checked><span>Monthly<small>{{ $pricing['monthly'] }} per user / month</small></span></label><label><input type="radio" name="pricing-billing" value="annual"><span>Annual @if($pricing['discount'] > 0)<em>Save {{ $pricing['annual_save'] }}/year</em>@endif<small>{{ $pricing['annual'] }} per user / year</small></span></label></fieldset>
+     <p class="pricing-selection" role="status" aria-live="polite"
+   data-monthly-text="Monthly billing: {{ $pricing['monthly'] }} per user, billed each month."
+   data-annual-text="Annual billing: {{ $pricing['annual'] }} per user, billed once a year ({{ $pricing['annual_monthly'] }}/month).@if($pricing['discount'] > 0) Save {{ $pricing['annual_save'] }} per user each year.@endif">Monthly billing: {{ $pricing['monthly'] }} per user, billed each month.</p>
+      <a class="button pricing-trial" href="/register">Start your {{ $pricing['trial_days'] }}-day free trial <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+      <p class="pricing-trial-assurance"><span aria-hidden="true">✓</span><strong>{{ $pricing['trial_days'] }}-day free trial</strong><span aria-hidden="true">·</span><span>No credit card required</span></p>
       <p class="pricing-plan-note">Ready to subscribe? <a href="/#contact">Talk to our team.</a></p>
     </article>
     <div class="pricing-benefits" aria-label="What comes with your plan">

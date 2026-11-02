@@ -14,11 +14,39 @@ use Illuminate\Validation\Rule;
 
 class SignupController extends Controller
 {
-    public function pricing()
-    {
-        abort_unless(config('saas.enabled'), 404);
-        return view('saas.pricing');
-    }
+   public function pricing()
+{
+    abort_unless(config('saas.enabled'), 404);
+
+    $plan = Plan::find(PlatformSetting::valueFor('trial_plan_id'))
+        ?? Plan::where('enabled', true)->where('public', true)
+            ->where('slug', '!=', 'existing-workspace')->orderBy('id')->first();
+    abort_unless($plan, 404);
+
+    $symbols = ['USD' => '$', 'INR' => '₹', 'EUR' => '€', 'GBP' => '£'];
+    $symbol  = $symbols[$plan->currency] ?? $plan->currency.' ';
+    $fmt     = fn ($n) => $symbol.number_format($n, floor($n) == $n ? 0 : 2);
+
+    $discount = 20;   // annual discount in %. Set to 0 for plain monthly × 12 (Save badges hide automatically)
+    $monthly  = (float) $plan->price;
+    $annual   = round($monthly * 12 * (1 - $discount / 100), 2);
+
+    $pricing = [
+        'monthly'        => $fmt($monthly),
+        'annual'         => $fmt($annual),
+        'annual_monthly' => $fmt(round($annual / 12, 2)),
+        'annual_save'    => $fmt(round($monthly * 12 - $annual, 2)),
+        'discount'       => $discount,
+        'trial_days'     => (int) PlatformSetting::valueFor('trial_days', 30),
+    ];
+
+    return view('saas.pricing', compact('plan', 'pricing'));
+}
+//  public function pricing()
+//     {
+//         abort_unless(config('saas.enabled'), 404);
+//         return view('saas.pricing');
+//     }
 
     public function form()
     {

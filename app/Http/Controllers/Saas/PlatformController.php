@@ -267,28 +267,60 @@ class PlatformController extends Controller
         return back()->with('status', 'Owner email verification approved.');
     }
     public function plans() { return $this->platformView('saas.platform-plans', ['plans' => Plan::where('slug', '!=', 'existing-workspace')->orderBy('id')->get()]); }
+    // public function savePlan(Request $request, ?Plan $plan = null)
+    // {
+    //     $data = $request->validate([
+    //         'name' => ['required', 'string', 'max:100'],
+    //         'price' => ['required', 'numeric', 'min:0', 'max:99999999'], 'currency' => ['required', 'regex:/\A[A-Z]{3}\z/'],
+    //         'max_users' => ['nullable', 'integer', 'min:1'], 'max_jobs' => ['nullable', 'integer', 'min:1'],
+    //         'max_candidates' => ['nullable', 'integer', 'min:1'], 'storage_mb' => ['nullable', 'integer', 'min:1'],
+    //         'enabled' => ['required', 'boolean'], 'public' => ['required', 'boolean'],
+    //     ]);
+    //     if (!$plan) {
+    //         $baseSlug = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['name'])), '-') ?: 'plan', 0, 38);
+    //         $data['slug'] = $baseSlug;
+    //         while ($data['slug'] === 'existing-workspace' || Plan::where('slug', $data['slug'])->exists()) {
+    //             $data['slug'] = $baseSlug.'-'.strtolower(\Illuminate\Support\Str::random(10));
+    //         }
+    //     }
+    //     $plan ??= new Plan;
+    //     $before = $plan->exists ? $plan->toArray() : null;
+    //     $plan->fill($data)->save();
+    //     AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'plan.saved', 'reason' => 'Platform plan configuration updated.', 'before' => $before, 'after' => $plan->toArray()]);
+    //     return back()->with('status', 'Plan saved. Changes also apply to clients currently on this plan.');
+    // }
     public function savePlan(Request $request, ?Plan $plan = null)
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'price' => ['required', 'numeric', 'min:0', 'max:99999999'], 'currency' => ['required', 'regex:/\A[A-Z]{3}\z/'],
-            'max_users' => ['nullable', 'integer', 'min:1'], 'max_jobs' => ['nullable', 'integer', 'min:1'],
-            'max_candidates' => ['nullable', 'integer', 'min:1'], 'storage_mb' => ['nullable', 'integer', 'min:1'],
-            'enabled' => ['required', 'boolean'], 'public' => ['required', 'boolean'],
-        ]);
-        if (!$plan) {
-            $baseSlug = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['name'])), '-') ?: 'plan', 0, 38);
-            $data['slug'] = $baseSlug;
-            while ($data['slug'] === 'existing-workspace' || Plan::where('slug', $data['slug'])->exists()) {
-                $data['slug'] = $baseSlug.'-'.strtolower(\Illuminate\Support\Str::random(10));
-            }
+{
+    $data = $request->validate([
+        'name' => ['required', 'string', 'max:100'],
+        'price' => ['required', 'numeric', 'min:0', 'max:99999999'], 'currency' => ['required', 'regex:/\A[A-Z]{3}\z/'],
+        'max_users' => ['nullable', 'integer', 'min:1'], 'max_jobs' => ['nullable', 'integer', 'min:1'],
+        'max_candidates' => ['nullable', 'integer', 'min:1'], 'storage_mb' => ['nullable', 'integer', 'min:1'],
+        'enabled' => ['required', 'boolean'], 'public' => ['required', 'boolean'],
+    ]);
+    if (!$plan) {
+        $baseSlug = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['name'])), '-') ?: 'plan', 0, 38);
+        $data['slug'] = $baseSlug;
+        while ($data['slug'] === 'existing-workspace' || Plan::where('slug', $data['slug'])->exists()) {
+            $data['slug'] = $baseSlug.'-'.strtolower(\Illuminate\Support\Str::random(10));
         }
-        $plan ??= new Plan;
-        $before = $plan->exists ? $plan->toArray() : null;
-        $plan->fill($data)->save();
-        AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'plan.saved', 'reason' => 'Platform plan configuration updated.', 'before' => $before, 'after' => $plan->toArray()]);
-        return back()->with('status', 'Plan saved. Changes also apply to clients currently on this plan.');
     }
+    $plan ??= new Plan;
+    $before = $plan->exists ? $plan->toArray() : null;
+
+    DB::connection('saas_landlord')->transaction(function () use ($plan, $data) {
+        // Only one plan is allowed: block creating a new one when a plan already exists.
+        if (!$plan->exists && Plan::where('slug', '!=', 'existing-workspace')->lockForUpdate()->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'name' => 'Only one plan is allowed. Edit the existing plan instead.',
+            ]);
+        }
+        $plan->fill($data)->save();
+    });
+
+    AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'plan.saved', 'reason' => 'Platform plan configuration updated.', 'before' => $before, 'after' => $plan->toArray()]);
+    return back()->with('status', 'Plan saved. Changes also apply to clients currently on this plan.');
+}
     public function settings()
     {
         return $this->platformView('saas.platform-settings', ['settings' => PlatformSetting::pluck('value', 'key'), 'plans' => Plan::where('enabled', true)->where('public', true)->get()]);

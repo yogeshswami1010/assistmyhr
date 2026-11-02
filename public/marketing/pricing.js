@@ -1,17 +1,18 @@
 // This compares published prices; trial signup and subscription handling stay separate.
-document.querySelectorAll('[data-pricing-plan]').forEach(plan => {
-  const summary = plan.querySelector('.pricing-selection');
+document.querySelectorAll("[data-pricing-plan]").forEach((plan) => {
+  const summary = plan.querySelector(".pricing-selection");
   const options = [...plan.querySelectorAll('input[name="pricing-billing"]')];
   const update = () => {
-    const selected = options.find(input => input.checked);
-    if (!selected) return;
+    const selected = options.find((input) => input.checked);
+    if (!selected || !summary) return;
     plan.dataset.billing = selected.value;
-    summary.textContent = selected.value === 'annual'
-      ? 'Annual billing: $720 per user, billed once a year ($60/month). Save $180 per user each year.'
-      : 'Monthly billing: $75 per user, billed each month.';
+    summary.textContent =
+      selected.value === "annual"
+        ? summary.dataset.annualText
+        : summary.dataset.monthlyText;
   };
-  options.forEach(input => {
-    input.addEventListener('change', () => {
+  options.forEach((input) => {
+    input.addEventListener("change", () => {
       if (!input.checked) return;
       update();
     });
@@ -20,51 +21,60 @@ document.querySelectorAll('[data-pricing-plan]').forEach(plan => {
 });
 
 // Enhance the category links into accessible tabs; all details remain readable without JS.
-document.querySelectorAll('.pricing-feature-explorer').forEach(explorer => {
-  const nav = explorer.querySelector('.pricing-feature-nav');
-  const tabs = [...nav.querySelectorAll('a')];
-  const panels = tabs.map(tab => explorer.querySelector(tab.getAttribute('href')));
-  nav.setAttribute('role', 'tablist');
-  const mobileLayout = window.matchMedia('(max-width: 680px)');
-  const updateOrientation = () => nav.setAttribute('aria-orientation', mobileLayout.matches ? 'horizontal' : 'vertical');
+document.querySelectorAll(".pricing-feature-explorer").forEach((explorer) => {
+  const nav = explorer.querySelector(".pricing-feature-nav");
+  const tabs = [...nav.querySelectorAll("a")];
+  const panels = tabs.map((tab) =>
+    explorer.querySelector(tab.getAttribute("href")),
+  );
+  nav.setAttribute("role", "tablist");
+  const mobileLayout = window.matchMedia("(max-width: 680px)");
+  const updateOrientation = () =>
+    nav.setAttribute(
+      "aria-orientation",
+      mobileLayout.matches ? "horizontal" : "vertical",
+    );
   updateOrientation();
-  mobileLayout.addEventListener('change', updateOrientation);
-  const actions = explorer.querySelector('.pricing-feature-actions');
-  const nextButton = actions.querySelector('.pricing-feature-next');
-  const nextName = nextButton.querySelector('[data-next-feature-name]');
+  mobileLayout.addEventListener("change", updateOrientation);
+  const actions = explorer.querySelector(".pricing-feature-actions");
+  const nextButton = actions.querySelector(".pricing-feature-next");
+  const nextName = nextButton.querySelector("[data-next-feature-name]");
   let activeIndex = 0;
   actions.hidden = false;
-  const select = index => {
+  const select = (index) => {
     activeIndex = index;
     const nextIndex = (index + 1) % tabs.length;
     nextName.textContent = tabs[nextIndex].textContent.trim();
-    nextButton.setAttribute('aria-controls', panels[nextIndex].id);
+    nextButton.setAttribute("aria-controls", panels[nextIndex].id);
     tabs.forEach((tab, i) => {
-      tab.setAttribute('aria-selected', String(i === index));
+      tab.setAttribute("aria-selected", String(i === index));
       tab.tabIndex = i === index ? 0 : -1;
       panels[i].hidden = i !== index;
     });
   };
-  nextButton.addEventListener('click', () => select((activeIndex + 1) % tabs.length));
+  nextButton.addEventListener("click", () =>
+    select((activeIndex + 1) % tabs.length),
+  );
   tabs.forEach((tab, index) => {
-    tab.id = panels[index].id + '-tab';
-    tab.setAttribute('role', 'tab');
-    tab.setAttribute('aria-controls', panels[index].id);
-    panels[index].setAttribute('role', 'tabpanel');
-    panels[index].setAttribute('aria-labelledby', tab.id);
+    tab.id = panels[index].id + "-tab";
+    tab.setAttribute("role", "tab");
+    tab.setAttribute("aria-controls", panels[index].id);
+    panels[index].setAttribute("role", "tabpanel");
+    panels[index].setAttribute("aria-labelledby", tab.id);
     panels[index].tabIndex = 0;
-    tab.addEventListener('click', event => {
+    tab.addEventListener("click", (event) => {
       event.preventDefault();
       select(index);
     });
-    tab.addEventListener('keydown', event => {
-      const previous = mobileLayout.matches ? 'ArrowLeft' : 'ArrowUp';
-      const next = mobileLayout.matches ? 'ArrowRight' : 'ArrowDown';
+    tab.addEventListener("keydown", (event) => {
+      const previous = mobileLayout.matches ? "ArrowLeft" : "ArrowUp";
+      const next = mobileLayout.matches ? "ArrowRight" : "ArrowDown";
       let target;
-      if (event.key === previous) target = (index - 1 + tabs.length) % tabs.length;
+      if (event.key === previous)
+        target = (index - 1 + tabs.length) % tabs.length;
       if (event.key === next) target = (index + 1) % tabs.length;
-      if (event.key === 'Home') target = 0;
-      if (event.key === 'End') target = tabs.length - 1;
+      if (event.key === "Home") target = 0;
+      if (event.key === "End") target = tabs.length - 1;
       if (target === undefined) return;
       event.preventDefault();
       select(target);
@@ -72,11 +82,13 @@ document.querySelectorAll('.pricing-feature-explorer').forEach(explorer => {
     });
   });
   const selectHash = () => {
-    const index = panels.findIndex(panel => '#' + panel.id === window.location.hash);
+    const index = panels.findIndex(
+      (panel) => "#" + panel.id === window.location.hash,
+    );
     if (index !== -1) select(index);
     return index;
   };
   select(0);
   selectHash();
-  window.addEventListener('hashchange', selectHash);
+  window.addEventListener("hashchange", selectHash);
 });
