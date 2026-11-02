@@ -16,12 +16,22 @@ return new class extends Migration {
             $table->id(); $table->string('name'); $table->string('email')->unique();
             $table->string('password'); $table->rememberToken(); $table->timestamps();
         });
-        $schema->create('saas_plans', function (Blueprint $table) {
-            $table->id(); $table->string('name'); $table->string('slug')->unique();
-            $table->decimal('price', 10, 2)->default(0); $table->string('currency', 3)->default('USD');
-            $table->unsignedInteger('max_users')->nullable(); $table->unsignedInteger('max_jobs')->nullable();
-            $table->unsignedInteger('max_candidates')->nullable(); $table->unsignedInteger('storage_mb')->nullable();
-            $table->boolean('enabled')->default(true); $table->boolean('public')->default(true); $table->timestamps();
+            $schema->create('saas_plans', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('slug')->unique();
+
+            $table->decimal('price', 10, 2)->default(0);
+            $table->string('currency', 3)->default('USD');
+
+            $table->unsignedBigInteger('max_users')->nullable();
+            $table->unsignedBigInteger('max_jobs')->nullable();
+            $table->unsignedBigInteger('max_candidates')->nullable();
+            $table->unsignedBigInteger('storage_mb')->nullable();
+
+            $table->boolean('enabled')->default(true);
+            $table->boolean('public')->default(true);
+            $table->timestamps();
         });
         $schema->create('saas_tenants', function (Blueprint $table) {
             $table->id(); $table->uuid('uuid')->unique(); $table->string('slug', 50)->unique();

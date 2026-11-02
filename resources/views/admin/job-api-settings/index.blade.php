@@ -114,10 +114,10 @@
     <section class="rounded-2xl border border-[#E8E6E1] bg-white p-6">
         <h2 class="text-lg font-bold">Example request</h2>
         <pre class="mt-4 overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-white">curl --get '{{ $endpoint }}' \
-  --header 'Accept: application/json' \
-  --header 'Authorization: Bearer YOUR_API_KEY' \
-  --data-urlencode 'per_page=20' \
-  --data-urlencode 'page=1'</pre>
+        --header 'Accept: application/json' \
+        --header 'Authorization: Bearer YOUR_API_KEY' \
+        --data-urlencode 'per_page=20' \
+        --data-urlencode 'page=1'</pre>
         <p class="mt-3 text-sm text-slate-600">The response contains <code>jobs</code>, <code>total_jobs</code>, and <code>pagination</code>. Display text fields as text and use <code>apply_url</code> for the Apply button. Increase <code>page</code> while <code>pagination.has_more</code> is true. Maximum 100 jobs per page and 60 API requests per minute per IP.</p>
         <p class="mt-3 text-sm text-slate-600">For a single job page, request <code>{{ $endpoint }}/JOB_ID</code> from your server with the same key. It returns <code>job</code>. Link your Apply button to <code>job.apply_url</code> to open the ATS application form. Use <code>detail_url</code> if you prefer the ATS-hosted job detail page.</p>
         <p class="mt-3 text-sm text-slate-600">Candidate details, resumes, recruiter notes, and hidden salaries are never included.</p>
