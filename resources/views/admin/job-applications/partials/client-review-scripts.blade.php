@@ -135,7 +135,6 @@
         if (!replyId) {
             data.client_email = form.elements.client_email.value;
             data.subject = form.elements.subject.value;
-            data.client_message = form.elements.client_message.value;
         }
         form.dataset.busy = '1';
         editor.contentEditable = 'false';
