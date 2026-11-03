@@ -54,6 +54,27 @@
 @include('admin.jobs.partials.job-form-scripts')
 
 @if (config('services.google_maps.key'))
+    @push('head-script')
+        <style>
+            .company-location-autocomplete {
+                display: block;
+                width: 100%;
+                color-scheme: light;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                background: #fff;
+                box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+                --gmp-mat-font-body-medium: normal 400 13px/20px var(--gmp-mat-font-family);
+                --gmp-mat-font-body-large: normal 400 13px/20px var(--gmp-mat-font-family);
+                --gmp-mat-color-on-surface: #0f1f3d;
+            }
+
+            .company-location-autocomplete:focus-within {
+                border-color: #2563eb;
+                box-shadow: 0 0 0 2px rgb(37 99 235 / 10%);
+            }
+        </style>
+    @endpush
     @push('footer-script')
         <script>
             (() => {
@@ -72,13 +93,12 @@
                             maxlength: 191,
                             noInputIcon: true,
                         });
-                        search.style.width = '100%';
-                        search.style.colorScheme = 'light';
+                        search.className = 'company-location-autocomplete';
+                        search.style.setProperty('--gmp-mat-font-family', getComputedStyle(field).fontFamily);
                         search.setAttribute('aria-label', @json(__('Company Location')));
                         search.placeholder = @json(__('Search for a company or address'));
                         search.description = search.placeholder;
                         picker.append(search);
-                        picker.className = 'rounded-xl border border-gray-200 bg-white shadow-sm focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/10';
                         field.hidden = true;
                         field.style.setProperty('display', 'none', 'important');
                         let revision = 0;
@@ -114,7 +134,6 @@
 
                 function showError() {
                     picker.replaceChildren();
-                    picker.removeAttribute('class');
                     field.hidden = false;
                     field.style.removeProperty('display');
                     status.textContent = @json(__('Google Maps search is unavailable. Enter the company location manually.'));
