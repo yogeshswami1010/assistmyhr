@@ -13,11 +13,28 @@ use Illuminate\Validation\Rule;
 class AccountController extends Controller
 {
     public function subscription()
-    {
-        $tenant = app(TenantContext::class)->current();
-        abort_unless($tenant, 404);
-        return view('saas.subscription', ['tenant' => $tenant, 'requests' => AuditLog::where('tenant_id',  $tenant->id)->where('action', 'subscription.change_requested')->latest('id')->limit(10)->get(), 'usage' => app(QuotaService::class)->usage(), 'plans' => Plan::where('enabled', true)->where('public', true)->get()]);
-    }
+{
+    $tenant = app(TenantContext::class)->current();
+
+    abort_unless($tenant, 404);
+
+    $plans = Plan::where('enabled', true)
+        ->where('public', true)
+        ->orderBy('price', 'asc')
+        ->get();
+
+    return view('saas.subscription', [
+        'tenant' => $tenant,
+        'subscription' => $tenant->subscription,
+        'requests' => AuditLog::where('tenant_id', $tenant->id)
+            ->where('action', 'subscription.change_requested')
+            ->latest('id')
+            ->limit(10)
+            ->get(),
+        'usage' => app(QuotaService::class)->usage(),
+        'plans' => $plans,
+    ]);
+}
 
     public function requestPlan(Request $request)
     {
