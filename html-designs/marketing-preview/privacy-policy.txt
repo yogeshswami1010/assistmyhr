@@ -326,3 +326,9 @@ For questions about this Privacy Policy, privacy complaints, or requests concern
 Assist My HR — Privacy Office
 Email: support@assistmyhr.com
 Phone: +1 (905) 374-8878
+
+22. GOOGLE CALENDAR DATA
+When you connect Google Calendar in Interview Schedule, Assist My HR requests your Google account identity and read-only access to calendar events. We use your Google email address to match your ATS account and retrieve events from your primary calendar for the dates displayed. Event titles and times appear alongside interviews for the connected user. Private events appear as Busy. Assist My HR does not create, edit, or delete Google Calendar events.
+Assist My HR stores your connected email address, Google account identifier, encrypted access and refresh tokens, and token expiration in your workspace database while the connection is active. Calendar events are fetched for display and are not saved as ATS interview records. Calendar data is used to display your schedule and is not sold, used for advertising, or shared with other clients.
+Use Disconnect in Interview Schedule to remove the stored connection and tokens from Assist My HR. You can also revoke access through your Google Account. For questions or deletion requests, email support@assistmyhr.com.
+Assist My HR's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements.

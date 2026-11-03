@@ -146,7 +146,7 @@ check(URL::hasValidSignature(Request::create($service->url($review, 'resume'))),
 $controller = new App\Http\Controllers\ClientCandidateReviewController();
 $page = $controller->show($review, $service)->getContent();
 check(str_contains($page, 'Candidate CV') && str_contains($page, 'Send review'), 'Existing links still show the CV and feedback form');
-check(!str_contains($page, 'Our introduction') && !str_contains($page, 'Message from the recruitment team') && !str_contains($page, '<h2>Client message</h2>'), 'Remove the recruitment introduction and hide blank client-message cards');
+check(str_contains($page, 'Our introduction') && str_contains($page, 'Message from the recruitment team') && !str_contains($page, '<h2>Client message</h2>'), 'The invitation email body appears on the candidate review page');
 check(!str_contains($page, 'other@example.test') && !str_contains($page, 'Applicant Notes'), 'Do not expose other clients or internal profile tabs');
 
 $incoming = $review->messages()->firstOrCreate(['submission_id' => (string) Str::uuid()], ['direction' => 'inbound', 'body_text' => 'Please arrange an interview.', 'mail_status' => 'received']);
@@ -182,12 +182,12 @@ $sendRequest = Request::create('https://ats.example.test/admin/send', 'POST', $s
 $result = $admin->send($sendRequest, 43, $service)->getData(true);
 $sentReview = CandidateClientReview::findOrFail($result['review_id']);
 check($sentReview->client_email === 'second.client@example.test' && $sentReview->job_application_id === 43 && $sentReview->resume_hashname === 'shared.pdf', 'Admin send stores the correct client, candidate and shared CV');
-check($sentReview->client_message === $clientInstructions, 'Store the client message separately from the email body');
+check($sentReview->client_message === null, 'Ignore the removed client-message input and store only the email body');
 $clientPage = $controller->show($sentReview, $service)->getContent();
-check(strpos($clientPage, '<h2>Client message</h2>') > strpos($clientPage, '<aside>') && strpos($clientPage, '<h2>Client message</h2>') < strpos($clientPage, '<h2>Reply with your review</h2>'), 'Client instructions appear above the reply section in the right column');
-check(str_contains($clientPage, htmlspecialchars($clientInstructions, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')) && !str_contains($clientPage, '<script>'), 'Render client instructions safely with Unicode and line breaks intact');
-check(!str_contains($clientPage, 'Message from the recruitment team') && !str_contains($clientPage, 'Qualified candidate'), 'The invitation email body is not displayed as a recruitment message on the review page');
-check(str_contains(end($transport->sent)['html'], 'Qualified candidate') && !str_contains(end($transport->sent)['html'], 'Confirm availability'), 'The invitation email retains its own message rather than the private-page instructions');
+check(strpos($clientPage, '<h2>Message from the recruitment team</h2>') > strpos($clientPage, '<aside>') && strpos($clientPage, '<h2>Message from the recruitment team</h2>') < strpos($clientPage, '<h2>Reply with your review</h2>'), 'Email body appears above the reply section in the right column');
+check(str_contains($clientPage, '<b>Qualified candidate</b>') && !str_contains($clientPage, 'Confirm availability') && !str_contains($clientPage, '<script>'), 'Render the formatted email body without the removed client message');
+check(str_contains($clientPage, 'Message from the recruitment team') && str_contains($clientPage, 'Qualified candidate'), 'The same invitation body is displayed on the review page');
+check(str_contains(end($transport->sent)['html'], 'Qualified candidate') && !str_contains(end($transport->sent)['html'], 'Confirm availability'), 'The invitation email uses the same body as the review page');
 $admin->send($sendRequest, 43, $service);
 check(count($transport->sent) === 4, 'Double-clicking the send endpoint cannot send the invitation twice');
 $actor->allowed = false;
@@ -195,8 +195,6 @@ rejected(fn () => $admin->send($sendRequest, 43, $service), Symfony\Component\Ht
 $actor->allowed = true;
 rejected(fn () => $admin->send(Request::create('/send', 'POST', $sendData + ['unused' => true]), 42, $service), Illuminate\Validation\ValidationException::class);
 rejected(fn () => $admin->send(Request::create('/send', 'POST', array_replace($sendData, ['client_email' => 'invalid'])), 43, $service), Illuminate\Validation\ValidationException::class);
-rejected(fn () => $admin->send(Request::create('/send', 'POST', array_replace($sendData, ['client_message' => str_repeat('x', 10001)])), 43, $service), Illuminate\Validation\ValidationException::class);
-rejected(fn () => $admin->send(Request::create('/send', 'POST', array_replace($sendData, ['client_message' => ['invalid']])), 43, $service), Illuminate\Validation\ValidationException::class);
 $clientData = ['message' => 'Client approved this candidate.', 'submission_id' => (string) Str::uuid()];
 $clientRequest = Request::create($service->url($sentReview, 'reply'), 'POST', $clientData);
 $controller->reply($clientRequest, $sentReview, $service);

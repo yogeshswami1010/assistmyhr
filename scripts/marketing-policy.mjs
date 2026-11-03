@@ -66,7 +66,7 @@ export function renderPrivacyPolicy(source, homeHref = '/') {
     }
   }
   if (sectionOpen) blocks.push('      </section>');
-  if (contents.length !== 21) throw new Error('Expected all 21 privacy policy sections.');
+  if (contents.length !== 22) throw new Error('Expected all 22 privacy policy sections.');
   return `<div class="privacy-page" aria-labelledby="privacy-title">
   <div class="privacy-hero"><div class="privacy-inner">
     <nav class="privacy-breadcrumb" aria-label="Breadcrumb"><a href="${escapeHtml(homeHref)}">Home</a><span aria-hidden="true">/</span><span aria-current="page">Privacy policy</span></nav>

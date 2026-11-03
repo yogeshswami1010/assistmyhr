@@ -11,11 +11,10 @@ const pane = {style:{display:'none'}};
 const editor = {id:'compose', innerHTML:'<p><b>Hello</b> José</p><ul><li>Experience</li></ul>', textContent:'Hello José Experience', dataset:{}, contentEditable:'true'};
 const output = {style:{}, textContent:''};
 const control = {disabled:false};
-const clientMessage = {value:'Please review José’s experience.\nConfirm availability.',disabled:false};
-const form = {dataset:{}, elements:{client_email:{value:'client@example.test'}, subject:{value:'Review candidate'},client_message:clientMessage},
+const form = {dataset:{}, elements:{client_email:{value:'client@example.test'}, subject:{value:'Review candidate'}},
     reportValidity:()=>true, getAttribute:()=>null,
     querySelector: selector=>selector==='.ja-review-editor'?editor:output,
-    querySelectorAll:()=>[control,clientMessage], reset(){this.resetCalled=true;clientMessage.value='';}};
+    querySelectorAll:()=>[control], reset(){this.resetCalled=true;}};
 const modalEvents = {};
 const emailInput = {focus(){this.focused=true;}};
 const modal = {open:false, contains:node=>node===editor, addEventListener(type, fn){modalEvents[type]=fn;},
@@ -56,7 +55,6 @@ const draft = editor.innerHTML;
 close();
 assert(!modal.open && opener.focused,'Cancel closes the popup and restores focus');
 assert.equal(editor.innerHTML,draft,'Closing preserves the message draft');
-assert.equal(clientMessage.value,'Please review José’s experience.\nConfirm availability.','Closing preserves the separate client message');
 open.call(opener);
 modalEvents.click({target:emailInput});
 assert(modal.open,'Clicking inside the form does not dismiss it');
@@ -78,8 +76,7 @@ submit.call(form,event);
 submit.call(form,event);
 assert.equal(requests.length,3,'Only one send request while pending');
 assert.equal(requests[2].options.data.client_email,'client@example.test');
-assert.equal(requests[2].options.data.client_message,clientMessage.value,'Send the client message separately, preserving Unicode and line breaks');
-assert(clientMessage.disabled,'The client message cannot change during a pending send');
+assert(!('client_message' in requests[2].options.data),'Only the email body is submitted, without a separate client message');
 assert.equal(requests[2].options.data._token,'csrf-test');
 assert.equal(Buffer.from(requests[2].options.data.message_payload,'base64').toString('utf8'),editor.innerHTML,'Encode Unicode rich text intact');
 close();modalEvents.cancel({preventDefault(){}});modalEvents.click({target:modal});
@@ -90,8 +87,6 @@ assert(!modal.open && pane.style.display==='block','A successful send closes com
 assert.equal(sendFeedback.textContent,'Profile email sent');
 assert(form.resetCalled && !control.disabled && editor.contentEditable==='true');
 assert.equal(editor.innerHTML,'');
-assert.equal(clientMessage.value,'','Reset the client message after successful sending');
-assert(!clientMessage.disabled,'Re-enable the client textarea after sending');
 assert(context._jaProfileCache.cleared);
 requests[3].resolve({view:'Sent invitation'});
 list.querySelector=()=>({dataset:{reviewDirty:'1'}});
@@ -128,12 +123,10 @@ assert(!retryButton.disabled);
 form.getAttribute=()=>null;
 open.call(opener);
 editor.innerHTML='<p>New introduction</p>';editor.textContent='New introduction';
-clientMessage.value='Retain these review instructions.';
 submit.call(form,event);
 requests[10].reject({responseJSON:{message:'SMTP unavailable',saved:true}});
 assert(modal.open && !control.disabled,'Keep the popup open and editable on a failed send');
 assert.equal(editor.innerHTML,'<p>New introduction</p>','Keep the compose draft on failure');
-assert.equal(clientMessage.value,'Retain these review instructions.','Keep the client message on failure');
 assert(output.textContent.includes('SMTP unavailable'));
 requests[11].resolve({view:'Failed invitation'});
 const changedInput = {closest:()=>form,classList:{contains:()=>false}};
@@ -141,7 +134,6 @@ events['input.jaClientReviews #ja-client-reviews-panel input, #ja-client-review-
 assert(!form.dataset.submissionId,'Editing popup inputs resets the submission id for the changed draft');
 close();open.call(opener);
 assert.equal(editor.innerHTML,'<p>New introduction</p>','Reopening retains an unsent draft');
-assert.equal(clientMessage.value,'Retain these review instructions.','Reopening retains the separate client message');
 panel.isConnected=false;tick();
 assert(cleared.includes(19),'Closing the profile stops polling');
 console.log('PASS: compose popup open/close/Escape/backdrop, pending-send guard, success navigation, rich text, validation, draft preservation, live replies, unread badge, and timer cleanup');
