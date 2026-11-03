@@ -59,6 +59,8 @@
             .company-location-autocomplete {
                 display: block;
                 width: 100%;
+                height: 52px;
+                box-sizing: border-box;
                 color-scheme: light;
                 border: 1px solid #e5e7eb;
                 border-radius: 12px;
