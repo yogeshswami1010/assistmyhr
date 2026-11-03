@@ -519,9 +519,26 @@
                                     <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" id="date-start" value="{{ $startDateVal }}" name="start_date">
                                 </div>
                                 <div class="form-group mb-0">
-                                    <label for="date-end" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('app.endDate')</label>
-                                    <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" id="date-end" name="end_date" value="{{ $endDateVal }}">
-                                </div>
+                                <label for="hiring_status" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                                    Job Status
+                                </label>
+                                <select name="hiring_status" id="hiring_status"
+                                    class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
+                                    @php
+                                        $hiringStatuses = [
+                                            'in_progress'  => 'In Progress',
+                                            'under_review' => 'Under Review',
+                                            'on_hold'      => 'On Hold',
+                                            'filled'       => 'Filled',
+                                            'closed'       => 'Closed',
+                                        ];
+                                        $currentHiring = old('hiring_status', $job->hiring_status ?? 'active');
+                                    @endphp
+                                    @foreach ($hiringStatuses as $value => $label)
+                                        <option value="{{ $value }}" @selected($currentHiring === $value)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             </div>
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">

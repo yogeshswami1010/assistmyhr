@@ -81,8 +81,9 @@ class AdminJobsController extends AdminBaseController
                 'locations' => $locNames,
                 'locationsStr' => implode(', ', $locNames),
                 'locationIds' => $job->jobLocation->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
-                'start' => $job->start_date?->format('d M, Y') ?? '—',
-                'end' => $job->end_date?->format('d M, Y') ?? '—',
+               'start' => $job->start_date?->format('d M, Y') ?? '—',
+                'hiringStatus' => $job->hiring_status ?? 'active',
+                'hiringStatusLabel' => ucwords(str_replace('_', ' ', $job->hiring_status ?? 'active')),
                 'status' => $job->status,
                 'copyUrl' => tenant_route('jobs.jobDetail', array_filter([$job->slug, $locId])),
                 'editUrl' => route('admin.jobs.edit', $job->id),
@@ -222,7 +223,7 @@ class AdminJobsController extends AdminBaseController
             $job->category_id = $request->category_id;
         }
         $job->start_date = $request->start_date;
-        $job->end_date = $request->end_date;
+        $job->hiring_status = $request->hiring_status ?? 'active';  
         $job->status = $request->status;
         $job->job_type_id = $request->job_type_id;
         $experienceIds = [];
@@ -408,7 +409,7 @@ class AdminJobsController extends AdminBaseController
             $job->category_id = $request->category_id;
         }
         $job->start_date = $request->start_date;
-        $job->end_date = $request->end_date;
+       $job->hiring_status = $request->hiring_status ?? 'active'; 
         $job->status = $request->status;
         $job->job_type_id = $request->job_type_id;
         $experienceIds = [];
@@ -681,9 +682,10 @@ class AdminJobsController extends AdminBaseController
             ->editColumn('start_date', function ($row) {
                 return $row->start_date ? $row->start_date->format('d M, Y') : '';
             })
-            ->editColumn('end_date', function ($row) {
-                return $row->end_date ? $row->end_date->format('d M, Y') : '';
-            })
+            ->editColumn('hiring_status', function ($row) {
+            return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">'
+                .ucwords(str_replace('_', ' ', $row->hiring_status ?? 'active')).'</span>';
+        })
             ->editColumn('status', function ($row) {
                 if ($row->status == 'active') {
                     return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">'.__('app.active').'</span>';
@@ -695,7 +697,7 @@ class AdminJobsController extends AdminBaseController
                     return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white" style="background: #FF8C00;">'.__('app.expired').'</span>';
                 }
             })
-            ->rawColumns(['status', 'action', 'location_id'])
+            ->rawColumns(['status', 'hiring_status', 'action', 'location_id'])
             ->addIndexColumn()
             ->make(true);
     }
@@ -878,7 +880,7 @@ class AdminJobsController extends AdminBaseController
     {
         $job = Job::find($request->id);
         $job->start_date = $request->start_date;
-        $job->end_date = $request->end_date;
+
         $job->status = 'active';
         $job->save();
 

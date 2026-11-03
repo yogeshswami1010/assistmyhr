@@ -17,7 +17,7 @@ class Job extends Model
     protected $casts = [
         'work_experience_ids' => 'array',
         'start_date' => 'date',
-        'end_date' => 'date',
+        'hiring_status' => 'string',
         'required_columns' => 'array',
         'meta_details' => 'array',
         'section_visibility' => 'array',
@@ -50,15 +50,12 @@ class Job extends Model
         return $this->belongsTo(Company::class, 'company_id');
     }
 
-    public function scopePublished($query)
+        public function scopePublished($query)
     {
         $today = Carbon::today()->toDateString();
 
         return $query->where('status', 'active')
-            ->whereDate('start_date', '<=', $today)
-            ->where(function ($query) use ($today) {
-                $query->whereNull('end_date')->orWhereDate('end_date', '>=', $today);
-            });
+            ->whereDate('start_date', '<=', $today);
     }
 
     public function sluggable(): array
@@ -74,7 +71,6 @@ class Job extends Model
     {
         return Job::where('status', 'active')
             ->where('start_date', '<=', Carbon::now()->format('Y-m-d'))
-            ->where('end_date', '>=', Carbon::now()->format('Y-m-d'))
             ->get();
     }
 
@@ -82,13 +78,13 @@ class Job extends Model
     {
         return Job::where('status', 'active')
             ->where('start_date', '<=', Carbon::now()->format('Y-m-d'))
-            ->where('end_date', '>=', Carbon::now()->format('Y-m-d'))
             ->count();
     }
 
     public function getActiveAttribute()
     {
-        return $this->status === 'active' && $this->start_date <= Carbon::now()->format('Y-m-d') && $this->end_date >= Carbon::now()->format('Y-m-d');
+        return $this->status === 'active'
+            && $this->start_date <= Carbon::now()->format('Y-m-d');
     }
 
     public function questions()
