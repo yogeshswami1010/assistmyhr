@@ -69,11 +69,13 @@
                         const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
                         const search = new PlaceAutocompleteElement({ value: field.value, maxlength: 191 });
                         search.style.width = '100%';
+                        search.style.colorScheme = 'light';
                         search.setAttribute('aria-label', @json(__('Company Location')));
                         search.placeholder = @json(__('Search for a company or address'));
                         search.description = search.placeholder;
                         picker.append(search);
                         field.hidden = true;
+                        field.style.setProperty('display', 'none', 'important');
                         let revision = 0;
                         search.addEventListener('input', () => {
                             revision++;
@@ -108,6 +110,7 @@
                 function showError() {
                     picker.replaceChildren();
                     field.hidden = false;
+                    field.style.removeProperty('display');
                     status.textContent = @json(__('Google Maps search is unavailable. Enter the company location manually.'));
                 }
 
