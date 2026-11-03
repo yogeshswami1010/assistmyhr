@@ -60,59 +60,69 @@
                 const field = document.getElementById('company_location');
                 const picker = document.createElement('div');
                 const status = document.createElement('div');
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'btn btn-link px-0';
-                button.textContent = @json(__('Search Google Maps'));
+                field.autocomplete = 'off';
                 status.setAttribute('role', 'status');
-                field.after(button, picker, status);
+                field.after(picker, status);
 
                 window.initCompanyLocationSearch = async () => {
                     try {
                         const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
-                        const search = new PlaceAutocompleteElement();
+                        const search = new PlaceAutocompleteElement({ value: field.value, maxlength: 191 });
+                        search.style.width = '100%';
+                        search.setAttribute('aria-label', @json(__('Company Location')));
                         search.placeholder = @json(__('Search for a company or address'));
                         search.description = search.placeholder;
                         picker.append(search);
+                        field.hidden = true;
+                        let revision = 0;
+                        search.addEventListener('input', () => {
+                            revision++;
+                            field.value = search.value;
+                            status.textContent = '';
+                        });
                         search.addEventListener('gmp-select', async ({ placePrediction }) => {
+                            const selection = ++revision;
+                            field.value = search.value;
                             status.textContent = '';
                             try {
                                 const place = placePrediction.toPlace();
                                 await place.fetchFields({ fields: ['formattedAddress'] });
+                                if (selection !== revision || field.hidden === false) return;
                                 if (!place.formattedAddress || place.formattedAddress.length > 191) {
                                     throw new Error();
                                 }
-                                field.value = place.formattedAddress;
+                                search.value = field.value = place.formattedAddress;
                                 field.dispatchEvent(new Event('change', { bubbles: true }));
                             } catch {
-                                status.textContent = @json(__('Could not fill in this address. Enter the company location manually.'));
+                                if (selection === revision && field.hidden) {
+                                    status.textContent = @json(__('Could not fill in this address. Enter the company location manually.'));
+                                }
                             }
                         });
                         search.addEventListener('gmp-error', showError);
-                        button.hidden = true;
                     } catch {
                         showError();
                     }
                 };
 
                 function showError() {
+                    picker.replaceChildren();
+                    field.hidden = false;
                     status.textContent = @json(__('Google Maps search is unavailable. Enter the company location manually.'));
                 }
 
-                button.addEventListener('click', () => {
-                    button.disabled = true;
-                    const script = document.createElement('script');
-                    const url = new URL('https://maps.googleapis.com/maps/api/js');
-                    url.search = new URLSearchParams({
-                        key: @json(config('services.google_maps.key')),
-                        loading: 'async',
-                        callback: 'initCompanyLocationSearch',
-                    });
-                    script.src = url;
-                    script.async = true;
-                    script.onerror = showError;
-                    document.head.append(script);
+                window.gm_authFailure = showError;
+                const script = document.createElement('script');
+                const url = new URL('https://maps.googleapis.com/maps/api/js');
+                url.search = new URLSearchParams({
+                    key: @json(config('services.google_maps.key')),
+                    loading: 'async',
+                    callback: 'initCompanyLocationSearch',
                 });
+                script.src = url;
+                script.async = true;
+                script.onerror = showError;
+                document.head.append(script);
             })();
         </script>
     @endpush
