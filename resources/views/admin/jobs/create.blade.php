@@ -54,90 +54,91 @@
 @include('admin.jobs.partials.job-form-scripts')
 
 @if (config('services.google_maps.key'))
-    @push('head-script')
-        <style>
-            .company-location-autocomplete {
-                display: block;
-                width: 100%;
-                height: 52px;
-                box-sizing: border-box;
-                color-scheme: light;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                background: #fff;
-                box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
-                --gmp-mat-font-body-medium: normal 400 13px/20px var(--gmp-mat-font-family);
-                --gmp-mat-font-body-large: normal 400 13px/20px var(--gmp-mat-font-family);
-                --gmp-mat-color-on-surface: #0f1f3d;
-            }
-
-            .company-location-autocomplete:focus-within {
-                border-color: #2563eb;
-                box-shadow: 0 0 0 2px rgb(37 99 235 / 10%);
-            }
-        </style>
-    @endpush
     @push('footer-script')
         <script>
             (() => {
                 const field = document.getElementById('company_location');
-                const picker = document.createElement('div');
+                const suggestions = document.createElement('datalist');
                 const status = document.createElement('div');
+                const predictions = new Map();
+                let timer;
+                let revision = 0;
+
                 field.autocomplete = 'off';
+                field.maxLength = 191;
+                suggestions.id = 'company-location-suggestions';
+                field.setAttribute('list', suggestions.id);
+                status.className = 'text-xs text-slate-500';
                 status.setAttribute('role', 'status');
-                field.after(picker, status);
+                field.after(suggestions, status);
 
                 window.initCompanyLocationSearch = async () => {
                     try {
-                        const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
-                        const search = new PlaceAutocompleteElement({
-                            value: field.value,
-                            maxlength: 191,
-                            noInputIcon: true,
-                        });
-                        search.className = 'company-location-autocomplete';
-                        search.style.setProperty('--gmp-mat-font-family', getComputedStyle(field).fontFamily);
-                        search.setAttribute('aria-label', @json(__('Company Location')));
-                        search.placeholder = @json(__('Search for a company or address'));
-                        search.description = search.placeholder;
-                        picker.append(search);
-                        field.hidden = true;
-                        field.style.setProperty('display', 'none', 'important');
-                        let revision = 0;
-                        search.addEventListener('input', () => {
-                            revision++;
-                            field.value = search.value;
+                        const { AutocompleteSuggestion, AutocompleteSessionToken } =
+                            await google.maps.importLibrary('places');
+                        let sessionToken;
+
+                        field.addEventListener('input', () => {
+                            clearTimeout(timer);
+                            const request = ++revision;
+                            const input = field.value.trim();
+                            const selected = predictions.get(input);
+                            suggestions.replaceChildren();
+                            predictions.clear();
                             status.textContent = '';
-                        });
-                        search.addEventListener('gmp-select', async ({ placePrediction }) => {
-                            const selection = ++revision;
-                            field.value = search.value;
-                            status.textContent = '';
-                            try {
-                                const place = placePrediction.toPlace();
-                                await place.fetchFields({ fields: ['formattedAddress'] });
-                                if (selection !== revision || field.hidden === false) return;
-                                if (!place.formattedAddress || place.formattedAddress.length > 191) {
-                                    throw new Error();
-                                }
-                                search.value = field.value = place.formattedAddress;
-                                field.dispatchEvent(new Event('change', { bubbles: true }));
-                            } catch {
-                                if (selection === revision && field.hidden) {
-                                    status.textContent = @json(__('Could not fill in this address. Enter the company location manually.'));
-                                }
+
+                            if (selected) {
+                                sessionToken = undefined;
+                                fillAddress(selected, request);
+                                return;
                             }
+
+                            if (input.length < 3) return;
+
+                            timer = setTimeout(async () => {
+                                try {
+                                    sessionToken ??= new AutocompleteSessionToken();
+                                    const result = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                                        input,
+                                        sessionToken,
+                                    });
+                                    if (request !== revision) return;
+
+                                    for (const { placePrediction } of result.suggestions) {
+                                        if (!placePrediction) continue;
+                                        const label = placePrediction.text.toString();
+                                        if (label.length > field.maxLength || predictions.has(label)) continue;
+                                        predictions.set(label, placePrediction);
+                                        const option = document.createElement('option');
+                                        option.value = label;
+                                        suggestions.append(option);
+                                    }
+                                    if (predictions.size) status.textContent = 'Google Maps';
+                                } catch {
+                                    if (request === revision) showError();
+                                }
+                            }, 250);
                         });
-                        search.addEventListener('gmp-error', showError);
                     } catch {
                         showError();
                     }
                 };
 
+                async function fillAddress(prediction, request) {
+                    try {
+                        const place = prediction.toPlace();
+                        await place.fetchFields({ fields: ['formattedAddress'] });
+                        if (request !== revision) return;
+                        if (place.formattedAddress && place.formattedAddress.length <= field.maxLength) {
+                            field.value = place.formattedAddress;
+                            field.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    } catch {
+                        if (request === revision) showError();
+                    }
+                }
+
                 function showError() {
-                    picker.replaceChildren();
-                    field.hidden = false;
-                    field.style.removeProperty('display');
                     status.textContent = @json(__('Google Maps search is unavailable. Enter the company location manually.'));
                 }
 
