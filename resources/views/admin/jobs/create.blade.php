@@ -52,3 +52,109 @@
 @endsection
 
 @include('admin.jobs.partials.job-form-scripts')
+
+@if (config('services.google_maps.key'))
+    @push('footer-script')
+        <script>
+            (() => {
+                const field = document.getElementById('company_location');
+                const suggestions = document.createElement('datalist');
+                const status = document.createElement('div');
+                const predictions = new Map();
+                let timer;
+                let revision = 0;
+
+                field.autocomplete = 'off';
+                field.maxLength = 191;
+                suggestions.id = 'company-location-suggestions';
+                field.setAttribute('list', suggestions.id);
+                status.className = 'text-xs text-slate-500';
+                status.setAttribute('role', 'status');
+                field.after(suggestions, status);
+
+                window.initCompanyLocationSearch = async () => {
+                    try {
+                        const { AutocompleteSuggestion, AutocompleteSessionToken } =
+                            await google.maps.importLibrary('places');
+                        let sessionToken;
+
+                        field.addEventListener('input', () => {
+                            clearTimeout(timer);
+                            const request = ++revision;
+                            const input = field.value.trim();
+                            const selected = predictions.get(input);
+                            suggestions.replaceChildren();
+                            predictions.clear();
+                            status.textContent = '';
+
+                            if (selected) {
+                                sessionToken = undefined;
+                                fillAddress(selected, request);
+                                return;
+                            }
+
+                            if (input.length < 3) return;
+
+                            timer = setTimeout(async () => {
+                                try {
+                                    sessionToken ??= new AutocompleteSessionToken();
+                                    const result = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                                        input,
+                                        sessionToken,
+                                    });
+                                    if (request !== revision) return;
+
+                                    for (const { placePrediction } of result.suggestions) {
+                                        if (!placePrediction) continue;
+                                        const label = placePrediction.text.toString();
+                                        if (label.length > field.maxLength || predictions.has(label)) continue;
+                                        predictions.set(label, placePrediction);
+                                        const option = document.createElement('option');
+                                        option.value = label;
+                                        suggestions.append(option);
+                                    }
+                                    if (predictions.size) status.textContent = 'Google Maps';
+                                } catch {
+                                    if (request === revision) showError();
+                                }
+                            }, 250);
+                        });
+                    } catch {
+                        showError();
+                    }
+                };
+
+                async function fillAddress(prediction, request) {
+                    try {
+                        const place = prediction.toPlace();
+                        await place.fetchFields({ fields: ['formattedAddress'] });
+                        if (request !== revision) return;
+                        if (place.formattedAddress && place.formattedAddress.length <= field.maxLength) {
+                            field.value = place.formattedAddress;
+                            field.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    } catch {
+                        if (request === revision) showError();
+                    }
+                }
+
+                function showError() {
+                    status.textContent = @json(__('Google Maps search is unavailable. Enter the company location manually.'));
+                }
+
+                window.gm_authFailure = showError;
+                const script = document.createElement('script');
+                const url = new URL('https://maps.googleapis.com/maps/api/js');
+                url.search = new URLSearchParams({
+                    key: @json(config('services.google_maps.key')),
+                    loading: 'async',
+                    callback: 'initCompanyLocationSearch',
+                });
+                script.src = url;
+                script.async = true;
+                script.onerror = showError;
+                document.head.append(script);
+            })();
+        </script>
+    @endpush
+@endif
