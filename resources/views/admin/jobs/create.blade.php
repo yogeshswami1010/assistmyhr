@@ -67,13 +67,18 @@
                 window.initCompanyLocationSearch = async () => {
                     try {
                         const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
-                        const search = new PlaceAutocompleteElement({ value: field.value, maxlength: 191 });
+                        const search = new PlaceAutocompleteElement({
+                            value: field.value,
+                            maxlength: 191,
+                            noInputIcon: true,
+                        });
                         search.style.width = '100%';
                         search.style.colorScheme = 'light';
                         search.setAttribute('aria-label', @json(__('Company Location')));
                         search.placeholder = @json(__('Search for a company or address'));
                         search.description = search.placeholder;
                         picker.append(search);
+                        picker.className = 'rounded-xl border border-gray-200 bg-white shadow-sm focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/10';
                         field.hidden = true;
                         field.style.setProperty('display', 'none', 'important');
                         let revision = 0;
@@ -109,6 +114,7 @@
 
                 function showError() {
                     picker.replaceChildren();
+                    picker.removeAttribute('class');
                     field.hidden = false;
                     field.style.removeProperty('display');
                     status.textContent = @json(__('Google Maps search is unavailable. Enter the company location manually.'));
