@@ -30,9 +30,6 @@
     $startDateVal = $job && $job->start_date
         ? $job->start_date->format('Y-m-d')
         : \Carbon\Carbon::now()->format('Y-m-d');
-    $endDateVal = $job && $job->end_date
-        ? $job->end_date->format('Y-m-d')
-        : \Carbon\Carbon::now()->addMonth()->format('Y-m-d');
 @endphp
 
 <div class="job-form-page pb-10 text-[#0F1F3D]">
