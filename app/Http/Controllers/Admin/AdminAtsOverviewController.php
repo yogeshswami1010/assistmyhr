@@ -22,7 +22,7 @@ class AdminAtsOverviewController extends AdminBaseController
 
         $today = Carbon::today()->toDateString();
         $jobs = Job::query()
-            ->select('id', 'title', 'company_id', 'location_id', 'start_date','hiring_status','status')
+            ->select('id', 'title', 'company_id', 'location_id')
             ->with([
                 'company:id,company_name',
                 'location:id,location',
@@ -34,7 +34,7 @@ class AdminAtsOverviewController extends AdminBaseController
                         ->orderBy('position');
                 },
             ])
-           ->where('status', 'open')
+            ->whereIn('status', ['open', 'active'])
             ->whereDate('start_date', '<=', $today)
             ->orderBy('title')
             ->get();
