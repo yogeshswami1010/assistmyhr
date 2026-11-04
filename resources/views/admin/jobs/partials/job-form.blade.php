@@ -25,12 +25,7 @@
         'cover_letter' => __('modules.jobs.coverLetter'),
         'terms_and_conditions' => __('modules.jobs.termsAndConditions'),
     ];
-    $startDateVal = $job && $job->start_date
-        ? $job->start_date->format('Y-m-d')
-        : \Carbon\Carbon::now()->format('Y-m-d');
-    $endDateVal = $job && $job->end_date
-        ? $job->end_date->format('Y-m-d')
-        : \Carbon\Carbon::now()->addMonth()->format('Y-m-d');
+  
 @endphp
 
 <div class="job-form-page pb-10 text-[#0F1F3D]">
@@ -209,44 +204,54 @@
                                 });
                             </script>
                             </div>
-                            <div class="form-group mb-0">
-                                <div class="mb-1.5 flex items-center justify-between gap-2">
-                                    <label for="title" class="block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
-                                    @if ($isEdit)
-                                    <button
-                                        type="button"
-                                        id="ai-generate-job-content-btn"
-                                        class="inline-flex items-center gap-1.5 rounded-lg border border-[#2563EB]/25 bg-[#EFF6FF] px-2.5 py-1.5 text-[11px] font-semibold text-[#2563EB] transition hover:bg-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-50"
-                                        data-url="{{ route('admin.jobs.ai-generate-content') }}"
-                                    >
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"/></svg>
-                                        <span id="ai-generate-job-content-label">@lang('app.aiGenerate')</span>
-                                    </button>
-                                    @endif
-                                </div>
-                                <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="title" id="title" value="{{ $job ? $job->title : '' }}">
-                            </div>
-                            <div class="form-group mb-0">
-                                <label for="job_code" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">Job Code</label>
-                                <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="job_code" id="job_code" maxlength="100" value="{{ $job ? $job->job_code : '' }}" placeholder="e.g. CSR-2026-001">
-                            </div>
+                           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div class="form-group mb-0">
+        <div class="mb-1.5 flex items-center justify-between gap-2">
+            <label for="title" class="block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
+            @if ($isEdit)
+            <button type="button" id="ai-generate-job-content-btn"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-[#2563EB]/25 bg-[#EFF6FF] px-2.5 py-1.5 text-[11px] font-semibold text-[#2563EB] transition hover:bg-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-50"
+                data-url="{{ route('admin.jobs.ai-generate-content') }}">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"/></svg>
+                <span id="ai-generate-job-content-label">@lang('app.aiGenerate')</span>
+            </button>
+            @endif
+        </div>
+        <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="title" id="title" value="{{ $job ? $job->title : '' }}">
+    </div>
+
+    <div class="form-group mb-0">
+        <label for="job_code" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">Job Code</label>
+        <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="job_code" id="job_code" maxlength="100" value="{{ $job ? $job->job_code : '' }}" placeholder="e.g. CSR-2026-001">
+    </div>
+</div>
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div class="form-group mb-0 flex min-h-0 flex-col">
-                                    <label for="job_type" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobType')</label>
-                                    <select name="job_type_id" id="job_type" class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
-                                        <option value="">—</option>
-                                        @foreach ($jobTypes as $jobType)
-                                            <option @if ($job && $job->job_type_id == $jobType->id) selected @endif value="{{ $jobType->id }}">{{ $jobType->job_type }}</option>
-                                        @endforeach
-                                    </select>
-                                    <div class="mt-2.5 flex items-stretch gap-2.5">
-                                        <button type="button" title="@lang('app.add') @lang('modules.jobs.jobType')" id="addJobType" class="inline-flex h-11 w-11 shrink-0 items-center justify-center self-start rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="@lang('app.add') @lang('modules.jobs.jobType')"><i class="fa fa-plus" aria-hidden="true"></i></button>
-                                        <label class="flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-xl border border-gray-100 bg-[#F8F7F4]/40 px-3 py-2 text-left text-[12px] font-medium leading-snug text-slate-600 transition hover:border-gray-200">
-                                            <input @if ($job && $job->show_job_type) checked @endif type="checkbox" value="yes" name="show_job_type" class="flat-red shrink-0 rounded border-gray-300 text-primary focus:ring-primary">
-                                            <span class="min-w-0 flex-1">@lang('modules.jobs.showJobType')</span>
-                                        </label>
-                                    </div>
-                                </div>
+                               <div class="form-group mb-0 flex min-h-0 flex-col">
+    <label for="job_type" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+        @lang('modules.jobs.jobType')
+    </label>
+
+    <div class="flex items-center gap-2">
+        <select name="job_type_id" id="job_type"
+            class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
+            <option value="">—</option>
+            @foreach ($jobTypes as $jobType)
+                <option @if ($job && $job->job_type_id == $jobType->id) selected @endif
+                    value="{{ $jobType->id }}">
+                    {{ $jobType->job_type }}
+                </option>
+            @endforeach
+        </select>
+
+        <button type="button"
+            title="@lang('app.add') @lang('modules.jobs.jobType')"
+            id="addJobType"
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
+            aria-label="@lang('app.add') @lang('modules.jobs.jobType')">
+            <i class="fa fa-plus" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
                                 <div class="form-group mb-0">
                                     <label for="total_positions" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.totalPositions') <span class="text-red-500">*</span></label>
                                     <div class="flex items-center overflow-hidden rounded-xl border border-gray-200 transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/10">
@@ -397,7 +402,7 @@
                             </div>
                             <div>
                                 <h3 class="text-[15px] font-bold text-[#0F1F3D]">@lang('modules.jobs.formJobDetails')</h3>
-                                <p class="mt-0.5 text-[12px] text-[#8892A0]">@lang('menu.locations'), @lang('menu.skills'), @lang('app.dates')</p>
+                           <p class="mt-0.5 text-[12px] text-[#8892A0]">@lang('menu.locations'), @lang('menu.skills')</p>
                             </div>
                         </div>
                         <div class="flex flex-col gap-4 p-5">
@@ -484,20 +489,18 @@
                                         toggleNewLocationField(document.getElementById('location_id'));
                                     });
                                 </script>
-                                <div class="form-group mb-0">
-                                    <label for="status" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
-                                        @lang('app.status')
-                                    </label>
-                                    <select name="status" id="status"
-                                        class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
-                                        <option value="active" {{ $job && $job->status == 'active' ? 'selected' : '' }}>
-                                            Active
-                                        </option>
-                                        <option value="inactive" {{ $job && in_array($job->status, ['inactive', 'ats']) ? 'selected' : '' }}>
-                                            Inactive
-                                        </option>
-                                    </select>
-                                </div>
+                               @php $currentStatus = $job->status ?? 'open'; @endphp
+<div class="form-group mb-0">
+    <label for="status" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+        @lang('app.status') <span class="text-red-500">*</span>
+    </label>
+    <select name="status" id="status" required
+        class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
+        @foreach (['open' => 'Open', 'closed' => 'Closed', 'filled' => 'Filled', 'on_hold' => 'On Hold'] as $val => $label)
+            <option value="{{ $val }}" @selected($currentStatus === $val)>{{ $label }}</option>
+        @endforeach
+    </select>
+</div>
                             </div>
                             <div class="form-group mb-0">
                                 <label for="job_skills" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('menu.skills')</label>
@@ -513,58 +516,63 @@
                                     @endif
                                 </select>
                             </div>
-                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div class="form-group mb-0">
-                                    <label for="date-start" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('app.startDate')</label>
-                                    <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" id="date-start" value="{{ $startDateVal }}" name="start_date">
-                                </div>
-                                <div class="form-group mb-0">
-                                <label for="hiring_status" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
-                                    Job Status
-                                </label>
-                                <select name="hiring_status" id="hiring_status"
-                                    class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
-                                    @php
-                                        $hiringStatuses = [
-                                            'in_progress'  => 'In Progress',
-                                            'under_review' => 'Under Review',
-                                            'on_hold'      => 'On Hold',
-                                            'filled'       => 'Filled',
-                                            'closed'       => 'Closed',
-                                        ];
-                                        $currentHiring = old('hiring_status', $job->hiring_status ?? 'active');
-                                    @endphp
-                                    @foreach ($hiringStatuses as $value => $label)
-                                        <option value="{{ $value }}" @selected($currentHiring === $value)>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            </div>
+                           
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div class="form-group mb-0 flex min-h-0 flex-col">
-                                    <label for="work_experience" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.workExperience')</label>
-                                    <div id="work-experience-select-wrapper"><select name="work_experience_ids[]" multiple id="work_experience" class="select2 form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
-                                        <option value="">—</option>
-                                        <option value="new">{{ __('Add New Work Experience') }}</option>
-                                        @foreach ($workExperiences as $workExperience)
-                                            <option @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id])) selected @endif value="{{ $workExperience->id }}">{{ $workExperience->work_experience }}</option>
-                                        @endforeach
-                                    </select></div>
-                                    <div id="new-work-experience-wrapper" class="hidden">
-                                        <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
-                                            <input type="text" id="work_experience_new" maxlength="191" disabled aria-label="{{ __('Add New Work Experience') }}" placeholder="{{ __('Add New Work Experience') }}" style="flex: 1 1 0%; min-width: 0; width: 0;" class="form-control rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]">
-                                            <button type="button" id="add-work-experience-inline" style="flex: 0 0 auto; padding: 0 14px; border-radius: 12px; background: #2563EB; color: white; font-size: 13px; font-weight: 600;">{{ __('Add') }}</button>
-                                            <button type="button" id="reset-work-experience" style="flex: 0 0 36px; border: 1px solid #E5E7EB; border-radius: 12px; background: white; color: #64748B;" aria-label="{{ __('modules.jobs.workExperience') }}">&times;</button>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2.5 flex items-stretch gap-2.5">
-                                        <label class="flex min-h-11 flex-1 cursor-pointer items-center gap-2.5 rounded-xl border border-gray-100 bg-[#F8F7F4]/40 px-3 py-2 text-left text-[12px] font-medium leading-snug text-slate-600 transition hover:border-gray-200">
-                                            <input @if ($job && $job->show_work_experience) checked @endif type="checkbox" value="yes" name="show_work_experience" class="flat-red shrink-0 rounded border-gray-300 text-primary focus:ring-primary">
-                                            <span class="min-w-0 flex-1">@lang('modules.jobs.showWorkExperience')</span>
-                                        </label>
-                                    </div>
-                                </div>
+                               <div class="form-group mb-0 flex min-h-0 flex-col">
+    <label for="work_experience" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+        @lang('modules.jobs.workExperience')
+    </label>
+
+    <div class="flex items-center gap-2">
+        <div id="work-experience-select-wrapper" class="min-w-0 flex-1">
+            <select name="work_experience_ids[]" multiple id="work_experience"
+                class="select2 form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
+                <option value="">—</option>
+                <option value="new">{{ __('Add New Work Experience') }}</option>
+
+                @foreach ($workExperiences as $workExperience)
+                    <option
+                        @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id]))
+                            selected
+                        @endif
+                        value="{{ $workExperience->id }}">
+                        {{ $workExperience->work_experience }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <button type="button"
+            title="@lang('app.add') @lang('modules.jobs.workExperience')"
+            id="addJobType"
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            aria-label="@lang('app.add') @lang('modules.jobs.workExperience')">
+            <i class="fa fa-plus" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <div id="new-work-experience-wrapper" class="hidden">
+        <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
+            <input type="text" id="work_experience_new" maxlength="191" disabled
+                aria-label="{{ __('Add New Work Experience') }}"
+                placeholder="{{ __('Add New Work Experience') }}"
+                style="flex: 1 1 0%; min-width: 0; width: 0;"
+                class="form-control rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]">
+
+            <button type="button" id="add-work-experience-inline"
+                style="flex: 0 0 auto; padding: 0 14px; border-radius: 12px; background: #2563EB; color: white; font-size: 13px; font-weight: 600;">
+                {{ __('Add') }}
+            </button>
+
+            <button type="button" id="reset-work-experience"
+                style="flex: 0 0 36px; border: 1px solid #E5E7EB; border-radius: 12px; background: white; color: #64748B;"
+                aria-label="{{ __('modules.jobs.workExperience') }}">
+                &times;
+            </button>
+        </div>
+    </div>
+</div>
                                 <div class="form-group mb-0 flex min-h-0 flex-col">
                                     <label for="paytype" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.showPayBy')</label>
                                     <select name="pay_type" id="paytype" class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
@@ -574,10 +582,7 @@
                                         <option @if ($job && $job->pay_type == 'Maximum') selected @endif value="Maximum">@lang('modules.jobs.maximumSalary')</option>
                                         <option @if ($job && $job->pay_type == 'Exact Amount') selected @endif value="Exact Amount">@lang('modules.jobs.exactSalary')</option>
                                     </select>
-                                    <label class="mt-2.5 flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border border-gray-100 bg-[#F8F7F4]/40 px-3 py-2 text-left text-[12px] font-medium leading-snug text-slate-600 transition hover:border-gray-200">
-                                        <input @if ($job && $job->show_salary) checked @endif type="checkbox" value="yes" name="show_salary" class="flat-red shrink-0 rounded border-gray-300 text-primary focus:ring-primary">
-                                        <span class="min-w-0 flex-1">@lang('modules.jobs.showSalary')</span>
-                                    </label>
+                                   
                                 </div>
                             </div>
                         </div>
@@ -899,7 +904,7 @@
                             <span id="job-preview-dates">—</span>
                         </div>
                         <div class="flex items-center justify-between border-t border-gray-100 pt-3">
-                            <span id="job-preview-status" class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-600">@lang('app.active')</span>
+                            <span id="job-preview-status" class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-600">Open</span>
                             <span id="job-preview-skills" class="ml-2 truncate text-[11.5px] text-gray-400">—</span>
                         </div>
                     </div>
@@ -1255,5 +1260,29 @@ $(document).ready(function () {
 })();
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var sel = document.getElementById('status');
+    var badge = document.getElementById('job-preview-status');
+    if (!sel || !badge) return;
+
+    var map = {
+        open:    ['Open',    'bg-emerald-50 text-emerald-600'],
+        closed:  ['Closed',  'bg-red-50 text-red-600'],
+        filled:  ['Filled',  'bg-blue-50 text-blue-600'],
+        on_hold: ['On Hold', 'bg-amber-50 text-amber-600']
+    };
+
+    function sync() {
+        var m = map[sel.value] || map.open;
+        badge.textContent = m[0];
+        badge.className = 'rounded-full px-2.5 py-1 text-[11.5px] font-semibold ' + m[1];
+    }
+
+    sel.addEventListener('change', sync);
+    if (window.jQuery) { jQuery(sel).on('change', sync); } // in case Select2 styles this field
+    sync();
+});
+</script>
 
 @include('admin.jobs.partials.question-create-modal')
