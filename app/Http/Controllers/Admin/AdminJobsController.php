@@ -340,7 +340,7 @@ class AdminJobsController extends AdminBaseController
     public function edit($id)
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
-        $this->job = Job::find($id);
+        $this->job = Job::findOrFail($id);
         $this->categories = JobCategory::all();
         $this->locations = JobLocation::all();
         $this->jobLocationData = $this->job->jobLocation->pluck('id')->toArray();

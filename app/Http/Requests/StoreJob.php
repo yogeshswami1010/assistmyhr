@@ -19,7 +19,7 @@ class StoreJob extends CoreRequest
             'job_description'    => 'required',
             'total_positions'    => 'required|numeric',
             'start_date'         => 'required|date',
-            'end_date'           => 'required|date',
+            'hiring_status'      => 'nullable|in:in_progress,under_review,on_hold,filled,closed',
 
             // New manual-entry fields
             'company_new'        => 'nullable|string|max:191',

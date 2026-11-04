@@ -17,6 +17,7 @@ class Job extends Model
     protected $casts = [
         'work_experience_ids' => 'array',
         'start_date' => 'date',
+        'end_date' => 'date',
         'hiring_status' => 'string',
         'required_columns' => 'array',
         'meta_details' => 'array',
