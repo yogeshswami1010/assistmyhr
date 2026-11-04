@@ -91,7 +91,6 @@
                                     <span class="truncate text-[14px] font-bold text-[#1A1E2E] group-hover:text-[#2563EB]">{{ $job->title }}</span>
                                     <span class="text-lg leading-none text-[#A0A8B5] group-hover:text-[#2563EB]">&rsaquo;</span>
                                 </a>
-                                <p class="mt-1 text-[11.5px] text-[#8892A0]">Active until {{ optional($job->end_date)->format('M d, Y') }}</p>
                             </td>
                             <td class="px-5 py-4 text-[13px] font-medium text-[#4D586B]">
                                 {{ optional($job->company)->company_name ?: 'No company' }}
@@ -130,7 +129,7 @@
                         <tr>
                             <td colspan="5" class="px-6 py-16 text-center">
                                 <p class="text-[15px] font-semibold text-[#3D4A5C]">No active jobs</p>
-                                <p class="mt-1 text-[12.5px] text-[#8892A0]">Active jobs within their start and end dates will appear here.</p>
+                                <p class="mt-1 text-[12.5px] text-[#8892A0]">Open jobs will appear here once their start date is reached.</p>
                             </td>
                         </tr>
                     @endforelse
