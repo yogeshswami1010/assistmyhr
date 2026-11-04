@@ -209,27 +209,27 @@
                                 });
                             </script>
                             </div>
-                            <div class="form-group mb-0">
-                                <div class="mb-1.5 flex items-center justify-between gap-2">
-                                    <label for="title" class="block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
-                                    @if ($isEdit)
-                                    <button
-                                        type="button"
-                                        id="ai-generate-job-content-btn"
-                                        class="inline-flex items-center gap-1.5 rounded-lg border border-[#2563EB]/25 bg-[#EFF6FF] px-2.5 py-1.5 text-[11px] font-semibold text-[#2563EB] transition hover:bg-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-50"
-                                        data-url="{{ route('admin.jobs.ai-generate-content') }}"
-                                    >
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"/></svg>
-                                        <span id="ai-generate-job-content-label">@lang('app.aiGenerate')</span>
-                                    </button>
-                                    @endif
-                                </div>
-                                <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="title" id="title" value="{{ $job ? $job->title : '' }}">
-                            </div>
-                            <div class="form-group mb-0">
-                                <label for="job_code" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">Job Code</label>
-                                <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="job_code" id="job_code" maxlength="100" value="{{ $job ? $job->job_code : '' }}" placeholder="e.g. CSR-2026-001">
-                            </div>
+                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div class="form-group mb-0">
+        <div class="mb-1.5 flex items-center justify-between gap-2">
+            <label for="title" class="block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
+            @if ($isEdit)
+            <button type="button" id="ai-generate-job-content-btn"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-[#2563EB]/25 bg-[#EFF6FF] px-2.5 py-1.5 text-[11px] font-semibold text-[#2563EB] transition hover:bg-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-50"
+                data-url="{{ route('admin.jobs.ai-generate-content') }}">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"/></svg>
+                <span id="ai-generate-job-content-label">@lang('app.aiGenerate')</span>
+            </button>
+            @endif
+        </div>
+        <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="title" id="title" value="{{ $job ? $job->title : '' }}">
+    </div>
+
+    <div class="form-group mb-0">
+        <label for="job_code" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">Job Code</label>
+        <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="job_code" id="job_code" maxlength="100" value="{{ $job ? $job->job_code : '' }}" placeholder="e.g. CSR-2026-001">
+    </div>
+</div>
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                <div class="form-group mb-0 flex min-h-0 flex-col">
     <label for="job_type" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
@@ -548,13 +548,13 @@
             </select>
         </div>
 
-        <button type="button"
-            title="@lang('app.add') @lang('modules.jobs.workExperience')"
-            id="addJobType"
-            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-            aria-label="@lang('app.add') @lang('modules.jobs.workExperience')">
-            <i class="fa fa-plus" aria-hidden="true"></i>
-        </button>
+      <button type="button"
+    title="@lang('app.add') @lang('modules.jobs.workExperience')"
+    id="addWorkExperience"
+    class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
+    aria-label="@lang('app.add') @lang('modules.jobs.workExperience')">
+    <i class="fa fa-plus" aria-hidden="true"></i>
+</button>
     </div>
 
     <div id="new-work-experience-wrapper" class="hidden">
