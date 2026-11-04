@@ -1,17 +1,132 @@
 <style>
-.subscription-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:28px}.subscription-heading h1{font-size:32px;margin:14px 0 8px}.subscription-heading p{margin:0}.subscription-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:24px;margin-bottom:24px}.subscription-card{background:#fff;border:1px solid #e8e6e1;border-radius:22px;padding:28px;min-width:0;box-shadow:0 8px 28px rgba(20,36,66,.035)}.plan-summary{background:radial-gradient(ellipse at top right,#2563eb35,transparent 75%),#10213f;color:white}.plan-summary h2{font-size:30px;margin:22px 0}.plan-summary .muted{color:#b1bed3}.status-chip{display:inline-flex;border-radius:30px;padding:6px 11px;font-size:11px;font-weight:700;background:#eef2ff;color:#4338ca}.status-chip.available{background:#ecfdf5;color:#047857}.status-chip.paused{background:#fff1f2;color:#be123c}.subscription-details{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:24px 0}.subscription-details dt{font-size:11px;color:#b1bed3;margin-bottom:8px}.subscription-details dd{margin:0;font-size:13px;line-height:1.6}.usage-row{margin-top:22px}.usage-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:#5a6478;margin-bottom:10px}.usage-label strong{color:#1a1e2e}.usage-track{height:6px;border-radius:10px;background:#eef0f5;overflow:hidden}.usage-fill{height:100%;background:#2563eb;border-radius:10px}.usage-fill.full{background:#e11d48}.workspace-link{margin-top:26px;padding-top:22px;border-top:1px solid #eeedf2}.renewal-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:36px}.renewal-grid p{margin:0}.subscription-card select,.subscription-card textarea{width:100%;font:400 13px 'Plus Jakarta Sans',sans-serif;border:1.5px solid #e2ded8;border-radius:11px;padding:12px 14px;background:#fff;color:#1a1e2e}.subscription-card textarea{resize:vertical;min-height:110px}.subscription-card select:focus,.subscription-card textarea:focus{outline:3px solid #2563eb17;border-color:#2563eb}.subscription-card form .field{margin-bottom:20px}.subscription-empty{padding:18px;background:#f8f9fc;border-radius:12px;font-size:13px;color:#7b8597}@media(max-width:780px){.subscription-grid,.renewal-grid{grid-template-columns:1fr}.subscription-heading{align-items:flex-start;flex-direction:column}.subscription-card{padding:24px}.subscription-heading h1{font-size:28px}}
+.subscription-page { background:#eef2f8; padding:20px; border-radius:16px; }
+.subscription-page h1 { font-size:25px; font-weight:800; margin:0; }
+.subscription-page h1 span { color:#2563eb; }
+.subscription-page h2 { font-size:17px; margin:0 0 5px; }
+.subscription-page p { margin:0; }
+.subscription-header,.subscription-summary,.subscription-renewal { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.subscription-header { justify-content:space-between; }
+.subscription-summary { background:#10264b; color:#fff; padding:13px 16px; border-radius:10px; margin:16px 0; }
+.subscription-summary .summary-chip { background:#eff6ff; color:#2047a0; border-radius:20px; padding:4px 10px; font-size:11px; font-weight:800; }
+.subscription-summary .summary-active { background:#dcfce7; color:#166534; }
+.subscription-summary .summary-paused { background:#ffe4e6; color:#9f1239; }
+.subscription-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-bottom:14px; }
+.subscription-stack { display:grid; gap:14px; }
+.subscription-page .subscription-card { background:#fff; padding:16px; border:1px solid #e1e7f0; border-radius:12px; min-width:0; }
+.subscription-page .billing-option { display:flex; align-items:center; gap:12px; margin:10px 0 0; padding:12px; border:1px solid #dce4ef; border-radius:10px; cursor:pointer; color:#1a1e2e; }
+.subscription-page .billing-option:has(input:checked) { background:#edf4ff; border-color:#2563eb; }
+.subscription-page .billing-option input { width:auto; margin:0; accent-color:#2563eb; }
+.subscription-page .billing-price { margin-inline-start:auto; text-align:end; font-size:15px; }
+.subscription-page .billing-note { background:#edf4ff; padding:9px 12px; border-radius:8px; color:#2047a0; margin-top:12px; }
+.subscription-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:12px; }
+.subscription-metrics strong,.subscription-metrics small { display:block; }
+.subscription-metrics strong { font-size:17px; }
+.subscription-icon { display:inline-flex; padding:4px 7px; border-radius:8px; background:#edf4ff; color:#2563eb; margin-bottom:4px; }
+.subscription-features { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; list-style:none; padding:0; margin:10px 0 0; }
+.subscription-features li::before { content:'✓'; color:#15803d; margin-inline-end:6px; }
+.subscription-renewal { margin-bottom:14px; }
+.subscription-renewal > div:first-child { flex:1 1 220px; }
+.subscription-renewal .renewal-message { flex:2 1 280px; }
+.subscription-page .renewal-message label { margin:0 0 5px; }
+.subscription-page .renewal-message textarea { min-height:64px; resize:vertical; }
+.subscription-page .button { margin:0; }
+.subscription-page .recent-request { margin-top:10px; padding-top:10px; border-top:1px solid #e1e7f0; white-space:pre-wrap; overflow-wrap:anywhere; }
+@media (max-width:800px) { .subscription-grid { grid-template-columns:1fr; } }
+@media (max-width:480px) { .subscription-metrics,.subscription-features { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 </style>
-@php($subscription = $tenant->subscription)
-@php($plan = $subscription?->plan)
-<div class="subscription-heading"><div><span class="eyebrow">Your subscription</span><h1>{{ $tenant->name }}</h1><p class="muted">Manage your plan, review usage and request a renewal.</p></div>@if($tenant->hasAccess())<a class="button" href="{{ tenant_route('admin.dashboard') }}">Open ATS <span aria-hidden="true">&nbsp;→</span></a>@endif</div>
-<div class="subscription-grid"><section class="subscription-card plan-summary" aria-labelledby="current-plan"><span class="eyebrow">Current plan</span><h2 id="current-plan">{{ $plan?->name ?? 'No plan' }}</h2><span class="status-chip {{ $tenant->hasAccess() ? 'available' : 'paused' }}">{{ ucfirst($subscription?->status ?? 'Unavailable') }}</span><dl class="subscription-details"><div><dt>Workspace status</dt><dd>{{ ucfirst($tenant->status) }}</dd></div><div><dt>Expires on</dt><dd>{{ $subscription?->expires_at ? $subscription->expires_at->format('d M Y') : 'No expiry' }}@if($subscription?->expires_at)<br><span class="muted">{{ $subscription->expires_at->format('H:i') }} UTC</span>@endif</dd></div></dl>@if(!$tenant->hasAccess())<div class="notice error" role="status">Your ATS access is paused. Contact the administrator for renewal or reactivation.</div>@else<p class="muted">Your workspace is ready. Continue managing your recruitment in the ATS.</p>@endif</section>
-<section class="subscription-card" aria-labelledby="usage-title"><h2 id="usage-title">Workspace usage</h2><p class="muted">Your current usage against this plan's limits.</p>
-@foreach([['Team members',$usage['users'],$plan?->max_users,''],['Stored jobs',$usage['jobs'],$plan?->max_jobs,''],['Candidates',$usage['candidates'],$plan?->max_candidates,''],['Local storage',$usage['storage_bytes']/1048576,$plan?->storage_mb,' MB']] as [$label,$used,$limit,$unit])
-@php($percentage = $limit > 0 ? min(100, max(0, $used / $limit * 100)) : null)
-<div class="usage-row"><div class="usage-label"><strong>{{ $label }}</strong><span>{{ $unit ? number_format($used,1) : number_format($used) }}{{ $unit }} / {{ $limit !== null ? number_format($limit).$unit : 'Unlimited' }}</span></div>@if($percentage !== null)<div class="usage-track" role="progressbar" aria-label="{{ $label }} usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ round($percentage) }}"><div class="usage-fill {{ $percentage >= 100 ? 'full' : '' }}" style="width:{{ $percentage }}%"></div></div>@endif</div>
-@endforeach
-<div class="workspace-link"><label for="company-login">Your company login link</label><input id="company-login" readonly value="{{ route('saas.workspace', $tenant->slug) }}"><p class="hint">Share this link with your recruiting team.</p></div></section></div>
-@if(auth()->user()->cans('manage_settings'))<section class="subscription-card renewal-grid" aria-labelledby="renewal-title"><div><span class="eyebrow">Plan management</span><h2 id="renewal-title" style="margin-top:18px">Request a plan or renewal</h2><p class="muted">Choose a plan and tell us what you need. The platform administrator reviews your request and updates your subscription manually.</p><p class="hint" style="margin-top:16px">Submitting a request does not change your current plan immediately.</p></div><div>@if($plans->isNotEmpty())<form method="post" action="{{ tenant_route('saas.request-plan') }}">@csrf<div class="field"><label for="plan_id">Choose a plan</label><select id="plan_id" name="plan_id" required>@foreach($plans as $availablePlan)<option value="{{ $availablePlan->id }}" @selected(old('plan_id',$plan?->id)==$availablePlan->id)>{{ $availablePlan->name }} — {{ $availablePlan->currency }} {{ number_format($availablePlan->price,2) }}</option>@endforeach</select>@error('plan_id')<p class="field-error">{{ $message }}</p>@enderror</div><div class="field"><label for="reason">Message to the administrator</label><textarea id="reason" name="reason" required maxlength="1000" placeholder="Tell us about your plan change or renewal request…">{{ old('reason') }}</textarea>@error('reason')<p class="field-error">{{ $message }}</p>@enderror</div><button class="button" type="submit">Send request <span aria-hidden="true">&nbsp;→</span></button></form>@else<div class="subscription-empty">No public plans are available yet. Contact the platform administrator to renew your subscription.</div>@endif</div></section>@endif
-@if(isset($requests) && $requests->isNotEmpty())
-<section class="subscription-card"><h2>Your recent requests</h2><p class="muted">These messages have been sent to the platform administrator.</p>@foreach($requests as $sent)<div style="border-top:1px solid #e2e8f0;padding:16px 0"><small>{{ $sent->created_at }} UTC &middot; Sent</small><p style="white-space:pre-wrap;overflow-wrap:anywhere">{{ $sent->reason }}</p></div>@endforeach</section>
+
+@php
+    $subscription = $tenant->subscription;
+    $plan = $subscription?->plan;
+    $hasAccess = $tenant->hasAccess();
+    $canRequest = auth()->user()->cans('manage_settings') && $plans->isNotEmpty();
+    $selectedPlan = old('plan_id', $plans->firstWhere('id', $plan?->id)?->id ?? $plans->first()?->id);
+@endphp
+
+<header class="subscription-header">
+    <div>
+        <p class="muted">Manage your plan, review usage and request a renewal or plan change.</p>
+        <h1>Workspace: <span>{{ $tenant->name }}</span></h1>
+    </div>
+    @if($hasAccess)
+        <a class="button" href="{{ tenant_route('admin.dashboard') }}">Open ATS →</a>
+    @endif
+</header>
+
+<section class="subscription-summary" aria-label="Current plan">
+    <span class="summary-chip">CURRENT PLAN</span>
+    <strong>{{ $plan?->name ?? 'No plan' }}</strong>
+    <span class="summary-chip {{ $hasAccess ? 'summary-active' : 'summary-paused' }}">{{ ucfirst($subscription?->status ?? 'Unavailable') }}</span>
+    <span>{{ $subscription?->expires_at ? 'Expires '.$subscription->expires_at->format('d M Y') : 'No expiry' }}</span>
+</section>
+@if(!$hasAccess)
+    <div class="notice error" role="status">Your ATS access is paused. Contact the administrator for renewal or reactivation.</div>
 @endif
+
+<div class="subscription-grid">
+    <section class="subscription-card" aria-labelledby="billing-title">
+        <h2 id="billing-title">Choose your billing</h2>
+        <p class="muted">Select a plan for your renewal or change request.</p>
+        @forelse($plans as $availablePlan)
+            <label class="billing-option">
+                <input type="radio" name="plan_id" value="{{ $availablePlan->id }}" @checked((string) $selectedPlan === (string) $availablePlan->id)
+                    @if($canRequest) form="subscription-request" required @else disabled @endif>
+                <strong>{{ $availablePlan->name }}</strong>
+                <strong class="billing-price">{{ $availablePlan->currency }} {{ number_format($availablePlan->price, 2) }}</strong>
+            </label>
+        @empty
+            <p class="billing-note">No public plans are available. Contact the platform administrator to renew.</p>
+        @endforelse
+    </section>
+
+    <div class="subscription-stack">
+        <section class="subscription-card" aria-labelledby="usage-title">
+            <h2 id="usage-title">Workspace usage</h2>
+            <p class="muted">Your current usage against this plan's limits.</p>
+            <div class="subscription-metrics">
+                @foreach([['Team members', $usage['users'], $plan?->max_users, '', 'fa-users'], ['Stored jobs', $usage['jobs'], $plan?->max_jobs, '', 'fa-briefcase'], ['Candidates', $usage['candidates'], $plan?->max_candidates, '', 'fa-user'], ['Storage', $usage['storage_bytes'] / 1048576, $plan?->storage_mb, ' MB', 'fa-database']] as [$label, $used, $limit, $unit, $icon])
+                    <div>
+                        <span class="subscription-icon" aria-hidden="true"><i class="fa {{ $icon }}"></i></span>
+                        <div>{{ $label }}</div>
+                        <strong>{{ number_format($used, $unit ? 1 : 0) }}{{ $unit }}</strong>
+                        <small class="muted">/ {{ $limit !== null ? number_format($limit).$unit : 'Unlimited' }}</small>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        <section class="subscription-card" aria-labelledby="subscription-features">
+            <h2 id="subscription-features">Workspace features</h2>
+            <ul class="subscription-features">
+                @foreach(['Applicant Tracking System (ATS)', 'Candidate Marketing & Sourcing', 'Candidate Database & CRM', 'AI Search & Matching', 'Job Posting & Distribution', 'Team Collaboration'] as $feature)
+                    <li>{{ $feature }}</li>
+                @endforeach
+            </ul>
+        </section>
+    </div>
+</div>
+
+@if($canRequest)
+    <form id="subscription-request" class="subscription-card subscription-renewal" method="post" action="{{ tenant_route('saas.request-plan') }}" aria-labelledby="renewal-title">
+        @csrf
+        <div>
+            <h2 id="renewal-title">Request a renewal or plan change</h2>
+            <p class="muted">Tell us what you need. Our team reviews and processes requests manually.</p>
+        </div>
+        <div class="renewal-message">
+            <label for="reason">Describe your request</label>
+            <textarea id="reason" name="reason" required maxlength="1000" placeholder="Renew my subscription, change plans, add users…">{{ old('reason') }}</textarea>
+        </div>
+        <button class="button" type="submit">Send request →</button>
+    </form>
+@endif
+
+<section class="subscription-card">
+    <label for="company-login">Your company login link</label>
+    <input id="company-login" readonly value="{{ route('saas.workspace', $tenant->slug) }}">
+    @if(isset($requests) && $requests->isNotEmpty())
+        <h2 class="mt-4">Your recent requests</h2>
+        @foreach($requests as $sent)
+            <div class="recent-request"><small>{{ $sent->created_at }} UTC · Sent</small><p>{{ $sent->reason }}</p></div>
+        @endforeach
+    @endif
+</section>
