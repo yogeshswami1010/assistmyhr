@@ -25,6 +25,8 @@
         'cover_letter' => __('modules.jobs.coverLetter'),
         'terms_and_conditions' => __('modules.jobs.termsAndConditions'),
     ];
+    $required_columns = array_replace($required_columns, array_intersect_key((array) ($job->required_columns ?? []), $required_columns));
+    $section_visibility = array_replace($section_visibility, array_intersect_key((array) ($job->section_visibility ?? []), $section_visibility));
     $startDateVal = $job && $job->start_date
         ? $job->start_date->format('Y-m-d')
         : \Carbon\Carbon::now()->format('Y-m-d');
@@ -804,7 +806,7 @@
                         <div class="p-5">
                             <div class="flex flex-wrap gap-3">
                                 @if ($job)
-                                    @foreach ($job->required_columns as $key => $value)
+                                    @foreach ($required_columns as $key => $value)
                                         <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-gray-100 bg-[#F8F7F4]/40 px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:border-gray-200">
                                             <input @if ($value) checked @endif type="checkbox" value="{{ $key }}" name="{{ $key }}" class="flat-red rounded border-gray-300 text-primary focus:ring-primary">
                                             {{ ucfirst(__($requiredColumns[$key])) }}
@@ -829,7 +831,7 @@
                         <div class="p-5">
                             <div class="flex flex-wrap gap-3">
                                 @if ($job)
-                                    @foreach ($job->section_visibility as $key => $value)
+                                    @foreach ($section_visibility as $key => $value)
                                         <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-gray-100 bg-[#F8F7F4]/40 px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:border-gray-200">
                                             <input @if ($value == 'yes') checked @endif type="checkbox" value="yes" name="{{ $key }}" class="flat-red rounded border-gray-300 text-primary focus:ring-primary">
                                             {{ ucfirst(__($sectionVisibility[$key])) }}
