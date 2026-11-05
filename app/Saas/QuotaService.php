@@ -13,6 +13,7 @@ class QuotaService
         if (!$tenant) { return; }
         $field = ['users' => 'max_users', 'jobs' => 'max_jobs', 'job_applications' => 'max_candidates'][$table] ?? null;
         $limit = $field ? $tenant->subscription?->plan?->$field : null;
+        if ($table === 'users') { $limit = $tenant->subscription?->userLimit(); }
         if ($limit !== null && DB::table($table)->count() >= $limit) {
             throw ValidationException::withMessages(['subscription' => 'Your plan has reached its '.str_replace('_', ' ', $field).' limit. Contact the administrator to upgrade.']);
         }

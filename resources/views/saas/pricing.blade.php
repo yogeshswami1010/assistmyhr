@@ -41,7 +41,7 @@
    data-monthly-text="Monthly billing: {{ $pricing['monthly'] }} per user, billed each month."
    data-annual-text="Annual billing: {{ $pricing['annual'] }} per user, billed once a year ({{ $pricing['annual_monthly'] }}/month).@if($pricing['discount'] > 0) Save {{ $pricing['annual_save'] }} per user each year.@endif">Monthly billing: {{ $pricing['monthly'] }} per user, billed each month.</p>
       <a class="button pricing-trial" href="/register">Start your {{ $pricing['trial_days'] }}-day free trial <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
-      <p class="pricing-trial-assurance"><span aria-hidden="true">✓</span><strong>{{ $pricing['trial_days'] }}-day free trial</strong><span aria-hidden="true">·</span><span>No credit card required</span></p>
+      <p class="pricing-trial-assurance"><span aria-hidden="true">✓</span><strong>{{ $pricing['trial_days'] }}-day free trial</strong><span aria-hidden="true">·</span><span>Up to {{ \App\Saas\Subscription::TRIAL_USER_LIMIT }} users, including the account owner</span><span aria-hidden="true">·</span><span>No credit card required</span></p>
       <p class="pricing-plan-note">Ready to subscribe? <a href="/#contact">Talk to our team.</a></p>
     </article>
     <div class="pricing-benefits" aria-label="What comes with your plan">

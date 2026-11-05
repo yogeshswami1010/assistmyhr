@@ -84,7 +84,7 @@
             <h2 id="usage-title">Workspace usage</h2>
             <p class="muted">Your current usage against this plan's limits.</p>
             <div class="subscription-metrics">
-                @foreach([['Team members', $usage['users'], $plan?->max_users, '', 'fa-users'], ['Stored jobs', $usage['jobs'], $plan?->max_jobs, '', 'fa-briefcase'], ['Candidates', $usage['candidates'], $plan?->max_candidates, '', 'fa-user'], ['Storage', $usage['storage_bytes'] / 1048576, $plan?->storage_mb, ' MB', 'fa-database']] as [$label, $used, $limit, $unit, $icon])
+                @foreach([['Team members', $usage['users'], $subscription?->userLimit(), '', 'fa-users'], ['Stored jobs', $usage['jobs'], $plan?->max_jobs, '', 'fa-briefcase'], ['Candidates', $usage['candidates'], $plan?->max_candidates, '', 'fa-user'], ['Storage', $usage['storage_bytes'] / 1048576, $plan?->storage_mb, ' MB', 'fa-database']] as [$label, $used, $limit, $unit, $icon])
                     <div>
                         <span class="subscription-icon" aria-hidden="true"><i class="fa {{ $icon }}"></i></span>
                         <div>{{ $label }}</div>
