@@ -123,7 +123,6 @@
                     <div class="mp-tab-bar" role="tablist">
                         <button type="button" class="mp-tab mp-tab-on" data-mp-tab="general" aria-selected="true">{{ __('modules.profilePage.generalInfo') }}</button>
                         <button type="button" class="mp-tab" data-mp-tab="security" aria-selected="false">{{ __('modules.profilePage.security') }}</button>
-                        <button type="button" class="mp-tab" data-mp-tab="notifications" aria-selected="false">{{ __('modules.profilePage.notifications') }}</button>
                     </div>
 
                     <div id="mp-panel-general" class="mp-tab-panel mp-tab-panel-on" role="tabpanel">
@@ -262,11 +261,6 @@
                         </div>
                     </div>
 
-                    <div id="mp-panel-notifications" class="mp-tab-panel" role="tabpanel">
-                        <div class="mp-section-body">
-                            <p class="text-[13.5px] leading-relaxed text-[#5A6478]">{{ __('modules.profilePage.notificationsInfo') }}</p>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 mp-a mp-a4">
@@ -329,7 +323,7 @@
                     t.classList.toggle('mp-tab-on', t.getAttribute('data-mp-tab') === id);
                     t.setAttribute('aria-selected', t.getAttribute('data-mp-tab') === id ? 'true' : 'false');
                 });
-                ['general', 'security', 'notifications'].forEach(function (p) {
+                ['general', 'security'].forEach(function (p) {
                     var el = document.getElementById('mp-panel-' + p);
                     if (!el) return;
                     el.classList.toggle('mp-tab-panel-on', p === id);
