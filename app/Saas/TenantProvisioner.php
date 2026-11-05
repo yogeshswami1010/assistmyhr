@@ -45,10 +45,9 @@ class TenantProvisioner
             $target = DB::connection('saas_tenant');
             $this->cloneSchema($source, $target);
             $target->transaction(function () use ($source, $target, $data) { $this->seed($source, $target, $data); });
-            $plan = Plan::where('id', PlatformSetting::valueFor('trial_plan_id'))->where('enabled', true)->firstOrFail();
             Subscription::create([
-                'tenant_id' => $tenant->id, 'plan_id' => $plan->id, 'status' => 'trialing',
-                'starts_at' => now(), 'expires_at' => now()->addDays((int) PlatformSetting::valueFor('trial_days', 14)),
+                'tenant_id' => $tenant->id, 'plan_id' => null, 'status' => 'trialing', 'seat_count' => Subscription::TRIAL_USER_LIMIT,
+                'starts_at' => now(), 'expires_at' => now()->addDays(Subscription::TRIAL_DAYS),
             ]);
             $tenant->status = 'active'; $tenant->save();
             AuditLog::create(['tenant_id' => $tenant->id, 'action' => 'tenant.created', 'reason' => 'Client signup completed.']);

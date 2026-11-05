@@ -19,7 +19,7 @@ class SignupController extends Controller
         abort_unless(config('saas.enabled'), 404);
         $plans = Plan::where('enabled', true)->where('public', true)
             ->where('slug', '!=', 'existing-workspace')->orderBy('duration_days')->orderBy('price')->get();
-        $pricing = ['trial_days' => (int) PlatformSetting::valueFor('trial_days', 30)];
+        $pricing = ['trial_days' => \App\Saas\Subscription::TRIAL_DAYS];
 
         return view('saas.pricing', compact('plans', 'pricing'));
     }

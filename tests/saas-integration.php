@@ -90,6 +90,7 @@ DB::table('google_captcha_settings')->insert(['secret'=>'ORIGINAL-CAPTCHA-SECRET
 $migration=require $root.'/database/migrations/2026_10_06_000003_create_saas_platform.php';$migration->up();
 (require $root.'/database/migrations/2026_11_05_000001_add_duration_to_saas_plans.php')->up();
 (require $root.'/database/migrations/2026_11_05_000002_add_seats_to_saas_subscriptions.php')->up();
+(require $root.'/database/migrations/2026_11_05_000003_allow_trials_without_a_plan.php')->up();
 (require $root.'/database/migrations/2026_10_27_000001_create_website_enquiries.php')->up();
 Schema::create('currencies',function(Blueprint $t){$t->increments('id');$t->string('currency_name');$t->string('currency_symbol');$t->string('currency_code');$t->boolean('default')->default(false);});
 Schema::table('company_settings',function(Blueprint $t){$t->integer('currency_id')->nullable();});
@@ -125,7 +126,7 @@ check($alpha->database_name!==$beta->database_name,'Every workspace receives a s
 check(!str_contains(tenant_html('<p onclick="evil()">Hiring</p><script>evil()</script><a href="javascript:evil()">X</a>'),'evil'),'Client rich text cannot inject scripts or event handlers');
 check(tenant_external_url('javascript:evil()')===''&&tenant_external_url('https://company.test')==='https://company.test','External links exclude active URL schemes');
 check($alpha->status==='active'&&$alpha->hasAccess(),'Signup creates accessible trial');
-check($alpha->subscription->expires_at->eq(now()->addDays(14)),'Trial duration applied');
+check($alpha->subscription->expires_at->eq(now()->addDays(30)) && $alpha->subscription->plan_id===null,'Standalone 30-day trial applied');
 check($context->current()===null&&DB::getDefaultConnection()==='sqlite','Provisioning restores landlord context');
 $context->activate($alpha);
 check(DB::table('users')->count()===1&&DB::table('users')->value('email_verified_at')===null,'Only new unverified owner seeded');
@@ -162,6 +163,7 @@ check(Auth::guard('platform')->attempt(['email'=>'same@example.test','password'=
 check(Auth::guard('platform')->attempt(['email'=>'platform@example.test','password'=>'long-admin-password']),'Separate platform guard authenticates');
 $context->activate($alpha);
 check(DB::table('jobs')->value('title')==='Alpha secret','Switch restores correct client data');
+$alpha->subscription->update(['plan_id'=>$plan->id]);
 $quota=app(QuotaService::class);$quota->assertCanCreate('jobs');
 DB::table('jobs')->insert(['company_id'=>1,'title'=>'Second alpha job']);
 rejected(fn()=>$quota->assertCanCreate('jobs'),'Job limit enforced');
@@ -208,11 +210,11 @@ $context->reset();
 check(config('services.deepseek.key')==='PLATFORM-AI'&&config('mail.ai_search_smtp.password')==='PLATFORM-SECRET','Reset restores platform configuration');
 $svc=app(SubscriptionService::class);
 $extended=$svc->extend($alpha,$admin,['days'=>30,'reason'=>'Paid offline']);
-check($extended->expires_at->eq(now()->addDays(44)),'Manual extension adds days to current future expiry');
+check($extended->expires_at->eq(now()->addDays(60)),'Manual extension adds days to current future expiry');
 check(AuditLog::where('action','subscription.extended')->value('reason')==='Paid offline','Extension reason recorded');
 rejected(fn()=>$svc->extend($alpha,$admin,['expires_at'=>now()->addDays(10)->toDateString(),'reason'=>'Invalid']),'Extensions cannot shorten access');
 Subscription::where('tenant_id',$beta->id)->update(['expires_at'=>now()->subDay()]);
-$extended=$svc->extend($beta,$admin,['days'=>7,'reason'=>'Renewal']);
+$extended=$svc->extend($beta,$admin,['plan_id'=>$plan->id,'days'=>7,'reason'=>'Renewal']);
 check($extended->expires_at->eq(now()->addDays(7)),'Expired renewals begin today');
 $svc->extend($beta,$admin,['expires_at'=>now()->addDays(20)->toDateString(),'reason'=>'Custom expiry']);
 check($beta->fresh()->subscription->expires_at->format('Y-m-d H:i:s')===now()->addDays(20)->endOfDay()->format('Y-m-d H:i:s'),'Exact expiry date supported');

@@ -309,7 +309,7 @@ class PlatformController extends Controller
             $plan = Plan::whereKey($plan->id)->lockForUpdate()->firstOrFail();
             if ($plan->slug === 'existing-workspace'
                 || Subscription::where('plan_id', $plan->id)->exists()
-                || (string) PlatformSetting::valueFor('trial_plan_id') === (string) $plan->id) {
+               ) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'plan' => 'This plan is assigned to clients or used for trials. Reassign it first, or disable it to stop new assignments.',
                 ]);
@@ -328,7 +328,7 @@ class PlatformController extends Controller
     }
     public function saveSettings(Request $request)
     {
-        $data = $request->validate(['signup_enabled' => ['required', 'boolean'], 'trial_days' => ['required', 'integer', 'min:1', 'max:90'], 'trial_plan_id' => ['required', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)->where('public', true)]]);
+        $data = $request->validate(['signup_enabled' => ['required', 'boolean']]);
         $before = PlatformSetting::whereIn('key', array_keys($data))->pluck('value', 'key')->all();
         foreach ($data as $key => $value) { PlatformSetting::updateOrCreate(['key' => $key], ['value' => (string) $value]); }
         AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'platform.settings_changed', 'reason' => 'Signup and trial settings changed.', 'before' => $before, 'after' => $data]);

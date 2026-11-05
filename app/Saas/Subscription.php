@@ -5,6 +5,7 @@ namespace App\Saas;
 class Subscription extends LandlordModel
 {
     public const TRIAL_USER_LIMIT = 3;
+    public const TRIAL_DAYS = 30;
 
     protected $table = 'saas_subscriptions';
     protected $casts = ['starts_at' => 'datetime', 'expires_at' => 'datetime', 'seat_count' => 'integer'];

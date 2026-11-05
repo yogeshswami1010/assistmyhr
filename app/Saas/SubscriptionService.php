@@ -15,6 +15,9 @@ class SubscriptionService
             $before = $subscription->only(['expires_at', 'status', 'plan_id', 'seat_count']);
             $oldExpiry = $subscription->expires_at;
             $plan = !empty($data['plan_id']) ? Plan::findOrFail($data['plan_id']) : $subscription->plan;
+            if (!$plan) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['plan_id' => 'Choose a paid plan to activate this trial account.']);
+            }
             $base = $oldExpiry && $oldExpiry->isFuture() ? $oldExpiry->copy() : now();
             $expiry = !empty($data['expires_at'])
                 ? Carbon::parse($data['expires_at'])->endOfDay()

@@ -39,7 +39,7 @@
     $subscription = $tenant->subscription;
     $plan = $subscription?->plan;
     $hasAccess = $tenant->hasAccess();
-    $canRequest = auth()->user()->cans('manage_settings') && $plans->isNotEmpty();
+    $canRequest = auth()->user()->cans('manage_settings') && $plans->isNotEmpty() && ($subscription?->status !== 'trialing' || !$hasAccess);
     $selectedPlan = old('plan_id', $plans->firstWhere('id', $plan?->id)?->id ?? $plans->first()?->id);
 @endphp
 
@@ -54,8 +54,8 @@
 </header>
 
 <section class="subscription-summary" aria-label="Current plan">
-    <span class="summary-chip">CURRENT PLAN</span>
-    <strong>{{ $plan?->name ?? 'No plan' }}</strong>
+    <span class="summary-chip">{{ $subscription?->status === 'trialing' ? 'TRIAL PERIOD' : 'CURRENT PLAN' }}</span>
+    <strong>{{ $subscription?->status === 'trialing' ? '30-day free trial · Up to 3 users' : ($plan?->name ?? 'No plan') }}</strong>
     <span class="summary-chip {{ $hasAccess ? 'summary-active' : 'summary-paused' }}">{{ ucfirst($subscription?->status ?? 'Unavailable') }}</span>
     <span>{{ $subscription?->expires_at ? 'Expires '.$subscription->expires_at->format('d M Y') : 'No expiry' }}</span>
 </section>
@@ -64,6 +64,7 @@
 @endif
 
 <div class="subscription-grid">
+    @if($subscription?->status !== 'trialing' || !$hasAccess)
     <section class="subscription-card" aria-labelledby="billing-title">
         <h2 id="billing-title">Choose your billing</h2>
         <p class="muted">Select a plan and duration for your renewal or change request.</p>
@@ -79,6 +80,9 @@
             <p class="billing-note">No public plans are available. Contact the platform administrator to renew.</p>
         @endforelse
     </section>
+    @else
+    <section class="subscription-card"><h2>Your free trial</h2><p>Your first 30 days are free for up to 3 users, including the account owner. No paid plan is assigned. When your trial expires, choose a monthly or yearly per-user plan and send an upgrade request to super admin.</p></section>
+    @endif
 
     <div class="subscription-stack">
         <section class="subscription-card" aria-labelledby="usage-title">
