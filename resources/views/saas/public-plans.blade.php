@@ -14,10 +14,9 @@
         <div class="pricing-plan-intro"><h3 id="published-plan-{{ $publishedPlan->id }}">{{ $publishedPlan->name }}</h3></div>
         <div class="pricing-price">
             <strong>{{ $publishedPlan->currency }} {{ number_format($publishedPlan->price, 2) }}</strong>
-            <div><span>per user / {{ $publishedPlan->durationDays() }} days</span><small>Total price = price per user × subscribed users. Request an upgrade from your account.</small></div>
+            <div><span>per user / {{ $publishedPlan->durationDays() }} days</span></div>
         </div>
         <ul class="published-plan-limits">
-            <li><span>Team members</span><strong>Based on approved user seats</strong></li>
             @foreach(['max_jobs'=>'Stored jobs','max_candidates'=>'Candidates','storage_mb'=>'Storage'] as $field=>$label)
                 <li><span>{{ $label }}</span><strong>{{ $publishedPlan->$field === null ? 'Unlimited' : number_format($publishedPlan->$field).($field === 'storage_mb' ? ' MB' : '') }}</strong></li>
             @endforeach
