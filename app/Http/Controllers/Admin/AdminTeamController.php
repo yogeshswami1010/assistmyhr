@@ -64,8 +64,14 @@ class AdminTeamController extends AdminBaseController
         // attach role
         $user->roles()->attach($request->role_id);
 
-        // send notification
-        $user->notify(new NewUser($request->password));
+        // Email delivery must not turn a completed creation into a failed request.
+        try {
+            $user->notify(new NewUser($request->password));
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return Reply::redirect(route('admin.team.index'), __('messages.teamCreatedWithoutWelcomeEmail'));
+        }
 
         return Reply::redirect(route('admin.team.index'), __('menu.team').' '.__('messages.createdSuccessfully'));
     }

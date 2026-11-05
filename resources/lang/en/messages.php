@@ -1,6 +1,7 @@
 <?php
 
 return array (
+  'teamCreatedWithoutWelcomeEmail' => 'Team member created successfully, but the welcome email could not be sent. Check your email settings. You do not need to add this member again.',
   'smtpSuccess' => 'SMTP configured successfully',
   'smtpNotSet' => 'SMTP is not configured',
   'updatedSuccessfully' => 'Updated successfully',
