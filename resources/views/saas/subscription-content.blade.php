@@ -39,7 +39,7 @@
     $subscription = $tenant->subscription;
     $plan = $subscription?->plan;
     $hasAccess = $tenant->hasAccess();
-    $canRequest = auth()->user()->cans('manage_settings') && $plans->isNotEmpty() && ($subscription?->status !== 'trialing' || !$hasAccess);
+    $canRequest = auth()->user()->cans('manage_settings') && $plans->isNotEmpty();
     $selectedPlan = old('plan_id', $plans->firstWhere('id', $plan?->id)?->id ?? $plans->first()?->id);
 @endphp
 
@@ -64,9 +64,11 @@
 @endif
 
 <div class="subscription-grid">
-    @if($subscription?->status !== 'trialing' || !$hasAccess)
     <section class="subscription-card" aria-labelledby="billing-title">
-        <h2 id="billing-title">Choose your billing</h2>
+        <h2 id="billing-title">{{ $subscription?->status === 'trialing' ? 'Upgrade your trial' : 'Choose your billing' }}</h2>
+        @if($subscription?->status === 'trialing')
+            <p class="billing-note">Your trial includes up to 3 users for 30 days. You can request a paid plan anytime. Your account stays on trial until super admin approves the upgrade.</p>
+        @endif
         <p class="muted">Select a plan and duration for your renewal or change request.</p>
         @forelse($plans as $availablePlan)
             <label class="billing-option">
@@ -80,9 +82,6 @@
             <p class="billing-note">No public plans are available. Contact the platform administrator to renew.</p>
         @endforelse
     </section>
-    @else
-    <section class="subscription-card"><h2>Your free trial</h2><p>Your first 30 days are free for up to 3 users, including the account owner. No paid plan is assigned. When your trial expires, choose a monthly or yearly per-user plan and send an upgrade request to super admin.</p></section>
-    @endif
 
     <div class="subscription-stack">
         <section class="subscription-card" aria-labelledby="usage-title">

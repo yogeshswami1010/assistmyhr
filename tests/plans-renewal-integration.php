@@ -154,7 +154,10 @@ $subscription->refresh()->update(['status'=>'trialing','plan_id'=>null,'expires_
 $tenant->unsetRelation('subscription');
 $trialData=['tenant'=>$tenant,'plans'=>$updated['plans'],'usage'=>['users'=>3,'jobs'=>0,'candidates'=>0,'storage_bytes'=>0]];
 $trialMarkup=view('saas.subscription-content',$trialData)->render();
-check(str_contains($trialMarkup,'30-day free trial') && !str_contains($trialMarkup,'type="radio" name="plan_id"') && !str_contains($trialMarkup,'type="radio" name="seat_count"'),'Active trial shows trial information without paid package selection');
+check(str_contains($trialMarkup,'30-day free trial') && str_contains($trialMarkup,'type="radio" name="plan_id"') && str_contains($trialMarkup,'name="seat_count"'),'Active trial shows paid packages and upgrade request alongside trial status');
+$clientRequest->merge(['plan_id'=>$monthly->id,'seat_count'=>5]);
+$account->requestPlan($clientRequest);
+check($subscription->fresh()->status==='trialing' && $subscription->fresh()->plan_id===null && $subscription->fresh()->userLimit()===3,'Early upgrade request preserves standalone trial and three-user quota until approval');
 $subscription->update(['expires_at'=>now()->subSecond()]);
 $tenant->unsetRelation('subscription');
 $expiredMarkup=view('saas.subscription-content',$trialData)->render();
