@@ -72,7 +72,7 @@
                 <input type="radio" name="plan_id" value="{{ $availablePlan->id }}" @checked((string) $selectedPlan === (string) $availablePlan->id)
                     @if($canRequest) form="subscription-request" required @else disabled @endif>
                 <strong>{{ $availablePlan->name }}</strong>
-                <strong class="billing-price">{{ $availablePlan->currency }} {{ number_format($availablePlan->price, 2) }}<small> monthly reference · {{ $availablePlan->durationDays() }}-day subscription</small></strong>
+                <strong class="billing-price">{{ $availablePlan->currency }} {{ number_format($availablePlan->price, 2) }}<small> / {{ $availablePlan->durationDays() }}-day subscription</small></strong>
             </label>
         @empty
             <p class="billing-note">No public plans are available. Contact the platform administrator to renew.</p>

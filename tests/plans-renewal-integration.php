@@ -18,7 +18,7 @@ $app->instance('config', new Illuminate\Config\Repository([
     'auth'=>['defaults'=>['guard'=>'platform'],'guards'=>['platform'=>['driver'=>'session','provider'=>'admins']], 'providers'=>['admins'=>['driver'=>'eloquent','model'=>PlatformAdmin::class]]],
     'hashing'=>['driver'=>'bcrypt'],
     'session'=>['driver'=>'array','lifetime'=>120,'lottery'=>[0,100],'path'=>'/','domain'=>null,'secure'=>false],
-    'view'=>['paths'=>[$root.'/resources/views'],'compiled'=>sys_get_temp_dir()],
+    'view'=>['paths'=>[$root.'/resources/views'],'compiled'=>$root.'/storage/framework/views'],
 ]));
 Illuminate\Support\Facades\Facade::setFacadeApplication($app);
 foreach ([Illuminate\Events\EventServiceProvider::class, Illuminate\Database\DatabaseServiceProvider::class,
@@ -93,9 +93,29 @@ $controller->extend(Request::create('/','POST',['days'=>null,'expires_at'=>null,
 check($subscription->fresh()->expires_at->eq(now()->addDays(190)),'Admin renewal form uses selected plan duration when custom fields are blank');
 rejected(fn()=>$controller->extend(Request::create('/','POST',['days'=>10,'expires_at'=>now()->addDays(20)->toDateString(),'reason'=>'Invalid']),$tenant),'Conflicting renewal dates rejected');
 // Compile the modified Blade templates to catch directive and PHP syntax errors.
-foreach (['platform-plans','plan-form','platform-tenant','platform-requests','subscription-content'] as $view) {
+foreach (['platform-plans','plan-form','platform-tenant','platform-requests','subscription-content','pricing','public-plans'] as $view) {
     $compiled=$app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/saas/'.$view.'.blade.php'));
     token_get_all($compiled,TOKEN_PARSE);
     check(true,$view.' compiles');
 }
+config(['saas.enabled'=>true]);
+$app['router']->get('/register',fn()=>null)->name('register');
+$app['router']->getRoutes()->refreshNameLookups();
+Plan::query()->update(['public'=>false]);
+$monthly=Plan::create(['name'=>'Monthly','slug'=>'monthly-live','price'=>75,'currency'=>'CAD','duration_days'=>30,'public'=>true,'enabled'=>true]);
+$yearly=Plan::create(['name'=>'Yearly','slug'=>'yearly-live','price'=>820,'currency'=>'CAD','duration_days'=>365,'public'=>true,'enabled'=>true]);
+Plan::create(['name'=>'Hidden disabled','slug'=>'hidden-disabled','price'=>1,'duration_days'=>30,'public'=>true,'enabled'=>false]);
+Plan::create(['name'=>'Hidden private','slug'=>'hidden-private','price'=>2,'duration_days'=>30,'public'=>false,'enabled'=>true]);
+$pricingView=(new App\Http\Controllers\Saas\SignupController)->pricing();
+$published=$pricingView->getData();
+check($published['plans']->pluck('id')->all()===[$monthly->id,$yearly->id],'Pricing lists every enabled public plan in duration order');
+$markup=view('saas.public-plans',$published)->render();
+check(str_contains($markup,'CAD 75.00') && str_contains($markup,'CAD 820.00') && str_contains($markup,'365-day subscription'),'Public cards render saved monthly and yearly prices with durations');
+check(!str_contains($markup,'Hidden') && !str_contains($markup,'720') && !str_contains($markup,'20%'),'Hidden plans and fabricated annual discounts excluded');
+$yearly->update(['price'=>850]);
+$updated=(new App\Http\Controllers\Saas\SignupController)->pricing()->getData();
+check(str_contains(view('saas.public-plans',$updated)->render(),'CAD 850.00'),'Admin price edits appear on the next pricing request');
+Plan::query()->update(['public'=>false]);
+$empty=(new App\Http\Controllers\Saas\SignupController)->pricing()->getData();
+check(str_contains(view('saas.public-plans',$empty)->render(),'Plans are being updated'),'Pricing handles no published plans gracefully');
 echo "Plan and renewal integration checks passed: {$checks}.\n";
