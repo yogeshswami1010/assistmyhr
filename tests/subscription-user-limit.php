@@ -10,6 +10,11 @@ namespace {
     $subscription->status = 'trialing';
     if ($subscription->userLimit() !== 3) { throw new \RuntimeException('Trial must allow three users'); }
     $subscription->status = 'active';
-    if ($subscription->userLimit() !== null) { throw new \RuntimeException('Upgrade must remove the user cap'); }
-    echo "Subscription user limit checks passed: trial capped, active unlimited.\n";
+    $subscription->seat_count = 3;
+    if ($subscription->userLimit() !== 3) { throw new \RuntimeException('Active account must use approved seats'); }
+    $subscription->seat_count = 5;
+    if ($subscription->userLimit() !== 5) { throw new \RuntimeException('Approved extra seats must be available'); }
+    $subscription->status = 'trialing';
+    if ($subscription->userLimit() !== 3) { throw new \RuntimeException('Trial must remain capped despite stored seats'); }
+    echo "Subscription user limit checks passed: trial and approved paid seats.\n";
 }

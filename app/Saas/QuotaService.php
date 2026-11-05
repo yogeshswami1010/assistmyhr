@@ -15,6 +15,11 @@ class QuotaService
         $limit = $field ? $tenant->subscription?->plan?->$field : null;
         if ($table === 'users') { $limit = $tenant->subscription?->userLimit(); }
         if ($limit !== null && DB::table($table)->count() >= $limit) {
+            if ($table === 'users') {
+                throw ValidationException::withMessages(['subscription' => $tenant->subscription?->status === 'trialing'
+                    ? 'Your trial allows up to 3 team members, including the account owner. Choose a per-user plan and request an upgrade from Account Subscription.'
+                    : 'All approved user seats are in use. Request additional seats from Account Subscription. You can add more members after super admin approval.']);
+            }
             throw ValidationException::withMessages(['subscription' => 'Your plan has reached its '.str_replace('_', ' ', $field).' limit. Contact the administrator to upgrade.']);
         }
     }

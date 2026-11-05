@@ -237,6 +237,7 @@ class PlatformController extends Controller
     public function extend(Request $request, Tenant $tenant)
     {
         $data = $request->validate([
+            'seat_count' => ['required', 'integer', 'min:1', 'max:100000'],
             'days' => ['prohibits:expires_at', 'nullable', 'integer', 'min:1', 'max:3650'],
             'expires_at' => ['prohibits:days', 'nullable', 'date_format:Y-m-d', 'after_or_equal:today'],
             'plan_id' => ['nullable', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)],
@@ -247,18 +248,19 @@ class PlatformController extends Controller
     }
     public function changePlan(Request $request, Tenant $tenant)
     {
-        $data = $request->validate(['plan_id' => ['required', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)], 'reason' => ['required', 'string', 'max:1000']]);
+        $data = $request->validate(['seat_count' => ['required', 'integer', 'min:1', 'max:100000'], 'plan_id' => ['required', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)], 'reason' => ['required', 'string', 'max:1000']]);
         $this->auditMutation($request, $tenant, 'subscription.plan_changed', $data['reason'], function () use ($tenant, $data) {
             $subscription = Subscription::where('tenant_id', $tenant->id)->lockForUpdate()->firstOrFail();
-            $before = $subscription->only(['plan_id', 'status', 'starts_at', 'expires_at']);
+            $before = $subscription->only(['plan_id', 'status', 'starts_at', 'expires_at', 'seat_count']);
             $subscription->plan_id = $data['plan_id'];
+            $subscription->seat_count = $data['seat_count'];
             if ($subscription->status === 'trialing' || !$subscription->hasAccess()) {
                 $subscription->status = 'active';
                 $subscription->starts_at = now();
                 $subscription->expires_at = now()->addDays(Plan::findOrFail($data['plan_id'])->durationDays());
             }
             $subscription->save();
-            return [$before, $subscription->only(['plan_id', 'status', 'starts_at', 'expires_at'])];
+            return [$before, $subscription->only(['plan_id', 'status', 'starts_at', 'expires_at', 'seat_count'])];
         });
         return back()->with('status', 'Plan updated. Trial and expired accounts start the selected plan duration; active accounts keep their expiry.');
     }

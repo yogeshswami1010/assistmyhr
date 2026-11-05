@@ -70,9 +70,10 @@
         @forelse($plans as $availablePlan)
             <label class="billing-option">
                 <input type="radio" name="plan_id" value="{{ $availablePlan->id }}" @checked((string) $selectedPlan === (string) $availablePlan->id)
+                    data-unit-price="{{ $availablePlan->price }}" data-currency="{{ $availablePlan->currency }}" data-duration="{{ $availablePlan->durationDays() }}"
                     @if($canRequest) form="subscription-request" required @else disabled @endif>
                 <strong>{{ $availablePlan->name }}</strong>
-                <strong class="billing-price">{{ $availablePlan->currency }} {{ number_format($availablePlan->price, 2) }}<small> / {{ $availablePlan->durationDays() }}-day subscription</small></strong>
+                <strong class="billing-price">{{ $availablePlan->currency }} {{ number_format($availablePlan->price, 2) }}<small> per user / {{ $availablePlan->durationDays() }} days</small></strong>
             </label>
         @empty
             <p class="billing-note">No public plans are available. Contact the platform administrator to renew.</p>
@@ -110,7 +111,10 @@
         @csrf
         <div>
             <h2 id="renewal-title">Request a renewal or plan change</h2>
-            <p class="muted">Tell us what you need. Our team reviews and processes requests manually.</p>
+            <p class="muted">Select your plan and total user seats, including the owner. Super admin reviews your request. Access and extra seats are enabled after approval; no payment is collected here.</p>
+            <label for="seat-count">Total user seats</label>
+            <input id="seat-count" name="seat_count" type="number" min="{{ max(1, $usage['users']) }}" max="100000" required value="{{ old('seat_count', max(1, $usage['users'], $subscription?->seat_count ?? 0)) }}">
+            <p id="subscription-total" role="status" aria-live="polite"></p>
         </div>
         <div class="renewal-message">
             <label for="reason">Describe your request</label>
@@ -120,13 +124,30 @@
     </form>
 @endif
 
+<script>
+(() => {
+    const seats = document.getElementById('seat-count');
+    const total = document.getElementById('subscription-total');
+    if (!seats || !total) return;
+    const update = () => {
+        const plan = document.querySelector('input[name="plan_id"]:checked');
+        if (!plan || !seats.validity.valid) { total.textContent = 'Choose a plan and a valid number of seats.'; return; }
+        const amount = Number(plan.dataset.unitPrice) * Number(seats.value);
+        total.textContent = `${seats.value} users × ${plan.dataset.currency} ${Number(plan.dataset.unitPrice).toFixed(2)} = ${plan.dataset.currency} ${amount.toFixed(2)} per ${plan.dataset.duration} days. Pending super admin approval.`;
+    };
+    seats.addEventListener('input', update);
+    document.querySelectorAll('input[name="plan_id"]').forEach(input => input.addEventListener('change', update));
+    update();
+})();
+</script>
+
 <section class="subscription-card">
     <label for="company-login">Your company login link</label>
     <input id="company-login" readonly value="{{ route('saas.workspace', $tenant->slug) }}">
     @if(isset($requests) && $requests->isNotEmpty())
         <h2 class="mt-4">Your recent requests</h2>
         @foreach($requests as $sent)
-            <div class="recent-request"><small>{{ $sent->created_at }} UTC · Sent@if(isset($sent->after['duration_days'])) · {{ $sent->after['duration_days'] }} days@endif</small><p>{{ $sent->reason }}</p></div>
+            <div class="recent-request"><small>{{ $sent->created_at }} UTC · Sent@if(isset($sent->after['duration_days'])) · {{ $sent->after['duration_days'] }} days@endif</small>@if(isset($sent->after['seat_count']))<p>{{ $sent->after['seat_count'] }} users · {{ $sent->after['currency'] ?? '' }} {{ $sent->after['total_price'] ?? '' }} total requested</p>@endif<p>{{ $sent->reason }}</p></div>
         @endforeach
     @endif
 </section>

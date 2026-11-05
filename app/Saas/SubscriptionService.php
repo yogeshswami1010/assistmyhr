@@ -12,7 +12,7 @@ class SubscriptionService
         return DB::connection('saas_landlord')->transaction(function () use ($tenant, $admin, $data) {
             Tenant::whereKey($tenant->id)->lockForUpdate()->firstOrFail();
             $subscription = Subscription::where('tenant_id', $tenant->id)->lockForUpdate()->firstOrFail();
-            $before = $subscription->only(['expires_at', 'status', 'plan_id']);
+            $before = $subscription->only(['expires_at', 'status', 'plan_id', 'seat_count']);
             $oldExpiry = $subscription->expires_at;
             $plan = !empty($data['plan_id']) ? Plan::findOrFail($data['plan_id']) : $subscription->plan;
             $base = $oldExpiry && $oldExpiry->isFuture() ? $oldExpiry->copy() : now();
@@ -24,12 +24,13 @@ class SubscriptionService
             }
             $subscription->expires_at = $expiry;
             $subscription->status = 'active';
+            if (isset($data['seat_count'])) { $subscription->seat_count = $data['seat_count']; }
             if (!empty($data['plan_id'])) { $subscription->plan_id = $data['plan_id']; }
             $subscription->save();
             AuditLog::create([
                 'tenant_id' => $tenant->id, 'admin_id' => $admin->id, 'action' => 'subscription.extended',
                 'reason' => $data['reason'], 'before' => $before,
-                'after' => $subscription->only(['expires_at', 'status', 'plan_id']),
+                'after' => $subscription->only(['expires_at', 'status', 'plan_id', 'seat_count']),
             ]);
             return $subscription;
         });

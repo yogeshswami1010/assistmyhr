@@ -30,11 +30,11 @@
     </div>
   </div>
   <div class="pricing-main">
-    <div class="pricing-section-heading"><span class="pricing-eyebrow">PRICING</span><h2>Simple, <span>plan pricing.</span></h2><p>Choose from our available plans. Prices and durations are set by our team.</p></div>
+    <div class="pricing-section-heading"><span class="pricing-eyebrow">PRICING</span><h2>Simple, <span>per-user pricing.</span></h2><p>Choose from our available plans. Prices and durations are set by our team.</p></div>
     @include('saas.public-plans')
     <div class="pricing-benefits" aria-label="What comes with your plan">
       <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><div><h3>All hiring features</h3><p>Hiring tools in one workspace.</p></div></article>
-      <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m5 10v-3a6 6 0 0 0-3-5"/></svg></span><div><h3>Built for your team</h3><p>Clear plan pricing.</p></div></article>
+      <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m5 10v-3a6 6 0 0 0-3-5"/></svg></span><div><h3>Built for your team</h3><p>Clear per-user pricing.</p></div></article>
       <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/></svg></span><div><h3>Flexible billing</h3><p>Choose your subscription duration.</p></div></article>
       <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4v5c0 5-8 9-8 9s-8-4-8-9V7l8-4Zm-4 9 3 3 5-6"/></svg></span><div><h3>One workspace</h3><p>Keep your hiring connected.</p></div></article>
       <article><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3M6 12H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h2v-7Zm12 0h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2v-7Zm0 7a3 3 0 0 1-3 3h-3"/></svg></span><div><h3>Help getting started</h3><p>Setup and onboarding support.</p></div></article>
