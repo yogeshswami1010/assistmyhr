@@ -13,7 +13,7 @@ class Subscription extends LandlordModel
     public function tenant() { return $this->belongsTo(Tenant::class); }
     public function userLimit(): ?int
     {
-        return $this->status === 'trialing' ? self::TRIAL_USER_LIMIT : $this->plan?->max_users;
+        return $this->status === 'trialing' ? self::TRIAL_USER_LIMIT : null;
     }
 
     public function hasAccess(): bool

@@ -250,8 +250,11 @@ class PlatformController extends Controller
         $data = $request->validate(['plan_id' => ['required', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)], 'reason' => ['required', 'string', 'max:1000']]);
         $this->auditMutation($request, $tenant, 'subscription.plan_changed', $data['reason'], function () use ($tenant, $data) {
             $subscription = Subscription::where('tenant_id', $tenant->id)->lockForUpdate()->firstOrFail();
-            $before = ['plan_id' => $subscription->plan_id]; $subscription->plan_id = $data['plan_id']; $subscription->save();
-            return [$before, ['plan_id' => $subscription->plan_id]];
+            $before = $subscription->only(['plan_id', 'status']);
+            $subscription->plan_id = $data['plan_id'];
+            if ($subscription->status === 'trialing') { $subscription->status = 'active'; }
+            $subscription->save();
+            return [$before, $subscription->only(['plan_id', 'status'])];
         });
         return back()->with('status', 'Plan changed; the subscription expiry is preserved.');
     }
