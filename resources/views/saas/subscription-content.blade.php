@@ -60,19 +60,19 @@
     <span>{{ $subscription?->expires_at ? 'Expires '.$subscription->expires_at->format('d M Y') : 'No expiry' }}</span>
 </section>
 @if(!$hasAccess)
-    <div class="notice error" role="status">Your ATS access is paused. Contact the administrator for renewal or reactivation.</div>
+    <div class="notice error" role="status">Your subscription has expired or access is paused. Select a plan below and send a renewal request to restore access after administrator approval.</div>
 @endif
 
 <div class="subscription-grid">
     <section class="subscription-card" aria-labelledby="billing-title">
         <h2 id="billing-title">Choose your billing</h2>
-        <p class="muted">Select a plan for your renewal or change request.</p>
+        <p class="muted">Select a plan and duration for your renewal or change request.</p>
         @forelse($plans as $availablePlan)
             <label class="billing-option">
                 <input type="radio" name="plan_id" value="{{ $availablePlan->id }}" @checked((string) $selectedPlan === (string) $availablePlan->id)
                     @if($canRequest) form="subscription-request" required @else disabled @endif>
                 <strong>{{ $availablePlan->name }}</strong>
-                <strong class="billing-price">{{ $availablePlan->currency }} {{ number_format($availablePlan->price, 2) }}</strong>
+                <strong class="billing-price">{{ $availablePlan->currency }} {{ number_format($availablePlan->price, 2) }}<small> monthly reference · {{ $availablePlan->durationDays() }}-day subscription</small></strong>
             </label>
         @empty
             <p class="billing-note">No public plans are available. Contact the platform administrator to renew.</p>
@@ -116,7 +116,7 @@
             <label for="reason">Describe your request</label>
             <textarea id="reason" name="reason" required maxlength="1000" placeholder="Renew my subscription, change plans, add users…">{{ old('reason') }}</textarea>
         </div>
-        <button class="button" type="submit">Send request →</button>
+        <button class="button" type="submit">{{ $hasAccess ? 'Send request →' : 'Request renewal →' }}</button>
     </form>
 @endif
 
@@ -126,7 +126,7 @@
     @if(isset($requests) && $requests->isNotEmpty())
         <h2 class="mt-4">Your recent requests</h2>
         @foreach($requests as $sent)
-            <div class="recent-request"><small>{{ $sent->created_at }} UTC · Sent</small><p>{{ $sent->reason }}</p></div>
+            <div class="recent-request"><small>{{ $sent->created_at }} UTC · Sent@if(isset($sent->after['duration_days'])) · {{ $sent->after['duration_days'] }} days@endif</small><p>{{ $sent->reason }}</p></div>
         @endforeach
     @endif
 </section>

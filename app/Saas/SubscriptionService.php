@@ -14,10 +14,11 @@ class SubscriptionService
             $subscription = Subscription::where('tenant_id', $tenant->id)->lockForUpdate()->firstOrFail();
             $before = $subscription->only(['expires_at', 'status', 'plan_id']);
             $oldExpiry = $subscription->expires_at;
+            $plan = !empty($data['plan_id']) ? Plan::findOrFail($data['plan_id']) : $subscription->plan;
             $base = $oldExpiry && $oldExpiry->isFuture() ? $oldExpiry->copy() : now();
             $expiry = !empty($data['expires_at'])
                 ? Carbon::parse($data['expires_at'])->endOfDay()
-                : $base->addDays((int) $data['days']);
+                : $base->addDays((int) ($data['days'] ?? $plan->durationDays()));
             if (!$expiry->isFuture() || ($oldExpiry && $expiry->lt($oldExpiry))) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['expires_at' => 'An extension must be in the future and cannot shorten the existing subscription.']);
             }

@@ -44,6 +44,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('plans', [PlatformController::class, 'plans'])->name('plans');
         Route::post('plans', [PlatformController::class, 'savePlan'])->name('plans.store');
         Route::put('plans/{plan}', [PlatformController::class, 'savePlan'])->name('plans.update');
+        Route::delete('plans/{plan}', [PlatformController::class, 'deletePlan'])->name('plans.destroy');
         Route::get('profile', [PlatformController::class, 'profile'])->name('profile');
         Route::put('profile', [PlatformController::class, 'updateProfile'])->middleware('throttle:10,1')->name('profile.update');
         Route::put('profile/password', [PlatformController::class, 'updatePassword'])->middleware('throttle:5,1')->name('profile.password');

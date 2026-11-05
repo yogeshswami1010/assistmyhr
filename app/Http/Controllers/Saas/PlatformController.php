@@ -237,8 +237,8 @@ class PlatformController extends Controller
     public function extend(Request $request, Tenant $tenant)
     {
         $data = $request->validate([
-            'days' => ['required_without:expires_at', 'prohibits:expires_at', 'nullable', 'integer', 'min:1', 'max:3650'],
-            'expires_at' => ['required_without:days', 'prohibits:days', 'nullable', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'days' => ['prohibits:expires_at', 'nullable', 'integer', 'min:1', 'max:3650'],
+            'expires_at' => ['prohibits:days', 'nullable', 'date_format:Y-m-d', 'after_or_equal:today'],
             'plan_id' => ['nullable', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)],
             'reason' => ['required', 'string', 'max:1000'],
         ]);
@@ -250,13 +250,17 @@ class PlatformController extends Controller
         $data = $request->validate(['plan_id' => ['required', Rule::exists('saas_landlord.saas_plans', 'id')->where('enabled', true)], 'reason' => ['required', 'string', 'max:1000']]);
         $this->auditMutation($request, $tenant, 'subscription.plan_changed', $data['reason'], function () use ($tenant, $data) {
             $subscription = Subscription::where('tenant_id', $tenant->id)->lockForUpdate()->firstOrFail();
-            $before = $subscription->only(['plan_id', 'status']);
+            $before = $subscription->only(['plan_id', 'status', 'starts_at', 'expires_at']);
             $subscription->plan_id = $data['plan_id'];
-            if ($subscription->status === 'trialing') { $subscription->status = 'active'; }
+            if ($subscription->status === 'trialing' || !$subscription->hasAccess()) {
+                $subscription->status = 'active';
+                $subscription->starts_at = now();
+                $subscription->expires_at = now()->addDays(Plan::findOrFail($data['plan_id'])->durationDays());
+            }
             $subscription->save();
-            return [$before, $subscription->only(['plan_id', 'status'])];
+            return [$before, $subscription->only(['plan_id', 'status', 'starts_at', 'expires_at'])];
         });
-        return back()->with('status', 'Plan changed; the subscription expiry is preserved.');
+        return back()->with('status', 'Plan updated. Trial and expired accounts start the selected plan duration; active accounts keep their expiry.');
     }
     public function verifyOwner(Request $request, Tenant $tenant)
     {
@@ -270,32 +274,11 @@ class PlatformController extends Controller
         return back()->with('status', 'Owner email verification approved.');
     }
     public function plans() { return $this->platformView('saas.platform-plans', ['plans' => Plan::where('slug', '!=', 'existing-workspace')->orderBy('id')->get()]); }
-    // public function savePlan(Request $request, ?Plan $plan = null)
-    // {
-    //     $data = $request->validate([
-    //         'name' => ['required', 'string', 'max:100'],
-    //         'price' => ['required', 'numeric', 'min:0', 'max:99999999'], 'currency' => ['required', 'regex:/\A[A-Z]{3}\z/'],
-    //         'max_users' => ['nullable', 'integer', 'min:1'], 'max_jobs' => ['nullable', 'integer', 'min:1'],
-    //         'max_candidates' => ['nullable', 'integer', 'min:1'], 'storage_mb' => ['nullable', 'integer', 'min:1'],
-    //         'enabled' => ['required', 'boolean'], 'public' => ['required', 'boolean'],
-    //     ]);
-    //     if (!$plan) {
-    //         $baseSlug = substr(trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($data['name'])), '-') ?: 'plan', 0, 38);
-    //         $data['slug'] = $baseSlug;
-    //         while ($data['slug'] === 'existing-workspace' || Plan::where('slug', $data['slug'])->exists()) {
-    //             $data['slug'] = $baseSlug.'-'.strtolower(\Illuminate\Support\Str::random(10));
-    //         }
-    //     }
-    //     $plan ??= new Plan;
-    //     $before = $plan->exists ? $plan->toArray() : null;
-    //     $plan->fill($data)->save();
-    //     AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'plan.saved', 'reason' => 'Platform plan configuration updated.', 'before' => $before, 'after' => $plan->toArray()]);
-    //     return back()->with('status', 'Plan saved. Changes also apply to clients currently on this plan.');
-    // }
     public function savePlan(Request $request, ?Plan $plan = null)
 {
     $data = $request->validate([
         'name' => ['required', 'string', 'max:100'],
+        'duration_days' => ['required', 'integer', 'min:1', 'max:3650'],
         'price' => ['required', 'numeric', 'min:0', 'max:99999999'], 'currency' => ['required', 'regex:/\A[A-Z]{3}\z/'],
         'max_users' => ['nullable', 'integer', 'min:1'], 'max_jobs' => ['nullable', 'integer', 'min:1'],
         'max_candidates' => ['nullable', 'integer', 'min:1'], 'storage_mb' => ['nullable', 'integer', 'min:1'],
@@ -312,18 +295,31 @@ class PlatformController extends Controller
     $before = $plan->exists ? $plan->toArray() : null;
 
     DB::connection('saas_landlord')->transaction(function () use ($plan, $data) {
-        // Only one plan is allowed: block creating a new one when a plan already exists.
-        if (!$plan->exists && Plan::where('slug', '!=', 'existing-workspace')->lockForUpdate()->exists()) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'name' => 'Only one plan is allowed. Edit the existing plan instead.',
-            ]);
-        }
         $plan->fill($data)->save();
     });
 
     AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'plan.saved', 'reason' => 'Platform plan configuration updated.', 'before' => $before, 'after' => $plan->toArray()]);
     return back()->with('status', 'Plan saved. Changes also apply to clients currently on this plan.');
 }
+    public function deletePlan(Plan $plan)
+    {
+        DB::connection('saas_landlord')->transaction(function () use ($plan) {
+            $plan = Plan::whereKey($plan->id)->lockForUpdate()->firstOrFail();
+            if ($plan->slug === 'existing-workspace'
+                || Subscription::where('plan_id', $plan->id)->exists()
+                || (string) PlatformSetting::valueFor('trial_plan_id') === (string) $plan->id) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'plan' => 'This plan is assigned to clients or used for trials. Reassign it first, or disable it to stop new assignments.',
+                ]);
+            }
+            $before = $plan->toArray();
+            $plan->delete();
+            AuditLog::create(['admin_id' => Auth::guard('platform')->id(), 'action' => 'plan.deleted',
+                'reason' => 'Platform plan deleted.', 'before' => $before]);
+        });
+        return back()->with('status', 'Plan deleted.');
+    }
+
     public function settings()
     {
         return $this->platformView('saas.platform-settings', ['settings' => PlatformSetting::pluck('value', 'key'), 'plans' => Plan::where('enabled', true)->where('public', true)->get()]);

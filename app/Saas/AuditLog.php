@@ -22,6 +22,7 @@ class AuditLog extends LandlordModel
             'subscription.extended' => 'Subscription extended',
             'subscription.plan_changed' => 'Subscription plan changed',
             'plan.saved' => 'Plan saved',
+            'plan.deleted' => 'Plan deleted',
             'admin.profile_updated' => 'Administrator profile updated',
             'admin.password_changed' => 'Administrator password changed',
             'admin.created' => 'Super administrator added',
