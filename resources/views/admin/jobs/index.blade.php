@@ -70,27 +70,28 @@
             <p class="mt-1.5 text-[22px] font-extrabold leading-none tracking-tight" id="statTotal">{{ number_format($totalJobs) }}</p>
             <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/55">@lang('modules.dashboard.totalJobs')</p>
         </div>
-        <div class="relative cursor-default overflow-hidden rounded-xl bg-[#059669] px-3.5 py-3 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div class="pointer-events-none absolute -right-3 -top-3 h-12 w-12 rounded-full bg-white opacity-[0.07]"></div>
-            <div class="flex items-center justify-between">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                    <svg class="h-4 w-4" fill="none" stroke="rgba(255,255,255,0.75)" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <span class="rounded-full bg-white/[0.14] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/55">@lang('app.active')</span>
-            </div>
-            <p class="mt-1.5 text-[22px] font-extrabold leading-none tracking-tight" id="statActive">{{ number_format($activeJobs) }}</p>
-            <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/55">@lang('modules.dashboard.activeJobs')</p>
+       <div class="relative cursor-default overflow-hidden rounded-xl bg-[#059669] px-3.5 py-3 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <div class="pointer-events-none absolute -right-3 -top-3 h-12 w-12 rounded-full bg-white opacity-[0.07]"></div>
+    <div class="flex items-center justify-between">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+            <svg class="h-4 w-4" fill="none" stroke="rgba(255,255,255,0.75)" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
+        <span class="rounded-full bg-white/[0.14] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/55">@lang('app.open')</span>
+    </div>
+    <p class="mt-1.5 text-[22px] font-extrabold leading-none tracking-tight" id="statOpen">{{ number_format($openJobs) }}</p>
+    <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/55">Open Jobs</p>
+</div>
         <div class="relative cursor-default overflow-hidden rounded-xl border border-[#F0EEE9] bg-white px-3.5 py-3 text-[#1A1E2E] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div class="pointer-events-none absolute -right-3 -top-3 h-12 w-12 rounded-full bg-[#EF4444] opacity-[0.07]"></div>
             <div class="flex items-center justify-between">
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFF1F2]">
                     <svg class="h-4 w-4" fill="none" stroke="#EF4444" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <span class="rounded-full bg-[#FFF1F2] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#EF4444]">@lang('app.inactive')</span>
+                <span class="rounded-full bg-[#FFF1F2] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#EF4444]">closed Jobs</span>
             </div>
-            <p class="mt-1.5 text-[22px] font-extrabold leading-none tracking-tight text-[#1A1E2E]" id="statInactive">{{ number_format($inactiveJobs) }}</p>
-            <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#8892A0]">@lang('modules.dashboard.inactiveJobs')</p>
+            <p class="mt-1.5 text-[22px] font-extrabold leading-none tracking-tight text-[#1A1E2E]" id="statInactive">
+    {{ number_format($closedJobs) }}</p>
+            <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#8892A0]">Closed Jobs</p>
         </div>
         <div class="relative cursor-default overflow-hidden rounded-xl bg-[#2563EB] px-3.5 py-3 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div class="pointer-events-none absolute -right-3 -top-3 h-12 w-12 rounded-full bg-white opacity-[0.07]"></div>
@@ -118,12 +119,16 @@
                     <option value="{{ $item->id }}">{{ ucwords($item->company_name) }}</option>
                 @endforeach
             </select>
-            <select id="jobsFilterStatus" class="rounded-lg border-[1.5px] border-[#E2DED8] bg-white py-2 pl-3 pr-9 text-[12.5px] font-[inherit] text-[#5A6478] outline-none focus:border-[#2563EB]" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%277%27 fill=%27none%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%239CA3AF%27 stroke-width=%271.6%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;appearance:none;cursor:pointer;">
-                <option value="">@lang('app.filter') @lang('app.status'): @lang('app.viewAll')</option>
-                <option value="active">@lang('app.active')</option>
-                <option value="inactive">@lang('app.inactive')</option>
-                <option value="expired">@lang('app.expired')</option>
-            </select>
+            <select id="jobsFilterStatus" class="rounded-lg border-[1.5px] border-[#E2DED8] bg-white py-2 pl-3 pr-9 text-[12.5px] font-[inherit] text-[#5A6478] outline-none focus:border-[#2563EB]"
+            style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%277%27 fill=%27none%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%239CA3AF%27 stroke-width=%271.6%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;appearance:none;cursor:pointer;">
+
+            <option value="">@lang('app.filter') @lang('app.status'): @lang('app.viewAll')</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+            <option value="filled">Filled</option>
+            <option value="on_hold">On Hold</option>
+            <option value="expired">Expired</option>
+        </select>
             <select id="jobsFilterLocation" class="rounded-lg border-[1.5px] border-[#E2DED8] bg-white py-2 pl-3 pr-9 text-[12.5px] font-[inherit] text-[#5A6478] outline-none focus:border-[#2563EB]" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%277%27 fill=%27none%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%239CA3AF%27 stroke-width=%271.6%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;appearance:none;cursor:pointer;">
                 <option value="">@lang('app.filter') @lang('menu.locations'): @lang('app.viewAll')</option>
                 @foreach ($locations as $location)
@@ -232,21 +237,22 @@
         toggleTpl: @json($toggleUrlTpl),
         bulkDestroy: @json(route('admin.jobs.bulkDestroy')),
     };
-    const I18N = {
-        copied: @json(__('messages.copiedToClipboard')),
-        deleteN: @json(__('errors.areYouSure')),
-        selectedSuffix: @json(__('messages.itemsSelected')),
-        active: @json(__('app.active')),
-        inactive: @json(__('app.inactive')),
-        expired: @json(__('app.expired')),
-        edit: @json(__('app.edit')),
-        copyUrl: @json(__('app.copyUrl')),
-        duplicate: @json(__('app.duplicate')),
-        status: @json(__('app.status')),
-        refresh: @json(__('app.refresh')),
-        delete: @json(__('app.delete')),
-    };
-
+   const I18N = {
+    copied: @json(__('messages.copiedToClipboard')),
+    deleteN: @json(__('errors.areYouSure')),
+    selectedSuffix: @json(__('messages.itemsSelected')),
+    open: 'Open',
+    closed: 'Closed',
+    filled: 'Filled',
+    onHold: 'On Hold',
+    expired: @json(__('app.expired')),
+    edit: @json(__('app.edit')),
+    copyUrl: @json(__('app.copyUrl')),
+    duplicate: @json(__('app.duplicate')),
+    status: @json(__('app.status')),
+    refresh: @json(__('app.refresh')),
+    delete: @json(__('app.delete')),
+};
     const CAT_PALETTE = [
         { bg: '#EFF6FF', tc: '#1D4ED8' },
         { bg: '#FFF7ED', tc: '#C2410C' },
@@ -290,20 +296,53 @@
     }
 
     function statusPill(status) {
-        if (status === 'active') return '<span class="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11.5px] font-bold text-[#059669]">' + esc(I18N.active) + '</span>';
-        if (status === 'inactive') return '<span class="inline-flex items-center gap-1 rounded-full bg-[#F1F3F7] px-2.5 py-1 text-[11.5px] font-bold text-[#8892A0]">' + esc(I18N.inactive) + '</span>';
-        if (status === 'expired') return '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold text-white" style="background:#FF8C00;">' + esc(I18N.expired) + '</span>';
-        return '<span class="inline-flex items-center gap-1 rounded-full bg-[#FFF7ED] px-2.5 py-1 text-[11.5px] font-bold text-[#F97316]">' + esc(status) + '</span>';
+        const styles = {
+            open: 'bg-[#ECFDF5] text-[#059669]',
+            closed: 'bg-[#F1F3F7] text-[#8892A0]',
+            filled: 'bg-[#EFF6FF] text-[#2563EB]',
+            on_hold: 'bg-[#FFF7ED] text-[#EA580C]',
+            expired: 'bg-[#FEF2F2] text-[#DC2626]'
+        };
+
+        const labels = {
+            open: I18N.open,
+            closed: I18N.closed,
+            filled: I18N.filled,
+            on_hold: I18N.onHold,
+            expired: I18N.expired
+        };
+
+        const key = String(status || '').toLowerCase();
+        const style = styles[key] || 'bg-[#F1F3F7] text-[#5A6478]';
+        const label = labels[key] || status;
+
+        return '<span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-bold '
+            + style + '">' + esc(label) + '</span>';
     }
 
     function updateKpisFromJobs() {
-        document.getElementById('statTotal').textContent = JOBS.length.toLocaleString();
-        document.getElementById('statActive').textContent = JOBS.filter(function (j) { return j.status === 'active'; }).length.toLocaleString();
-        document.getElementById('statInactive').textContent = JOBS.filter(function (j) { return j.status === 'inactive'; }).length.toLocaleString();
-        var openings = 0;
-        JOBS.forEach(function (j) { openings += j.openings || 0; });
-        document.getElementById('statOpenings').textContent = openings.toLocaleString();
-    }
+    document.getElementById('statTotal').textContent =
+        JOBS.length.toLocaleString();
+
+    document.getElementById('statOpen').textContent =
+        JOBS.filter(function (j) {
+            return j.status === 'open';
+        }).length.toLocaleString();
+
+    document.getElementById('statInactive').textContent =
+        JOBS.filter(function (j) {
+            return j.status === 'closed';
+        }).length.toLocaleString();
+
+    var openings = 0;
+
+    JOBS.forEach(function (j) {
+        openings += Number(j.openings) || 0;
+    });
+
+    document.getElementById('statOpenings').textContent =
+        openings.toLocaleString();
+}
 
     function renderTable() {
         const data = getFiltered();
@@ -365,7 +404,7 @@
             if (PERM.add) {
                 html += '<a href="' + esc(j.duplicateUrl) + '" class="jobs-action-btn bg-[#ECFDF5] hover:bg-[#D1FAE5]" data-tip="' + esc(I18N.duplicate) + '"><svg class="h-3.5 w-3.5" fill="none" stroke="#059669" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></a>';
             }
-            if (PERM.edit && j.status !== 'expired') {
+           if (PERM.edit && ['open', 'closed'].includes(j.status)) {
                 html += '<button type="button" class="jobs-action-btn bg-[#FFF7ED] hover:bg-[#FEF3C7] jobs-toggle-status" data-id="' + j.id + '" data-tip="' + esc(I18N.status) + '"><svg class="h-3.5 w-3.5" fill="none" stroke="#F97316" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg></button>';
             }
             if (PERM.edit && j.status === 'expired') {

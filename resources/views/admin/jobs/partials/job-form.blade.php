@@ -98,32 +98,32 @@
                                     </div>
                                 </div>
 
-                                <script>
-                                    function toggleNewCompanyField(select) {
-                                        const wrapper = document.getElementById('new-company-wrapper');
-                                        const input = document.getElementById('company_new');
-                                        const isNew = select.value === 'new';
+                              <script>
+    function toggleNewCompanyField(select) {
+        const wrapper = document.getElementById('new-company-wrapper');
+        const input = document.getElementById('company_new');
+        const isNew = select.value === 'new';
 
-                                        select.style.display = isNew ? 'none' : '';
-                                        wrapper.classList.toggle('hidden', !isNew);
-                                        input.disabled = !isNew;
-                                        if (isNew) input.focus();
-                                    }
+        select.style.display = isNew ? 'none' : '';
+        select.disabled = isNew;              // "new" is never submitted as company
+        wrapper.classList.toggle('hidden', !isNew);
+        input.disabled = !isNew;
+        if (isNew) input.focus();
+    }
 
-                                    function resetCompanyField() {
-                                        const select = document.getElementById('company');
-                                        document.getElementById('company_new').value = '';
-                                        select.value = '';
-                                        $(select).trigger('change');
-                                        select.focus();
-                                    }
+    function resetCompanyField() {
+        const select = document.getElementById('company');
+        document.getElementById('company_new').value = '';
+        select.disabled = false;              // enable before changing it
+        select.value = '';
+        toggleNewCompanyField(select);
+        select.focus();
+    }
 
-                                    document.addEventListener('DOMContentLoaded', function () {
-                                        const companySelect = document.getElementById('company');
-
-                                        toggleNewCompanyField(companySelect);
-                                    });
-                                </script>
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleNewCompanyField(document.getElementById('company'));
+    });
+</script>
 
                                 <div class="form-group mb-0">
                                     <label class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
@@ -182,34 +182,35 @@
                                 </div>
                             </div>
 
-                            <script>
-                                function toggleNewCategoryField(select) {
-                                    const wrapper = document.getElementById('new-category-wrapper');
-                                    const input = document.getElementById('category_new');
-                                    const isNew = select.value === 'new';
+                           <script>
+    function toggleNewCategoryField(select) {
+        const wrapper = document.getElementById('new-category-wrapper');
+        const input = document.getElementById('category_new');
+        const isNew = select.value === 'new';
 
-                                    select.style.display = isNew ? 'none' : '';
-                                    wrapper.classList.toggle('hidden', !isNew);
-                                    input.disabled = !isNew;
-                                    if (isNew) input.focus();
-                                }
+        select.style.display = isNew ? 'none' : '';
+        select.disabled = isNew;
+        wrapper.classList.toggle('hidden', !isNew);
+        input.disabled = !isNew;
+        if (isNew) input.focus();
+    }
 
-                                function resetCategoryField() {
-                                    const select = document.getElementById('category_id');
-                                    document.getElementById('category_new').value = '';
-                                    select.value = '';
-                                    $(select).trigger('change');
-                                    select.focus();
-                                }
+    function resetCategoryField() {
+        const select = document.getElementById('category_id');
+        document.getElementById('category_new').value = '';
+        select.disabled = false;
+        select.value = '';
+        toggleNewCategoryField(select);
+        select.focus();
+    }
 
-                                document.addEventListener('DOMContentLoaded', function () {
-                                    const categorySelect = document.getElementById('category_id');
-
-                                    toggleNewCategoryField(categorySelect);
-                                });
-                            </script>
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleNewCategoryField(document.getElementById('category_id'));
+    });
+</script>
                             </div>
-                            <div class="form-group mb-0">
+                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div class="form-group mb-0">
                                 <div class="mb-1.5 flex items-center justify-between gap-2">
                                     <label for="title" class="block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
                                     @if ($isEdit)
@@ -230,33 +231,34 @@
                                 <label for="job_code" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">Job Code</label>
                                 <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="job_code" id="job_code" maxlength="100" value="{{ $job ? $job->job_code : '' }}" placeholder="e.g. CSR-2026-001">
                             </div>
+</div>
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                <div class="form-group mb-0 flex min-h-0 flex-col">
-    <label for="job_type" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
-        @lang('modules.jobs.jobType')
-    </label>
+                                    <label for="job_type" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                                        @lang('modules.jobs.jobType')
+                                    </label>
 
-    <div class="flex items-center gap-2">
-        <select name="job_type_id" id="job_type"
-            class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
-            <option value="">—</option>
-            @foreach ($jobTypes as $jobType)
-                <option @if ($job && $job->job_type_id == $jobType->id) selected @endif
-                    value="{{ $jobType->id }}">
-                    {{ $jobType->job_type }}
-                </option>
-            @endforeach
-        </select>
+                                    <div class="flex items-center gap-2">
+                                        <select name="job_type_id" id="job_type"
+                                            class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
+                                            <option value="">—</option>
+                                            @foreach ($jobTypes as $jobType)
+                                                <option @if ($job && $job->job_type_id == $jobType->id) selected @endif
+                                                    value="{{ $jobType->id }}">
+                                                    {{ $jobType->job_type }}
+                                                </option>
+                                            @endforeach
+                                        </select>
 
-        <button type="button"
-            title="@lang('app.add') @lang('modules.jobs.jobType')"
-            id="addJobType"
-            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
-            aria-label="@lang('app.add') @lang('modules.jobs.jobType')">
-            <i class="fa fa-plus" aria-hidden="true"></i>
-        </button>
-    </div>
-</div>
+                                        <button type="button"
+                                            title="@lang('app.add') @lang('modules.jobs.jobType')"
+                                            id="addJobType"
+                                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
+                                            aria-label="@lang('app.add') @lang('modules.jobs.jobType')">
+                                            <i class="fa fa-plus" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="form-group mb-0">
                                     <label for="total_positions" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.totalPositions') <span class="text-red-500">*</span></label>
                                     <div class="flex items-center overflow-hidden rounded-xl border border-gray-200 transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/10">
@@ -531,21 +533,21 @@
 
     <div class="flex items-center gap-2">
         <div id="work-experience-select-wrapper" class="min-w-0 flex-1">
-            <select name="work_experience_ids[]" multiple id="work_experience"
-                class="select2 form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
-                <option value="">—</option>
-                <option value="new">{{ __('Add New Work Experience') }}</option>
+           <select name="work_experience_ids[]" multiple id="work_experience"
+    data-placeholder="Select Work Experience"
+    class="select2 form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
+    style="width: 100%;">
 
-                @foreach ($workExperiences as $workExperience)
-                    <option
-                        @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id]))
-                            selected
-                        @endif
-                        value="{{ $workExperience->id }}">
-                        {{ $workExperience->work_experience }}
-                    </option>
-                @endforeach
-            </select>
+    @foreach ($workExperiences as $workExperience)
+        <option
+            @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id]))
+                selected
+            @endif
+            value="{{ $workExperience->id }}">
+            {{ $workExperience->work_experience }}
+        </option>
+    @endforeach
+</select>
         </div>
 
       <button type="button"

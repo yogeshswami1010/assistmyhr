@@ -11,6 +11,19 @@ class Job extends Model
     use Sluggable;
     use \Illuminate\Database\Eloquent\SoftDeletes;
 
+    // Allowed status values (single source of truth)
+    public const STATUS_OPEN    = 'open';
+    public const STATUS_CLOSED  = 'closed';
+    public const STATUS_FILLED  = 'filled';
+    public const STATUS_ON_HOLD = 'on_hold';
+
+    public const STATUSES = [
+        self::STATUS_OPEN    => 'Open',
+        self::STATUS_CLOSED  => 'Closed',
+        self::STATUS_FILLED  => 'Filled',
+        self::STATUS_ON_HOLD => 'On Hold',
+    ];
+
     public function getJobDescriptionAttribute($value) { return tenant_html($value); }
     public function getJobRequirementAttribute($value) { return tenant_html($value); }
 
@@ -24,6 +37,10 @@ class Job extends Model
         'section_visibility' => 'array',
         'show_on_consortium'   => 'boolean',
         'show_on_assistmyday'  => 'boolean',
+        // NEW: the three flags are now set automatically from the form
+        'show_job_type'        => 'boolean',
+        'show_work_experience' => 'boolean',
+        'show_salary'          => 'boolean',
     ];
 
     protected $appends = [
@@ -32,7 +49,6 @@ class Job extends Model
 
     public function applications()
     {
-
         return $this->belongsToMany(JobApplication::class);
     }
 
@@ -51,12 +67,16 @@ class Job extends Model
         return $this->belongsTo(Company::class, 'company_id');
     }
 
-        public function scopePublished($query)
+    // CHANGED: only "open" jobs show on the website
+    public function scopeOpen($query)
     {
-        $today = Carbon::today()->toDateString();
+        return $query->where('status', self::STATUS_OPEN);
+    }
 
-        return $query->where('status', 'active')
-            ->whereDate('start_date', '<=', $today);
+    // CHANGED: no start_date check. Date is auto-set on creation, so "open" is enough.
+    public function scopePublished($query)
+    {
+        return $query->where('status', self::STATUS_OPEN);
     }
 
     public function sluggable(): array
@@ -68,24 +88,21 @@ class Job extends Model
         ];
     }
 
+    // CHANGED: uses "open" instead of "active"
     public static function activeJobs()
     {
-        return Job::where('status', 'active')
-            ->where('start_date', '<=', Carbon::now()->format('Y-m-d'))
-            ->get();
+        return Job::open()->get();
     }
 
     public static function activeJobsCount()
     {
-        return Job::where('status', 'active')
-            ->where('start_date', '<=', Carbon::now()->format('Y-m-d'))
-            ->count();
+        return Job::open()->count();
     }
 
+    // CHANGED: "active" now means status is open
     public function getActiveAttribute()
     {
-        return $this->status === 'active'
-            && $this->start_date <= Carbon::now()->format('Y-m-d');
+        return $this->status === self::STATUS_OPEN;
     }
 
     public function questions()
@@ -121,22 +138,21 @@ class Job extends Model
             'location_id');
     }
 
-    // public function location(){
-    //     return $this->hasMany(JobJobLocation::class, 'job_id');
-    // }
-
     public function location()
     {
         return $this->belongsTo(JobLocation::class, 'location_id');
     }
+
     public function experience()
     {
         return $this->belongsTo(\App\WorkExperience::class, 'work_experience_id');
     }
-   public function currency()
+
+    public function currency()
     {
         return $this->belongsTo(Currency::class, 'currency_id');
     }
+
     public function statuses()
     {
         return $this->hasMany(ApplicationStatus::class, 'job_id')->orderBy('position');

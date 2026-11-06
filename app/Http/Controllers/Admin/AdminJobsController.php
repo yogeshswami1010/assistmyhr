@@ -46,23 +46,24 @@ class AdminJobsController extends AdminBaseController
      */
     public function index()
     {
-        abort_if(! $this->user->cans('view_jobs'), 403);
-        $this->companies = Company::all();
-        $this->locations = JobLocation::all();
-        $this->totalJobs = Job::count();
-        $this->activeJobs = Job::where('status', 'active')->count();
-        $this->inactiveJobs = Job::where('status', 'inactive')->count();
-        $this->expiredJobs = Job::where('status', 'expired')->count();
-        $this->totalOpenings = (int) Job::sum('total_positions');
+       abort_if(! $this->user->cans('view_jobs'), 403);
 
-        $jobsQuery = Job::query()
-            ->with(['jobLocation.country', 'company', 'category', 'jobType'])
-            ->join('job_job_locations', 'job_job_locations.job_id', 'jobs.id')
-            ->select('jobs.id as jobs_id', 'job_job_locations.location_id as locations_id', 'jobs.*')
-            ->where('jobs.id', '>', 0)
-            ->groupBy('jobs_id');
+    $this->companies = Company::all();
+    $this->locations = JobLocation::all();
 
-        $jobs = $jobsQuery->get();
+    $this->totalJobs = Job::count();
+    $this->openJobs = Job::where('status', 'open')->count();
+    $this->closedJobs = Job::where('status', 'closed')->count();
+    $this->totalOpenings = (int) Job::sum('total_positions');
+
+    $jobsQuery = Job::query()
+        ->with(['jobLocation.country', 'company', 'category', 'jobType'])
+        ->join('job_job_locations', 'job_job_locations.job_id', 'jobs.id')
+        ->select('jobs.id as jobs_id', 'job_job_locations.location_id as locations_id', 'jobs.*')
+        ->where('jobs.id', '>', 0)
+        ->groupBy('jobs_id');
+
+    $jobs = $jobsQuery->get();
 
         $this->jobsPayload = $jobs->map(function (Job $job) {
             $firstLoc = $job->jobLocation->first();
@@ -195,7 +196,7 @@ class AdminJobsController extends AdminBaseController
 
         $job = new Job;
         $job->slug = null;
-
+        
         // Handle manual company entry
         if ($request->filled('company_new')) {
             $company = Company::firstOrCreate(
@@ -210,7 +211,6 @@ class AdminJobsController extends AdminBaseController
         $job->job_code = $request->job_code;
         $job->job_description = $request->job_description;
         $job->total_positions = $request->total_positions;
-
         // Handle manual category entry
         if ($request->filled('category_new')) {
             $category = JobCategory::firstOrCreate(
@@ -220,16 +220,27 @@ class AdminJobsController extends AdminBaseController
         } else {
             $job->category_id = $request->category_id;
         }
-
-        $job->start_date = now()->toDateString();   // auto-set on creation
+        $job->start_date = now()->toDateString();  
         $job->hiring_status = $request->hiring_status ?? 'active';
         $job->status = $request->status ?: 'open';
         $job->job_type_id = $request->job_type_id;
-
-        $experienceIds = $this->resolveWorkExperienceIds($request->work_experience_ids);
-        $job->work_experience_ids = $experienceIds;
-        $job->work_experience_id = $experienceIds[0] ?? null;
-
+        $experienceIds = [];
+        foreach ($request->work_experience_ids as $value) {
+            if (str_starts_with($value, 'new:')) {
+                $name = trim(substr($value, 4));
+                $experience = WorkExperience::where('work_experience', $name)->first();
+                if (! $experience) {
+                    $experience = new WorkExperience;
+                    $experience->work_experience = $name;
+                    $experience->save();
+                }
+                $experienceIds[] = $experience->id;
+            } else {
+                $experienceIds[] = (int) $value;
+            }
+        }
+        $job->work_experience_ids = array_values(array_unique($experienceIds));
+        $job->work_experience_id = $experienceIds[0];
         $job->pay_type = $request->pay_type;
         $job->pay_according = $request->pay_according;
         $job->starting_salary = $request->starting_salary;
@@ -242,9 +253,19 @@ class AdminJobsController extends AdminBaseController
             'description' => $request->meta_description ?: strip_tags(Str::substr(html_entity_decode($request->job_description), 0, 150)),
         ];
 
-        $this->applyVisibilityFlags($job, $request, $experienceIds);
+        if ($request->show_job_type == 'yes') {
+            $job->show_job_type = true;
+        }
 
-        $job->save();
+        if ($request->show_work_experience == 'yes') {
+            $job->show_work_experience = true;
+        }
+
+        if ($request->show_salary == 'yes') {
+            $job->show_salary = true;
+        }
+
+        $jobData = $job->save();
 
         if (! is_null($request->skill_id)) {
             JobSkill::where('job_id', $job->id)->delete();
@@ -260,14 +281,14 @@ class AdminJobsController extends AdminBaseController
         // Save Question for job
         $job->questions()->sync($this->jobQuestionsWithResume($request->question));
 
-        // Handle manual location entry
+      // Handle manual location entry
         if ($request->filled('location_new')) {
             $newLocation = JobLocation::firstOrCreate(
                 ['location' => trim($request->location_new)]
             );
             $locationIds = [$newLocation->id];
         } else {
-            $locationIds = array_filter((array) ($request->location_id ?? []), fn ($v) => $v && $v !== 'new');
+            $locationIds = $request->location_id ?? [];
         }
 
         foreach ($locationIds as $location) {
@@ -282,40 +303,6 @@ class AdminJobsController extends AdminBaseController
         event(new JobAlertEvent($job));
 
         return Reply::redirect(route('admin.jobs.index'), __('menu.jobs').' '.__('messages.createdSuccessfully'));
-    }
-        /** Turn submitted work experience values into clean IDs, ignoring blanks and the "new" placeholder. */
-    private function resolveWorkExperienceIds($values): array
-    {
-        $ids = [];
-
-        foreach ((array) $values as $value) {
-            $value = trim((string) $value);
-
-            if ($value === '' || $value === 'new') {
-                continue;
-            }
-
-            if (str_starts_with($value, 'new:')) {
-                $name = trim(substr($value, 4));
-                if ($name === '') {
-                    continue;
-                }
-                $experience = WorkExperience::firstOrCreate(['work_experience' => $name]);
-                $ids[] = $experience->id;
-            } else {
-                $ids[] = (int) $value;
-            }
-        }
-
-        return array_values(array_unique($ids));
-    }
-
-    /** Show job type / work experience / pay on the website only when the field is filled. */
-    private function applyVisibilityFlags(Job $job, Request $request, array $experienceIds): void
-    {
-        $job->show_job_type        = $request->filled('job_type_id');
-        $job->show_work_experience = count($experienceIds) > 0;
-        $job->show_salary          = $request->filled('pay_type');
     }
 
     /**
@@ -340,7 +327,7 @@ class AdminJobsController extends AdminBaseController
     public function edit($id)
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::find($id);
         $this->categories = JobCategory::all();
         $this->locations = JobLocation::all();
         $this->jobLocationData = $this->job->jobLocation->pluck('id')->toArray();
@@ -365,124 +352,150 @@ class AdminJobsController extends AdminBaseController
      * @return Response
      */
     public function update(StoreJob $request, $id)
-{
-    abort_if(! $this->user->cans('edit_jobs'), 403);
+    {
+        abort_if(! $this->user->cans('edit_jobs'), 403);
 
-    $required_columns = [
-        'gender' => false,
-        'dob' => false,
-        'country' => false,
-        'address' => false,
-    ];
+        $required_columns = [
+            'gender' => false,
+            'dob' => false,
+            'country' => false,
+            'address' => false,
+        ];
 
-    foreach ($required_columns as $key => $value) {
-        if ($request->has($key)) {
-            $required_columns[$key] = true;
+        foreach ($required_columns as $key => $value) {
+            if ($request->has($key)) {
+                $required_columns[$key] = true;
+            }
         }
-    }
 
-    $section_visibility = [
-        'profile_image' => 'no',
-        'resume' => 'no',
-        'cover_letter' => 'no',
-        'terms_and_conditions' => 'no',
-    ];
+        $section_visibility = [
+            'profile_image' => 'no',
+            'resume' => 'no',
+            'cover_letter' => 'no',
+            'terms_and_conditions' => 'no',
+        ];
 
-    foreach ($section_visibility as $key => $value) {
-        if ($request->has($key)) {
-            $section_visibility[$key] = 'yes';
+        foreach ($section_visibility as $key => $value) {
+            if ($request->has($key)) {
+                $section_visibility[$key] = 'yes';
+            }
         }
-    }
 
-    $job = Job::findOrFail($id);
-
-    // Handle manual company entry
-    if ($request->filled('company_new')) {
-        $company = Company::firstOrCreate(
-            ['company_name' => trim($request->company_new)]
-        );
-        $job->company_id = $company->id;
-    } else {
-        $job->company_id = $request->company;
-    }
-    $job->company_location = $request->company_location;
-    $job->title = $request->title;
-    $job->job_code = $request->job_code;
-    $job->job_description = $request->job_description;
-    $job->total_positions = $request->total_positions;
-
-    // Handle manual category entry
-    if ($request->filled('category_new')) {
-        $category = JobCategory::firstOrCreate(
-            ['name' => trim($request->category_new)]
-        );
-        $job->category_id = $category->id;
-    } else {
-        $job->category_id = $request->category_id;
-    }
-
-    // start_date is NOT touched on update, it keeps the date set at creation
-    $job->hiring_status = $request->hiring_status ?? 'active';
-    $job->status = $request->status ?: 'open';
-    $job->job_type_id = $request->job_type_id;
-
-    $experienceIds = $this->resolveWorkExperienceIds($request->work_experience_ids);
-    $job->work_experience_ids = $experienceIds;
-    $job->work_experience_id = $experienceIds[0] ?? null;
-
-    $job->pay_type = $request->pay_type;
-    $job->pay_according = $request->pay_according;
-    $job->starting_salary = $request->starting_salary;
-    $job->maximum_salary = $request->maximum_salary;
-    $job->currency_id = $request->currency_id;
-    $job->required_columns = $required_columns;
-    $job->section_visibility = $section_visibility;
-    $job->meta_details = [
-        'title' => $request->meta_title ?: $job->title,
-        'description' => $request->meta_description ?: strip_tags(Str::substr(html_entity_decode($job->job_description), 0, 150)),
-    ];
-
-    $this->applyVisibilityFlags($job, $request, $experienceIds);
-
-    $job->save();
-
-    if (! is_null($request->skill_id)) {
-        JobSkill::where('job_id', $job->id)->delete();
-
-        foreach ($request->skill_id as $skill) {
-            $jobSkill = new JobSkill;
-            $jobSkill->skill_id = $skill;
-            $jobSkill->job_id = $job->id;
-            $jobSkill->save();
+        $job = Job::find($id);
+        // Handle manual company entry
+        if ($request->filled('company_new')) {
+            $company = Company::firstOrCreate(
+                ['company_name' => trim($request->company_new)]
+            );
+            $job->company_id = $company->id;
+        } else {
+            $job->company_id = $request->company;
         }
+        $job->company_location = $request->company_location;
+        $job->title = $request->title;
+        $job->job_code = $request->job_code;
+        $job->job_description = $request->job_description;
+       
+        $job->total_positions = $request->total_positions;
+        // Handle manual category entry
+        if ($request->filled('category_new')) {
+            $category = JobCategory::firstOrCreate(
+                ['name' => trim($request->category_new)]
+            );
+            $job->category_id = $category->id;
+        } else {
+            $job->category_id = $request->category_id;
+        }
+        $job->start_date = $request->start_date;
+       $job->hiring_status = $request->hiring_status ?? 'active'; 
+        $job->status = $request->status;
+        $job->job_type_id = $request->job_type_id;
+        $experienceIds = [];
+        foreach ($request->work_experience_ids as $value) {
+            if (str_starts_with($value, 'new:')) {
+                $name = trim(substr($value, 4));
+                $experience = WorkExperience::where('work_experience', $name)->first();
+                if (! $experience) {
+                    $experience = new WorkExperience;
+                    $experience->work_experience = $name;
+                    $experience->save();
+                }
+                $experienceIds[] = $experience->id;
+            } else {
+                $experienceIds[] = (int) $value;
+            }
+        }
+        $job->work_experience_ids = array_values(array_unique($experienceIds));
+        $job->work_experience_id = $experienceIds[0];
+        $job->pay_type = $request->pay_type;
+        $job->pay_according = $request->pay_according;
+        $job->starting_salary = $request->starting_salary;
+        $job->maximum_salary = $request->maximum_salary;
+        $job->currency_id = $request->currency_id;
+        $job->required_columns = $required_columns;
+        $job->section_visibility = $section_visibility;
+        $job->meta_details = [
+            'title' => $request->meta_title ?: $job->title,
+            'description' => $request->meta_description ?: strip_tags(Str::substr(html_entity_decode($job->job_description), 0, 150)),
+        ];
+
+        if ($request->show_job_type == 'yes') {
+            $job->show_job_type = true;
+        } else {
+            $job->show_job_type = false;
+        }
+
+        if ($request->show_work_experience == 'yes') {
+            $job->show_work_experience = true;
+        } else {
+            $job->show_work_experience = false;
+        }
+
+        if ($request->show_salary == 'yes') {
+            $job->show_salary = true;
+        } else {
+
+            $job->show_salary = false;
+        }
+
+        $job->save();
+
+        if (! is_null($request->skill_id)) {
+            JobSkill::where('job_id', $job->id)->delete();
+
+            foreach ($request->skill_id as $skill) {
+                $jobSkill = new JobSkill;
+                $jobSkill->skill_id = $skill;
+                $jobSkill->job_id = $job->id;
+                $jobSkill->save();
+            }
+        }
+
+        // Update Question for job
+        $job->questions()->sync($this->jobQuestionsWithResume($request->question));
+
+        JobJobLocation::where('job_id', $job->id)->delete();
+       // Handle manual location entry
+        if ($request->filled('location_new')) {
+            $newLocation = JobLocation::firstOrCreate(
+                ['location' => trim($request->location_new)]
+            );
+            $locationIds = [$newLocation->id];
+        } else {
+            $locationIds = $request->location_id ?? [];
+        }
+
+        foreach ($locationIds as $location) {
+            $jobLocation = new JobJobLocation;
+            $jobLocation->job_id = $job->id;
+            $jobLocation->location_id = $location;
+            $jobLocation->save();
+        }
+
+        $this->syncJobStatuses($id, $request);
+
+        return Reply::redirect(route('admin.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));
     }
-
-    // Update Question for job
-    $job->questions()->sync($this->jobQuestionsWithResume($request->question));
-
-    JobJobLocation::where('job_id', $job->id)->delete();
-
-    // Handle manual location entry
-    if ($request->filled('location_new')) {
-        $newLocation = JobLocation::firstOrCreate(
-            ['location' => trim($request->location_new)]
-        );
-        $locationIds = [$newLocation->id];
-    } else {
-        $locationIds = array_filter((array) ($request->location_id ?? []), fn ($v) => $v && $v !== 'new');
-    }
-
-    foreach ($locationIds as $location) {
-        $jobLocation = new JobJobLocation;
-        $jobLocation->job_id = $job->id;
-        $jobLocation->location_id = $location;
-        $jobLocation->save();
-    }
-
-    $this->syncJobStatuses($id, $request);
-
-    return Reply::redirect(route('admin.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));
-}
 
     private function syncJobStatuses(int $jobId, $request): void
     {

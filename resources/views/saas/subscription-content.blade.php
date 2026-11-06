@@ -48,9 +48,7 @@
         <p class="muted">Manage your plan, review usage and request a renewal or plan change.</p>
         <h1>Workspace: <span>{{ $tenant->name }}</span></h1>
     </div>
-    @if($hasAccess)
-        <a class="button" href="{{ tenant_route('admin.dashboard') }}">Open ATS →</a>
-    @endif
+ 
 </header>
 
 <section class="subscription-summary" aria-label="Current plan">
