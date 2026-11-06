@@ -114,6 +114,16 @@ Route::middleware(['signed', 'throttle:60,1'])->prefix('candidate-review')->name
 });
 
 Auth::routes(['register' => false]);
+// ── Google Login & Registration ─────────────────────────────────────
+Route::get('/auth/google', [
+    \App\Http\Controllers\Auth\LoginController::class,
+    'redirectToGoogle'
+])->name('google.login');
+
+Route::get('/auth/google/callback', [
+    \App\Http\Controllers\Auth\LoginController::class,
+    'handleGoogleCallback'
+])->name('google.callback');
 require __DIR__.'/saas.php';
 
 // Old bookmarks go to login; purchase verification is no longer registered.
@@ -435,3 +445,45 @@ Route::middleware('auth')->group(function () {
     Route::get('remove-session',            [VerifyMobileController::class, 'removeSession'])->name('removeSession');
 });
 Route::post('candidate-email-webhook', [\App\Http\Controllers\CandidateEmailWebhookController::class, '__invoke'])->name('candidate-email-webhook');
+
+// Route::get('/preview-client-review-email/{id}', function ($id) {
+
+//     abort_unless(app()->environment('local'), 404);
+
+//     $review = \App\CandidateClientReview::findOrFail($id);
+
+//     $message = \App\CandidateClientReviewMessage::where(
+//         'candidate_client_review_id', $review->id
+//     )
+//     ->where('direction', 'outbound')
+//     ->latest()
+//     ->firstOrFail();
+
+//     $sender = auth()->user() ?: \App\User::findOrFail(1);
+
+//     $signature = \App\Services\CandidateEmailBody::render(
+//         '',
+//         $sender->email_signature,
+//         $sender->email_signature_image_url,
+//         $sender->email_signature_html
+//     );
+
+//     $application = \App\JobApplication::withTrashed()
+//         ->with('job.company')
+//         ->find($review->job_application_id);
+
+//     $companyName = $application?->job?->company?->company_name
+//         ?: config('app.name');
+
+//     return view('email.client-review-invitation', [
+//         'review' => $review,
+//         'bodyHtml' => \App\Services\ClientReviewContent::clean(
+//             (string) $message->body_html
+//         ),
+//         'reviewUrl' => app(\App\Services\CandidateClientReviewService::class)
+//             ->url($review),
+//         'signatureHtml' => $signature,
+//         'companyName' => $companyName,
+//     ]);
+
+// });

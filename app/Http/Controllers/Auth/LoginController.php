@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -173,4 +176,107 @@ class LoginController extends Controller
 
         return redirect(tenant_route('login'));
     }
+
+    /**
+ * Redirect user to Google.
+ */
+/**
+ * Redirect user to Google.
+ */
+public function redirectToGoogle()
+{
+    return Socialite::driver('google')
+        ->scopes(['openid', 'email', 'profile'])
+        ->redirect();
+}
+
+/**
+ * Handle Google login.
+ */
+public function handleGoogleCallback(Request $request)
+{
+    try {
+
+        $googleUser = Socialite::driver('google')->user();
+
+        $email = strtolower(trim((string) $googleUser->getEmail()));
+        $googleId = $googleUser->getId();
+
+        if (!$email || !$googleId) {
+            return redirect()->route('login')
+                ->withErrors([
+                    'email' => 'Google account details could not be retrieved.'
+                ]);
+        }
+
+        // Verify Google's email verification status.
+        $googleData = $googleUser->user ?? [];
+
+        if (empty($googleData['email_verified'])) {
+            return redirect()->route('login')
+                ->withErrors([
+                    'email' => 'Please use a verified Google account.'
+                ]);
+        }
+
+        // First check whether this Google account is already linked.
+        $user = User::where('google_id', $googleId)->first();
+
+        // If not linked, check whether an account already exists with this email.
+        if (!$user) {
+            $user = User::where('email', $email)->first();
+        }
+
+        if (!$user) {
+
+            // New Google user: continue through SaaS registration.
+            // Do not create a user directly here.
+            $request->session()->put('google_registration', [
+                'google_id' => $googleId,
+                'name' => $googleUser->getName(),
+                'email' => $email,
+                'image' => $googleUser->getAvatar(),
+            ]);
+
+            return redirect()->route('register');
+
+        }
+
+        // Save Google ID on the existing user.
+        if ($user->google_id && $user->google_id !== $googleId) {
+            return redirect()->route('login')
+                ->withErrors([
+                    'email' => 'This email is linked to another Google account.'
+                ]);
+        }
+
+        $user->google_id = $googleId;
+
+        if (!$user->email_verified_at) {
+            $user->email_verified_at = now();
+        }
+
+        if (!$user->image && $googleUser->getAvatar()) {
+            $user->image = $googleUser->getAvatar();
+        }
+
+        $user->save();
+
+        // Login existing user.
+        Auth::guard('web')->login($user, true);
+
+        $request->session()->regenerate();
+
+        return redirect()->intended($this->redirectTo());
+
+    } catch (\Throwable $e) {
+
+        Log::error('Google Authentication Error: ' . $e->getMessage());
+
+        return redirect()->route('login')
+            ->withErrors([
+                'email' => 'Google authentication failed. Please try again.'
+            ]);
+    }
+}
 }

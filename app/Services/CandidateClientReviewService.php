@@ -7,6 +7,7 @@ use App\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use App\JobApplication;
 
 class CandidateClientReviewService
 {
@@ -26,28 +27,34 @@ class CandidateClientReviewService
         return $mailer;
     }
 
-    public function send(CandidateClientReview $review, CandidateClientReviewMessage $message, User $sender): void
-    {
-        DB::transaction(function () use ($review, $message, $sender) {
-            $locked = CandidateClientReviewMessage::lockForUpdate()->findOrFail($message->id);
-            if ($locked->direction !== 'outbound' || (int) $locked->candidate_client_review_id !== (int) $review->id) {
-                throw new \LogicException('Only staff messages from this review can be emailed to the client.');
-            }
-            if ($locked->mail_status === 'sent') return;
-            abort_if($review->revoked_at || !$review->expires_at->isFuture(), 410, 'This review link is no longer active.');
-            $signature = CandidateEmailBody::render('', $sender->email_signature, $sender->email_signature_image_url, $sender->email_signature_html);
-            $html = view('email.client-review-invitation', [
-                'review' => $review, 'bodyHtml' => ClientReviewContent::clean((string) $locked->body_html),
-                'reviewUrl' => $this->url($review), 'signatureHtml' => $signature,
-            ])->render();
-            $this->mailer()->html($html, function ($mail) use ($review, $sender) {
-                $mail->to($review->client_email)->subject($review->subject);
-                if (filter_var($sender->email, FILTER_VALIDATE_EMAIL)) $mail->replyTo($sender->email, $sender->name);
-            });
-            $locked->update(['mail_status' => 'sent']);
-            if (!$review->sent_at) $review->update(['sent_at' => now()]);
+   public function send(CandidateClientReview $review, CandidateClientReviewMessage $message, User $sender): void
+{
+    DB::transaction(function () use ($review, $message, $sender) {
+        $locked = CandidateClientReviewMessage::lockForUpdate()->findOrFail($message->id);
+        if ($locked->direction !== 'outbound' || (int) $locked->candidate_client_review_id !== (int) $review->id) {
+            throw new \LogicException('Only staff messages from this review can be emailed to the client.');
+        }
+        if ($locked->mail_status === 'sent') return;
+        abort_if($review->revoked_at || !$review->expires_at->isFuture(), 410, 'This review link is no longer active.');
+        $signature = CandidateEmailBody::render('', $sender->email_signature, $sender->email_signature_image_url, $sender->email_signature_html);
+
+        // Company name shown at the top of the email (from the candidate's job)
+        $application = \App\JobApplication::withTrashed()->with('job.company')->find($review->job_application_id);
+        $companyName = $application?->job?->company?->company_name ?: config('app.name');
+
+        $html = view('email.client-review-invitation', [
+            'review' => $review, 'bodyHtml' => ClientReviewContent::clean((string) $locked->body_html),
+            'reviewUrl' => $this->url($review), 'signatureHtml' => $signature,
+            'companyName' => $companyName,
+        ])->render();
+        $this->mailer()->html($html, function ($mail) use ($review, $sender) {
+            $mail->to($review->client_email)->subject($review->subject);
+            if (filter_var($sender->email, FILTER_VALIDATE_EMAIL)) $mail->replyTo($sender->email, $sender->name);
         });
-    }
+        $locked->update(['mail_status' => 'sent']);
+        if (!$review->sent_at) $review->update(['sent_at' => now()]);
+    });
+}
 
     public function notify(CandidateClientReview $review, CandidateClientReviewMessage $message): void
     {

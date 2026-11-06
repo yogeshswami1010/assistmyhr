@@ -36,6 +36,7 @@ class SignupController extends Controller
         $data = $request->validate([
             'privacy_policy' => ['required', 'accepted'],
             'company_name' => ['required', 'string', 'max:150'], 'name' => ['required', 'string', 'max:150'],
+            'google_id' => ['nullable', 'string', 'max:260'],
             'email' => ['required', 'email', 'max:254', Rule::unique('saas_landlord.saas_tenants', 'owner_email')->where(fn ($query) => $query->where('status', '!=', 'failed'))], 'password' => ['required', 'string', 'min:8', 'max:200', 'confirmed', 'regex:/[^\p{L}\p{N}\s]/u'],
         ], ['privacy_policy.required' => 'Please accept the Privacy Policy to create your workspace.', 'privacy_policy.accepted' => 'Please accept the Privacy Policy to create your workspace.', 'password.regex' => 'Include at least one special character, such as !, @ or #.']);
         do {
@@ -54,6 +55,13 @@ class SignupController extends Controller
         $request->session()->regenerate();
         $request->session()->put('saas_tenant_id', $tenant->id);
         $user = User::findOrFail(1);
+
+        // Save Google ID if registration came through Google.
+if ($request->filled('google_id')) {
+    $user->google_id = $request->input('google_id');
+    $user->save();
+}
+
         Auth::guard('web')->login($user, true);
         try { $user->sendEmailVerificationNotification(); }
         catch (\Throwable $e) { report($e); $request->session()->flash('status', 'Your workspace was created, but the verification email could not be sent. Please resend it below or contact support@assistmyhr.com.'); }
