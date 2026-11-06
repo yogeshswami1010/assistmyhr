@@ -5,8 +5,72 @@
 <div class="field"><label for="company_name">Company name</label><input id="company_name" name="company_name" value="{{ old('company_name') }}" placeholder="Your company" required maxlength="150" autocomplete="organization" @error('company_name') aria-invalid="true" aria-describedby="company_name-error" @enderror>@error('company_name')<p class="field-error" id="company_name-error">{{ $message }}</p>@enderror</div>
 <div class="fields"><div class="field"><label for="name">Your name</label><input id="name" name="name" value="{{ old('name') }}" placeholder="Full name" required maxlength="150" autocomplete="name" @error('name') aria-invalid="true" aria-describedby="name-error" @enderror>@error('name')<p class="field-error" id="name-error">{{ $message }}</p>@enderror</div><div class="field"><label for="email">Email</label><input id="email" name="email" type="email" value="{{ old('email') }}" placeholder="Email" required maxlength="254" autocomplete="email" @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>@error('email')<p class="field-error" id="email-error">{{ $message }}</p>@enderror</div></div>
 <div class="fields"><div class="field"><label for="password">Password</label><div class="password-input-wrap"><input id="password" name="password" type="password" required minlength="8" maxlength="200" autocomplete="new-password" aria-describedby="password-hint @error('password') password-error @enderror" @error('password') aria-invalid="true" @enderror><button type="button" class="password-toggle" data-password-target="password" aria-controls="password" aria-pressed="false" aria-label="Show password"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg></button></div><div class="password-meter" role="meter" aria-label="Password strength" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><span id="password-strength-bar"></span></div><p id="password-strength" class="hint" aria-live="polite">Password strength: Enter a password</p>@error('password')<p class="field-error" id="password-error">{{ $message }}</p>@enderror</div><div class="field"><label for="password_confirmation">Confirm password</label><div class="password-input-wrap"><input id="password_confirmation" name="password_confirmation" type="password" required minlength="8" maxlength="200" autocomplete="new-password" @error('password_confirmation') aria-invalid="true" aria-describedby="password_confirmation-error" @enderror><button type="button" class="password-toggle" data-password-target="password_confirmation" aria-controls="password_confirmation" aria-pressed="false" aria-label="Show password"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg></button></div>@error('password_confirmation')<p class="field-error" id="password_confirmation-error">{{ $message }}</p>@enderror</div></div>
-<p class="hint" id="password-hint">Use at least 8 characters, including a special character such as !, @ or #.</p><div class="privacy-consent"><label for="privacy_policy"><input id="privacy_policy" name="privacy_policy" type="checkbox" value="1" required @checked(old('privacy_policy')) @error('privacy_policy') aria-invalid="true" aria-describedby="privacy-policy-error" @enderror><span>I have read and agree to the <a href="{{ url('/privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy<span class="privacy-link-note"> (opens in a new tab)</span></a>.</span></label>@error('privacy_policy')<p class="field-error" id="privacy-policy-error">{{ $message }}</p>@enderror</div><button class="button" type="submit">Create workspace <span aria-hidden="true">&nbsp;→</span></button><p class="login-note">Already have a workspace? <a href="{{ tenant_route('login') }}">Sign in</a></p></form></section></div>
-<style>.privacy-consent{margin:18px 0 22px}.privacy-consent label{display:flex;align-items:flex-start;gap:10px;color:#597391;font-size:13px;line-height:1.8}.privacy-consent input{flex-shrink:0;width:18px;height:18px;margin:3px 0 0;accent-color:#0755ff}.privacy-consent a{color:#0755ff;text-decoration:underline;text-underline-offset:3px}.privacy-link-note{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#password-hint{white-space:nowrap;overflow-x:auto;max-width:100%;margin-bottom:18px}.password-input-wrap{position:relative}.signup-form .password-input-wrap input{padding-right:48px}.signup-form .password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:36px;height:36px;background:transparent;border:0;border-radius:8px;color:#64748b;padding:0;cursor:pointer}.password-toggle:focus-visible{outline:2px solid #2563eb;outline-offset:1px}.password-toggle .eye-slash{display:none}.password-toggle[aria-pressed="true"] .eye-slash{display:block}.password-meter{height:5px;border-radius:10px;background:#e2e8f0;overflow:hidden;margin-top:6px}.password-meter span{display:block;height:100%;width:0;transition:width .2s,background .2s}</style>
+<p class="hint" id="password-hint">Use at least 8 characters, including a special character such as !, @ or #.</p><div class="privacy-consent"><label for="privacy_policy"><input id="privacy_policy" name="privacy_policy" type="checkbox" value="1" required @checked(old('privacy_policy')) @error('privacy_policy') aria-invalid="true" aria-describedby="privacy-policy-error" @enderror><span>I have read and agree to the <a href="{{ url('/privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy<span class="privacy-link-note"> (opens in a new tab)</span></a>.</span></label>@error('privacy_policy')<p class="field-error" id="privacy-policy-error">{{ $message }}</p>@enderror</div><button class="button" type="submit">
+    Create workspace <span aria-hidden="true">&nbsp;→</span>
+</button>
+
+{{-- Google Registration --}}
+<div class="google-divider">
+    <span>OR REGISTER WITH</span>
+</div>
+
+<a href="{{ route('google.login') }}" class="google-register-button">
+    <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.45 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.76 7.18l7.73 6C44.42 37.97 46.98 31.84 46.98 24.55z"/>
+        <path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19C.93 17.48 0 20.13 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.15 1.45-4.89 2.3-8.18 2.3-6.26 0-11.55-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+
+    <span>Continue with Google</span>
+</a>
+
+<p class="login-note">
+    Already have a workspace?
+    <a href="{{ tenant_route('login') }}">Sign in</a>
+</p></form></section></div>
+<style>.privacy-consent{margin:18px 0 22px}.privacy-consent label{display:flex;align-items:flex-start;gap:10px;color:#597391;font-size:13px;line-height:1.8}.privacy-consent input{flex-shrink:0;width:18px;height:18px;margin:3px 0 0;accent-color:#0755ff}.privacy-consent a{color:#0755ff;text-decoration:underline;text-underline-offset:3px}.privacy-link-note{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#password-hint{white-space:nowrap;overflow-x:auto;max-width:100%;margin-bottom:18px}.password-input-wrap{position:relative}.signup-form .password-input-wrap input{padding-right:48px}.signup-form .password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:36px;height:36px;background:transparent;border:0;border-radius:8px;color:#64748b;padding:0;cursor:pointer}.password-toggle:focus-visible{outline:2px solid #2563eb;outline-offset:1px}.password-toggle .eye-slash{display:none}.password-toggle[aria-pressed="true"] .eye-slash{display:block}.password-meter{height:5px;border-radius:10px;background:#e2e8f0;overflow:hidden;margin-top:6px}.password-meter span{display:block;height:100%;width:0;transition:width .2s,background .2s}
+    .google-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 0;
+    color: #7890a9;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.google-divider::before,
+.google-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #dce5ef;
+}
+
+.google-register-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid #dce5ef;
+    border-radius: 10px;
+    background: #fff;
+    color: #243b53;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s;
+}
+
+.google-register-button:hover {
+    background: #f7f9fc;
+    color: #243b53;
+}
+</style>
 <script>
 (function(){
 const input=document.getElementById('password'),bar=document.getElementById('password-strength-bar'),label=document.getElementById('password-strength'),meter=document.querySelector('.password-meter');
