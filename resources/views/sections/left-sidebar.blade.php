@@ -236,12 +236,6 @@
             </a>
         @endif
 
-        @if(in_array("view_locations", $userPermissions))
-            <a href="{{ route('admin.locations.index') }}" class="ra-nav-link {{ request()->is('admin/locations*') ? 'on' : '' }}">
-                <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="locations" /></span>
-                <span class="ra-nl">@lang('menu.locations')</span>
-            </a>
-        @endif
     </div>
 
     <style>

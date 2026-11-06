@@ -161,12 +161,6 @@
 
             initJobFormSelect2();
 
-            // Bind after jQuery and Select2 load; the form markup is rendered before them.
-            $('#location_id').on('change.jobLocation', function () {
-                toggleNewLocationField(this);
-            });
-            toggleNewLocationField(document.getElementById('location_id'));
-
             if (typeof $.fn.bootstrapMaterialDatePicker === 'function') {
                 $('#date-end').bootstrapMaterialDatePicker({ weekStart: 0, time: false });
                 $('#date-start').bootstrapMaterialDatePicker({ weekStart: 0, time: false }).on('change', function (e, date) {
@@ -267,11 +261,8 @@
                 var catId = $('#category_id').val();
                 $('#job-preview-category').text(catId ? $('#category_id option:selected').text().trim() : '—');
 
-                var locs = [];
-                $('#location_id option:selected').each(function () {
-                    locs.push($(this).text().trim());
-                });
-                $('#job-preview-location').text(locs.length ? locs.join(', ') : '—');
+                var location = ($('#location_new').val() || '').trim();
+                $('#job-preview-location').text(location || '—');
 
                 var n = parseInt($('#total_positions').val(), 10) || 0;
                 $('#job-preview-openings').text(n > 0 ? (n + ' ' + txtOpenings) : '—');
@@ -297,7 +288,8 @@
             }
 
             $('#title, #company, #category_id, #job_type, #total_positions, #status').on('change input', jobFormPreviewRefresh);
-            $('#location_id, #job_skills').on('change', jobFormPreviewRefresh);
+            $('#location_new').on('input change', jobFormPreviewRefresh);
+            $('#job_skills').on('change', jobFormPreviewRefresh);
             $('#title, #category_id').on('change input', updateAiGenerateButtonVisibility);
 
             $('.job-pos-minus').on('click', function () {
