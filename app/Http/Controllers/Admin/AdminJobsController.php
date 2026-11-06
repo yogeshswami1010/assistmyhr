@@ -134,14 +134,12 @@ class AdminJobsController extends AdminBaseController
         if (! is_null($this->job)) {
             $this->jobQuestion = $this->job->questions->pluck('id')->toArray();
             $this->skills = Skill::where('category_id', $this->job->category_id)->get();
-            $this->jobLocation = $this->job->jobLocation->pluck('id')->toArray();
             $selectedCategoryId = (int) $this->job->category_id;
         }
         if (! $selectedCategoryId && request()->filled('category_id')) {
             $selectedCategoryId = (int) request('category_id');
         }
         $this->categories = JobCategory::all();
-        $this->locations = JobLocation::all();
         $this->jobTypes = JobType::forJobForm();
         $this->workExperiences = WorkExperience::all();
         $this->questions = $this->getQuestionsForCategory($selectedCategoryId);
@@ -329,8 +327,6 @@ class AdminJobsController extends AdminBaseController
         abort_if(! $this->user->cans('edit_jobs'), 403);
         $this->job = Job::find($id);
         $this->categories = JobCategory::all();
-        $this->locations = JobLocation::all();
-        $this->jobLocationData = $this->job->jobLocation->pluck('id')->toArray();
         $this->skills = Skill::where('category_id', $this->job->category_id)->get();
         $this->jobQuestion = $this->job->questions->pluck('id')->toArray();
         $this->questions = $this->getQuestionsForCategory((int) $this->job->category_id);
@@ -474,22 +470,21 @@ class AdminJobsController extends AdminBaseController
         // Update Question for job
         $job->questions()->sync($this->jobQuestionsWithResume($request->question));
 
-        JobJobLocation::where('job_id', $job->id)->delete();
-       // Handle manual location entry
-        if ($request->filled('location_new')) {
-            $newLocation = JobLocation::firstOrCreate(
-                ['location' => trim($request->location_new)]
-            );
-            $locationIds = [$newLocation->id];
-        } else {
-            $locationIds = $request->location_id ?? [];
-        }
+        $locationName = trim((string) $request->location_new);
+        if ($locationName === '' || $locationName !== $job->jobLocation->first()?->location) {
+            $locationIds = $locationName !== ''
+                ? [JobLocation::firstOrCreate(['location' => $locationName])->id]
+                : array_filter((array) $request->location_id, fn ($id) => $id && $id !== 'new');
 
-        foreach ($locationIds as $location) {
-            $jobLocation = new JobJobLocation;
-            $jobLocation->job_id = $job->id;
-            $jobLocation->location_id = $location;
-            $jobLocation->save();
+            DB::transaction(function () use ($job, $locationIds) {
+                JobJobLocation::where('job_id', $job->id)->delete();
+                foreach ($locationIds as $locationId) {
+                    $jobLocation = new JobJobLocation;
+                    $jobLocation->job_id = $job->id;
+                    $jobLocation->location_id = $locationId;
+                    $jobLocation->save();
+                }
+            });
         }
 
         $this->syncJobStatuses($id, $request);

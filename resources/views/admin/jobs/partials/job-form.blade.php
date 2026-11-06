@@ -1,6 +1,5 @@
 @php
     $isEdit = $isEdit ?? false;
-    $selectedLocationIds = $isEdit ? $jobLocationData : (isset($jobLocation) ? $jobLocation : []);
     $required_columns = [
         'gender' => false,
         'dob' => false,
@@ -414,88 +413,15 @@
                         </div>
                         <div class="flex flex-col gap-4 p-5">
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                               <div class="form-group mb-0">
-                                    <label class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
-                                        @lang('Locations')
+                                <div class="form-group mb-0">
+                                    <label for="location_new" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                                        @lang('Locations') <span class="text-red-500">*</span>
                                     </label>
-
-                                    {{-- Location Dropdown --}}
-                                    <div id="location-select-wrapper">
-                                    <select 
-                                        name="location_id[]" 
-                                        id="location_id" 
-                                        multiple="multiple"
-                                        class="form-control select2"
-                                        onchange="toggleNewLocationField(this)"
-                                    >
-
-                                        {{-- Add New Location FIRST --}}
-                                        <option value="new" @selected(count($locations) === 0)>@lang('Add New Location')</option>
-
-                                        {{-- Existing Locations --}}
-                                        @foreach ($locations as $location)
-                                            <option 
-                                                value="{{ $location->id }}"
-                                                @if (in_array($location->id, $selectedLocationIds)) selected @endif
-                                            >
-                                                {{ ucfirst($location->location) . ($location->country ? ' (' . $location->country->country_code . ')' : '') }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    </div>
-
-                                    {{-- New Location Field --}}
-                                    <div id="new-location-wrapper" class="relative hidden">
-                                        <input
-                                            type="text"
-                                            id="location_new"
-                                            name="location_new"
-                                            aria-label="{{ __('Add New Location') }}"
-                                            style="padding-right: 2.75rem"
-                                            placeholder="{{ __('Add New Location') }}"
-                                            class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
-                                            value="{{ old('location_new') }}"
-                                        >
-                                        <button type="button" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-[#2563EB]" onclick="resetLocationField()" aria-label="{{ __('Locations') }}" title="{{ __('Locations') }}">&times;</button>
-                                    </div>
+                                    <input type="text" id="location_new" name="location_new"
+                                        class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
+                                        placeholder="{{ __('Enter job location') }}" maxlength="191"
+                                        value="{{ old('location_new', $job?->jobLocation->first()?->location) }}">
                                 </div>
-
-                                <script>
-                                    function toggleNewLocationField(select) {
-                                        const wrapper = document.getElementById('new-location-wrapper');
-                                        const input = document.getElementById('location_new');
-                                        const values = $(select).val() || [];
-                                        const isNew = values.includes('new');
-
-                                        if (isNew) {
-                                            Array.from(select.options).forEach(option => {
-                                                option.selected = option.value === 'new';
-                                            });
-                                            if ($(select).data('select2')) {
-                                                $(select).select2('close');
-                                            }
-                                        }
-                                        document.getElementById('location-select-wrapper').classList.toggle('hidden', isNew);
-                                        wrapper.classList.toggle('hidden', !isNew);
-                                        input.disabled = !isNew;
-                                        input.style.opacity = '1';
-                                        if (isNew) input.focus();
-                                    }
-
-                                    function resetLocationField() {
-                                        document.getElementById('location_new').value = '';
-                                        $('#location_id').val([]).trigger('change');
-                                        if ($('#location_id').data('select2')) {
-                                            $('#location_id').select2('open');
-                                        } else {
-                                            document.getElementById('location_id').focus();
-                                        }
-                                    }
-
-                                    document.addEventListener('DOMContentLoaded', function () {
-                                        toggleNewLocationField(document.getElementById('location_id'));
-                                    });
-                                </script>
                                @php $currentStatus = $job->status ?? 'open'; @endphp
 <div class="form-group mb-0">
     <label for="status" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
@@ -1009,7 +935,6 @@
 function handleDualInput(inputEl, key) {
     const hasText = inputEl.value.trim().length > 0;
     const sel = document.getElementById(
-        key === 'location' ? 'location_id' :
         key === 'category' ? 'category_id' : 'company'
     );
     if (!sel) return;
@@ -1045,7 +970,6 @@ $(document).ready(function () {
 });
 function handleDualSelect(selEl, key) {
     const inputEl = document.getElementById(
-        key === 'location' ? 'location_new' :
         key === 'category' ? 'category_new' : 'company_new'
     );
     if (!inputEl) return;
@@ -1058,9 +982,6 @@ function handleDualSelect(selEl, key) {
 
 // Wire up Select2 changes (since Select2 bypasses native onchange for multi-selects)
 $(document).ready(function () {
-    $('#location_id').on('change', function () {
-        handleDualSelect(this, 'location'); toggleNewLocationField(this);
-    });
     $('#category_id').on('change', function () {
         handleDualSelect(this, 'category'); toggleNewCategoryField(this);
     });

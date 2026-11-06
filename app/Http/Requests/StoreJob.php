@@ -64,7 +64,8 @@ class StoreJob extends CoreRequest
 
             $locationIds = array_filter((array) ($this->location_id ?? []), fn ($id) => filled($id) && $id !== 'new');
             if (empty(trim((string) $this->location_new)) && empty($locationIds)) {
-                $validator->errors()->add('location_id', __('menu.locations').' '.__('errors.fieldRequired'));
+                $field = $this->has('location_new') ? 'location_new' : 'location_id';
+                $validator->errors()->add($field, __('menu.locations').' '.__('errors.fieldRequired'));
             }
         });
     }

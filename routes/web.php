@@ -21,7 +21,6 @@ use App\Http\Controllers\Admin\AdminJobOnboardController;
 use App\Http\Controllers\Admin\AdminJobsController;
 use App\Http\Controllers\Admin\AdminJobTypeController;
 use App\Http\Controllers\Admin\AdminLinkedInSettingsController;
-use App\Http\Controllers\Admin\AdminLocationsController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminQuestionController;
 use App\Http\Controllers\Admin\AdminReportController;
@@ -270,7 +269,6 @@ Route::middleware('auth')->group(function () {
             Route::resource('skills', AdminSkillsController::class);
             Route::post('skills/ai-generate',  [AdminSkillsController::class, 'aiGenerateSkills'])->name('skills.ai-generate');
             Route::post('skills/quick-create', [AdminSkillsController::class, 'quickCreate'])->name('skills.quick-create');
-            Route::resource('locations', AdminLocationsController::class);
 
             // Jobs
 
