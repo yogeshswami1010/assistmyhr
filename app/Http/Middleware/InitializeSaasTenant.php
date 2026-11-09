@@ -92,16 +92,6 @@ class InitializeSaasTenant
             if (!$supportAccess && $tenant->status === 'suspended' && !$request->is('login', 'logout', 'account/subscription*', 'email/*', 'password/*')) {
                 return $request->expectsJson() ? response()->json(['message' => 'This workspace is suspended.'], 403) : redirect('/account/subscription');
             }
-            Log::info('SAAS SUBSCRIPTION DEBUG', [
-                'url' => $request->fullUrl(),
-                'tenant_id' => $tenant->id,
-                'tenant_slug' => $tenant->slug,
-                'tenant_status' => $tenant->status,
-                'subscription_id' => $tenant->subscription?->id,
-                'subscription_status' => $tenant->subscription?->status,
-                'subscription_expiry' => $tenant->subscription?->expires_at,
-                'has_access' => $tenant->hasAccess(),
-            ]);
          if (
     !$supportAccess &&
     !$tenant->hasAccess() &&
