@@ -290,4 +290,30 @@ $context->activate($tenant);
 $afterPasswordLogin->invoke($passwordController, $callbackRequest, App\User::findOrFail(1));
 check($tenant->fresh()->google_subject===$google->subject && !$session->has('google_pending_link'),'Password success for the workspace owner links the verified Google subject');
 
+// Reproduce a tenant with pending platform migrations after the landlord was updated.
+config(['database.connections.saas_tenant' => ['driver'=>'sqlite','database'=>':memory:','prefix'=>'']]);
+Schema::connection('saas_tenant')->create('jobs', fn (Blueprint $table) => $table->id());
+$repository = new Illuminate\Database\Migrations\DatabaseMigrationRepository($app['db'], 'migrations');
+$migrator = new Illuminate\Database\Migrations\Migrator($repository, $app['db'], $app['files']);
+$paths = array_map(fn ($file) => $root.'/database/migrations/'.$file.'.php', [
+    '2026_10_06_000003_create_saas_platform',
+    '2026_10_27_000001_create_website_enquiries',
+    '2026_11_05_000001_add_duration_to_saas_plans',
+    '2026_11_05_000002_add_seats_to_saas_subscriptions',
+    '2026_11_05_000003_allow_trials_without_a_plan',
+    '2026_11_09_000001_add_google_subject_to_saas_tenants',
+    '2026_11_10_000001_add_jooble_publishing_to_jobs',
+]);
+$migrator->usingConnection('saas_tenant', function () use ($migrator, $repository, $paths) {
+    $repository->createRepository();
+    $migrator->run($paths);
+    check(Schema::hasColumn('jobs', 'publish_on_jooble') && count($repository->getRan()) === count($paths), 'Tenant migrations reach Jooble after pending landlord-only migrations');
+    $migrator->run($paths);
+    check(count($repository->getRan()) === count($paths), 'Repeating tenant migrations is safe');
+    $migrator->rollback($paths);
+    check(!Schema::hasColumn('jobs', 'publish_on_jooble'), 'Tenant rollback removes the tenant-only column');
+});
+check(Schema::hasColumn('saas_plans', 'duration_days') && Schema::hasColumn('saas_subscriptions', 'seat_count')
+    && $tenant->fresh()->google_subject === $google->subject, 'Tenant migrations and rollback leave the central schema and accounts intact');
+
 echo "Plan and renewal integration checks passed: {$checks}.\n";

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\{Schema, DB};
 return new class extends Migration {
     public function up(): void
     {
+        if (DB::getDefaultConnection() === 'saas_tenant') return;
+
         Schema::connection('saas_landlord')->table('saas_subscriptions', function (Blueprint $table) {
             $table->unsignedBigInteger('plan_id')->nullable()->change();
         });
