@@ -38,6 +38,7 @@ $migration=require $root.'/database/migrations/2026_11_05_000001_add_duration_to
 $migration->up();
 (require $root.'/database/migrations/2026_11_05_000002_add_seats_to_saas_subscriptions.php')->up();
 (require $root.'/database/migrations/2026_11_05_000003_allow_trials_without_a_plan.php')->up();
+(require $root.'/database/migrations/2026_11_09_000001_add_google_subject_to_saas_tenants.php')->up();
 $admin=PlatformAdmin::create(['name'=>'Admin','email'=>'admin@example.test','password'=>'unused']); Auth::guard('platform')->setUser($admin);
 $controller=new PlatformController;
 $checks=0;
@@ -177,15 +178,18 @@ if (!class_exists(\Laravel\Socialite\Facades\Socialite::class)) {
 $google = new class {
     public bool $verified = true;
     public bool $failCallback = false;
+    public string $email = 'Registrant@Example.test';
+    public string $subject = 'signup-subject';
     public function driver(string $provider) { return $this; }
     public function redirect() { return redirect()->away('https://accounts.google.com/'); }
     public function user() {
         if ($this->failCallback) { throw new RuntimeException('Simulated invalid OAuth state'); }
-        return new class($this->verified) {
+        return new class($this->verified, $this->email, $this->subject) {
             public array $user;
-            public function __construct(bool $verified) { $this->user = ['email_verified'=>$verified]; }
+            public function __construct(bool $verified, private string $email, private string $subject) { $this->user = ['email_verified'=>$verified]; }
             public function getName() { return 'Google registrant'; }
-            public function getEmail() { return 'Registrant@Example.test'; }
+            public function getEmail() { return $this->email; }
+            public function getId() { return $this->subject; }
         };
     }
 };
@@ -207,7 +211,8 @@ $app->instance(App\Saas\TenantContext::class, new class extends App\Saas\TenantC
 $callbackResponse = (new App\Http\Middleware\InitializeSaasTenant)->handle($callbackRequest, $oauth->callback(...));
 check(str_ends_with($callbackResponse->getTargetUrl(), '/register'),'Google signup callback runs without a tenant');
 $signup = new App\Http\Controllers\Saas\SignupController;
-check($signup->form($oauthRequest)->getData()['googleProfile']['email']==='registrant@example.test' && !$session->has('google_signup_pending'),'Verified Google email reaches the workspace form');
+$googleProfile = $signup->form($oauthRequest)->getData()['googleProfile'];
+check($googleProfile['email']==='registrant@example.test' && $googleProfile['subject']==='signup-subject' && !$session->has('google_signup_pending'),'Verified Google identity reaches the workspace form');
 $tampered = Request::create('/register', 'POST', ['email'=>'other@example.test']);
 $tampered->setLaravelSession($session);
 rejected(fn()=>$signup->store($tampered),'Google signup still requires workspace details and consent');
@@ -219,5 +224,70 @@ $oauth->start($oauthRequest);
 $google->failCallback = true;
 check(str_ends_with($oauth->callback($oauthRequest)->getTargetUrl(), '/register') && !$session->has('google_signup_profile'),'OAuth callback failure returns to signup');
 token_get_all($app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/saas/signup.blade.php')), TOKEN_PARSE);
+
+// The alternate local Laravel install may not include the app's role package.
+if (!trait_exists(\Shanmuga\LaravelEntrust\Traits\LaravelEntrustUserTrait::class)) {
+    trait TestEntrustUserTrait {}
+    class_alias(TestEntrustUserTrait::class, \Shanmuga\LaravelEntrust\Traits\LaravelEntrustUserTrait::class);
+}
+Schema::table('users', function (Blueprint $table) {
+    $table->string('email')->nullable();
+    $table->string('password')->nullable();
+    $table->rememberToken();
+});
+config([
+    'auth.guards.web'=>['driver'=>'session','provider'=>'workspace-users'],
+    'auth.providers.workspace-users'=>['driver'=>'eloquent','model'=>App\User::class],
+]);
+$context = new class extends App\Saas\TenantContext {
+    private ?Tenant $active = null;
+    public ?int $lastActivated = null;
+    public function reset(): void { $this->active = null; }
+    public function current(): ?Tenant { return $this->active; }
+    public function activate(Tenant $tenant): void { $this->active = $tenant; $this->lastActivated = $tenant->id; }
+};
+$app->instance(App\Saas\TenantContext::class, $context);
+$app['router']->get('/login',fn()=>null)->name('login');
+$app['router']->get('/email/verify',fn()=>null)->name('verification.notice');
+$app['router']->getRoutes()->refreshNameLookups();
+$google->verified = true;
+$google->failCallback = false;
+$google->email = 'owner@gmail.com';
+$google->subject = 'owner-google-subject';
+$tenant->update(['owner_email'=>$google->email]);
+$subscription->update(['status'=>'active','expires_at'=>now()->addDays(10)]);
+\Illuminate\Support\Facades\DB::table('users')->where('id',1)->update(['email'=>$google->email,'email_verified_at'=>now(),'password'=>password_hash('test-password', PASSWORD_BCRYPT)]);
+$loginWithGoogle = function (?string $workspace = null) use ($oauth, $session, $callbackRequest) {
+    $loginRequest = Request::create('/auth/google', 'GET', $workspace ? ['workspace'=>$workspace] : []);
+    $loginRequest->setLaravelSession($session);
+    $oauth->startLogin($loginRequest);
+    return (new App\Http\Middleware\InitializeSaasTenant)->handle($callbackRequest, $oauth->callback(...));
+};
+$login = $loginWithGoogle();
+check(str_contains($login->getTargetUrl(), '/admin/dashboard') && $context->lastActivated===$tenant->id && $session->get('saas_tenant_id')===$tenant->id,'Google sign-in resolves and activates the matching workspace');
+check($tenant->fresh()->google_subject===$google->subject,'Existing verified Gmail owner links to the Google subject');
+$google->subject = 'different-google-subject';
+check(str_ends_with($loginWithGoogle()->getTargetUrl(), '/login'),'Different Google subject cannot replace an existing link');
+$google->subject = $tenant->fresh()->google_subject;
+check(str_ends_with($loginWithGoogle('another-workspace')->getTargetUrl(), '/login'),'A company sign-in link cannot select another workspace');
+$subscription->update(['expires_at'=>now()->subDay()]);
+check(str_contains($loginWithGoogle()->getTargetUrl(), '/account/subscription'),'Expired workspace goes to subscription after Google sign-in');
+$tenant->update(['google_subject'=>null,'owner_email'=>'owner@example.test']);
+$google->email = $tenant->owner_email;
+\Illuminate\Support\Facades\DB::table('users')->where('id',1)->update(['email'=>$google->email]);
+check(str_contains($loginWithGoogle()->getTargetUrl(), '/login') && $session->has('google_pending_link') && $tenant->fresh()->google_subject===null,'Older third-party Google email requires workspace password proof');
+if (!trait_exists(\Illuminate\Foundation\Auth\AuthenticatesUsers::class)) {
+    trait TestAuthenticatesUsersTrait {}
+    class_alias(TestAuthenticatesUsersTrait::class, \Illuminate\Foundation\Auth\AuthenticatesUsers::class);
+}
+$context->activate($tenant);
+$passwordController = (new ReflectionClass(App\Http\Controllers\Auth\LoginController::class))->newInstanceWithoutConstructor();
+$afterPasswordLogin = new ReflectionMethod($passwordController, 'authenticated');
+$afterPasswordLogin->invoke($passwordController, $callbackRequest, App\User::findOrFail(2));
+check($tenant->fresh()->google_subject===null,'Password success for a different user cannot link the workspace owner');
+$loginWithGoogle();
+$context->activate($tenant);
+$afterPasswordLogin->invoke($passwordController, $callbackRequest, App\User::findOrFail(1));
+check($tenant->fresh()->google_subject===$google->subject && !$session->has('google_pending_link'),'Password success for the workspace owner links the verified Google subject');
 
 echo "Plan and renewal integration checks passed: {$checks}.\n";

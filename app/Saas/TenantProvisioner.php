@@ -23,6 +23,7 @@ class TenantProvisioner
             'uuid' => $uuid, 'slug' => $data['slug'], 'name' => $data['company_name'],
             'owner_email' => $data['email'], 'status' => 'provisioning',
             'database_name' => $database, 'database_driver' => $driver === 'sqlite' ? 'sqlite' : 'mysql',
+            ...array_intersect_key($data, ['google_subject' => true]),
         ]);
         $context = app(TenantContext::class);
         $previous = $context->current();
@@ -53,7 +54,9 @@ class TenantProvisioner
             AuditLog::create(['tenant_id' => $tenant->id, 'action' => 'tenant.created', 'reason' => 'Client signup completed.']);
             return $tenant->fresh();
         } catch (\Throwable $e) {
-            $tenant->status = 'failed'; $tenant->save();
+            $tenant->status = 'failed';
+            if (isset($data['google_subject'])) { $tenant->google_subject = null; }
+            $tenant->save();
             AuditLog::create(['tenant_id' => $tenant->id, 'action' => 'tenant.provisioning_failed', 'reason' => 'Provisioning failed; inspect server logs.']);
             throw $e;
         } finally {

@@ -98,7 +98,7 @@
     <div class="flex-grow border-t border-[#E2DED8]"></div>
 </div>
 
-<a href="{{ route('google.login') }}"
+<a href="{{ route('google.login', request()->only('workspace')) }}"
    class="{{ $authSecondary }} animate-auth-fade-up">
 
     <svg class="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">

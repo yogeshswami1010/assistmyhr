@@ -74,6 +74,7 @@ Route::post('/telnyx-webhook', TelnyxWebhookController::class)
 require __DIR__.'/website.php';
 
 Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');
+Route::get('/job-feeds/jooble.xml', \App\Http\Controllers\Front\JoobleFeedController::class)->middleware('throttle:60,1')->name('jobs.feeds.jooble');
 
 Route::name('jobs.')
     ->group(function () {
@@ -115,9 +116,9 @@ Route::middleware(['signed', 'throttle:60,1'])->prefix('candidate-review')->name
 Auth::routes(['register' => false]);
 // ── Google Login & Registration ─────────────────────────────────────
 Route::get('/auth/google', [
-    \App\Http\Controllers\Auth\LoginController::class,
-    'redirectToGoogle'
-])->name('google.login');
+    \App\Http\Controllers\Auth\GoogleRegistrationController::class,
+    'startLogin'
+])->middleware('throttle:10,1')->name('google.login');
 
 Route::get('/auth/google/callback', [
     \App\Http\Controllers\Auth\GoogleRegistrationController::class,

@@ -44,6 +44,10 @@ DB::setDefaultConnection('alpha');
 Illuminate\Support\Facades\Log::swap(Mockery::mock(Psr\Log\LoggerInterface::class)->shouldIgnoreMissing());
 CarbonImmutable::setTestNow('2026-10-31 10:00:00 UTC');
 Carbon\Carbon::setTestNow('2026-10-31 10:00:00 UTC');
+if (!trait_exists(\Shanmuga\LaravelEntrust\Traits\LaravelEntrustUserTrait::class)) {
+    trait TestCalendarEntrustTrait {}
+    class_alias(TestCalendarEntrustTrait::class, \Shanmuga\LaravelEntrust\Traits\LaravelEntrustUserTrait::class);
+}
 $user = Mockery::mock(App\User::class)->makePartial();
 $user->id = 1; $user->email = 'admin@example.test'; $user->shouldReceive('cans')->with('view_schedule')->andReturn(true);
 $other = new App\User; $other->id = 2; $other->email = 'other@example.test';
@@ -59,6 +63,7 @@ function googleRejected(callable $action, string $message) {
     throw new RuntimeException($message);
 }
 $session = new Illuminate\Session\Store('google-test', new Illuminate\Session\ArraySessionHandler(120)); $session->start();
+$app->instance('session.store', $session);
 $makeRequest = function (array $parameters = []) use ($session, $user, $app) {
     $request = Request::create('https://ats.example.test/admin/interview-schedule/google-calendar/callback', 'GET', $parameters);
     $request->setLaravelSession($session); $request->setUserResolver(fn () => $user);
@@ -116,7 +121,7 @@ check(count($events) === 3 && $events[0]['start'] === '2026-10-31T12:00:00+05:30
 check($events[1]['allDay'] && $events[1]['end'] === '2026-11-02', 'Multi-day all-day events preserve the exclusive end date');
 check($events[2]['title'] === 'Google: Busy' && !str_contains(json_encode($events), 'SECRET'), 'Private event details are hidden');
 check($events[0]['sourceType'] === 'google' && !$events[0]['editable'], 'Google events are identified and read-only');
-Http::assertSent(fn ($request) => $request['pageToken'] === 'PAGE2' && $request['singleEvents'] === 'true' && $request['timeMin'] === '2026-09-30T18:30:00+00:00');
+Http::assertSent(fn ($request) => ($request['pageToken'] ?? null) === 'PAGE2' && $request['singleEvents'] === 'true' && $request['timeMin'] === '2026-09-30T18:30:00+00:00');
 check($calendar->events($other, $start, $end) === [], 'Other ATS users cannot read the connected calendar');
 DB::setDefaultConnection('beta'); check($calendar->events($user, $start, $end) === [], 'Another client with the same user ID cannot read the calendar');
 DB::setDefaultConnection('alpha');
@@ -135,5 +140,38 @@ try { $controller->connect($restricted, $calendar); throw new RuntimeException('
 catch (Symfony\Component\HttpKernel\Exception\HttpException $e) { check($e->getStatusCode() === 403, 'Calendar access requires schedule permission'); }
 $calendar->disconnect($other->id); check(GoogleCalendarConnection::exists(), 'Another user disconnecting cannot remove the admin connection');
 $calendar->disconnect($user->id); check(!GoogleCalendarConnection::exists(), 'Disconnect removes the users calendar tokens');
+
+config(['saas.enabled' => true, 'services.google' => ['client_id' => 'SIGNUP-CLIENT', 'client_secret' => 'SIGNUP-SECRET']]);
+config(['services.google_calendar' => ['client_id' => 'CALENDAR-CLIENT', 'client_secret' => null]]);
+check(!$calendar->configured(), 'A partial dedicated credential pair does not mix with signup credentials');
+config(['services.google_calendar' => []]);
+$tenant = (new App\Saas\Tenant)->forceFill(['id' => 10, 'slug' => 'alpha', 'owner_email' => $user->email, 'google_subject' => 'google-owner']);
+$app->instance(App\Saas\TenantContext::class, new class($tenant) extends App\Saas\TenantContext {
+    public function __construct(private App\Saas\Tenant $selected) {}
+    public function current(): ?App\Saas\Tenant { return $this->selected; }
+});
+$authorization = $controller->connect($makeRequest(), $calendar);
+parse_str(parse_url($authorization->getTargetUrl(), PHP_URL_QUERY), $query);
+check($query['client_id'] === 'SIGNUP-CLIENT' && $query['login_hint'] === 'google-owner', 'Calendar uses the signup client and hints the linked Google account');
+check($query['redirect_uri'] === 'https://ats.example.test/admin/interview-schedule/google-calendar/callback', 'Shared credentials still use the Calendar callback');
+$tokenResponse = ['access_token' => 'ACCESS', 'refresh_token' => 'REFRESH', 'expires_in' => 3600];
+fakeGoogle([
+    $tokenUrl => Http::response($tokenResponse),
+    $profileUrl => Http::response(['email' => $user->email, 'email_verified' => true, 'sub' => 'another-account']),
+]);
+googleRejected(fn () => $calendar->connect($user, 'code', 'verifier'), 'Matching email cannot authorize a different Google account for a linked owner');
+fakeGoogle([
+    $tokenUrl => Http::response($tokenResponse),
+    $profileUrl => Http::response(['email' => $user->email, 'email_verified' => true, 'sub' => 'google-owner']),
+    $eventsUrl.'*' => Http::response(['items' => [['id' => 'existing', 'summary' => 'Existing event', 'start' => ['date' => '2026-10-31'], 'end' => ['date' => '2026-11-01']]]]),
+]);
+$pending = $session->get('google_calendar_oauth');
+$controller->callback($makeRequest(['state' => $pending['state'], 'code' => 'good']), $calendar);
+Http::assertSent(fn ($request) => $request->url() === $tokenUrl && $request['client_id'] === 'SIGNUP-CLIENT');
+check($calendar->events($user, $start, $end)[0]['title'] === 'Google: Existing event', 'Linked signup account sees existing Calendar events after consent');
+$user->shouldReceive('hasVerifiedEmail')->once()->andReturn(false);
+$user->shouldReceive('markEmailAsVerified')->once()->andReturn(true);
+$verification = (new App\Http\Controllers\Saas\VerificationController)->verify($makeRequest(), (string) $user->id, sha1($user->email));
+check(str_contains($verification->getTargetUrl(), '/admin/interview-schedule?workspace=alpha'), 'Google registrant is sent to Interview Schedule after email verification');
 CarbonImmutable::setTestNow(); Carbon\Carbon::setTestNow();
 echo "Google Calendar checks passed.\n";

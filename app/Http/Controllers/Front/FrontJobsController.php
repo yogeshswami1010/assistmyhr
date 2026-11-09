@@ -271,7 +271,7 @@ class FrontJobsController extends FrontBaseController
             ->where(function ($query) {
                 $query->whereNull('end_date')->orWhereDate('end_date', '>=', Carbon::now());
             })
-            ->where('status', 'active')
+            ->publicJobPage()
             ->firstOrFail();
 
         Session::put('lastPageUrl', $slug);
@@ -319,7 +319,7 @@ class FrontJobsController extends FrontBaseController
 
     public function jobApply($slug, $location = null)
     {
-        $this->job = Job::where('slug', $slug)->where('status', 'active')->first();
+        $this->job = Job::where('slug', $slug)->publicJobPage()->first();
         abort_if(!$this->job, 404);
 
         $this->metaTitle       = $this->job->meta_details['title']       ?? '';

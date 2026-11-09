@@ -10,7 +10,7 @@ The integration requests read-only Calendar event access and email identity. It 
 2. Create an OAuth client of type **Web application**. Add this exact authorized redirect URI, replacing the origin with the deployed `APP_URL`:
    `https://assistmyhr.com/admin/interview-schedule/google-calendar/callback`
    For local development with Artisan, register `http://127.0.0.1:8000/admin/interview-schedule/google-calendar/callback` as well and use that same host in the browser and `APP_URL`.
-3. Set backend environment variables (never put the secret in client-side JavaScript):
+3. If both `GOOGLE_CALENDAR_CLIENT_ID` and `GOOGLE_CALENDAR_CLIENT_SECRET` are blank, the app uses `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from Google signup. Add the calendar callback from step 2 to that OAuth client as well. To use a separate Calendar client, set both variables:
 
    ```dotenv
    GOOGLE_CALENDAR_CLIENT_ID=your-web-client-id
@@ -30,7 +30,7 @@ The integration requests read-only Calendar event access and email identity. It 
 
 The calendar loads Google events on opening or changing the visible date range. **Refresh events** loads current Google changes without reloading the page. If Google is unavailable, ATS interviews still display and a separate error explains how to retry. There is no background polling or calendar write permission. Only the primary calendar is included in this version.
 
-The pricing page and signup configuration do not enable this integration. Production OAuth verification and consent-screen publishing may be needed for external users; Google testing-mode authorizations can expire. Follow Google's current requirements.
+After email verification, Google registrants go to Interview Schedule when Calendar setup is ready and their account can view schedules. The app preselects the linked Google account. Users grant read-only Calendar access from Interview Schedule. Production OAuth verification and consent-screen publishing may be needed for external users. Google testing-mode authorizations can expire. Follow Google's current requirements.
 
 ## Verification
 

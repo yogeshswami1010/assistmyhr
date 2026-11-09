@@ -435,6 +435,17 @@
     </select>
 </div>
                             </div>
+                            <div class="rounded-xl border border-gray-200 p-4">
+                                <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
+                                <input type="hidden" name="publish_on_jooble" value="0">
+                                <label class="flex items-center gap-2 text-sm text-slate-700">
+                                    <input type="checkbox" name="publish_on_jooble" value="1"
+                                        @checked(old('publish_on_jooble', $isEdit && $job?->publish_on_jooble))>
+                                    Include this job in the Jooble feed
+                                </label>
+                                <p class="mt-2 text-xs text-slate-600">Open jobs appear in the feed after saving. Submit your workspace’s feed URL to Jooble for review.</p>
+                                <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ tenant_route('jobs.feeds.jooble') }}" target="_blank" rel="noopener">{{ tenant_route('jobs.feeds.jooble') }}</a>
+                            </div>
                             <div class="form-group mb-0">
                                 <label for="job_skills" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('menu.skills')</label>
                                 <select class="form-control select2 select2-multiple w-full" id="job_skills" multiple="multiple" data-placeholder="@lang('app.add') @lang('menu.skills')" name="skill_id[]" style="width: 100%;">
