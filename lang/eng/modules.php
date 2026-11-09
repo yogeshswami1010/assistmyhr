@@ -188,8 +188,6 @@ return [
         'status' => 'Status',
         'job' => 'Job',
         'location' => 'Location',
-        'startDate' => 'Start Date',
-        'sendDate' => 'End Date',
         'pending' => 'Pending',
         'approved' => 'Approved',
         'all' => 'All',

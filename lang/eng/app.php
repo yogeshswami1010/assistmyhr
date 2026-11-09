@@ -34,8 +34,6 @@ return [
     'update' => 'Update',
     'back' => 'Back',
     'reset' => 'Reset',
-    'startDate' => 'Start Date',
-    'endDate' => 'End Date',
     'status' => 'Status',
     'duplicate' => 'Duplicate',
     'active' => 'Active',

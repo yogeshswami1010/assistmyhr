@@ -19,6 +19,8 @@
         .jobs-cb-wrap input:checked ~ .jobs-cb-box { background: #2563EB; border-color: #2563EB; }
         .jobs-cb-wrap input:checked ~ .jobs-cb-box .jobs-cb-chk { display: block; }
         .jobs-cb-chk { display: none; }
+        .jobs-action-disabled { background: #F1F3F7; cursor: not-allowed; opacity: .6; }
+.jobs-action-disabled:hover { transform: none; box-shadow: none; }
     </style>
 @endpush
 
@@ -160,8 +162,6 @@
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('app.company')</th>
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('modules.dashboard.totalOpenings')</th>
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('menu.locations')</th>
-                        <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('app.startDate')</th>
-                        <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('app.endDate')</th>
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('app.status')</th>
                         <th class="whitespace-nowrap py-2.5 pl-4 pr-[18px] text-right text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('app.action')</th>
                     </tr>
@@ -400,7 +400,13 @@
             if (PERM.edit) {
                 html += '<a href="' + esc(j.editUrl) + '" class="jobs-action-btn bg-[#EFF6FF] hover:bg-[#DBEAFE]" data-tip="' + esc(I18N.edit) + '"><svg class="h-3.5 w-3.5" fill="none" stroke="#2563EB" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></a>';
             }
-            html += '<button type="button" class="jobs-action-btn bg-[#F5F3FF] hover:bg-[#EDE9FE] jobs-copy-url" data-url="' + esc(j.copyUrl) + '" data-tip="' + esc(I18N.copyUrl) + '"><svg class="h-3.5 w-3.5" fill="none" stroke="#7C3AED" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></button>';
+           const canCopy = ['open', 'on_hold'].includes(j.status);
+
+if (canCopy) {
+    html += '<button type="button" class="jobs-action-btn bg-[#F5F3FF] hover:bg-[#EDE9FE] jobs-copy-url" data-url="' + esc(j.copyUrl) + '" data-tip="' + esc(I18N.copyUrl) + '"><svg class="h-3.5 w-3.5" fill="none" stroke="#7C3AED" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></button>';
+} else {
+    html += '<button type="button" disabled aria-disabled="true" class="jobs-action-btn jobs-action-disabled" data-tip="' + esc(I18N.linkUnavailable) + '"><svg class="h-3.5 w-3.5" fill="none" stroke="#9CA3AF" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></button>';
+}
             if (PERM.add) {
                 html += '<a href="' + esc(j.duplicateUrl) + '" class="jobs-action-btn bg-[#ECFDF5] hover:bg-[#D1FAE5]" data-tip="' + esc(I18N.duplicate) + '"><svg class="h-3.5 w-3.5" fill="none" stroke="#059669" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></a>';
             }
