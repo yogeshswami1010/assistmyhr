@@ -2,7 +2,7 @@
     @error('google_calendar')<div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm" role="alert">{{ $message }}</div>@enderror
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E8E6E1] bg-white p-4">
         <div><strong class="text-sm">Google Calendar</strong>
-            <p class="mt-1 text-xs text-[#5A6478]">{{ $googleCalendarEmail ? 'Connected: '.$googleCalendarEmail.'. Your Google events appear in green and are visible only to you.' : 'Show your primary Google Calendar alongside interviews. Connect the Google account matching your ATS email address.' }}</p>
+            <p class="mt-1 text-xs text-[#5A6478]">{{ $googleCalendarEmail ? 'Connected: '.$googleCalendarEmail.'. Your Google events appear in green and are visible only to you.' : 'Connect the Google account matching your ATS email and approve read-only access. Events from your primary calendar will appear alongside interviews.' }}</p>
             <a href="{{ route('privacy-policy') }}" class="mt-1 inline-block text-xs underline">Google Calendar privacy information</a>
             @unless($googleCalendarReady && $googleCalendarConfigured)<p id="google-calendar-setup-hint" class="mt-1 text-xs text-[#5A6478]">Google Calendar setup is pending. Your platform administrator needs to enable this connection before you can sign in.</p>@endunless
         </div>

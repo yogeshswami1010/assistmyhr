@@ -25,7 +25,8 @@ class GoogleCalendarController extends Controller
             'tenant_id' => $this->tenantId(), 'expires_at' => now()->addMinutes(10)->timestamp,
             'fingerprint' => $calendar->fingerprint(),
         ]);
-        return redirect()->away($calendar->authorizationUrl($state, $verifier, $request->user()->email));
+        $user = $request->user();
+        return redirect()->away($calendar->authorizationUrl($state, $verifier, $calendar->linkedSubject($user) ?? $user->email));
     }
 
     public function callback(Request $request, GoogleCalendarService $calendar)

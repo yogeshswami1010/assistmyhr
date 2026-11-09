@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\GoogleCalendarConnection;
+use App\Saas\TenantContext;
 use App\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
@@ -16,8 +17,29 @@ class GoogleCalendarService
 
     public function configured(): bool
     {
-        return trim((string) config('services.google_calendar.client_id')) !== ''
-            && trim((string) config('services.google_calendar.client_secret')) !== '';
+        $credentials = $this->credentials();
+
+        return filled($credentials['client_id']) && filled($credentials['client_secret']);
+    }
+
+    private function credentials(): array
+    {
+        $calendar = config('services.google_calendar', []);
+        $service = filled($calendar['client_id'] ?? null) || filled($calendar['client_secret'] ?? null)
+            ? 'google_calendar' : 'google';
+
+        return [
+            'client_id' => config('services.'.$service.'.client_id'),
+            'client_secret' => config('services.'.$service.'.client_secret'),
+        ];
+    }
+
+    public function linkedSubject(User $user): ?string
+    {
+        $tenant = config('saas.enabled') ? app(TenantContext::class)->current() : null;
+
+        return $tenant && strcasecmp($tenant->owner_email, trim($user->email)) === 0
+            ? $tenant->google_subject : null;
     }
 
     public function redirectUri(): string
@@ -27,15 +49,16 @@ class GoogleCalendarService
 
     public function fingerprint(): string
     {
-        return hash('sha256', config('services.google_calendar.client_id').'|'.config('services.google_calendar.client_secret').'|'.$this->redirectUri());
+        $credentials = $this->credentials();
+        return hash('sha256', $credentials['client_id'].'|'.$credentials['client_secret'].'|'.$this->redirectUri());
     }
 
-    public function authorizationUrl(string $state, string $verifier, string $email): string
+    public function authorizationUrl(string $state, string $verifier, string $loginHint): string
     {
         return 'https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query([
-            'client_id' => config('services.google_calendar.client_id'), 'redirect_uri' => $this->redirectUri(),
+            'client_id' => $this->credentials()['client_id'], 'redirect_uri' => $this->redirectUri(),
             'response_type' => 'code', 'scope' => self::SCOPES, 'state' => $state,
-            'access_type' => 'offline', 'prompt' => 'consent select_account', 'login_hint' => $email,
+            'access_type' => 'offline', 'prompt' => 'consent', 'login_hint' => $loginHint,
             'code_challenge' => rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '='),
             'code_challenge_method' => 'S256',
         ], '', '&', PHP_QUERY_RFC3986);
@@ -47,8 +70,10 @@ class GoogleCalendarService
             $tokens = $this->tokens(['grant_type' => 'authorization_code', 'code' => $code,
                 'code_verifier' => $verifier, 'redirect_uri' => $this->redirectUri()]);
             $profile = $this->get('https://openidconnect.googleapis.com/v1/userinfo', $tokens['access_token']);
+            $linkedSubject = $this->linkedSubject($user);
             if (empty($profile['email_verified']) || empty($profile['sub'])
-                || strcasecmp((string) ($profile['email'] ?? ''), trim($user->email)) !== 0) {
+                || strcasecmp((string) ($profile['email'] ?? ''), trim($user->email)) !== 0
+                || ($linkedSubject !== null && $profile['sub'] !== $linkedSubject)) {
                 throw new GoogleCalendarException('Sign in with the Google account matching your ATS email address.');
             }
             if (empty($tokens['refresh_token'])) {
@@ -72,8 +97,10 @@ class GoogleCalendarService
         return $this->locked($user->id, function () use ($user, $start, $end) {
             $connection = GoogleCalendarConnection::where('user_id', $user->id)->first();
             if (!$connection) return [];
-            if (strcasecmp($connection->email, trim($user->email)) !== 0) {
-                throw new GoogleCalendarException('Your ATS email has changed. Disconnect Google Calendar and connect the matching account.');
+            $linkedSubject = $this->linkedSubject($user);
+            if (strcasecmp($connection->email, trim($user->email)) !== 0
+                || ($linkedSubject !== null && $connection->google_subject !== $linkedSubject)) {
+                throw new GoogleCalendarException('Reconnect Google Calendar using the Google account matching your ATS account.');
             }
             if (!$this->configured()) throw new GoogleCalendarException('Google Calendar is unavailable. Contact the platform administrator.');
             $token = $this->accessToken($connection);
@@ -129,8 +156,7 @@ class GoogleCalendarService
         if (!$this->configured()) throw new GoogleCalendarException('Google Calendar is not configured. Contact the platform administrator.');
         try {
             $response = Http::asForm()->acceptJson()->connectTimeout(10)->timeout(25)->withoutRedirecting()
-                ->post(self::TOKEN_URL, $parameters + ['client_id' => config('services.google_calendar.client_id'),
-                    'client_secret' => config('services.google_calendar.client_secret')]);
+                ->post(self::TOKEN_URL, $parameters + $this->credentials());
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             throw new GoogleCalendarException('Could not reach Google. Try again shortly.');
         }
