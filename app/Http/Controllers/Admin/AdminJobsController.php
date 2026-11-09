@@ -326,7 +326,15 @@ class AdminJobsController extends AdminBaseController
     public function edit($id)
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
-        $this->job = Job::find($id);
+        $this->job = Job::findOrFail($id);
+        if ($this->job->publish_on_jooble) {
+            $this->joobleFeedIssue = match (true) {
+                !in_array($this->job->status, [Job::STATUS_OPEN, 'active'], true) => 'Set the job status to Open.',
+                $this->job->company?->status !== 'active' => 'Select an active company.',
+                !Job::jooblePublished()->whereKey($id)->exists() => 'Check the job’s publication and expiry dates.',
+                default => $this->job->joobleContentIssue(),
+            };
+        }
         $this->categories = JobCategory::all();
         $this->skills = Skill::where('category_id', $this->job->category_id)->get();
         $this->jobQuestion = $this->job->questions->pluck('id')->toArray();
@@ -406,7 +414,7 @@ class AdminJobsController extends AdminBaseController
         } else {
             $job->category_id = $request->category_id;
         }
-        $job->start_date = $request->start_date;
+        $job->start_date = $request->filled('start_date') ? $request->start_date : ($job->publicationDate() ?? now()->toDateString());
         $job->status = $request->status;
         $job->job_type_id = $request->job_type_id;
         $experienceIds = [];

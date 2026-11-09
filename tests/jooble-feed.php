@@ -51,7 +51,7 @@ Schema::create('jobs', function (Blueprint $table) {
     }
     $table->boolean('show_job_type')->default(false);
     $table->boolean('show_salary')->default(false);
-    $table->date('start_date');
+    $table->date('start_date')->nullable();
     $table->date('end_date')->nullable();
     $table->timestamps();
     $table->softDeletes();
@@ -103,4 +103,13 @@ try {
 }
 DB::table('jobs')->where('id', 1)->update(['publish_on_jooble' => false]);
 check(count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Turning off publishing removes the listing');
+
+DB::table('jobs')->where('id', 1)->update(['publish_on_jooble' => true, 'start_date' => null, 'end_date' => '0000-00-00', 'created_at' => '2026-11-02 12:00:00']);
+$xml = simplexml_load_string($controller($request)->getContent());
+check(count($xml->job) === 1 && (string) $xml->job->pubdate === '02.11.2026' && !isset($xml->job->expire), 'A missing start date uses the creation date and a zero expiry is treated as unset');
+check(Job::publicJobPage()->withinPublicationWindow()->whereKey(1)->exists(), 'The recovered listing links to an accessible job detail page');
+DB::table('jobs')->where('id', 1)->update(['status' => 'active', 'start_date' => '0000-00-00']);
+check(count(simplexml_load_string($controller($request)->getContent())->job) === 1, 'Legacy active jobs with a zero start date still appear when opted in');
+DB::table('jobs')->where('id', 1)->update(['job_description' => '<p>&nbsp;</p>']);
+check(Job::findOrFail(1)->joobleContentIssue() === 'Add a job description.' && count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Empty rich-text descriptions are excluded with an actionable reason');
 echo "Jooble feed checks passed.\n";

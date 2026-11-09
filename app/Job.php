@@ -82,13 +82,55 @@ class Job extends Model
 
     public function scopeJooblePublished($query)
     {
+        return $query->whereIn('status', [self::STATUS_OPEN, 'active'])
+            ->where('publish_on_jooble', true)
+            ->withinPublicationWindow()
+            ->whereHas('company', fn ($query) => $query->where('status', 'active'));
+    }
+
+    public function scopeWithinPublicationWindow($query)
+    {
         $today = now()->toDateString();
 
-        return $query->published()
-            ->where('publish_on_jooble', true)
-            ->whereDate('start_date', '<=', $today)
-            ->where(fn ($query) => $query->whereNull('end_date')->orWhereDate('end_date', '>=', $today))
-            ->whereHas('company', fn ($query) => $query->where('status', 'active'));
+        return $query->where(function ($query) use ($today) {
+            $query->whereDate('start_date', '<=', $today)
+                ->where('start_date', 'not like', '0000-00-00%')
+                ->orWhere(fn ($query) => $query->where(fn ($query) => $query->whereNull('start_date')->orWhere('start_date', 'like', '0000-00-00%'))
+                    ->whereDate('created_at', '<=', $today));
+        })->where(fn ($query) => $query->whereNull('end_date')->orWhere('end_date', 'like', '0000-00-00%')->orWhereDate('end_date', '>=', $today));
+    }
+
+    public function publicationDate()
+    {
+        return str_starts_with((string) $this->getRawOriginal('start_date'), '0000-00-00')
+            ? $this->created_at : ($this->start_date ?? $this->created_at);
+    }
+
+    public function publicationEndDate()
+    {
+        return str_starts_with((string) $this->getRawOriginal('end_date'), '0000-00-00') ? null : $this->end_date;
+    }
+
+    public function joobleRegion(): string
+    {
+        return $this->jobLocation->pluck('location')->map(fn ($location) => trim((string) $location))->filter()->unique()->implode(', ')
+            ?: trim((string) $this->company_location);
+    }
+
+    public function joobleContentIssue(): ?string
+    {
+        if (blank($this->slug) || blank($this->title)) {
+            return 'The job needs a title and a public job link.';
+        }
+        if (blank($this->joobleRegion())) {
+            return 'Add a job location.';
+        }
+        $description = html_entity_decode(strip_tags($this->job_description), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (!preg_match('/[^\s\p{Z}]/u', $description)) {
+            return 'Add a job description.';
+        }
+
+        return null;
     }
 
     public function scopePublicJobPage($query)

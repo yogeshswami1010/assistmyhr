@@ -23,21 +23,18 @@ class JoobleFeedController
         $xml->startElement('jobs');
 
         foreach (Job::jooblePublished()->with(['company', 'jobLocation', 'jobType', 'currency'])->lazyById() as $job) {
-            $locations = $job->jobLocation->pluck('location')->filter()->unique();
-            $region = $locations->implode(', ') ?: trim((string) $job->company_location);
-            $description = $job->job_description;
-            if (blank($job->slug) || blank($job->title) || blank($region) || blank(strip_tags($description))) {
+            if ($job->joobleContentIssue() !== null) {
                 continue;
             }
 
             $fields = [
                 'link' => tenant_route('jobs.jobDetail', [$job->slug, $job->jobLocation->first()?->id]),
                 'name' => $job->title,
-                'region' => $region,
-                'description' => $description,
-                'pubdate' => $job->start_date->format('d.m.Y'),
+                'region' => $job->joobleRegion(),
+                'description' => $job->job_description,
+                'pubdate' => $job->publicationDate()->format('d.m.Y'),
                 'updated' => $job->updated_at?->format('d.m.Y'),
-                'expire' => $job->end_date?->format('d.m.Y'),
+                'expire' => $job->publicationEndDate()?->format('d.m.Y'),
                 'company' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
                 'jobtype' => $job->show_job_type ? $job->jobType?->job_type : null,
                 'salary' => $this->salary($job),

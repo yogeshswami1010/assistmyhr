@@ -444,6 +444,13 @@
                                     Include this job in the Jooble feed
                                 </label>
                                 <p class="mt-2 text-xs text-slate-600">Open jobs appear in the feed after saving. Submit your workspace’s feed URL to Jooble for review.</p>
+                                @if($isEdit && $job?->publish_on_jooble)
+                                    @if(!empty($joobleFeedIssue))
+                                        <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $joobleFeedIssue }}</p>
+                                    @else
+                                        <p class="mt-1 text-xs font-semibold text-emerald-700">Included in your workspace’s Jooble feed.</p>
+                                    @endif
+                                @endif
                                 <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ tenant_route('jobs.feeds.jooble') }}" target="_blank" rel="noopener">{{ tenant_route('jobs.feeds.jooble') }}</a>
                             </div>
                             <div class="form-group mb-0">

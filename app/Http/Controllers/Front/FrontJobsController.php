@@ -267,10 +267,7 @@ class FrontJobsController extends FrontBaseController
     {
         $this->job = Job::with(['workExperience', 'jobType'])
             ->where('slug', $slug)
-            ->whereDate('start_date', '<=', Carbon::now())
-            ->where(function ($query) {
-                $query->whereNull('end_date')->orWhereDate('end_date', '>=', Carbon::now());
-            })
+            ->withinPublicationWindow()
             ->publicJobPage()
             ->firstOrFail();
 
