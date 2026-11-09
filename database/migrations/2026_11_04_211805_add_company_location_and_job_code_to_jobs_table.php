@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -29,10 +28,6 @@ return new class extends Migration
                 $table->boolean('show_salary')->default(false);
             }
         });
-
-        // Convert old status values to the new ones
-        DB::table('jobs')->where('status', 'active')->update(['status' => 'open']);
-        DB::table('jobs')->whereIn('status', ['inactive', 'expired'])->update(['status' => 'closed']);
     }
 
     public function down(): void

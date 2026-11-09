@@ -43,7 +43,8 @@ $app->instance(TenantContext::class, new class($tenant) extends TenantContext {
 Carbon\Carbon::setTestNow('2026-11-10 12:00:00');
 Schema::create('jobs', function (Blueprint $table) {
     $table->id();
-    foreach (['title', 'slug', 'status', 'company_location', 'job_description', 'pay_type', 'pay_according'] as $field) {
+    $table->enum('status', ['active', 'inactive'])->default('active');
+    foreach (['title', 'slug', 'company_location', 'job_description', 'pay_type', 'pay_according'] as $field) {
         $table->string($field)->nullable();
     }
     foreach (['company_id', 'job_type_id', 'currency_id', 'starting_salary', 'maximum_salary'] as $field) {
@@ -66,6 +67,11 @@ Schema::create('job_job_locations', function (Blueprint $table) {
     $table->id(); $table->integer('job_id'); $table->integer('location_id');
 });
 (require $root.'/database/migrations/2026_11_10_000001_add_jooble_publishing_to_jobs.php')->up();
+DB::table('jobs')->insert(['id'=>101,'status'=>'active','start_date'=>'2026-11-01']);
+DB::table('jobs')->insert(['id'=>102,'status'=>'inactive','start_date'=>'2026-11-01']);
+(require $root.'/database/migrations/2026_11_10_000002_expand_job_status_values.php')->up();
+check(DB::table('jobs')->orderBy('id')->pluck('status')->all() === ['active', 'inactive'], 'Status migration expands the old enum without changing existing statuses');
+DB::table('jobs')->whereIn('id', [101, 102])->delete();
 DB::table('companies')->insert(['id'=>1,'company_name'=>'Acme','status'=>'active','show_in_frontend'=>'true']);
 DB::table('job_locations')->insert(['id'=>1,'location'=>'Toronto']);
 DB::table('job_types')->insert(['id'=>1,'job_type'=>'Full-time']);
@@ -112,4 +118,8 @@ DB::table('jobs')->where('id', 1)->update(['status' => 'active', 'start_date' =>
 check(count(simplexml_load_string($controller($request)->getContent())->job) === 1, 'Legacy active jobs with a zero start date still appear when opted in');
 DB::table('jobs')->where('id', 1)->update(['job_description' => '<p>&nbsp;</p>']);
 check(Job::findOrFail(1)->joobleContentIssue() === 'Add a job description.' && count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Empty rich-text descriptions are excluded with an actionable reason');
+DB::table('jobs')->where('id', 1)->update(['status' => '', 'job_description' => $open['job_description']]);
+check(count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Blank status is not treated as permission to publish');
+DB::table('jobs')->where('id', 1)->update(['status' => Job::STATUS_OPEN]);
+check(count(simplexml_load_string($controller($request)->getContent())->job) === 1, 'Saving a repaired job as Open restores the Jooble listing');
 echo "Jooble feed checks passed.\n";

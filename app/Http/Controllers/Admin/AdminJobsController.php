@@ -415,7 +415,7 @@ class AdminJobsController extends AdminBaseController
             $job->category_id = $request->category_id;
         }
         $job->start_date = $request->filled('start_date') ? $request->start_date : ($job->publicationDate() ?? now()->toDateString());
-        $job->status = $request->status;
+        $job->status = $request->input('status', $job->status);
         $job->job_type_id = $request->job_type_id;
         $experienceIds = [];
         foreach ($request->work_experience_ids as $value) {
