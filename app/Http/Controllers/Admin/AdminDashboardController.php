@@ -66,6 +66,26 @@ class AdminDashboardController extends AdminBaseController
         $this->progressPercent = $this->progressbarPercent();
         $this->todoItemsView = $this->generateTodoView();
 
+        // Recent Applications (same exclusion rule as your Candidate Database count)
+        $this->recentApplications = JobApplication::with(['job', 'status'])
+            ->whereNull('moved_to_trash_at')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Jobs Overview (donut)
+        $jobStatusCounts = Job::select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $this->jobsOverview = [
+            'total'   => (int) $jobStatusCounts->sum(),
+            'active'  => (int) ($jobStatusCounts['active'] ?? 0),
+            'filled'  => (int) ($jobStatusCounts['filled'] ?? 0),
+            'closed'  => (int) ($jobStatusCounts['closed'] ?? 0),
+            'on_hold' => (int) ($jobStatusCounts['on_hold'] ?? 0),
+        ];
+
         return view('admin.dashboard.index', $this->data);
     }
     public function dismissWelcome(\Illuminate\Http\Request $request)

@@ -75,12 +75,14 @@ document.getElementById('dashboard-login-url').addEventListener('click',copyDash
         </div>
     @endif
 
-    <div class="flex flex-col gap-5 xl:flex-row">
+    {{-- Single full-width column (right sidebar removed) --}}
+    <div class="flex flex-col gap-5">
         <div class="min-w-0 flex-1">
             @if(!$progress['progress_completed'])
                 @include('admin.dashboard.onboarding-card')
             @endif
 
+            {{-- ================= STAT CARDS (8) ================= --}}
             <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 @if($user->cans('view_company'))
                     <a href="{{ route('admin.company.index') }}" class="rd-sc rd-c-navy rd-a rd-a3">
@@ -214,104 +216,150 @@ document.getElementById('dashboard-login-url').addEventListener('click',copyDash
                 @else
                     </div>
                 @endif
+
+                {{-- NEW 8th CARD: Online Team Members --}}
+                <div class="rd-sc rd-sc-static rd-c-white rd-c-teal rd-a rd-a6">
+                    <div class="flex items-center justify-between">
+                        <div class="rd-sico">
+                            <svg class="h-[18px] w-[18px]" fill="none" stroke="#0D9488" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
+                        <span class="rd-stag bg-teal-50 text-teal-600">Online</span>
+                    </div>
+                    <div id="dashboard-online-count" class="rd-snum rd-cnt" data-v="{{ (int) $onlineTeamMemberIds->count() }}">0</div>
+                    <div class="rd-slbl">Online Team Members</div>
+                </div>
             </div>
 
-            @if ($user->roles->count() === 0)
-                <div class="rd-a rd-a3 mt-5 rounded-xl border border-[#E8E6E1] bg-white px-3 py-3">
-                    <p class="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#8892A0]">@lang('modules.dashboard.quickActions')</p>
-                    <div class="flex flex-col gap-1">
-                        @if($user->cans('add_jobs'))
-                            <a href="{{ route('admin.jobs.create') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-[#3D4A5C] transition-colors hover:bg-[#EEF0F5]">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-[#EFF6FF]"><svg class="h-3 w-3 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg></span>
-                                @lang('modules.dashboard.postNewJob')
-                            </a>
-                        @endif
-                        @if($user->cans('view_schedule'))
-                            <a href="{{ route('admin.interview-schedule.create') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-[#3D4A5C] transition-colors hover:bg-[#EEF0F5]">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-[#F5F3FF]"><svg class="h-3 w-3 text-[#7C3AED]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span>
-                                @lang('modules.dashboard.scheduleInterview')
-                            </a>
-                        @endif
-                        <a href="{{ route('admin.report.index') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-[#3D4A5C] transition-colors hover:bg-[#EEF0F5]">
-                            <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50"><svg class="h-3 w-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span>
-                            @lang('modules.dashboard.viewReports')
-                        </a>
+            {{-- ================= ROW 1: Recent Applications + To-Do ================= --}}
+            <div class="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
+                <div class="xl:col-span-2 rounded-xl border border-[#E8E6E1] bg-white shadow-sm rd-a rd-a3">
+                    <div class="flex items-center justify-between px-4 py-3">
+                        <h3 class="text-sm font-bold text-[#1A1E2E]">Recent Applications</h3>
+                        <a href="{{ route('admin.job-applications.table') }}" class="text-[11.5px] font-semibold text-[#2563EB]">View All</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-[12px]">
+                            <thead>
+                                <tr class="border-y border-[#F0EEE9] text-[10px] uppercase tracking-wider text-[#8892A0]">
+                                    <th class="px-4 py-2 font-semibold">Candidate</th>
+                                    <th class="px-4 py-2 font-semibold">Job Title</th>
+                                    <th class="px-4 py-2 font-semibold">Applied On</th>
+                                    <th class="px-4 py-2 font-semibold">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @forelse(($recentApplications ?? collect()) as $app)
+                                <tr class="border-b border-[#F8F9FB]">
+                                    <td class="px-4 py-2.5">
+                                        <span class="inline-flex items-center gap-2">
+                                            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-[#EFF6FF] text-[10px] font-bold text-[#2563EB]">
+                                                {{ strtoupper(collect(explode(' ', $app->full_name))->map(fn($w) => $w[0] ?? '')->take(2)->implode('')) }}
+                                            </span>
+                                            <span class="font-semibold text-[#1A1E2E]">{{ $app->full_name }}</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-2.5 text-[#3D4A5C]">{{ $app->job->title ?? '-' }}</td>
+                                    <td class="px-4 py-2.5 text-[#3D4A5C]">{{ $app->created_at->format('M j, Y') }}</td>
+                                    <td class="px-4 py-2.5">
+                                        <span class="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[10.5px] font-semibold text-[#2563EB]">{{ ucfirst($app->status->status ?? 'New') }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="px-4 py-8 text-center text-[#8892A0]">No recent applications.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            @endif
-        </div>
 
-        @if ($user->roles->count() > 0)
-            <div class="flex w-full shrink-0 flex-col gap-4 xl:w-[268px] rd-a rd-a3">
-                <div id="dashboard-online-team" class="overflow-hidden rounded-xl border border-[#E8E6E1] bg-white shadow-sm">
-                    <div class="flex items-center justify-between border-b border-[#F0EEE9] px-4 py-3">
-                        <div>
-                            <h3 class="text-sm font-bold text-[#1A1E2E]">Online Team Members</h3>
-                            <p class="mt-0.5 text-[11px] text-[#8892A0]">Currently using the ATS</p>
-                        </div>
-                        <span id="dashboard-online-count" class="inline-flex min-w-[26px] items-center justify-center rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-600">{{ $onlineTeamMemberIds->count() }}</span>
-                    </div>
-                    <div class="max-h-[260px] overflow-y-auto p-2">
-                        <?php foreach ($teamMembers as $member): ?>
-                            <?php
-                                $memberOnline = $onlineTeamMemberIds->contains((int) $member->id);
-                                $memberRole = $member->role?->role?->display_name ?? 'Team Member';
-                                $isCurrentMember = (int) $member->id === (int) $user->id;
-                            ?>
-                            <div data-ats-online-member="{{ $member->id }}" class="{{ $memberOnline ? '' : 'hidden' }} flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-[#F8F9FB]">
-                                <span class="relative inline-flex shrink-0">
-                                    <img src="{{ $member->profile_image_url }}" alt="" class="h-9 w-9 rounded-full object-cover ring-2 ring-[#EEF0F5]" width="36" height="36" loading="lazy">
-                                    <span data-ats-presence-user="{{ $member->id }}" class="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white {{ $memberOnline ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
-                                </span>
-                                <div class="min-w-0 flex-1">
-                                    <p class="truncate text-[13px] font-semibold text-[#1A1E2E]">{{ ucwords($member->name) }} <span class="{{ $isCurrentMember ? '' : 'hidden' }} text-[10px] font-semibold text-[#2563EB]">(You)</span></p>
-                                    <p class="truncate text-[11px] text-[#8892A0]">{{ ucwords($memberRole) }}</p>
-                                </div>
-                                <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>
-                            </div>
-                        <?php endforeach; ?>
-                        <div id="dashboard-online-empty" class="{{ $onlineTeamMemberIds->isEmpty() ? '' : 'hidden' }} px-3 py-8 text-center">
-                            <p class="text-[12px] font-medium text-[#8892A0]">No team members are online.</p>
-                        </div>
-                    </div>
-                    @if($user->cans('view_team'))
-                        <a href="{{ route('admin.team.index') }}" class="block border-t border-[#F0EEE9] px-4 py-2.5 text-center text-[11.5px] font-semibold text-[#2563EB] hover:bg-[#F8FAFF]">View all team members</a>
-                    @endif
-                </div>
-                <div class="rd-todo-card flex max-h-[min(70vh,640px)] flex-col">
+                @if ($user->roles->count() > 0)
+                <div class="rd-todo-card flex max-h-[min(70vh,420px)] flex-col rd-a rd-a3">
                     <div class="rd-todo-hd">
                         <div>
                             <h3 class="text-sm font-bold text-[#1A1E2E]">@lang('modules.module.todos.todoList')</h3>
-                            <p class="mt-0.5 text-[11px] text-[#8892A0]">@lang('modules.dashboard.manageDailyTasks')</p>
                         </div>
                         <a href="{{ route('admin.todo-items.index') }}" class="rounded-lg bg-[#EFF6FF] px-3 py-1.5 text-[11.5px] font-semibold text-[#2563EB] hover:bg-blue-100">@lang('modules.module.todos.viewAll')</a>
                     </div>
+                    <div class="flex gap-2 px-3 pb-2">
+                        <input id="quick-todo-title" type="text" placeholder="Add a task..." class="min-w-0 flex-1 rounded-lg border border-[#E8E6E1] px-3 py-2 text-[12px] focus:outline-none">
+                        <button type="button" id="quick-todo-add" class="rounded-lg bg-[#2563EB] px-3 text-white" aria-label="Add task">+</button>
+                    </div>
                     <div id="todo-items-list" class="min-h-0 flex-1 overflow-y-auto"></div>
                 </div>
+                @endif
+            </div>
 
-                <div class="rounded-xl border border-[#E8E6E1] bg-white px-3 py-3">
-                    <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8892A0]">@lang('modules.dashboard.quickActions')</p>
-                    <div class="flex flex-col gap-1">
+            {{-- ================= ROW 2: Jobs Overview + Quick Actions ================= --}}
+            @php
+                $jo = $jobsOverview ?? ['total' => 0, 'active' => 0, 'filled' => 0, 'closed' => 0, 'on_hold' => 0];
+                $segments = [
+                    ['label' => 'Active Jobs', 'count' => $jo['active'],  'color' => '#2563EB'],
+                    ['label' => 'Filled Jobs', 'count' => $jo['filled'],  'color' => '#10B981'],
+                    ['label' => 'Closed Jobs', 'count' => $jo['closed'],  'color' => '#F43F5E'],
+                    ['label' => 'On Hold',     'count' => $jo['on_hold'], 'color' => '#F59E0B'],
+                ];
+                $sum = max(1, collect($segments)->sum('count'));
+                $offset = 0;
+            @endphp
+            <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+                <div class="xl:col-span-2 rounded-xl border border-[#E8E6E1] bg-white p-4 shadow-sm rd-a rd-a4">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-[#1A1E2E]">Jobs Overview</h3>
+                        <a href="{{ route('admin.jobs.index') }}" class="text-[11.5px] font-semibold text-[#2563EB]">View All</a>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-8">
+                        <div class="relative h-32 w-32">
+                            <svg viewBox="0 0 36 36" class="h-32 w-32 -rotate-90">
+                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#F0EEE9" stroke-width="4"/>
+                                @foreach($segments as $s)
+                                    @php $pct = $s['count'] / $sum * 100; @endphp
+                                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="{{ $s['color'] }}" stroke-width="4"
+                                            stroke-dasharray="{{ $pct }} {{ 100 - $pct }}" stroke-dashoffset="{{ -$offset }}"/>
+                                    @php $offset += $pct; @endphp
+                                @endforeach
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-2xl font-extrabold text-[#1A1E2E]">{{ $jo['total'] }}</span>
+                                <span class="text-[10px] text-[#8892A0]">Total Jobs</span>
+                            </div>
+                        </div>
+                        <ul class="min-w-[220px] flex-1 space-y-2 text-[12px]">
+                            @foreach($segments as $s)
+                                <li class="flex items-center justify-between">
+                                    <span class="flex items-center gap-2 text-[#3D4A5C]">
+                                        <span class="h-2.5 w-2.5 rounded-full" style="background:{{ $s['color'] }}"></span>{{ $s['label'] }}
+                                    </span>
+                                    <span class="font-semibold text-[#1A1E2E]">{{ $s['count'] }}
+                                        <span class="ml-3 text-[#8892A0]">{{ round($s['count'] / $sum * 100) }}%</span></span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-[#E8E6E1] bg-white p-4 shadow-sm rd-a rd-a4">
+                    <h3 class="mb-3 text-sm font-bold text-[#1A1E2E]">Quick Actions</h3>
+                    <div class="grid grid-cols-2 gap-3">
                         @if($user->cans('add_jobs'))
-                            <a href="{{ route('admin.jobs.create') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-[#3D4A5C] transition-colors hover:bg-[#EEF0F5]">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-[#EFF6FF]"><svg class="h-3 w-3 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg></span>
-                                @lang('modules.dashboard.postNewJob')
-                            </a>
+                        <a href="{{ route('admin.jobs.create') }}" class="flex flex-col items-center gap-2 rounded-xl bg-[#EFF6FF] px-3 py-4 text-center text-[12px] font-semibold text-[#2563EB]">
+                            <span class="text-lg">⊕</span>Post a New Job
+                        </a>
                         @endif
                         @if($user->cans('view_schedule'))
-                            <a href="{{ route('admin.interview-schedule.create') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-[#3D4A5C] transition-colors hover:bg-[#EEF0F5]">
-                                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-[#F5F3FF]"><svg class="h-3 w-3 text-[#7C3AED]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></span>
-                                @lang('modules.dashboard.scheduleInterview')
-                            </a>
+                        <a href="{{ route('admin.interview-schedule.create') }}" class="flex flex-col items-center gap-2 rounded-xl bg-[#F5F3FF] px-3 py-4 text-center text-[12px] font-semibold text-[#7C3AED]">
+                            <span class="text-lg">📅</span>Schedule Interview
+                        </a>
                         @endif
-                        <a href="{{ route('admin.report.index') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-[#3D4A5C] transition-colors hover:bg-[#EEF0F5]">
-                            <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50"><svg class="h-3 w-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span>
-                            @lang('modules.dashboard.viewReports')
+                        <a href="{{ route('admin.report.index') }}" class="flex flex-col items-center gap-2 rounded-xl bg-emerald-50 px-3 py-4 text-center text-[12px] font-semibold text-emerald-600">
+                            <span class="text-lg">📊</span>View Reports
+                        </a>
+                        <a href="{{ route('admin.job-applications.table') }}" class="flex flex-col items-center gap-2 rounded-xl bg-amber-50 px-3 py-4 text-center text-[12px] font-semibold text-amber-600">
+                            <span class="text-lg">🔍</span>Search Candidates
                         </a>
                     </div>
                 </div>
             </div>
-        @endif
+        </div>
     </div>
 
     <div class="hidden fixed inset-0 z-50 overflow-y-auto" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="reviewModal" aria-hidden="true" data-backdrop="static">
@@ -572,7 +620,28 @@ document.getElementById('dashboard-login-url').addEventListener('click',copyDash
             }
 
             updateTodoItem(id, null, status);
-        })
+        });
+
+        // Quick "Add a task..." input
+        $('body').on('click', '#quick-todo-add', function () {
+            const title = $('#quick-todo-title').val().trim();
+            if (!title) return;
+            $.easyAjax({
+                url: "{{ route('admin.todo-items.store') }}",
+                type: 'POST',
+                data: { _token: '{{ csrf_token() }}', title: title },
+                success: function (response) {
+                    if (response.status == 'success') {
+                        $('#todo-items-list').html(response.view);
+                        initSortable();
+                        $('#quick-todo-title').val('');
+                    }
+                }
+            });
+        });
+        $('body').on('keypress', '#quick-todo-title', function (e) {
+            if (e.which === 13) { $('#quick-todo-add').click(); }
+        });
     </script>
   
 @endpush
