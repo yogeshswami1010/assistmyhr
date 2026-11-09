@@ -8,6 +8,7 @@ use GuzzleHttp\Client;
 use App\CompanySetting;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Saas\TenantContext;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Laravel\Socialite\Facades\Socialite;
@@ -167,6 +168,20 @@ class LoginController extends Controller
         return $this->guard()->attempt($this->credentials($request), $request->boolean('remember'));
     }
 
+    protected function authenticated(Request $request, $user)
+    {
+        if (!config('saas.enabled')) {
+            return;
+        }
+
+        $link = $request->session()->pull('google_pending_link');
+        $tenant = app(TenantContext::class)->current();
+        if ($link && $tenant && $tenant->id === $link['tenant_id'] && $user->id === $link['user_id']
+            && strtolower($user->email) === $link['email'] && now()->timestamp < $link['expires_at']) {
+            $tenant->linkGoogleSubject($link['subject']);
+        }
+    }
+
     public function logout(Request $request)
     {
         $this->guard()->logout();
@@ -176,23 +191,6 @@ class LoginController extends Controller
 
         return redirect(tenant_route('login'));
     }
-
-    /**
- * Redirect user to Google.
- */
-/**
- * Redirect user to Google.
- */
-public function redirectToGoogle(Request $request)
-{
-    $response = Socialite::driver('google')
-        ->scopes(['openid', 'email', 'profile'])
-        ->redirect();
-    $request->session()->forget('google_signup_pending');
-    $request->session()->put('google_login_pending', true);
-
-    return $response;
-}
 
 /**
  * Handle Google login.

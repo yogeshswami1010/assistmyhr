@@ -29,8 +29,7 @@ class InitializeSaasTenant
         abort_if($request->isMethod('GET') && $request->is('admin/settings/application-setting'), 404);
         $context = app(TenantContext::class);
         $context->reset();
-        if ($request->is('superadmin*', 'account/integrations/microsoft/callback', 'register', 'auth/google', 'auth/google/signup', 'pricing', 'privacy-policy', 'website/enquiries', 'saas/workspace/*', 'ats-app/*')
-            || ($request->is('auth/google/callback') && !$request->session()->get('google_login_pending'))
+        if ($request->is('superadmin*', 'account/integrations/microsoft/callback', 'register', 'auth/google', 'auth/google/*', 'pricing', 'privacy-policy', 'website/enquiries', 'saas/workspace/*', 'ats-app/*')
             || $request->path() === '/') {
             try { return $this->privateResponse($next($request)); } finally { $context->reset(); }
         }
@@ -100,8 +99,6 @@ class InitializeSaasTenant
     !$request->is(
         'login',
         'logout',
-        'auth/google',
-        'auth/google/callback',
         'account/subscription*',
         'email/*',
         'password/*'
