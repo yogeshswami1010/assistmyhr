@@ -444,44 +444,44 @@ Route::middleware('auth')->group(function () {
 });
 Route::post('candidate-email-webhook', [\App\Http\Controllers\CandidateEmailWebhookController::class, '__invoke'])->name('candidate-email-webhook');
 
-// Route::get('/preview-client-review-email/{id}', function ($id) {
+Route::get('/preview-client-review-email/{id}', function ($id) {
 
-//     abort_unless(app()->environment('local'), 404);
+    abort_unless(app()->environment('local'), 404);
 
-//     $review = \App\CandidateClientReview::findOrFail($id);
+    $review = \App\CandidateClientReview::findOrFail($id);
 
-//     $message = \App\CandidateClientReviewMessage::where(
-//         'candidate_client_review_id', $review->id
-//     )
-//     ->where('direction', 'outbound')
-//     ->latest()
-//     ->firstOrFail();
+    $message = \App\CandidateClientReviewMessage::where(
+        'candidate_client_review_id', $review->id
+    )
+    ->where('direction', 'outbound')
+    ->latest()
+    ->firstOrFail();
 
-//     $sender = auth()->user() ?: \App\User::findOrFail(1);
+    $sender = auth()->user() ?: \App\User::findOrFail(1);
 
-//     $signature = \App\Services\CandidateEmailBody::render(
-//         '',
-//         $sender->email_signature,
-//         $sender->email_signature_image_url,
-//         $sender->email_signature_html
-//     );
+    $signature = \App\Services\CandidateEmailBody::render(
+        '',
+        $sender->email_signature,
+        $sender->email_signature_image_url,
+        $sender->email_signature_html
+    );
 
-//     $application = \App\JobApplication::withTrashed()
-//         ->with('job.company')
-//         ->find($review->job_application_id);
+    $application = \App\JobApplication::withTrashed()
+        ->with('job.company')
+        ->find($review->job_application_id);
 
-//     $companyName = $application?->job?->company?->company_name
-//         ?: config('app.name');
+    $companyName = $application?->job?->company?->company_name
+        ?: config('app.name');
 
-//     return view('email.client-review-invitation', [
-//         'review' => $review,
-//         'bodyHtml' => \App\Services\ClientReviewContent::clean(
-//             (string) $message->body_html
-//         ),
-//         'reviewUrl' => app(\App\Services\CandidateClientReviewService::class)
-//             ->url($review),
-//         'signatureHtml' => $signature,
-//         'companyName' => $companyName,
-//     ]);
+    return view('email.client-review-invitation', [
+        'review' => $review,
+        'bodyHtml' => \App\Services\ClientReviewContent::clean(
+            (string) $message->body_html
+        ),
+        'reviewUrl' => app(\App\Services\CandidateClientReviewService::class)
+            ->url($review),
+        'signatureHtml' => $signature,
+        'companyName' => $companyName,
+    ]);
 
-// });
+});
