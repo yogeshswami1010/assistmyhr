@@ -120,8 +120,8 @@ Route::get('/auth/google', [
 ])->name('google.login');
 
 Route::get('/auth/google/callback', [
-    \App\Http\Controllers\Auth\LoginController::class,
-    'handleGoogleCallback'
+    \App\Http\Controllers\Auth\GoogleRegistrationController::class,
+    'callback'
 ])->name('google.callback');
 require __DIR__.'/saas.php';
 
