@@ -183,11 +183,15 @@ class LoginController extends Controller
 /**
  * Redirect user to Google.
  */
-public function redirectToGoogle()
+public function redirectToGoogle(Request $request)
 {
-    return Socialite::driver('google')
+    $response = Socialite::driver('google')
         ->scopes(['openid', 'email', 'profile'])
         ->redirect();
+    $request->session()->forget('google_signup_pending');
+    $request->session()->put('google_login_pending', true);
+
+    return $response;
 }
 
 /**

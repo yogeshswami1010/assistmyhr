@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/pricing', [SignupController::class, 'pricing'])->name('saas.pricing');
 Route::get('/register', [SignupController::class, 'form'])->name('register');
 Route::post('/register', [SignupController::class, 'store'])->middleware('throttle:5,1');
+Route::get('/auth/google/signup', [\App\Http\Controllers\Auth\GoogleRegistrationController::class, 'start'])->middleware('throttle:10,1')->name('google.signup');
 Route::get('/saas/workspace/{slug}', [SignupController::class, 'workspace'])->name('saas.workspace');
 Route::get('/ats-app/{slug}/manifest.webmanifest', [\App\Http\Controllers\Saas\AppInstallationController::class, 'manifest'])
     ->where('slug', '[a-z0-9][a-z0-9-]{1,49}')->name('saas.app.manifest');

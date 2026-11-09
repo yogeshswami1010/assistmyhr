@@ -165,4 +165,59 @@ check(str_contains($expiredMarkup,'type="radio" name="plan_id"') && str_contains
 Plan::query()->update(['public'=>false]);
 $empty=(new App\Http\Controllers\Saas\SignupController)->pricing()->getData();
 check(str_contains(view('saas.public-plans',$empty)->render(),'Plans are being updated'),'Pricing handles no published plans gracefully');
+
+// Exercise signup without a Google account, a network request, or a tenant user table.
+if (!class_exists(\Laravel\Socialite\Facades\Socialite::class)) {
+    class TestSocialiteFacade extends \Illuminate\Support\Facades\Facade
+    {
+        protected static function getFacadeAccessor() { return 'test-socialite'; }
+    }
+    class_alias(TestSocialiteFacade::class, \Laravel\Socialite\Facades\Socialite::class);
+}
+$google = new class {
+    public bool $verified = true;
+    public bool $failCallback = false;
+    public function driver(string $provider) { return $this; }
+    public function redirect() { return redirect()->away('https://accounts.google.com/'); }
+    public function user() {
+        if ($this->failCallback) { throw new RuntimeException('Simulated invalid OAuth state'); }
+        return new class($this->verified) {
+            public array $user;
+            public function __construct(bool $verified) { $this->user = ['email_verified'=>$verified]; }
+            public function getName() { return 'Google registrant'; }
+            public function getEmail() { return 'Registrant@Example.test'; }
+        };
+    }
+};
+\Laravel\Socialite\Facades\Socialite::swap($google);
+\Illuminate\Support\Facades\Log::swap(new class { public function warning($message, $context = []) {} });
+PlatformSetting::updateOrCreate(['key'=>'signup_enabled'], ['value'=>'1']);
+$oauth = new App\Http\Controllers\Auth\GoogleRegistrationController;
+$oauthRequest = Request::create('https://example.test/auth/google/signup');
+$oauthRequest->setLaravelSession($session);
+check(str_ends_with($oauth->start($oauthRequest)->getTargetUrl(), '/register') && !$session->has('google_signup_pending'),'Missing Google configuration returns to signup');
+config(['services.google'=>['client_id'=>'test-id','client_secret'=>'test-secret','redirect'=>'https://example.test/auth/google/callback']]);
+check($oauth->start($oauthRequest)->getTargetUrl()==='https://accounts.google.com/' && $session->get('google_signup_pending'),'Signup starts OAuth with signup intent in session');
+$callbackRequest = Request::create('https://example.test/auth/google/callback');
+$callbackRequest->setLaravelSession($session);
+$app->instance(App\Saas\TenantContext::class, new class extends App\Saas\TenantContext {
+    public function reset(): void {}
+    public function activate(Tenant $tenant): void { throw new RuntimeException('Signup must not activate a tenant'); }
+});
+$callbackResponse = (new App\Http\Middleware\InitializeSaasTenant)->handle($callbackRequest, $oauth->callback(...));
+check(str_ends_with($callbackResponse->getTargetUrl(), '/register'),'Google signup callback runs without a tenant');
+$signup = new App\Http\Controllers\Saas\SignupController;
+check($signup->form($oauthRequest)->getData()['googleProfile']['email']==='registrant@example.test' && !$session->has('google_signup_pending'),'Verified Google email reaches the workspace form');
+$tampered = Request::create('/register', 'POST', ['email'=>'other@example.test']);
+$tampered->setLaravelSession($session);
+rejected(fn()=>$signup->store($tampered),'Google signup still requires workspace details and consent');
+check($tampered->input('email')==='registrant@example.test','Submitted email cannot replace the Google email');
+$oauth->start($oauthRequest);
+$google->verified = false;
+check(str_ends_with($oauth->callback($oauthRequest)->getTargetUrl(), '/register') && !$session->has('google_signup_profile'),'Unverified Google email is rejected');
+$oauth->start($oauthRequest);
+$google->failCallback = true;
+check(str_ends_with($oauth->callback($oauthRequest)->getTargetUrl(), '/register') && !$session->has('google_signup_profile'),'OAuth callback failure returns to signup');
+token_get_all($app['blade.compiler']->compileString(file_get_contents($root.'/resources/views/saas/signup.blade.php')), TOKEN_PARSE);
+
 echo "Plan and renewal integration checks passed: {$checks}.\n";
