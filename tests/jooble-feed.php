@@ -71,6 +71,8 @@ DB::table('jobs')->insert(['id'=>101,'status'=>'active','start_date'=>'2026-11-0
 DB::table('jobs')->insert(['id'=>102,'status'=>'inactive','start_date'=>'2026-11-01']);
 (require $root.'/database/migrations/2026_11_10_000002_expand_job_status_values.php')->up();
 check(DB::table('jobs')->orderBy('id')->pluck('status')->all() === ['active', 'inactive'], 'Status migration expands the old enum without changing existing statuses');
+(require $root.'/database/migrations/2026_11_10_000003_normalize_legacy_job_statuses.php')->up();
+check(DB::table('jobs')->orderBy('id')->pluck('status')->all() === ['open', 'closed'], 'Legacy Active and Inactive become Open and Closed');
 DB::table('jobs')->whereIn('id', [101, 102])->delete();
 DB::table('companies')->insert(['id'=>1,'company_name'=>'Acme','status'=>'active','show_in_frontend'=>'true']);
 DB::table('job_locations')->insert(['id'=>1,'location'=>'Toronto']);
@@ -79,13 +81,14 @@ DB::table('currencies')->insert(['id'=>1,'currency_code'=>'CAD']);
 $open = ['company_id'=>1,'slug'=>'engineer','title'=>'Engineer & R&D ]]>','status'=>'open',
     'start_date'=>'2026-11-01','end_date'=>'2026-11-30','updated_at'=>'2026-11-09 12:00:00','job_description'=>'<p>Build <strong>great tools</strong>.</p>',
     'job_type_id'=>1,'show_job_type'=>true,'currency_id'=>1,'show_salary'=>true,'pay_type'=>'Range','starting_salary'=>50000,'maximum_salary'=>70000,'pay_according'=>'year'];
-DB::table('jobs')->insert($open + ['id'=>1,'publish_on_jooble'=>true]);
-DB::table('jobs')->insert(array_replace($open, ['id'=>2,'slug'=>'unlisted']));
+DB::table('jobs')->insert($open + ['id'=>1]);
+DB::table('jobs')->insert(array_replace($open, ['id'=>2,'slug'=>'filled','status'=>'filled','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>3,'slug'=>'closed','status'=>'closed','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>4,'slug'=>'expired','end_date'=>'2026-11-09','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>5,'slug'=>'future','start_date'=>'2026-11-11','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>6,'slug'=>'deleted','deleted_at'=>now(),'publish_on_jooble'=>true]));
-foreach (range(1, 6) as $id) { DB::table('job_job_locations')->insert(['job_id'=>$id,'location_id'=>1]); }
+DB::table('jobs')->insert(array_replace($open, ['id'=>7,'slug'=>'on-hold','status'=>'on_hold','publish_on_jooble'=>true]));
+foreach (range(1, 7) as $id) { DB::table('job_job_locations')->insert(['job_id'=>$id,'location_id'=>1]); }
 
 function check($condition, string $message): void {
     if (!$condition) { throw new RuntimeException($message); }
@@ -95,7 +98,7 @@ $controller = new JoobleFeedController;
 $response = $controller($request);
 $xml = simplexml_load_string($response->getContent());
 check($response->headers->get('Content-Type') === 'application/xml; charset=UTF-8' && $xml->getName() === 'jobs', 'Jooble receives valid UTF-8 XML');
-check(count($xml->job) === 1 && (string) $xml->job['id'] === 'alpha-uuid-1', 'Only current opted-in jobs appear, with stable workspace-specific IDs');
+check(count($xml->job) === 1 && (string) $xml->job['id'] === 'alpha-uuid-1', 'Only current Open jobs appear, regardless of the old checkbox');
 check((string) $xml->job->name === $open['title'] && (string) $xml->job->description === Job::findOrFail(1)->job_description, 'CDATA preserves title and full public HTML');
 check((string) $xml->job->link === 'https://ats.example.test/job/engineer/1?workspace=alpha' && (string) $xml->job->region === 'Toronto', 'Feed links to the correct workspace and location');
 check((string) $xml->job->pubdate === '01.11.2026' && (string) $xml->job->updated === '09.11.2026' && (string) $xml->job->expire === '30.11.2026', 'Dates use Jooble format');
@@ -107,15 +110,15 @@ try {
 } catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
     check($exception->getStatusCode() === 404, 'Feed requires the selected workspace');
 }
-DB::table('jobs')->where('id', 1)->update(['publish_on_jooble' => false]);
-check(count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Turning off publishing removes the listing');
+DB::table('jobs')->where('id', 1)->update(['status' => 'closed']);
+check(count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Closing an Open job removes the listing');
 
-DB::table('jobs')->where('id', 1)->update(['publish_on_jooble' => true, 'start_date' => null, 'end_date' => '0000-00-00', 'created_at' => '2026-11-02 12:00:00']);
+DB::table('jobs')->where('id', 1)->update(['status' => 'open', 'start_date' => null, 'end_date' => '0000-00-00', 'created_at' => '2026-11-02 12:00:00']);
 $xml = simplexml_load_string($controller($request)->getContent());
 check(count($xml->job) === 1 && (string) $xml->job->pubdate === '02.11.2026' && !isset($xml->job->expire), 'A missing start date uses the creation date and a zero expiry is treated as unset');
-check(Job::publicJobPage()->withinPublicationWindow()->whereKey(1)->exists(), 'The recovered listing links to an accessible job detail page');
-DB::table('jobs')->where('id', 1)->update(['status' => 'active', 'start_date' => '0000-00-00']);
-check(count(simplexml_load_string($controller($request)->getContent())->job) === 1, 'Legacy active jobs with a zero start date still appear when opted in');
+check(Job::publicJobPage()->whereKey(1)->exists(), 'The recovered listing links to an accessible job detail page');
+DB::table('jobs')->where('id', 1)->update(['start_date' => '0000-00-00']);
+check(count(simplexml_load_string($controller($request)->getContent())->job) === 1, 'Open jobs with a legacy zero start date still appear');
 DB::table('jobs')->where('id', 1)->update(['job_description' => '<p>&nbsp;</p>']);
 check(Job::findOrFail(1)->joobleContentIssue() === 'Add a job description.' && count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Empty rich-text descriptions are excluded with an actionable reason');
 DB::table('jobs')->where('id', 1)->update(['status' => '', 'job_description' => $open['job_description']]);

@@ -41,7 +41,6 @@ class Job extends Model
         'show_job_type'        => 'boolean',
         'show_work_experience' => 'boolean',
         'show_salary'          => 'boolean',
-        'publish_on_jooble'    => 'boolean',
     ];
 
     protected $appends = [
@@ -82,10 +81,7 @@ class Job extends Model
 
     public function scopeJooblePublished($query)
     {
-        return $query->whereIn('status', [self::STATUS_OPEN, 'active'])
-            ->where('publish_on_jooble', true)
-            ->withinPublicationWindow()
-            ->whereHas('company', fn ($query) => $query->where('status', 'active'));
+        return $query->publicJobPage();
     }
 
     public function scopeWithinPublicationWindow($query)
@@ -135,8 +131,8 @@ class Job extends Model
 
     public function scopePublicJobPage($query)
     {
-        return $query->where(fn ($query) => $query->where('status', 'active')
-            ->orWhere(fn ($query) => $query->jooblePublished()));
+        return $query->open()->withinPublicationWindow()
+            ->whereHas('company', fn ($query) => $query->where('status', 'active'));
     }
 
     public function sluggable(): array
