@@ -131,7 +131,7 @@ class JobBoardFeedController
 
     private function salary(Job $job): ?string
     {
-        if (!$job->show_salary || !$job->currency?->currency_code) {
+        if (!$job->currency?->currency_code) {
             return null;
         }
 

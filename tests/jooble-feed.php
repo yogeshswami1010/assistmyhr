@@ -96,7 +96,7 @@ DB::table('job_types')->insert(['id'=>1,'job_type'=>'Full-time']);
 DB::table('currencies')->insert(['id'=>1,'currency_code'=>'CAD']);
 $open = ['company_id'=>1,'slug'=>'engineer','title'=>'Engineer & R&D ]]>','status'=>'open',
     'start_date'=>'2026-11-01','end_date'=>'2026-11-30','updated_at'=>'2026-11-09 12:00:00','job_description'=>'<p>Build <strong>great tools</strong>.</p>',
-    'job_type_id'=>1,'show_job_type'=>false,'currency_id'=>1,'show_salary'=>true,'pay_type'=>'Range','starting_salary'=>50000,'maximum_salary'=>70000,'pay_according'=>'year'];
+    'job_type_id'=>1,'show_job_type'=>false,'currency_id'=>1,'show_salary'=>false,'pay_type'=>'Range','starting_salary'=>50000,'maximum_salary'=>70000,'pay_according'=>'year'];
 DB::table('jobs')->insert($open + ['id'=>1,'publish_on_jooble'=>true]);
 DB::table('jobs')->insert(array_replace($open, ['id'=>2,'slug'=>'filled','status'=>'filled','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>3,'slug'=>'closed','status'=>'closed','publish_on_jooble'=>true]));
@@ -120,7 +120,7 @@ check((string) $xml->job->name === $open['title'] && (string) $xml->job->descrip
 check((string) $xml->job->link === 'https://ats.example.test/job/engineer/1?workspace=alpha' && (string) $xml->job->region === 'Toronto', 'Feed links to the correct workspace and location');
 check((string) $xml->job->apply_url === 'https://ats.example.test/jobapply/engineer/1?workspace=alpha', 'Direct apply URL includes the correct workspace and location');
 check((string) $xml->job->pubdate === '01.11.2026' && (string) $xml->job->updated === '09.11.2026' && (string) $xml->job->expire === '30.11.2026', 'Dates use Jooble format');
-check((string) $xml->job->salary === '50000–70000 CAD / year' && (string) $xml->job->company === 'Acme', 'Optional public compensation and employer data are included');
+check((string) $xml->job->salary === '50000–70000 CAD / year' && (string) $xml->job->company === 'Acme', 'Jooble includes saved salary regardless of the job page setting');
 check((string) $xml->job->jobtype === 'Full-time', 'The saved job type appears even when the public job page hides it');
 check(Job::publicJobPage()->pluck('id')->all() === [1, 8], 'Jooble selection does not affect public job detail eligibility');
 DB::table('jobs')->where('id', 1)->update(['status' => 'closed']);
@@ -170,6 +170,7 @@ $assistMyHr = simplexml_load_string($controller->assistMyHr()->getContent());
 check(count($assistMyHr->job) === 2 && (string) $assistMyHr->job[0]['id'] === 'alpha-uuid-8'
     && (string) $assistMyHr->job[1]['id'] === 'beta-uuid-1', 'AssistMyHR combines selected eligible jobs across workspaces and excludes closed jobs');
 check((string) $assistMyHr->job[0]->apply_url === 'https://ats.example.test/jobapply/unselected/1?workspace=alpha', 'AssistMyHR keeps the correct workspace application link');
+check((string) $assistMyHr->job[0]->salary === '50000–70000 CAD / year', 'AssistMyHR includes saved salary regardless of the job page setting');
 check(count(simplexml_load_string($controller->jooble()->getContent())->job) === 1, 'AssistMyHR selections do not change Jooble listings');
 
 $postJobFree = simplexml_load_string($controller->postJobFree()->getContent());

@@ -424,7 +424,7 @@
                             </div>
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
-                                <p class="text-xs text-slate-600">Choose which public feeds should include this job while it is Open.</p>
+                                <p class="text-xs text-slate-600">Choose which public feeds should include this job while it is Open. The feeds include the saved salary when a currency is set.</p>
                                 @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'AssistMyHR', 'postjobfree' => 'PostJobFree'] as $board => $label)
                                     @php
                                         $field = 'publish_on_'.$board;
