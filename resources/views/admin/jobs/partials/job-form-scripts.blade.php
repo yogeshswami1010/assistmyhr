@@ -104,8 +104,8 @@
                     if ($s.data('select2')) {
                         $s.select2('destroy');
                     }
+                    $s.select2({...jobFormSelect2Opts, closeOnSelect: !$s.is('#work_experience')});
                 });
-                $('#createForm select.select2').select2(jobFormSelect2Opts);
             }
 
             function reinitJobSkillsSelect2() {
@@ -271,35 +271,47 @@
                     $.ajaxModal('#addDepartmentModal', url);
                 });
 
-                function toggleWorkExperienceField() {
-                    var isNew = ($('#work_experience').val() || []).includes('new');
-                    if (isNew) $('#work_experience').select2('close');
-                    $('#work-experience-select-wrapper').toggleClass('hidden', isNew);
-                    $('#new-work-experience-wrapper').toggleClass('hidden', !isNew);
-                    $('#work_experience_new').prop('disabled', !isNew);
-                    if (isNew) $('#work_experience_new').trigger('focus');
+                const $addExperience = $('#addWorkExperience');
+                const $experienceInput = $('#work_experience_new');
+
+                function setExperienceEditor(open) {
+                    $('#new-work-experience-wrapper').toggleClass('hidden', !open);
+                    $addExperience.attr('aria-expanded', String(open));
+                    $experienceInput.prop('disabled', !open);
+                    if (open) {
+                        $experienceInput.trigger('focus');
+                    } else {
+                        $experienceInput.val('');
+                        $addExperience.trigger('focus');
+                    }
                 }
-                $('#work_experience').on('change', toggleWorkExperienceField);
+
+                $addExperience.on('click', function () {
+                    setExperienceEditor($addExperience.attr('aria-expanded') !== 'true');
+                });
                 $('#reset-work-experience').on('click', function () {
-                    $('#work_experience_new').val('');
-                    $('#work_experience').val(($('#work_experience').val() || []).filter(value => value !== 'new')).trigger('change');
+                    setExperienceEditor(false);
                 });
                 $('#add-work-experience-inline').on('click', function () {
-                    var input = document.getElementById('work_experience_new');
-                    var name = input.value.trim();
-                    if (!name) { input.focus(); return; }
-                    var select = document.getElementById('work_experience');
-                    var option = Array.from(select.options).find(item => item.text.trim().toLowerCase() === name.toLowerCase());
-                    if (!option) { option = new Option(name, 'new:' + name, true, true); select.add(option); }
+                    const name = $experienceInput.val().trim();
+                    if (!name) { $experienceInput.trigger('focus'); return; }
+
+                    const select = document.getElementById('work_experience');
+                    let option = Array.from(select.options).find(item => item.text.trim().toLowerCase() === name.toLowerCase());
+                    if (!option) {
+                        option = new Option(name, 'new:' + name);
+                        select.add(option);
+                    }
                     option.selected = true;
-                    Array.from(select.options).forEach(item => { if (item.value === 'new') item.selected = false; });
-                    input.value = '';
                     $(select).trigger('change');
+                    setExperienceEditor(false);
                 });
-                $('#work_experience_new').on('keydown', function (event) {
-                    if (event.key === 'Enter') { event.preventDefault(); $('#add-work-experience-inline').trigger('click'); }
+                $experienceInput.on('keydown', function (event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        $('#add-work-experience-inline').trigger('click');
+                    }
                 });
-                toggleWorkExperienceField();
             });
 
             $('#save-form').click(function () {

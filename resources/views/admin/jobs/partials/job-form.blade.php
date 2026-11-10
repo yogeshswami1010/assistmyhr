@@ -491,15 +491,16 @@
       <button type="button"
     title="@lang('app.add') @lang('modules.jobs.workExperience')"
     id="addWorkExperience"
+    aria-controls="new-work-experience-wrapper" aria-expanded="false"
     class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
     aria-label="@lang('app.add') @lang('modules.jobs.workExperience')">
     <i class="fa fa-plus" aria-hidden="true"></i>
 </button>
     </div>
 
-    <div id="new-work-experience-wrapper" class="hidden">
+    <div id="new-work-experience-wrapper" class="mt-2 hidden">
         <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
-            <input type="text" id="work_experience_new" name="work_experience_new" maxlength="191" disabled
+            <input type="text" id="work_experience_new" maxlength="191" disabled
                 aria-label="{{ __('Add New Work Experience') }}"
                 placeholder="{{ __('Add New Work Experience') }}"
                 style="flex: 1 1 0%; min-width: 0; width: 0;"
@@ -512,7 +513,7 @@
 
             <button type="button" id="reset-work-experience"
                 style="flex: 0 0 36px; border: 1px solid #E5E7EB; border-radius: 12px; background: white; color: #64748B;"
-                aria-label="{{ __('modules.jobs.workExperience') }}">
+                aria-label="{{ __('Cancel adding work experience') }}">
                 &times;
             </button>
         </div>
@@ -1225,59 +1226,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @include('admin.jobs.partials.question-create-modal')
-<script>
-document.addEventListener('click', function (event) {
-
-    // Work Experience plus button
-    const addButton = event.target.closest('#addWorkExperience');
-
-    if (addButton) {
-        event.preventDefault();
-
-        const selectWrapper = document.getElementById('work-experience-select-wrapper');
-        const newWrapper = document.getElementById('new-work-experience-wrapper');
-        const input = document.getElementById('work_experience_new');
-
-        if (!selectWrapper || !newWrapper || !input) {
-            console.error('Work Experience elements not found');
-            return;
-        }
-
-        selectWrapper.style.display = 'none';
-        addButton.style.display = 'none';
-
-        newWrapper.classList.remove('hidden');
-        newWrapper.style.display = 'block';
-
-        input.disabled = false;
-        input.focus();
-    }
-
-    // Work Experience reset button
-    const resetButton = event.target.closest('#reset-work-experience');
-
-    if (resetButton) {
-        event.preventDefault();
-
-        const selectWrapper = document.getElementById('work-experience-select-wrapper');
-        const newWrapper = document.getElementById('new-work-experience-wrapper');
-        const input = document.getElementById('work_experience_new');
-        const addButton = document.getElementById('addWorkExperience');
-
-        if (!selectWrapper || !newWrapper || !input || !addButton) {
-            console.error('Work Experience reset elements not found');
-            return;
-        }
-
-        input.value = '';
-        input.disabled = true;
-
-        newWrapper.classList.add('hidden');
-        newWrapper.style.display = 'none';
-
-        selectWrapper.style.display = '';
-        addButton.style.display = '';
-    }
-
-});
-</script>
