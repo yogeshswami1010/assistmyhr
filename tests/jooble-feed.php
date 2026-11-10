@@ -13,34 +13,47 @@ if (!trait_exists(\Cviebrock\EloquentSluggable\Sluggable::class)) {
 
 use App\Http\Controllers\Front\JoobleFeedController;
 use App\Job;
-use App\Saas\Tenant;
-use App\Saas\TenantContext;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Schema};
 
 $app = new Illuminate\Foundation\Application($root);
+$alphaDatabase = tempnam(sys_get_temp_dir(), 'jooble-alpha-');
+$betaDatabase = tempnam(sys_get_temp_dir(), 'jooble-beta-');
+register_shutdown_function(function () use ($alphaDatabase, $betaDatabase) {
+    foreach (['sqlite', 'beta'] as $connection) { DB::purge($connection); }
+    unlink($alphaDatabase);
+    unlink($betaDatabase);
+});
 $app->instance('config', new Illuminate\Config\Repository([
     'saas' => ['enabled' => true],
     'app' => ['url' => 'https://ats.example.test'],
-    'database' => ['default' => 'sqlite', 'connections' => ['sqlite' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']]],
+    'database' => ['default' => 'sqlite', 'connections' => [
+        'sqlite' => ['driver' => 'sqlite', 'database' => $alphaDatabase, 'prefix' => ''],
+        'beta' => ['driver' => 'sqlite', 'database' => $betaDatabase, 'prefix' => ''],
+        'saas_landlord' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''],
+    ]],
 ]));
 Illuminate\Support\Facades\Facade::setFacadeApplication($app);
 foreach ([Illuminate\Events\EventServiceProvider::class, Illuminate\Database\DatabaseServiceProvider::class, Illuminate\Routing\RoutingServiceProvider::class] as $provider) {
     $app->register($provider);
 }
 $app->boot();
-$request = Request::create('https://ats.example.test/job-feeds/jooble.xml?workspace=alpha');
+$request = Request::create('https://ats.example.test/job-feeds/jooble.xml');
 $app->instance('request', $request);
 $app['router']->get('/job/{slug}/{location?}', fn () => 'Job')->name('jobs.jobDetail');
 $app['router']->get('/jobapply/{slug}/{location?}', fn () => 'Apply')->name('jobs.jobApply');
 $app['router']->getRoutes()->refreshNameLookups();
-$tenant = (new class extends Tenant { public function hasAccess(): bool { return true; } })
-    ->forceFill(['uuid' => 'alpha-uuid', 'slug' => 'alpha']);
-$app->instance(TenantContext::class, new class($tenant) extends TenantContext {
-    public function __construct(private Tenant $tenant) {}
-    public function current(): ?Tenant { return $this->tenant; }
+$landlord = DB::connection('saas_landlord');
+$landlord->getSchemaBuilder()->create('saas_tenants', function (Blueprint $table) {
+    $table->id(); $table->string('slug'); $table->string('uuid'); $table->string('status');
+    $table->string('database_name'); $table->string('database_driver');
 });
+$landlord->getSchemaBuilder()->create('saas_subscriptions', function (Blueprint $table) {
+    $table->id(); $table->integer('tenant_id'); $table->string('status'); $table->timestamp('expires_at')->nullable();
+});
+$landlord->table('saas_tenants')->insert(['id'=>1,'slug'=>'alpha','uuid'=>'alpha-uuid','status'=>'active','database_name'=>$alphaDatabase,'database_driver'=>'sqlite']);
+$landlord->table('saas_subscriptions')->insert(['tenant_id'=>1,'status'=>'active']);
 Carbon\Carbon::setTestNow('2026-11-10 12:00:00');
 Schema::create('jobs', function (Blueprint $table) {
     $table->id();
@@ -82,50 +95,69 @@ DB::table('currencies')->insert(['id'=>1,'currency_code'=>'CAD']);
 $open = ['company_id'=>1,'slug'=>'engineer','title'=>'Engineer & R&D ]]>','status'=>'open',
     'start_date'=>'2026-11-01','end_date'=>'2026-11-30','updated_at'=>'2026-11-09 12:00:00','job_description'=>'<p>Build <strong>great tools</strong>.</p>',
     'job_type_id'=>1,'show_job_type'=>false,'currency_id'=>1,'show_salary'=>true,'pay_type'=>'Range','starting_salary'=>50000,'maximum_salary'=>70000,'pay_according'=>'year'];
-DB::table('jobs')->insert($open + ['id'=>1]);
+DB::table('jobs')->insert($open + ['id'=>1,'publish_on_jooble'=>true]);
 DB::table('jobs')->insert(array_replace($open, ['id'=>2,'slug'=>'filled','status'=>'filled','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>3,'slug'=>'closed','status'=>'closed','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>4,'slug'=>'expired','end_date'=>'2026-11-09','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>5,'slug'=>'future','start_date'=>'2026-11-11','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>6,'slug'=>'deleted','deleted_at'=>now(),'publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>7,'slug'=>'on-hold','status'=>'on_hold','publish_on_jooble'=>true]));
-foreach (range(1, 7) as $id) { DB::table('job_job_locations')->insert(['job_id'=>$id,'location_id'=>1]); }
+DB::table('jobs')->insert(array_replace($open, ['id'=>8,'slug'=>'unselected']));
+foreach (range(1, 8) as $id) { DB::table('job_job_locations')->insert(['job_id'=>$id,'location_id'=>1]); }
 
 function check($condition, string $message): void {
     if (!$condition) { throw new RuntimeException($message); }
 }
 
 $controller = new JoobleFeedController;
-$response = $controller($request);
+$response = $controller();
 $xml = simplexml_load_string($response->getContent());
 check($response->headers->get('Content-Type') === 'application/xml; charset=UTF-8' && $xml->getName() === 'jobs', 'Jooble receives valid UTF-8 XML');
-check(count($xml->job) === 1 && (string) $xml->job['id'] === 'alpha-uuid-1', 'Only current Open jobs appear, regardless of the old checkbox');
+check(count($xml->job) === 1 && (string) $xml->job['id'] === 'alpha-uuid-1', 'Only selected current Open jobs appear');
 check((string) $xml->job->name === $open['title'] && (string) $xml->job->description === Job::findOrFail(1)->job_description, 'CDATA preserves title and full public HTML');
 check((string) $xml->job->link === 'https://ats.example.test/job/engineer/1?workspace=alpha' && (string) $xml->job->region === 'Toronto', 'Feed links to the correct workspace and location');
 check((string) $xml->job->apply_url === 'https://ats.example.test/jobapply/engineer/1?workspace=alpha', 'Direct apply URL includes the correct workspace and location');
 check((string) $xml->job->pubdate === '01.11.2026' && (string) $xml->job->updated === '09.11.2026' && (string) $xml->job->expire === '30.11.2026', 'Dates use Jooble format');
 check((string) $xml->job->salary === '50000–70000 CAD / year' && (string) $xml->job->company === 'Acme', 'Optional public compensation and employer data are included');
 check((string) $xml->job->jobtype === 'Full-time', 'The saved job type appears even when the public job page hides it');
-check(Job::publicJobPage()->pluck('id')->all() === [1], 'The advertised job is available on the public job page');
-try {
-    $controller(Request::create('https://ats.example.test/job-feeds/jooble.xml?workspace=beta'));
-    throw new RuntimeException('Mismatched workspace could access the feed');
-} catch (\Symfony\Component\HttpKernel\Exception\HttpException $exception) {
-    check($exception->getStatusCode() === 404, 'Feed requires the selected workspace');
-}
+check(Job::publicJobPage()->pluck('id')->all() === [1, 8], 'Jooble selection does not affect public job detail eligibility');
 DB::table('jobs')->where('id', 1)->update(['status' => 'closed']);
-check(count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Closing an Open job removes the listing');
+check(count(simplexml_load_string($controller()->getContent())->job) === 0, 'Closing an Open job removes the listing');
 
 DB::table('jobs')->where('id', 1)->update(['status' => 'open', 'start_date' => null, 'end_date' => '0000-00-00', 'created_at' => '2026-11-02 12:00:00']);
-$xml = simplexml_load_string($controller($request)->getContent());
+$xml = simplexml_load_string($controller()->getContent());
 check(count($xml->job) === 1 && (string) $xml->job->pubdate === '02.11.2026' && !isset($xml->job->expire), 'A missing start date uses the creation date and a zero expiry is treated as unset');
 check(Job::publicJobPage()->whereKey(1)->exists(), 'The recovered listing links to an accessible job detail page');
 DB::table('jobs')->where('id', 1)->update(['start_date' => '0000-00-00']);
-check(count(simplexml_load_string($controller($request)->getContent())->job) === 1, 'Open jobs with a legacy zero start date still appear');
+check(count(simplexml_load_string($controller()->getContent())->job) === 1, 'Open jobs with a legacy zero start date still appear');
 DB::table('jobs')->where('id', 1)->update(['job_description' => '<p>&nbsp;</p>']);
-check(Job::findOrFail(1)->joobleContentIssue() === 'Add a job description.' && count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Empty rich-text descriptions are excluded with an actionable reason');
+check(Job::findOrFail(1)->joobleContentIssue() === 'Add a job description.' && count(simplexml_load_string($controller()->getContent())->job) === 0, 'Empty rich-text descriptions are excluded with an actionable reason');
 DB::table('jobs')->where('id', 1)->update(['status' => '', 'job_description' => $open['job_description']]);
-check(count(simplexml_load_string($controller($request)->getContent())->job) === 0, 'Blank status is not treated as permission to publish');
+check(count(simplexml_load_string($controller()->getContent())->job) === 0, 'Blank status is not treated as permission to publish');
 DB::table('jobs')->where('id', 1)->update(['status' => Job::STATUS_OPEN]);
-check(count(simplexml_load_string($controller($request)->getContent())->job) === 1, 'Saving a repaired job as Open restores the Jooble listing');
+check(count(simplexml_load_string($controller()->getContent())->job) === 1, 'Saving a repaired job as Open restores the Jooble listing');
+
+$beta = DB::connection('beta');
+foreach (DB::select("SELECT sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'") as $table) {
+    $beta->unprepared($table->sql);
+}
+$beta->table('companies')->insert(['id'=>1,'company_name'=>'Beta Company','status'=>'active','show_in_frontend'=>'true']);
+$beta->table('jobs')->insert(array_replace($open, ['id'=>1,'slug'=>'beta-job','title'=>'Beta job','company_location'=>'Montreal','publish_on_jooble'=>true]));
+$landlord->table('saas_tenants')->insert([
+    ['id'=>2,'slug'=>'beta','uuid'=>'beta-uuid','status'=>'active','database_name'=>$betaDatabase,'database_driver'=>'sqlite'],
+    ['id'=>3,'slug'=>'suspended','uuid'=>'suspended-uuid','status'=>'suspended','database_name'=>'unused','database_driver'=>'sqlite'],
+    ['id'=>4,'slug'=>'expired','uuid'=>'expired-uuid','status'=>'active','database_name'=>'unused','database_driver'=>'sqlite'],
+]);
+$landlord->table('saas_subscriptions')->insert([
+    ['tenant_id'=>2,'status'=>'trialing','expires_at'=>now()->addDay()],
+    ['tenant_id'=>3,'status'=>'active','expires_at'=>null],
+    ['tenant_id'=>4,'status'=>'active','expires_at'=>now()->subDay()],
+]);
+$xml = simplexml_load_string($controller()->getContent());
+check(count($xml->job) === 2 && (string) $xml->job[0]['id'] === 'alpha-uuid-1' && (string) $xml->job[1]['id'] === 'beta-uuid-1', 'Shared feed combines active workspaces with unique job IDs and skips suspended or expired accounts');
+check((string) $xml->job[1]->company === 'Beta Company' && (string) $xml->job[1]->apply_url === 'https://ats.example.test/jobapply/beta-job?workspace=beta', 'Second workspace retains its own employer and apply URL');
+check(DB::getDefaultConnection() === 'sqlite' && config('database.connections.saas_jooble_feed') === null, 'Feed leaves the default database connection unchanged');
+DB::table('jobs')->where('id', 1)->update(['publish_on_jooble' => false]);
+$xml = simplexml_load_string($controller()->getContent());
+check(count($xml->job) === 1 && (string) $xml->job['id'] === 'beta-uuid-1', 'Deselecting a job removes only that workspace listing');
 echo "Jooble feed checks passed.\n";

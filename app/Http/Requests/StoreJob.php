@@ -18,6 +18,7 @@ class StoreJob extends CoreRequest
             'title'              => 'required',
             'job_code'           => 'nullable|string|max:100',
             'job_description'    => 'required',
+            'publish_on_jooble'  => 'sometimes|boolean',
             'status'             => ['sometimes', 'required', Rule::in(array_keys(Job::STATUSES))],
             'total_positions'    => 'required|numeric',
 

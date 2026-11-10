@@ -437,15 +437,21 @@
                             </div>
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
-                                <p class="mt-2 text-xs text-slate-600">Save a job as Open to include it in the Jooble feed. Submit your workspace’s feed URL to Jooble for review.</p>
-                                @if($isEdit && $job?->status === \App\Job::STATUS_OPEN)
+                                <input type="hidden" name="publish_on_jooble" value="0">
+                                <label class="flex items-center gap-2 text-sm text-slate-700">
+                                    <input type="checkbox" name="publish_on_jooble" value="1"
+                                        @checked(old('publish_on_jooble', $isEdit && $job?->publish_on_jooble))>
+                                    Include this job in the Jooble feed
+                                </label>
+                                <p class="mt-2 text-xs text-slate-600">Selected Open jobs are included in the shared AssistMyHR feed.</p>
+                                @if($isEdit && $job?->publish_on_jooble)
                                     @if(!empty($joobleFeedIssue))
                                         <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $joobleFeedIssue }}</p>
                                     @else
-                                        <p class="mt-1 text-xs font-semibold text-emerald-700">Included in your workspace’s Jooble feed.</p>
+                                        <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the shared AssistMyHR Jooble feed.</p>
                                     @endif
                                 @endif
-                                <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ tenant_route('jobs.feeds.jooble') }}" target="_blank" rel="noopener">{{ tenant_route('jobs.feeds.jooble') }}</a>
+                                <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.jooble') }}" target="_blank" rel="noopener">{{ route('jobs.feeds.jooble') }}</a>
                             </div>
                             <div class="form-group mb-0">
                                 <label for="job_skills" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('menu.skills')</label>

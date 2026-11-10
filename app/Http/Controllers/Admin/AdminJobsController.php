@@ -209,6 +209,7 @@ class AdminJobsController extends AdminBaseController
         $job->title = $request->title;
         $job->job_code = $request->job_code;
         $job->job_description = $request->job_description;
+        $job->publish_on_jooble = $request->boolean('publish_on_jooble');
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
         if ($request->filled('category_new')) {
@@ -326,8 +327,9 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
         $this->job = Job::findOrFail($id);
-        if ($this->job->status === Job::STATUS_OPEN) {
+        if ($this->job->publish_on_jooble) {
             $this->joobleFeedIssue = match (true) {
+                $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
                 $this->job->company?->status !== 'active' => 'Select an active company.',
                 !Job::jooblePublished()->whereKey($id)->exists() => 'Check the job’s publication and expiry dates.',
                 default => $this->job->joobleContentIssue(),
@@ -398,7 +400,10 @@ class AdminJobsController extends AdminBaseController
         $job->title = $request->title;
         $job->job_code = $request->job_code;
         $job->job_description = $request->job_description;
-       
+        if ($request->has('publish_on_jooble')) {
+            $job->publish_on_jooble = $request->boolean('publish_on_jooble');
+        }
+
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
         if ($request->filled('category_new')) {

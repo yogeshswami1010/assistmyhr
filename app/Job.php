@@ -41,6 +41,7 @@ class Job extends Model
         'show_job_type'        => 'boolean',
         'show_work_experience' => 'boolean',
         'show_salary'          => 'boolean',
+        'publish_on_jooble'    => 'boolean',
     ];
 
     protected $appends = [
@@ -81,7 +82,7 @@ class Job extends Model
 
     public function scopeJooblePublished($query)
     {
-        return $query->publicJobPage();
+        return $query->publicJobPage()->where('publish_on_jooble', true);
     }
 
     public function scopeWithinPublicationWindow($query)

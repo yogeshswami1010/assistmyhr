@@ -3,34 +3,68 @@
 namespace App\Http\Controllers\Front;
 
 use App\Job;
+use App\Saas\Tenant;
 use App\Saas\TenantContext;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use XMLWriter;
 
 class JoobleFeedController
 {
-    public function __invoke(Request $request): Response
-    {
-        $tenant = config('saas.enabled') ? app(TenantContext::class)->current() : null;
-        if (config('saas.enabled')) {
-            abort_unless($tenant && $request->query('workspace') === $tenant->slug && $tenant->hasAccess(), 404);
-        }
+    private const CONNECTION = 'saas_jooble_feed';
 
+    public function __invoke(): Response
+    {
         $xml = new XMLWriter;
         $xml->openMemory();
         $xml->startDocument('1.0', 'UTF-8');
         $xml->startElement('jobs');
 
-        foreach (Job::jooblePublished()->with(['company', 'jobLocation', 'jobType', 'currency'])->lazyById() as $job) {
+        if (config('saas.enabled')) {
+            foreach (Tenant::where('status', 'active')->with('subscription')->lazyById() as $tenant) {
+                if ($tenant->hasAccess()) {
+                    $this->writeWorkspaceJobs($xml, $tenant);
+                }
+            }
+        } else {
+            $this->writeJobs($xml, Job::query());
+        }
+
+        $xml->endElement();
+        $xml->endDocument();
+
+        return new Response($xml->outputMemory(), 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'Cache-Control' => 'no-store']);
+    }
+
+    private function writeWorkspaceJobs(XMLWriter $xml, Tenant $tenant): void
+    {
+        $connectionKey = 'database.connections.'.self::CONNECTION;
+        $previous = config($connectionKey);
+        config([$connectionKey => app(TenantContext::class)->connectionConfig($tenant)]);
+
+        try {
+            $this->writeJobs($xml, Job::on(self::CONNECTION), $tenant);
+        } finally {
+            DB::purge(self::CONNECTION);
+            config([$connectionKey => $previous]);
+        }
+    }
+
+    private function writeJobs(XMLWriter $xml, Builder $query, ?Tenant $tenant = null): void
+    {
+        foreach ($query->jooblePublished()->with(['company', 'jobLocation', 'jobType', 'currency'])->lazyById() as $job) {
             if ($job->joobleContentIssue() !== null) {
                 continue;
             }
 
             $jobRouteParameters = [$job->slug, $job->jobLocation->first()?->id];
+            if ($tenant) {
+                $jobRouteParameters['workspace'] = $tenant->slug;
+            }
             $fields = [
-                'link' => tenant_route('jobs.jobDetail', $jobRouteParameters),
-                'apply_url' => tenant_route('jobs.jobApply', $jobRouteParameters),
+                'link' => route('jobs.jobDetail', $jobRouteParameters),
+                'apply_url' => route('jobs.jobApply', $jobRouteParameters),
                 'name' => $job->title,
                 'region' => $job->joobleRegion(),
                 'description' => $job->job_description,
@@ -52,10 +86,6 @@ class JoobleFeedController
             $xml->endElement();
         }
 
-        $xml->endElement();
-        $xml->endDocument();
-
-        return new Response($xml->outputMemory(), 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'Cache-Control' => 'no-store']);
     }
 
     private function salary(Job $job): ?string
