@@ -33,6 +33,7 @@ $app->boot();
 $request = Request::create('https://ats.example.test/job-feeds/jooble.xml?workspace=alpha');
 $app->instance('request', $request);
 $app['router']->get('/job/{slug}/{location?}', fn () => 'Job')->name('jobs.jobDetail');
+$app['router']->get('/jobapply/{slug}/{location?}', fn () => 'Apply')->name('jobs.jobApply');
 $app['router']->getRoutes()->refreshNameLookups();
 $tenant = (new class extends Tenant { public function hasAccess(): bool { return true; } })
     ->forceFill(['uuid' => 'alpha-uuid', 'slug' => 'alpha']);
@@ -101,6 +102,7 @@ check($response->headers->get('Content-Type') === 'application/xml; charset=UTF-
 check(count($xml->job) === 1 && (string) $xml->job['id'] === 'alpha-uuid-1', 'Only current Open jobs appear, regardless of the old checkbox');
 check((string) $xml->job->name === $open['title'] && (string) $xml->job->description === Job::findOrFail(1)->job_description, 'CDATA preserves title and full public HTML');
 check((string) $xml->job->link === 'https://ats.example.test/job/engineer/1?workspace=alpha' && (string) $xml->job->region === 'Toronto', 'Feed links to the correct workspace and location');
+check((string) $xml->job->apply_url === 'https://ats.example.test/jobapply/engineer/1?workspace=alpha', 'Direct apply URL includes the correct workspace and location');
 check((string) $xml->job->pubdate === '01.11.2026' && (string) $xml->job->updated === '09.11.2026' && (string) $xml->job->expire === '30.11.2026', 'Dates use Jooble format');
 check((string) $xml->job->salary === '50000–70000 CAD / year' && (string) $xml->job->company === 'Acme', 'Optional public compensation and employer data are included');
 check((string) $xml->job->jobtype === 'Full-time', 'The saved job type appears even when the public job page hides it');

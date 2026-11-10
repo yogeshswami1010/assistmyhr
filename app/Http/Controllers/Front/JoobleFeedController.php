@@ -27,8 +27,10 @@ class JoobleFeedController
                 continue;
             }
 
+            $jobRouteParameters = [$job->slug, $job->jobLocation->first()?->id];
             $fields = [
-                'link' => tenant_route('jobs.jobDetail', [$job->slug, $job->jobLocation->first()?->id]),
+                'link' => tenant_route('jobs.jobDetail', $jobRouteParameters),
+                'apply_url' => tenant_route('jobs.jobApply', $jobRouteParameters),
                 'name' => $job->title,
                 'region' => $job->joobleRegion(),
                 'description' => $job->job_description,
