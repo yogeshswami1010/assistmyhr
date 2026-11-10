@@ -26,9 +26,6 @@
             var txtInactive = @json(__('app.inactive'));
             var txtOpenings = @json(__('modules.front.openings'));
             var linkUrlPrompt = @json(__('modules.jobs.linkUrlPrompt'));
-            var aiGenerateIdleLabel = @json(__('app.aiGenerate'));
-            var aiGenerateLoadingLabel = @json(__('app.aiGenerating'));
-            var aiGeneratePrerequisiteMsg = @json('Please enter job title and select job category first.');
 
             function jobRichSyncField(editorId, textareaId) {
                 var $ed = $('#' + editorId);
@@ -119,46 +116,6 @@
                 $js.select2(jobFormSelect2Opts);
             }
 
-            function syncEditorWithHtml(editorId, textareaId, html) {
-                var $ed = $('#' + editorId);
-                var $ta = $('#' + textareaId);
-                if (!$ed.length || !$ta.length) {
-                    return;
-                }
-                $ed.html(html || '');
-                $ta.val(html || '');
-            }
-
-            function updateAiGenerateButtonVisibility() {
-                var hasTitle = ($('#title').val() || '').trim().length > 0;
-                var hasCategory = ($('#category_id').val() || '').trim().length > 0;
-                var $btn = $('#ai-generate-job-content-btn');
-                if (!$btn.length) {
-                    return;
-                }
-                $btn.toggleClass('opacity-50', !(hasTitle && hasCategory));
-            }
-
-            function applyGeneratedSkills(skillNames) {
-                var wanted = (skillNames || []).map(function (name) {
-                    return (name || '').toString().trim().toLowerCase();
-                }).filter(Boolean);
-
-                if (!wanted.length) {
-                    return;
-                }
-
-                var selectedValues = [];
-                $('#job_skills option').each(function () {
-                    var text = ($(this).text() || '').trim().toLowerCase();
-                    if (wanted.indexOf(text) !== -1) {
-                        selectedValues.push($(this).val());
-                    }
-                });
-
-                $('#job_skills').val(selectedValues).trigger('change');
-            }
-
             initJobFormSelect2();
 
             if (typeof $.fn.bootstrapMaterialDatePicker === 'function') {
@@ -198,7 +155,6 @@
                         }
                         reinitJobSkillsSelect2();
                         jobFormPreviewRefresh();
-                        updateAiGenerateButtonVisibility();
                     },
                 });
             });
@@ -290,7 +246,6 @@
             $('#title, #company, #category_id, #job_type, #total_positions, #status').on('change input', jobFormPreviewRefresh);
             $('#location_new').on('input change', jobFormPreviewRefresh);
             $('#job_skills').on('change', jobFormPreviewRefresh);
-            $('#title, #category_id').on('change input', updateAiGenerateButtonVisibility);
 
             $('.job-pos-minus').on('click', function () {
                 var $i = $('#total_positions');
@@ -309,7 +264,6 @@
                 jobRichSyncAll();
 
                 jobFormPreviewRefresh();
-                updateAiGenerateButtonVisibility();
 
                 $('#addJobType').click(function () {
                     var url = "{{ route('admin.job-type.create') }}";
@@ -372,78 +326,6 @@
                 });
             });
 
-            $('#ai-generate-job-content-btn').on('click', function () {
-                var $btn = $(this);
-                var title = ($('#title').val() || '').trim();
-                var categoryId = $('#category_id').val();
-                var $label = $('#ai-generate-job-content-label');
-
-                function resetAiGenerateButton() {
-                    $btn.prop('disabled', false);
-                    $label.text(aiGenerateIdleLabel);
-                }
-
-                if (!title || !categoryId) {
-                    toastr.error(aiGeneratePrerequisiteMsg);
-                    return;
-                }
-
-                $btn.prop('disabled', true);
-                $label.text(aiGenerateLoadingLabel);
-
-                // Safety fallback in case any callback is skipped by transport/runtime errors.
-                var aiBtnSafetyTimeout = setTimeout(function () {
-                    resetAiGenerateButton();
-                }, 20000);
-
-                $.easyAjax({
-                    url: $btn.data('url'),
-                    container: '#createForm',
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        title: title,
-                        category_id: categoryId
-                    },
-                    success: function (response) {
-                        try {
-                            var payload = null;
-                            if (response && response.data && typeof response.data === 'object') {
-                                payload = response.data;
-                            } else if (response && typeof response === 'object') {
-                                payload = response;
-                            }
-
-                            if (!payload || (!payload.description_html && !payload.job_requirement_html)) {
-                                toastr.error((response && response.message) ? response.message : 'AI generation failed.');
-                                return;
-                            }
-
-                            syncEditorWithHtml('job_description_editor', 'job_description', payload.description_html || '');
-                            syncEditorWithHtml(
-                                'job_requirement_editor',
-                                'job_requirement',
-                                payload.job_requirement_html || ''
-                            );
-                            applyGeneratedSkills(payload.skills || []);
-                            if (typeof payload.meta_title !== 'undefined') {
-                                $('#meta-title').val(payload.meta_title || '');
-                            }
-                            if (typeof payload.meta_description !== 'undefined') {
-                                $('#meta-description').val(payload.meta_description || '');
-                            }
-                            jobFormPreviewRefresh();
-                        } finally {
-                            clearTimeout(aiBtnSafetyTimeout);
-                            resetAiGenerateButton();
-                        }
-                    },
-                    error: function () {
-                        clearTimeout(aiBtnSafetyTimeout);
-                        resetAiGenerateButton();
-                    }
-                });
-            });
         })();
     </script>
 @endpush
