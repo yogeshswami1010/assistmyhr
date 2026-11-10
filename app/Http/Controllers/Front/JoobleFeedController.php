@@ -36,7 +36,7 @@ class JoobleFeedController
                 'updated' => $job->updated_at?->format('d.m.Y'),
                 'expire' => $job->publicationEndDate()?->format('d.m.Y'),
                 'company' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
-                'jobtype' => $job->show_job_type ? $job->jobType?->job_type : null,
+                'jobtype' => $job->jobType?->job_type,
                 'salary' => $this->salary($job),
             ];
 

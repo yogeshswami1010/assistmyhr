@@ -80,7 +80,7 @@ DB::table('job_types')->insert(['id'=>1,'job_type'=>'Full-time']);
 DB::table('currencies')->insert(['id'=>1,'currency_code'=>'CAD']);
 $open = ['company_id'=>1,'slug'=>'engineer','title'=>'Engineer & R&D ]]>','status'=>'open',
     'start_date'=>'2026-11-01','end_date'=>'2026-11-30','updated_at'=>'2026-11-09 12:00:00','job_description'=>'<p>Build <strong>great tools</strong>.</p>',
-    'job_type_id'=>1,'show_job_type'=>true,'currency_id'=>1,'show_salary'=>true,'pay_type'=>'Range','starting_salary'=>50000,'maximum_salary'=>70000,'pay_according'=>'year'];
+    'job_type_id'=>1,'show_job_type'=>false,'currency_id'=>1,'show_salary'=>true,'pay_type'=>'Range','starting_salary'=>50000,'maximum_salary'=>70000,'pay_according'=>'year'];
 DB::table('jobs')->insert($open + ['id'=>1]);
 DB::table('jobs')->insert(array_replace($open, ['id'=>2,'slug'=>'filled','status'=>'filled','publish_on_jooble'=>true]));
 DB::table('jobs')->insert(array_replace($open, ['id'=>3,'slug'=>'closed','status'=>'closed','publish_on_jooble'=>true]));
@@ -102,7 +102,8 @@ check(count($xml->job) === 1 && (string) $xml->job['id'] === 'alpha-uuid-1', 'On
 check((string) $xml->job->name === $open['title'] && (string) $xml->job->description === Job::findOrFail(1)->job_description, 'CDATA preserves title and full public HTML');
 check((string) $xml->job->link === 'https://ats.example.test/job/engineer/1?workspace=alpha' && (string) $xml->job->region === 'Toronto', 'Feed links to the correct workspace and location');
 check((string) $xml->job->pubdate === '01.11.2026' && (string) $xml->job->updated === '09.11.2026' && (string) $xml->job->expire === '30.11.2026', 'Dates use Jooble format');
-check((string) $xml->job->salary === '50000–70000 CAD / year' && (string) $xml->job->jobtype === 'Full-time' && (string) $xml->job->company === 'Acme', 'Optional public compensation and employer data are included');
+check((string) $xml->job->salary === '50000–70000 CAD / year' && (string) $xml->job->company === 'Acme', 'Optional public compensation and employer data are included');
+check((string) $xml->job->jobtype === 'Full-time', 'The saved job type appears even when the public job page hides it');
 check(Job::publicJobPage()->pluck('id')->all() === [1], 'The advertised job is available on the public job page');
 try {
     $controller(Request::create('https://ats.example.test/job-feeds/jooble.xml?workspace=beta'));
