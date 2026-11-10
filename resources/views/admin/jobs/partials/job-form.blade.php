@@ -439,7 +439,9 @@
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
                                 <p class="text-xs text-slate-600">Choose which public feeds should include this job while it is Open.</p>
                                 @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'AssistMyHR'] as $board => $label)
-                                    @php($field = 'publish_on_'.$board)
+                                    @php
+                                        $field = 'publish_on_'.$board;
+                                    @endphp
                                     <div class="mt-3">
                                         <input type="hidden" name="{{ $field }}" value="0">
                                         <label class="flex items-center gap-2 text-sm text-slate-700">
