@@ -42,6 +42,7 @@ class Job extends Model
         'show_work_experience' => 'boolean',
         'show_salary'          => 'boolean',
         'publish_on_jooble'    => 'boolean',
+        'publish_on_assistmyhr' => 'boolean',
     ];
 
     protected $appends = [

@@ -10,11 +10,21 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use XMLWriter;
 
-class JoobleFeedController
+class JobBoardFeedController
 {
-    private const CONNECTION = 'saas_jooble_feed';
+    private const CONNECTION = 'saas_job_board_feed';
 
-    public function __invoke(): Response
+    public function jooble(): Response
+    {
+        return $this->feed('publish_on_jooble');
+    }
+
+    public function assistMyHr(): Response
+    {
+        return $this->feed('publish_on_assistmyhr');
+    }
+
+    private function feed(string $selection): Response
     {
         $xml = new XMLWriter;
         $xml->openMemory();
@@ -24,11 +34,11 @@ class JoobleFeedController
         if (config('saas.enabled')) {
             foreach (Tenant::where('status', 'active')->with('subscription')->lazyById() as $tenant) {
                 if ($tenant->hasAccess()) {
-                    $this->writeWorkspaceJobs($xml, $tenant);
+                    $this->writeWorkspaceJobs($xml, $tenant, $selection);
                 }
             }
         } else {
-            $this->writeJobs($xml, Job::query());
+            $this->writeJobs($xml, Job::query(), $selection);
         }
 
         $xml->endElement();
@@ -37,23 +47,26 @@ class JoobleFeedController
         return new Response($xml->outputMemory(), 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'Cache-Control' => 'no-store']);
     }
 
-    private function writeWorkspaceJobs(XMLWriter $xml, Tenant $tenant): void
+    private function writeWorkspaceJobs(XMLWriter $xml, Tenant $tenant, string $selection): void
     {
         $connectionKey = 'database.connections.'.self::CONNECTION;
         $previous = config($connectionKey);
         config([$connectionKey => app(TenantContext::class)->connectionConfig($tenant)]);
 
         try {
-            $this->writeJobs($xml, Job::on(self::CONNECTION), $tenant);
+            $this->writeJobs($xml, Job::on(self::CONNECTION), $selection, $tenant);
         } finally {
             DB::purge(self::CONNECTION);
             config([$connectionKey => $previous]);
         }
     }
 
-    private function writeJobs(XMLWriter $xml, Builder $query, ?Tenant $tenant = null): void
+    private function writeJobs(XMLWriter $xml, Builder $query, string $selection, ?Tenant $tenant = null): void
     {
-        foreach ($query->jooblePublished()->with(['company', 'jobLocation', 'jobType', 'currency'])->lazyById() as $job) {
+        $jobs = $query->publicJobPage()->where($selection, true)
+            ->with(['company', 'jobLocation', 'jobType', 'currency'])->lazyById();
+
+        foreach ($jobs as $job) {
             if ($job->joobleContentIssue() !== null) {
                 continue;
             }
@@ -85,7 +98,6 @@ class JoobleFeedController
             }
             $xml->endElement();
         }
-
     }
 
     private function salary(Job $job): ?string

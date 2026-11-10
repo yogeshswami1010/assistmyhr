@@ -74,7 +74,8 @@ Route::post('/telnyx-webhook', TelnyxWebhookController::class)
 require __DIR__.'/website.php';
 
 Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');
-Route::get('/job-feeds/jooble.xml', \App\Http\Controllers\Front\JoobleFeedController::class)->middleware('throttle:60,1')->name('jobs.feeds.jooble');
+Route::get('/job-feeds/jooble.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jooble'])->middleware('throttle:60,1')->name('jobs.feeds.jooble');
+Route::get('/job-feeds/assistmyhr.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'assistMyHr'])->middleware('throttle:60,1')->name('jobs.feeds.assistmyhr');
 
 Route::name('jobs.')
     ->group(function () {

@@ -11,7 +11,7 @@ if (!trait_exists(\Cviebrock\EloquentSluggable\Sluggable::class)) {
     class_alias(TestJoobleSluggable::class, \Cviebrock\EloquentSluggable\Sluggable::class);
 }
 
-use App\Http\Controllers\Front\JoobleFeedController;
+use App\Http\Controllers\Front\JobBoardFeedController;
 use App\Job;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -81,6 +81,7 @@ Schema::create('job_job_locations', function (Blueprint $table) {
     $table->id(); $table->integer('job_id'); $table->integer('location_id');
 });
 (require $root.'/database/migrations/2026_11_10_000001_add_jooble_publishing_to_jobs.php')->up();
+(require $root.'/database/migrations/2026_11_10_000004_add_assistmyhr_publishing_to_jobs.php')->up();
 DB::table('jobs')->insert(['id'=>101,'status'=>'active','start_date'=>'2026-11-01']);
 DB::table('jobs')->insert(['id'=>102,'status'=>'inactive','start_date'=>'2026-11-01']);
 (require $root.'/database/migrations/2026_11_10_000002_expand_job_status_values.php')->up();
@@ -109,8 +110,8 @@ function check($condition, string $message): void {
     if (!$condition) { throw new RuntimeException($message); }
 }
 
-$controller = new JoobleFeedController;
-$response = $controller();
+$controller = new JobBoardFeedController;
+$response = $controller->jooble();
 $xml = simplexml_load_string($response->getContent());
 check($response->headers->get('Content-Type') === 'application/xml; charset=UTF-8' && $xml->getName() === 'jobs', 'Jooble receives valid UTF-8 XML');
 check(count($xml->job) === 1 && (string) $xml->job['id'] === 'alpha-uuid-1', 'Only selected current Open jobs appear');
@@ -122,20 +123,20 @@ check((string) $xml->job->salary === '50000–70000 CAD / year' && (string) $xml
 check((string) $xml->job->jobtype === 'Full-time', 'The saved job type appears even when the public job page hides it');
 check(Job::publicJobPage()->pluck('id')->all() === [1, 8], 'Jooble selection does not affect public job detail eligibility');
 DB::table('jobs')->where('id', 1)->update(['status' => 'closed']);
-check(count(simplexml_load_string($controller()->getContent())->job) === 0, 'Closing an Open job removes the listing');
+check(count(simplexml_load_string($controller->jooble()->getContent())->job) === 0, 'Closing an Open job removes the listing');
 
 DB::table('jobs')->where('id', 1)->update(['status' => 'open', 'start_date' => null, 'end_date' => '0000-00-00', 'created_at' => '2026-11-02 12:00:00']);
-$xml = simplexml_load_string($controller()->getContent());
+$xml = simplexml_load_string($controller->jooble()->getContent());
 check(count($xml->job) === 1 && (string) $xml->job->pubdate === '02.11.2026' && !isset($xml->job->expire), 'A missing start date uses the creation date and a zero expiry is treated as unset');
 check(Job::publicJobPage()->whereKey(1)->exists(), 'The recovered listing links to an accessible job detail page');
 DB::table('jobs')->where('id', 1)->update(['start_date' => '0000-00-00']);
-check(count(simplexml_load_string($controller()->getContent())->job) === 1, 'Open jobs with a legacy zero start date still appear');
+check(count(simplexml_load_string($controller->jooble()->getContent())->job) === 1, 'Open jobs with a legacy zero start date still appear');
 DB::table('jobs')->where('id', 1)->update(['job_description' => '<p>&nbsp;</p>']);
-check(Job::findOrFail(1)->joobleContentIssue() === 'Add a job description.' && count(simplexml_load_string($controller()->getContent())->job) === 0, 'Empty rich-text descriptions are excluded with an actionable reason');
+check(Job::findOrFail(1)->joobleContentIssue() === 'Add a job description.' && count(simplexml_load_string($controller->jooble()->getContent())->job) === 0, 'Empty rich-text descriptions are excluded with an actionable reason');
 DB::table('jobs')->where('id', 1)->update(['status' => '', 'job_description' => $open['job_description']]);
-check(count(simplexml_load_string($controller()->getContent())->job) === 0, 'Blank status is not treated as permission to publish');
+check(count(simplexml_load_string($controller->jooble()->getContent())->job) === 0, 'Blank status is not treated as permission to publish');
 DB::table('jobs')->where('id', 1)->update(['status' => Job::STATUS_OPEN]);
-check(count(simplexml_load_string($controller()->getContent())->job) === 1, 'Saving a repaired job as Open restores the Jooble listing');
+check(count(simplexml_load_string($controller->jooble()->getContent())->job) === 1, 'Saving a repaired job as Open restores the Jooble listing');
 
 $beta = DB::connection('beta');
 foreach (DB::select("SELECT sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'") as $table) {
@@ -153,11 +154,20 @@ $landlord->table('saas_subscriptions')->insert([
     ['tenant_id'=>3,'status'=>'active','expires_at'=>null],
     ['tenant_id'=>4,'status'=>'active','expires_at'=>now()->subDay()],
 ]);
-$xml = simplexml_load_string($controller()->getContent());
+$xml = simplexml_load_string($controller->jooble()->getContent());
 check(count($xml->job) === 2 && (string) $xml->job[0]['id'] === 'alpha-uuid-1' && (string) $xml->job[1]['id'] === 'beta-uuid-1', 'Shared feed combines active workspaces with unique job IDs and skips suspended or expired accounts');
 check((string) $xml->job[1]->company === 'Beta Company' && (string) $xml->job[1]->apply_url === 'https://ats.example.test/jobapply/beta-job?workspace=beta', 'Second workspace retains its own employer and apply URL');
-check(DB::getDefaultConnection() === 'sqlite' && config('database.connections.saas_jooble_feed') === null, 'Feed leaves the default database connection unchanged');
+check(DB::getDefaultConnection() === 'sqlite' && config('database.connections.saas_job_board_feed') === null, 'Feed leaves the default database connection unchanged');
 DB::table('jobs')->where('id', 1)->update(['publish_on_jooble' => false]);
-$xml = simplexml_load_string($controller()->getContent());
+$xml = simplexml_load_string($controller->jooble()->getContent());
 check(count($xml->job) === 1 && (string) $xml->job['id'] === 'beta-uuid-1', 'Deselecting a job removes only that workspace listing');
-echo "Jooble feed checks passed.\n";
+
+check(count(simplexml_load_string($controller->assistMyHr()->getContent())->job) === 0, 'Existing Jooble selections do not publish jobs to AssistMyHR');
+DB::table('jobs')->whereIn('id', [3, 8])->update(['publish_on_assistmyhr' => true]);
+$beta->table('jobs')->where('id', 1)->update(['publish_on_assistmyhr' => true]);
+$assistMyHr = simplexml_load_string($controller->assistMyHr()->getContent());
+check(count($assistMyHr->job) === 2 && (string) $assistMyHr->job[0]['id'] === 'alpha-uuid-8'
+    && (string) $assistMyHr->job[1]['id'] === 'beta-uuid-1', 'AssistMyHR combines selected eligible jobs across workspaces and excludes closed jobs');
+check((string) $assistMyHr->job[0]->apply_url === 'https://ats.example.test/jobapply/unselected/1?workspace=alpha', 'AssistMyHR keeps the correct workspace application link');
+check(count(simplexml_load_string($controller->jooble()->getContent())->job) === 1, 'AssistMyHR selections do not change Jooble listings');
+echo "Job board feed checks passed.\n";
