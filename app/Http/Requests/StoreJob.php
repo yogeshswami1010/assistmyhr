@@ -20,6 +20,7 @@ class StoreJob extends CoreRequest
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
             'publish_on_assistmyhr' => 'sometimes|boolean',
+            'publish_on_postjobfree' => 'sometimes|boolean',
             'status'             => ['sometimes', 'required', Rule::in(array_keys(Job::STATUSES))],
             'total_positions'    => 'required|numeric',
 

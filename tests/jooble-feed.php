@@ -82,6 +82,7 @@ Schema::create('job_job_locations', function (Blueprint $table) {
 });
 (require $root.'/database/migrations/2026_11_10_000001_add_jooble_publishing_to_jobs.php')->up();
 (require $root.'/database/migrations/2026_11_10_000004_add_assistmyhr_publishing_to_jobs.php')->up();
+(require $root.'/database/migrations/2026_11_10_000005_add_postjobfree_publishing_to_jobs.php')->up();
 DB::table('jobs')->insert(['id'=>101,'status'=>'active','start_date'=>'2026-11-01']);
 DB::table('jobs')->insert(['id'=>102,'status'=>'inactive','start_date'=>'2026-11-01']);
 (require $root.'/database/migrations/2026_11_10_000002_expand_job_status_values.php')->up();
@@ -170,4 +171,22 @@ check(count($assistMyHr->job) === 2 && (string) $assistMyHr->job[0]['id'] === 'a
     && (string) $assistMyHr->job[1]['id'] === 'beta-uuid-1', 'AssistMyHR combines selected eligible jobs across workspaces and excludes closed jobs');
 check((string) $assistMyHr->job[0]->apply_url === 'https://ats.example.test/jobapply/unselected/1?workspace=alpha', 'AssistMyHR keeps the correct workspace application link');
 check(count(simplexml_load_string($controller->jooble()->getContent())->job) === 1, 'AssistMyHR selections do not change Jooble listings');
+
+$postJobFree = simplexml_load_string($controller->postJobFree()->getContent());
+check($postJobFree->getName() === 'source' && count($postJobFree->job) === 0, 'PostJobFree has a separate selection and source root');
+DB::table('jobs')->whereIn('id', [1, 3])->update(['publish_on_postjobfree' => true]);
+$beta->table('jobs')->where('id', 1)->update(['publish_on_postjobfree' => true]);
+$postJobFree = simplexml_load_string($controller->postJobFree()->getContent());
+check(count($postJobFree->job) === 2 && (string) $postJobFree->job[0]->referencenumber === 'alpha-uuid-1'
+    && (string) $postJobFree->job[1]->referencenumber === 'beta-uuid-1', 'PostJobFree lists selected Open jobs with unique cross-workspace references');
+$listing = $postJobFree->job[0];
+check((string) $listing->title === $open['title'] && (string) $listing->date === '2026-11-02 12:00:00'
+    && (string) $listing->url === 'https://ats.example.test/job/engineer/1?workspace=alpha'
+    && (string) $listing->company === 'Acme' && (string) $listing->location === 'Toronto'
+    && (string) $listing->description === 'Build great tools.' && (string) $listing->salary === '50000–70000 CAD / year', 'PostJobFree fields follow its XML example');
+check(!isset($listing['id']) && !isset($listing->email) && !isset($listing->cpc), 'PostJobFree reference is a field and no optional email or bid is exposed');
+$beta->table('companies')->where('id', 1)->update(['show_in_frontend' => 'false']);
+check(count(simplexml_load_string($controller->postJobFree()->getContent())->job) === 1, 'PostJobFree excludes jobs without a public employer name');
+check(count(simplexml_load_string($controller->assistMyHr()->getContent())->job) === 2
+    && count(simplexml_load_string($controller->jooble()->getContent())->job) === 1, 'PostJobFree selection does not affect other feeds');
 echo "Job board feed checks passed.\n";

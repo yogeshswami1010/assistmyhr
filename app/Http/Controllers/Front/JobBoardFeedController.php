@@ -24,12 +24,17 @@ class JobBoardFeedController
         return $this->feed('publish_on_assistmyhr');
     }
 
+    public function postJobFree(): Response
+    {
+        return $this->feed('publish_on_postjobfree');
+    }
+
     private function feed(string $selection): Response
     {
         $xml = new XMLWriter;
         $xml->openMemory();
         $xml->startDocument('1.0', 'UTF-8');
-        $xml->startElement('jobs');
+        $xml->startElement($selection === 'publish_on_postjobfree' ? 'source' : 'jobs');
 
         if (config('saas.enabled')) {
             foreach (Tenant::where('status', 'active')->with('subscription')->lazyById() as $tenant) {
@@ -65,9 +70,10 @@ class JobBoardFeedController
     {
         $jobs = $query->publicJobPage()->where($selection, true)
             ->with(['company', 'jobLocation', 'jobType', 'currency'])->lazyById();
+        $postJobFree = $selection === 'publish_on_postjobfree';
 
         foreach ($jobs as $job) {
-            if ($job->joobleContentIssue() !== null) {
+            if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue() !== null)) {
                 continue;
             }
 
@@ -75,7 +81,8 @@ class JobBoardFeedController
             if ($tenant) {
                 $jobRouteParameters['workspace'] = $tenant->slug;
             }
-            $fields = [
+            $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
+            $fields = $postJobFree ? $this->postJobFreeFields($job, $jobRouteParameters, $reference) : [
                 'link' => route('jobs.jobDetail', $jobRouteParameters),
                 'apply_url' => route('jobs.jobApply', $jobRouteParameters),
                 'name' => $job->title,
@@ -90,7 +97,9 @@ class JobBoardFeedController
             ];
 
             $xml->startElement('job');
-            $xml->writeAttribute('id', ($tenant ? $tenant->uuid.'-' : '').$job->id);
+            if (!$postJobFree) {
+                $xml->writeAttribute('id', $reference);
+            }
             foreach ($fields as $name => $value) {
                 if (filled($value)) {
                     $this->writeCdata($xml, $name, $value);
@@ -98,6 +107,26 @@ class JobBoardFeedController
             }
             $xml->endElement();
         }
+    }
+
+    private function postJobFreeFields(Job $job, array $routeParameters, string $reference): array
+    {
+        $date = $job->publicationDate();
+        if ($job->created_at?->isSameDay($date)) {
+            $date = $job->created_at;
+        }
+        $description = preg_replace('~<br\b[^>]*>|</(?:p|div|li|h[1-6]|tr)>~i', "\n", $job->job_description);
+
+        return [
+            'title' => $job->title,
+            'date' => $date->format('Y-m-d H:i:s'),
+            'referencenumber' => $reference,
+            'url' => route('jobs.jobDetail', $routeParameters),
+            'company' => $job->company->company_name,
+            'location' => $job->joobleRegion(),
+            'description' => trim(html_entity_decode(strip_tags($description), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
+            'salary' => $this->salary($job),
+        ];
     }
 
     private function salary(Job $job): ?string

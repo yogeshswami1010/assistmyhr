@@ -211,6 +211,7 @@ class AdminJobsController extends AdminBaseController
         $job->job_description = $request->job_description;
         $job->publish_on_jooble = $request->boolean('publish_on_jooble');
         $job->publish_on_assistmyhr = $request->boolean('publish_on_assistmyhr');
+        $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
         if ($request->filled('category_new')) {
@@ -328,7 +329,7 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
         $this->job = Job::findOrFail($id);
-        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr) {
+        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree) {
             $this->jobBoardFeedIssue = match (true) {
                 $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
                 $this->job->company?->status !== 'active' => 'Select an active company.',
@@ -406,6 +407,9 @@ class AdminJobsController extends AdminBaseController
         }
         if ($request->has('publish_on_assistmyhr')) {
             $job->publish_on_assistmyhr = $request->boolean('publish_on_assistmyhr');
+        }
+        if ($request->has('publish_on_postjobfree')) {
+            $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
         }
 
         $job->total_positions = $request->total_positions;

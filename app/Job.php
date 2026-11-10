@@ -43,6 +43,7 @@ class Job extends Model
         'show_salary'          => 'boolean',
         'publish_on_jooble'    => 'boolean',
         'publish_on_assistmyhr' => 'boolean',
+        'publish_on_postjobfree' => 'boolean',
     ];
 
     protected $appends = [
@@ -126,6 +127,15 @@ class Job extends Model
         $description = html_entity_decode(strip_tags($this->job_description), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         if (!preg_match('/[^\s\p{Z}]/u', $description)) {
             return 'Add a job description.';
+        }
+
+        return null;
+    }
+
+    public function postJobFreeCompanyIssue(): ?string
+    {
+        if ($this->company?->show_in_frontend !== 'true' || blank($this->company?->company_name)) {
+            return 'PostJobFree requires a public company name.';
         }
 
         return null;

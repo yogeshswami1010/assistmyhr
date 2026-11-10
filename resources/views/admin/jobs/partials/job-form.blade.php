@@ -425,9 +425,10 @@
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
                                 <p class="text-xs text-slate-600">Choose which public feeds should include this job while it is Open.</p>
-                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'AssistMyHR'] as $board => $label)
+                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'AssistMyHR', 'postjobfree' => 'PostJobFree'] as $board => $label)
                                     @php
                                         $field = 'publish_on_'.$board;
+                                        $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
                                     @endphp
                                     <div class="mt-3">
                                         <input type="hidden" name="{{ $field }}" value="0">
@@ -437,8 +438,8 @@
                                             Include this job in the {{ $label }} feed
                                         </label>
                                         @if($isEdit && $job?->{$field})
-                                            @if(!empty($jobBoardFeedIssue))
-                                                <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $jobBoardFeedIssue }}</p>
+                                            @if($feedIssue)
+                                                <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $feedIssue }}</p>
                                             @else
                                                 <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
                                             @endif
