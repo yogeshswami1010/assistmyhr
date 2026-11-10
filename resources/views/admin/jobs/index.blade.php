@@ -392,8 +392,6 @@
             html += '<td class="px-4 py-3 align-middle"><div class="inline-flex items-center gap-1 text-[12px] font-semibold text-[#5A6478]">';
             html += '<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
             html += esc(j.locationsStr || '—') + '</div></td>';
-            html += '<td class="px-4 py-3 align-middle text-[12.5px] text-[#8892A0]">' + esc(j.start) + '</td>';
-            html += '<td class="px-4 py-3 align-middle text-[12.5px] text-[#8892A0]">' + esc(j.end) + '</td>';
             html += '<td class="px-4 py-3 align-middle">' + statusPill(j.status) + '</td>';
             html += '<td class="py-3 pl-4 pr-[18px] text-right align-middle"><div class="flex items-center justify-end gap-1.5">';
 
