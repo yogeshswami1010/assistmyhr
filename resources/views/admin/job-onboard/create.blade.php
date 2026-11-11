@@ -38,11 +38,7 @@
 @endpush
 
 @section('page-title-html')
-    @if($documentSign)
-        <span class="text-[22px] font-bold tracking-tight text-[#1A1E2E]">Prepare offer for signing</span>
-    @else
     <span class="text-[22px] font-bold tracking-tight text-[#1A1E2E]">@lang('app.job') <span class="font-['Instrument_Serif',serif] text-[20px] font-normal italic text-[#2563EB]">@lang('app.onBoard')</span></span>
-    @endif
 @endsection
 
 @section('page-subtitle')
@@ -160,14 +156,12 @@
                             @endforeach
                         </select>
                     </div>
-                    @unless($documentSign)
                     <div>
                         <label class="bs-set-lbl">@lang('app.sendOfferEmail')</label>
                         <div class="switchery-demo mt-2">
                             <input id="nexmo_status" name="send_email" type="checkbox" value="yes" class="js-switch change-language-setting" data-color="#99d683" data-size="small"/>
                         </div>
                     </div>
-                    @endunless
                 </div>
             </div>
 
@@ -341,7 +335,7 @@
 
         $(document).on('click', '.save-onboard', function () {
             $.easyAjax({
-                url: @json(tenant_route($documentSign ? 'admin.document-sign.store' : 'admin.job-onboard.store')),
+                url: @json(tenant_route('admin.job-onboard.store')),
                 container: '#createSchedule',
                 type: 'POST',
                 file: true

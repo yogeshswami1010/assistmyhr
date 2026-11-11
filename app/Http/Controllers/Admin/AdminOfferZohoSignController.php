@@ -23,9 +23,10 @@ class AdminOfferZohoSignController extends AdminBaseController
         $this->pageTitle = 'Document Sign';
         $this->zohoEnabled = $zoho->enabled();
         if ($this->zohoEnabled) {
-            $this->applications = JobApplication::with(['job', 'onboard'])
+            $this->applications = JobApplication::with(['job', 'status', 'onboard', 'latestSigningDocument'])
                 ->where(fn ($query) => $query
                     ->whereHas('status', fn ($status) => $status->hired())
+                    ->orWhereHas('signingDocuments')
                     ->orWhereHas('onboard', fn ($offer) => $offer
                         ->where('hired_status', 'offered')->orWhereNotNull('zoho_sign_request_id')))
                 ->latest('id')

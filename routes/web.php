@@ -373,8 +373,11 @@ Route::middleware('auth')->group(function () {
             Route::get('job-onboard/update-status/{id?}',[AdminJobOnboardController::class, 'updateStatus'])->name('job-onboard.update-status');
             Route::prefix('document-sign')->name('document-sign.')->controller(\App\Http\Controllers\Admin\AdminOfferZohoSignController::class)->group(function () {
                 Route::get('/', 'index')->name('index');
-                Route::get('prepare', [AdminJobOnboardController::class, 'create'])->name('prepare');
-                Route::post('prepare', [AdminJobOnboardController::class, 'store'])->name('store');
+                Route::get('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'show'])->name('prepare');
+                Route::post('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'store'])->name('store');
+                Route::post('documents/{id}/editor', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'editor'])->whereNumber('id')->name('documents.editor');
+                Route::post('documents/{id}/sync', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'sync'])->whereNumber('id')->name('documents.sync');
+                Route::get('documents/{id}/pdf', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'download'])->whereNumber('id')->name('documents.pdf');
                 Route::get('{id}', 'show')->whereNumber('id')->name('show');
                 Route::post('{id}', 'configure')->whereNumber('id')->name('configure');
                 Route::post('{id}/send', 'send')->whereNumber('id')->name('send');

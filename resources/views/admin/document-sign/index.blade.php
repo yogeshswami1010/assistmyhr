@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-subtitle', 'Manage offer letters signed through Zoho Sign.')
+@section('page-subtitle', 'Send PDFs to applicants for signature through Zoho Sign.')
 
 @section('content')
     @if(!$zohoEnabled)
@@ -25,20 +25,22 @@
                             <td>{{ $application->full_name }}</td>
                             <td>{{ $application->job?->title ?? '—' }}</td>
                             <td>
-                                @if($offer)
+                                @if($application->latestSigningDocument)
+                                    @include('admin.document-sign.status', ['offer' => $application->latestSigningDocument])
+                                @elseif($offer)
                                     @include('admin.document-sign.status', ['offer' => $offer])
                                 @else
-                                    Ready to prepare offer
+                                    Ready to upload
                                 @endif
                             </td>
                             <td>
-                                @if($offer)
+                                @if($application->latestSigningDocument || $application->status?->isHired())
+                                    <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.prepare', ['id' => $application->id]) }}">
+                                        {{ $application->latestSigningDocument ? 'View documents' : 'Upload PDF' }}<span class="sr-only"> for {{ $application->full_name }}</span>
+                                    </a>
+                                @elseif($offer)
                                     <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.show', ['id' => $offer->id]) }}">
                                         View signing details<span class="sr-only"> for {{ $application->full_name }}</span>
-                                    </a>
-                                @elseif($user->cans('add_job_applications'))
-                                    <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.prepare', ['id' => $application->id]) }}">
-                                        Prepare offer<span class="sr-only"> for {{ $application->full_name }}</span>
                                     </a>
                                 @endif
                             </td>

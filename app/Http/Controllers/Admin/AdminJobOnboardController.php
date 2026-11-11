@@ -15,7 +15,6 @@ use App\Notifications\JobOffer;
 use App\Onboard;
 use App\OnboardAnswer;
 use App\OnboardFiles;
-use App\Services\ZohoSign;
 use App\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\Request;
@@ -50,19 +49,11 @@ class AdminJobOnboardController extends AdminBaseController
     public function create(Request $request)
     {
         abort_if(! $this->user->cans('add_job_applications'), 403);
-        $this->documentSign = $request->routeIs('admin.document-sign.prepare');
-        if ($this->documentSign) {
-            $this->authorizeDocumentSign();
-            $this->pageTitle = 'Prepare offer for signing';
-        }
 
         $this->application = JobApplication::with(['job', 'status', 'job.location', 'location'])->findOrFail($request->id);
 
         // Abort if requested application status is not hired.
         abort_unless($this->application->status?->isHired(), 403);
-        if ($this->documentSign && $this->application->onboard) {
-            return redirect(tenant_route('admin.document-sign.show', ['id' => $this->application->onboard->id]));
-        }
 
         $this->users = User::all();
         $this->departments = Department::all();
@@ -80,22 +71,15 @@ class AdminJobOnboardController extends AdminBaseController
     {
         abort_unless($this->user->cans('add_job_applications'), 403);
         $request->validate(['candidate_id' => 'required|integer']);
-        $documentSign = $request->routeIs('admin.document-sign.store');
-        if ($documentSign) {
-            $this->authorizeDocumentSign();
-        }
-
-        return DB::transaction(fn () => $this->storeOffer($request, $documentSign));
+        return DB::transaction(fn () => $this->storeOffer($request));
     }
 
-    private function storeOffer(StoreRequest $request, bool $documentSign): array
+    private function storeOffer(StoreRequest $request): array
     {
         $application = JobApplication::whereKey($request->candidate_id)->lockForUpdate()->firstOrFail();
         abort_unless($application->status?->isHired(), 403);
         if ($existing = $application->onboard) {
-            return Reply::redirect($documentSign
-                ? tenant_route('admin.document-sign.show', ['id' => $existing->id])
-                : tenant_route('admin.job-onboard.show', ['job_onboard' => $existing->id]));
+            return Reply::redirect(tenant_route('admin.job-onboard.show', ['job_onboard' => $existing->id]));
         }
 
         // Save On Board Details
@@ -137,19 +121,11 @@ class AdminJobOnboardController extends AdminBaseController
             }
         }
         // Send Offer email
-        if ($documentSign) {
-            return Reply::redirect(tenant_route('admin.document-sign.show', ['id' => $onBoard->id]), 'Offer saved.');
-        }
         if ($request->has('send_email')) {
             $this->sendOffer($request->candidate_id);
         }
 
         return Reply::redirect(route('admin.job-onboard.index'), __('app.onBoard').' '.__('messages.createdSuccessfully'));
-    }
-
-    private function authorizeDocumentSign(): void
-    {
-        abort_unless($this->user->cans('view_job_applications') && app(ZohoSign::class)->enabled(), 403);
     }
 
     /**

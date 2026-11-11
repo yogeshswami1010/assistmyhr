@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\CandidateSigningDocument;
 use App\Onboard;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
@@ -28,6 +29,7 @@ class ZohoSignWebhookController extends Controller
         }
 
         $status = match (data_get($payload, 'notifications.operation_type')) {
+            'RequestSubmitted' => 'inprogress',
             'RequestCompleted' => 'completed',
             'RequestRejected' => 'declined',
             'RequestRecalled' => 'recalled',
@@ -53,6 +55,12 @@ class ZohoSignWebhookController extends Controller
                     return;
                 }
                 $context->activate($tenant);
+            }
+
+            $document = CandidateSigningDocument::where('zoho_sign_request_id', $id)->first();
+            if ($document) {
+                $document->applyStatus($status);
+                return;
             }
 
             $offer = Onboard::where('zoho_sign_request_id', $id)->first();

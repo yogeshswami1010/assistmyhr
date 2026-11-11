@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\CandidateSigningDocument;
+use App\JobApplication;
 use App\Notifications\JobOfferAccepted;
 use App\Notifications\JobOfferRejected;
 use App\Onboard;
@@ -90,9 +92,68 @@ class ZohoSign
         $this->applyStatus($offer, $status);
     }
 
-    public function status(Onboard $offer): string
+    public function createCandidateDraft(JobApplication $application, string $pdfPath, string $filename): string
     {
-        $this->registerWorkspace($offer);
+        $stream = fopen($pdfPath, 'rb');
+        if ($stream === false) {
+            throw new RuntimeException('The uploaded PDF could not be read.');
+        }
+
+        try {
+            $response = $this->client()
+                ->attach('file', $stream, $filename, ['Content-Type' => 'application/pdf'])
+                ->post('requests', [
+                    'data' => json_encode(['requests' => [
+                        'request_name' => $filename,
+                        'expiration_days' => 30,
+                        'is_sequential' => true,
+                        'actions' => [[
+                            'action_type' => 'SIGN',
+                            'recipient_name' => $application->full_name,
+                            'recipient_email' => $application->email,
+                            'signing_order' => 0,
+                            'verify_recipient' => true,
+                            'verification_type' => 'EMAIL',
+                        ]],
+                    ]], JSON_THROW_ON_ERROR),
+                    'testing' => config('zoho-sign.testing') ? 'true' : 'false',
+                ]);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        $id = (string) data_get($this->json($response), 'requests.request_id');
+        if (! preg_match('/\A[0-9]{1,64}\z/', $id)) {
+            throw new RuntimeException('Zoho Sign did not return a request ID.');
+        }
+        $this->registerWorkspace($id);
+
+        return $id;
+    }
+
+    public function editorUrl(CandidateSigningDocument $document): string
+    {
+        $response = $this->client()->asForm()->post('requests/'.$document->zoho_sign_request_id.'/embedsendtoken', [
+            'testing' => config('zoho-sign.testing') ? 'true' : 'false',
+        ]);
+        $url = $this->json($response)['send_url'] ?? null;
+        $parts = is_string($url) ? parse_url($url) : false;
+        if (($parts['scheme'] ?? null) !== 'https'
+            || ($parts['host'] ?? null) !== 'sign.'.$this->regionalHost()
+            || ($parts['path'] ?? null) !== '/embedsend'
+            || isset($parts['user']) || isset($parts['pass'])
+            || (isset($parts['port']) && $parts['port'] !== 443)) {
+            throw new RuntimeException('Zoho Sign did not return a valid editor link.');
+        }
+
+        return $url;
+    }
+
+    public function status(Onboard|CandidateSigningDocument $offer): string
+    {
+        $this->registerWorkspace($offer->zoho_sign_request_id);
         $response = $this->json($this->client()->get('requests/'.$offer->zoho_sign_request_id));
         $status = data_get($response, 'requests.request_status');
         if (! is_string($status) || ! preg_match('/\A[a-z_ ]{1,32}\z/i', $status)) {
@@ -102,7 +163,7 @@ class ZohoSign
         return strtolower($status);
     }
 
-    private function registerWorkspace(Onboard $offer): void
+    private function registerWorkspace(string $requestId): void
     {
         if (! config('saas.enabled')) {
             return;
@@ -115,10 +176,10 @@ class ZohoSign
 
         $requests = DB::connection('saas_landlord')->table('saas_zoho_sign_requests');
         $requests->insertOrIgnore([
-            'request_id' => $offer->zoho_sign_request_id,
+            'request_id' => $requestId,
             'tenant_id' => $tenant->id,
         ]);
-        if ((int) $requests->where('request_id', $offer->zoho_sign_request_id)->value('tenant_id') !== (int) $tenant->id) {
+        if ((int) $requests->where('request_id', $requestId)->value('tenant_id') !== (int) $tenant->id) {
             throw new RuntimeException('The Zoho Sign request could not be assigned to this workspace.');
         }
     }
@@ -162,7 +223,7 @@ class ZohoSign
         }
     }
 
-    public function signedPdf(Onboard $offer): string
+    public function signedPdf(Onboard|CandidateSigningDocument $offer): string
     {
         $response = $this->client()->get('requests/'.$offer->zoho_sign_request_id.'/pdf', [
             'with_coc' => 'true',
@@ -182,7 +243,7 @@ class ZohoSign
         }
 
         $domain = config('zoho-sign.domain');
-        $host = $domain === 'zohocloud.ca' ? $domain : 'zoho.'.$domain;
+        $host = $this->regionalHost();
         $cacheKey = 'zoho-sign.token.'.hash('sha256', $domain.config('zoho-sign.client_id').config('zoho-sign.refresh_token'));
         $cache = config('saas.enabled')
             ? Cache::build(['driver' => 'file', 'path' => storage_path('framework/cache/data')])
@@ -206,6 +267,13 @@ class ZohoSign
         return Http::baseUrl("https://sign.{$host}/api/v1")
             ->withHeaders(['Authorization' => 'Zoho-oauthtoken '.$token])
             ->connectTimeout(5)->timeout(25)->withoutRedirecting();
+    }
+
+    private function regionalHost(): string
+    {
+        $domain = config('zoho-sign.domain');
+
+        return $domain === 'zohocloud.ca' ? $domain : 'zoho.'.$domain;
     }
 
     private function json(Response $response): array
