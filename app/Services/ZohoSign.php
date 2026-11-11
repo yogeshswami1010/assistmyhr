@@ -25,11 +25,7 @@ class ZohoSign
         return filled(config('zoho-sign.client_id'))
             && filled(config('zoho-sign.client_secret'))
             && filled(config('zoho-sign.refresh_token'))
-            && in_array(config('zoho-sign.domain'), self::DOMAINS, true)
-            && (! config('saas.enabled') || (
-                filled(config('zoho-sign.workspace'))
-                && app(TenantContext::class)->current()?->slug === config('zoho-sign.workspace')
-            ));
+            && in_array(config('zoho-sign.domain'), self::DOMAINS, true);
     }
 
     public function createDraft(Onboard $offer): string
@@ -96,6 +92,7 @@ class ZohoSign
 
     public function status(Onboard $offer): string
     {
+        $this->registerWorkspace($offer);
         $response = $this->json($this->client()->get('requests/'.$offer->zoho_sign_request_id));
         $status = data_get($response, 'requests.request_status');
         if (! is_string($status) || ! preg_match('/\A[a-z_ ]{1,32}\z/i', $status)) {
@@ -103,6 +100,27 @@ class ZohoSign
         }
 
         return strtolower($status);
+    }
+
+    private function registerWorkspace(Onboard $offer): void
+    {
+        if (! config('saas.enabled')) {
+            return;
+        }
+
+        $tenant = app(TenantContext::class)->current();
+        if (! $tenant) {
+            throw new RuntimeException('The Zoho Sign request requires a workspace.');
+        }
+
+        $requests = DB::connection('saas_landlord')->table('saas_zoho_sign_requests');
+        $requests->insertOrIgnore([
+            'request_id' => $offer->zoho_sign_request_id,
+            'tenant_id' => $tenant->id,
+        ]);
+        if ((int) $requests->where('request_id', $offer->zoho_sign_request_id)->value('tenant_id') !== (int) $tenant->id) {
+            throw new RuntimeException('The Zoho Sign request could not be assigned to this workspace.');
+        }
     }
 
     public function applyStatus(Onboard $offer, string $status): void
@@ -164,10 +182,14 @@ class ZohoSign
         }
 
         $domain = config('zoho-sign.domain');
+        $host = $domain === 'zohocloud.ca' ? $domain : 'zoho.'.$domain;
         $cacheKey = 'zoho-sign.token.'.hash('sha256', $domain.config('zoho-sign.client_id').config('zoho-sign.refresh_token'));
-        $token = Cache::remember($cacheKey, now()->addMinutes(45), function () use ($domain) {
+        $cache = config('saas.enabled')
+            ? Cache::build(['driver' => 'file', 'path' => storage_path('framework/cache/data')])
+            : Cache::store();
+        $token = $cache->remember($cacheKey, now()->addMinutes(45), function () use ($host) {
             $response = Http::asForm()->connectTimeout(5)->timeout(15)->withoutRedirecting()
-                ->post("https://accounts.zoho.{$domain}/oauth/v2/token", [
+                ->post("https://accounts.{$host}/oauth/v2/token", [
                     'client_id' => config('zoho-sign.client_id'),
                     'client_secret' => config('zoho-sign.client_secret'),
                     'refresh_token' => config('zoho-sign.refresh_token'),
@@ -181,7 +203,7 @@ class ZohoSign
             return $token;
         });
 
-        return Http::baseUrl("https://sign.zoho.{$domain}/api/v1")
+        return Http::baseUrl("https://sign.{$host}/api/v1")
             ->withHeaders(['Authorization' => 'Zoho-oauthtoken '.$token])
             ->connectTimeout(5)->timeout(25)->withoutRedirecting();
     }

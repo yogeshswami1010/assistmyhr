@@ -2,7 +2,6 @@
 
 return [
     'domain' => env('ZOHO_SIGN_DOMAIN', 'com'),
-    'workspace' => env('ZOHO_SIGN_WORKSPACE'),
     'client_id' => env('ZOHO_SIGN_CLIENT_ID'),
     'client_secret' => env('ZOHO_SIGN_CLIENT_SECRET'),
     'refresh_token' => env('ZOHO_SIGN_REFRESH_TOKEN'),
