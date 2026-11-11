@@ -152,11 +152,6 @@ class AdminCompanyController extends AdminBaseController
 
         $setting->update($data);
 
-        // update company's jobs status
-        if ($setting->status != $request->input('status')) {
-            Job::where('company_id', $id)->update(['status' => $request->status]);
-        }
-
         return Reply::redirect(route('admin.company.show', $setting->id), __('menu.companies').' '.__('messages.updatedSuccessfully'));
     }
 

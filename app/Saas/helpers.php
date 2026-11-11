@@ -19,7 +19,7 @@ function tenant_upload_path(string $path = ''): string
     if (config('saas.enabled') && app(\App\Saas\TenantContext::class)->current()) {
         return app(\App\Saas\TenantContext::class)->root().'/uploads/'.ltrim($path, '/');
     }
-    return tenant_upload_path(''.ltrim($path, '/'));
+    return public_path('user-uploads/'.ltrim($path, '/'));
 }
 
 function tenant_asset_url(string $path): string

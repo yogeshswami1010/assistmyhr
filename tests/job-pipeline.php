@@ -80,8 +80,12 @@ try {
 check(ApplicationStatus::forJob(1)->orderBy('position')->get()->toArray() === $saved->toArray(), 'Rejected removal does not change the pipeline');
 check(ApplicationStatus::forJob(2)->orderBy('position')->get()->toArray() === $legacy, 'Editing another job preserves legacy stages');
 
+$view = file_get_contents($root.'/resources/views/admin/jobs/partials/job-form.blade.php');
+$compiledForm = $app['blade.compiler']->compileString($view);
+token_get_all($compiledForm, TOKEN_PARSE);
+check(!str_contains($compiledForm, '<?php(') && !str_contains($compiledForm, '@checked(old($field'), 'The job board controls compile into executable PHP');
+
 if (isset($argv[2])) {
-    $view = file_get_contents($root.'/resources/views/admin/jobs/partials/job-form.blade.php');
     $start = strpos($view, '{{-- ── Pipeline Statuses');
     $card = substr($view, $start, strpos($view, '{{-- Form actions', $start) - $start);
     $start = strpos($view, '// ── Pipeline status rows');

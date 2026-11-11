@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Requests;
+use App\Job;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Validation\Rule;
@@ -15,11 +16,11 @@ class StoreJob extends CoreRequest
     public function rules()
     {
         $rules = [
-            'title'                => 'required',
-            'job_code'             => 'nullable|string|max:100',
-            'job_description'      => 'required',
-            'publish_on_jooble'    => 'sometimes|boolean',
-            'total_positions'      => 'required|numeric',
+            'title'              => 'required',
+            'job_code'           => 'nullable|string|max:100',
+            'job_description'    => 'required',
+            'publish_on_jooble'  => 'sometimes|boolean',
+            'total_positions'    => 'required|numeric',
 
             // New manual-entry fields
             'company_new'          => 'nullable|string|max:191',

@@ -37,6 +37,16 @@ class ApplicationStatus extends Model
         return $query->whereNull('job_id');
     }
 
+    public function scopeHired($query)
+    {
+        return $query->whereRaw('LOWER(TRIM(status)) = ?', ['hired']);
+    }
+
+    public function isHired(): bool
+    {
+        return strtolower(trim((string) $this->status)) === 'hired';
+    }
+
     public function scopeForJob($query, int $jobId)
     {
         return $query->where('job_id', $jobId);

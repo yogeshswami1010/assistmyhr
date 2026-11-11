@@ -210,6 +210,8 @@ class AdminJobsController extends AdminBaseController
         $job->job_code = $request->job_code;
         $job->job_description = $request->job_description;
         $job->publish_on_jooble = $request->boolean('publish_on_jooble');
+        $job->publish_on_assistmyhr = $request->boolean('publish_on_assistmyhr');
+        $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
         if ($request->filled('category_new')) {
@@ -326,7 +328,15 @@ class AdminJobsController extends AdminBaseController
     public function edit($id)
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
-        $this->job = Job::find($id);
+        $this->job = Job::findOrFail($id);
+        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree) {
+            $this->jobBoardFeedIssue = match (true) {
+                $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
+                $this->job->company?->status !== 'active' => 'Select an active company.',
+                !Job::publicJobPage()->whereKey($id)->exists() => 'Check the job’s publication and expiry dates.',
+                default => $this->job->joobleContentIssue(),
+            };
+        }
         $this->categories = JobCategory::all();
         $this->skills = Skill::where('category_id', $this->job->category_id)->get();
         $this->jobQuestion = $this->job->questions->pluck('id')->toArray();
@@ -395,7 +405,13 @@ class AdminJobsController extends AdminBaseController
         if ($request->has('publish_on_jooble')) {
             $job->publish_on_jooble = $request->boolean('publish_on_jooble');
         }
-       
+        if ($request->has('publish_on_assistmyhr')) {
+            $job->publish_on_assistmyhr = $request->boolean('publish_on_assistmyhr');
+        }
+        if ($request->has('publish_on_postjobfree')) {
+            $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
+        }
+
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
         if ($request->filled('category_new')) {
@@ -406,8 +422,8 @@ class AdminJobsController extends AdminBaseController
         } else {
             $job->category_id = $request->category_id;
         }
-        $job->start_date = $request->start_date;
-        $job->status = $request->status;
+        $job->start_date = $request->filled('start_date') ? $request->start_date : ($job->publicationDate() ?? now()->toDateString());
+        $job->status = $request->input('status', $job->status);
         $job->job_type_id = $request->job_type_id;
         $experienceIds = [];
         foreach ($request->work_experience_ids as $value) {
@@ -679,15 +695,10 @@ class AdminJobsController extends AdminBaseController
                 return $row->start_date ? $row->start_date->format('d M, Y') : '';
             })
             ->editColumn('status', function ($row) {
-                if ($row->status == 'active') {
-                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">'.__('app.active').'</span>';
-                }
-                if ($row->status == 'inactive') {
-                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">'.__('app.inactive').'</span>';
-                }
-                if ($row->status == 'expired') {
-                    return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white" style="background: #FF8C00;">'.__('app.expired').'</span>';
-                }
+                $label = Job::STATUSES[$row->status] ?? 'Unknown';
+                $color = $row->status === Job::STATUS_OPEN ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-700';
+
+                return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium '.$color.'">'.e($label).'</span>';
             })
             ->rawColumns(['status', 'action', 'location_id'])
             ->addIndexColumn()
@@ -873,7 +884,7 @@ class AdminJobsController extends AdminBaseController
         $job = Job::find($request->id);
         $job->start_date = $request->start_date;
 
-        $job->status = 'active';
+        $job->status = Job::STATUS_OPEN;
         $job->save();
 
         return Reply::success(__('messages.updatedSuccessfully'));

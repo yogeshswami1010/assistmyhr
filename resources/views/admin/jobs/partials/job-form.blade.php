@@ -210,20 +210,7 @@
                             </div>
                  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div class="form-group mb-0">
-                                <div class="mb-1.5 flex items-center justify-between gap-2">
-                                    <label for="title" class="block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
-                                    @if ($isEdit)
-                                    <button
-                                        type="button"
-                                        id="ai-generate-job-content-btn"
-                                        class="inline-flex items-center gap-1.5 rounded-lg border border-[#2563EB]/25 bg-[#EFF6FF] px-2.5 py-1.5 text-[11px] font-semibold text-[#2563EB] transition hover:bg-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-50"
-                                        data-url="{{ route('admin.jobs.ai-generate-content') }}"
-                                    >
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l1.912 5.813a2 2 0 001.268 1.268L21 12l-5.82 1.919a2 2 0 00-1.261 1.261L12 21l-1.919-5.82a2 2 0 00-1.261-1.261L3 12l5.813-1.919a2 2 0 001.268-1.268L12 3z"/></svg>
-                                        <span id="ai-generate-job-content-label">@lang('app.aiGenerate')</span>
-                                    </button>
-                                    @endif
-                                </div>
+                                <label for="title" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.jobTitle') <span class="text-red-500">*</span></label>
                                 <input type="text" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10" name="title" id="title" value="{{ $job ? $job->title : '' }}">
                             </div>
                             <div class="form-group mb-0">
@@ -437,14 +424,29 @@
                             </div>
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
-                                <input type="hidden" name="publish_on_jooble" value="0">
-                                <label class="flex items-center gap-2 text-sm text-slate-700">
-                                    <input type="checkbox" name="publish_on_jooble" value="1"
-                                        @checked(old('publish_on_jooble', $isEdit && $job?->publish_on_jooble))>
-                                    Include this job in the Jooble feed
-                                </label>
-                                <p class="mt-2 text-xs text-slate-600">Open jobs appear in the feed after saving. Submit your workspace’s feed URL to Jooble for review.</p>
-                                <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ tenant_route('jobs.feeds.jooble') }}" target="_blank" rel="noopener">{{ tenant_route('jobs.feeds.jooble') }}</a>
+                                <p class="text-xs text-slate-600">Choose which public feeds should include this job while it is Open. The feeds include the saved salary when a currency is set.</p>
+                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'AssistMyHR', 'postjobfree' => 'PostJobFree'] as $board => $label)
+                                    @php
+                                        $field = 'publish_on_'.$board;
+                                        $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
+                                    @endphp
+                                    <div class="mt-3">
+                                        <input type="hidden" name="{{ $field }}" value="0">
+                                        <label class="flex items-center gap-2 text-sm text-slate-700">
+                                            <input type="checkbox" name="{{ $field }}" value="1"
+                                                @checked(old($field, $isEdit && $job?->{$field}))>
+                                            Include this job in the {{ $label }} feed
+                                        </label>
+                                        @if($isEdit && $job?->{$field})
+                                            @if($feedIssue)
+                                                <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $feedIssue }}</p>
+                                            @else
+                                                <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
+                                            @endif
+                                        @endif
+                                        <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.'.$board) }}" target="_blank" rel="noopener">{{ route('jobs.feeds.'.$board) }}</a>
+                                    </div>
+                                @endforeach
                             </div>
                             <div class="form-group mb-0">
                                 <label for="job_skills" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('menu.skills')</label>
@@ -490,15 +492,16 @@
       <button type="button"
     title="@lang('app.add') @lang('modules.jobs.workExperience')"
     id="addWorkExperience"
+    aria-controls="new-work-experience-wrapper" aria-expanded="false"
     class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
     aria-label="@lang('app.add') @lang('modules.jobs.workExperience')">
     <i class="fa fa-plus" aria-hidden="true"></i>
 </button>
     </div>
 
-    <div id="new-work-experience-wrapper" class="hidden">
+    <div id="new-work-experience-wrapper" class="mt-2 hidden">
         <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
-            <input type="text" id="work_experience_new" name="work_experience_new" maxlength="191" disabled
+            <input type="text" id="work_experience_new" maxlength="191" disabled
                 aria-label="{{ __('Add New Work Experience') }}"
                 placeholder="{{ __('Add New Work Experience') }}"
                 style="flex: 1 1 0%; min-width: 0; width: 0;"
@@ -511,7 +514,7 @@
 
             <button type="button" id="reset-work-experience"
                 style="flex: 0 0 36px; border: 1px solid #E5E7EB; border-radius: 12px; background: white; color: #64748B;"
-                aria-label="{{ __('modules.jobs.workExperience') }}">
+                aria-label="{{ __('Cancel adding work experience') }}">
                 &times;
             </button>
         </div>
@@ -1224,59 +1227,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @include('admin.jobs.partials.question-create-modal')
-<script>
-document.addEventListener('click', function (event) {
-
-    // Work Experience plus button
-    const addButton = event.target.closest('#addWorkExperience');
-
-    if (addButton) {
-        event.preventDefault();
-
-        const selectWrapper = document.getElementById('work-experience-select-wrapper');
-        const newWrapper = document.getElementById('new-work-experience-wrapper');
-        const input = document.getElementById('work_experience_new');
-
-        if (!selectWrapper || !newWrapper || !input) {
-            console.error('Work Experience elements not found');
-            return;
-        }
-
-        selectWrapper.style.display = 'none';
-        addButton.style.display = 'none';
-
-        newWrapper.classList.remove('hidden');
-        newWrapper.style.display = 'block';
-
-        input.disabled = false;
-        input.focus();
-    }
-
-    // Work Experience reset button
-    const resetButton = event.target.closest('#reset-work-experience');
-
-    if (resetButton) {
-        event.preventDefault();
-
-        const selectWrapper = document.getElementById('work-experience-select-wrapper');
-        const newWrapper = document.getElementById('new-work-experience-wrapper');
-        const input = document.getElementById('work_experience_new');
-        const addButton = document.getElementById('addWorkExperience');
-
-        if (!selectWrapper || !newWrapper || !input || !addButton) {
-            console.error('Work Experience reset elements not found');
-            return;
-        }
-
-        input.value = '';
-        input.disabled = true;
-
-        newWrapper.classList.add('hidden');
-        newWrapper.style.display = 'none';
-
-        selectWrapper.style.display = '';
-        addButton.style.display = '';
-    }
-
-});
-</script>

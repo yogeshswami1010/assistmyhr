@@ -8,7 +8,6 @@ use App\Skill;
 use App\Company;
 use App\JobType;
 use App\JobAlert;
-use Carbon\Carbon;
 use App\JobCategory;
 use App\JobLocation;
 use App\Helper\Files;
@@ -72,12 +71,7 @@ class FrontJobsController extends FrontBaseController
             ->with(['job', 'location'])
             ->join('job_locations', 'job_locations.id', '=', 'job_job_locations.location_id')
             ->join('jobs', 'jobs.id', '=', 'job_job_locations.job_id')
-            ->where('jobs.status', 'active')
-            ->whereDate('jobs.start_date', '<=', Carbon::now()->format('Y-m-d'))
-            ->where(function ($q) {
-                $q->where('jobs.end_date', '>=', Carbon::now()->format('Y-m-d'))
-                  ->orWhereNull('jobs.end_date');
-            });
+            ->whereIn('jobs.id', Job::publicJobPage()->select('id'));
 
         return $query;
     }
@@ -220,9 +214,7 @@ class FrontJobsController extends FrontBaseController
     // ─────────────────────────────────────────────────────────────
     public function data($request)
     {
-        $jobs = Job::where('status', 'active')
-            ->where('start_date', '<=', Carbon::now()->format('Y-m-d'))
-            ->where('end_date', '>=', Carbon::now()->format('Y-m-d'));
+        $jobs = Job::publicJobPage();
 
         if ($request->category !== null && $request->category != 'all') {
             $jobs = $jobs->where('category_id', $request->category);
@@ -267,10 +259,6 @@ class FrontJobsController extends FrontBaseController
     {
         $this->job = Job::with(['workExperience', 'jobType'])
             ->where('slug', $slug)
-            ->whereDate('start_date', '<=', Carbon::now())
-            ->where(function ($query) {
-                $query->whereNull('end_date')->orWhereDate('end_date', '>=', Carbon::now());
-            })
             ->publicJobPage()
             ->firstOrFail();
 
@@ -592,11 +580,7 @@ class FrontJobsController extends FrontBaseController
     {
         $this->job = Job::with(['workExperience', 'jobType'])
             ->where('slug', $slug)
-            ->whereDate('start_date', '<=', Carbon::now())
-            ->where(function ($query) {
-                $query->whereNull('end_date')->orWhereDate('end_date', '>=', Carbon::now());
-            })
-            ->where('status', 'active')
+            ->publicJobPage()
             ->firstOrFail();
 
         Session::put('lastPageUrl', $slug);

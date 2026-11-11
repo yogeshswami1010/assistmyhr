@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (\Illuminate\Support\Facades\DB::getDefaultConnection() === 'saas_tenant') return;
+
         $schema = Schema::connection('saas_landlord');
         if (!$schema->hasColumn('users', 'email_verified_at')) {
             $schema->table('users', function (Blueprint $table) { $table->timestamp('email_verified_at')->nullable(); });
@@ -64,6 +66,8 @@ return new class extends Migration {
 
     public function down(): void
     {
+        if (\Illuminate\Support\Facades\DB::getDefaultConnection() === 'saas_tenant') return;
+
         $schema = Schema::connection('saas_landlord');
         foreach (['saas_platform_settings', 'saas_api_keys', 'saas_audit_logs', 'saas_subscriptions', 'saas_tenants', 'saas_plans', 'saas_platform_admins'] as $table) {
             $schema->dropIfExists($table);

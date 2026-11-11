@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Config;
 use App\Http\Requests\StoreOfferLetter;
 use App\Notifications\JobOfferAccepted;
 use App\Notifications\JobOfferRejected;
+use App\Services\ZohoSign;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\NewJobApplication;
@@ -93,7 +95,7 @@ class FrontJobOfferController extends FrontBaseController
 
         $this->offer = Onboard::with(['applications','files','applications.job', 'department', 'designation', 'onboardQuestion'])
         ->where('offer_code', $offerCode)
-        ->first();
+        ->firstOrFail();
         $this->job   = Job::with(['category','location', 'skills', 'company'])->where('id', $this->offer->applications->job->id)->first();
         
         return view('front.job-offer', $this->data);
@@ -103,29 +105,34 @@ class FrontJobOfferController extends FrontBaseController
      * @param Request $request
      * @return array
      */
-    public function saveOffer(Request $request)
+    public function saveOffer(Request $request, ZohoSign $zoho)
     {
-        // dd($request->all());
-        $offer = Onboard::where('offer_code', $request->code)->first();
+        $request->validate([
+            'code' => 'required|string',
+            'type' => 'required|in:accept,rejected',
+            'answer' => 'sometimes|array',
+        ]);
+
+        return DB::transaction(fn () => $this->saveOfferResponse($request, $zoho));
+    }
+
+    private function saveOfferResponse(Request $request, ZohoSign $zoho)
+    {
+        $offer = Onboard::where('offer_code', $request->code)->lockForUpdate()->firstOrFail();
+        if ($offer->hired_status !== 'offered') {
+            return Reply::error('This offer has already been resolved.');
+        }
+        if ($offer->zoho_sign_file_id && $request->type === 'accept') {
+            return $this->startZohoSigning($request, $offer, $zoho);
+        }
+        if ($offer->zoho_sign_request_id) {
+            return Reply::error('Please respond to the signing request in Zoho Sign.');
+        }
+
         $jobApplication = JobApplication::findOrFail($offer->applications->id);
 
         if($request->type == 'accept'){
-            if (isset($request->answer) && !empty($request->answer)) 
-            {
-                foreach ($request->answer as $key => $value) {
-                    $answer = new OnboardAnswer();
-                    $answer->onboard_id = $offer->id;
-                    $answer->question_id = $key;
-                    if ($request->hasFile('answer.' . $key)) {
-                        $answer->file = Files::uploadLocalOrS3( $value, 'documents');
-                    } else 
-                    {
-                        $answer->answer = $value;
-                    }
-                    
-                    $answer->save();
-                }
-            }
+            $this->saveAnswers($request->input('answer', []) + $request->file('answer', []), $offer);
 
             $image     = $request->signature;  // your base64 encoded
             $image     = str_replace('data:image/png;base64,', '', $image);
@@ -174,5 +181,64 @@ class FrontJobOfferController extends FrontBaseController
         }
 
         return Reply::success(__('messages.thankyouForYourResponse'));
+    }
+
+    private function startZohoSigning(Request $request, Onboard $offer, ZohoSign $zoho): array
+    {
+        if (! $zoho->enabled()) {
+            return Reply::error('Zoho Sign is unavailable. Please contact your recruiter.');
+        }
+        if (! $offer->zoho_sign_request_id) {
+            if ($offer->accept_last_date->copy()->endOfDay()->isPast()) {
+                return Reply::error('The deadline for this offer has passed.');
+            }
+
+            $rules = ['answer' => 'sometimes|array'];
+            foreach ($offer->onboardQuestion as $question) {
+                $rules['answer.'.$question->id] = $question->type === 'text'
+                    ? 'required|string|max:5000'
+                    : 'required|file|mimes:png,jpg,jpeg,pdf,doc,docx,xls,xlsx,rtf|max:10240';
+            }
+            $answers = $request->validate($rules)['answer'] ?? [];
+
+            try {
+                $offer->zoho_sign_request_id = $zoho->createDraft($offer);
+            } catch (\RuntimeException | ConnectionException $exception) {
+                report($exception);
+                return Reply::error('The signing request could not be prepared. Please try again or contact your recruiter.');
+            }
+            $offer->zoho_sign_status = 'draft';
+            $offer->save();
+            $this->saveAnswers($answers, $offer);
+        }
+
+        try {
+            $zoho->submit($offer);
+        } catch (\RuntimeException | ConnectionException $exception) {
+            report($exception);
+            return Reply::error('The signing request could not be confirmed. Please try again or contact your recruiter.');
+        }
+
+        return Reply::redirect(tenant_route('jobs.job-offer', ['slug' => $offer->offer_code]));
+    }
+
+    private function saveAnswers(array $answers, Onboard $offer): void
+    {
+        foreach ($offer->onboardQuestion as $question) {
+            if (! array_key_exists($question->id, $answers)) {
+                continue;
+            }
+
+            $value = $answers[$question->id];
+            $answer = new OnboardAnswer;
+            $answer->onboard_id = $offer->id;
+            $answer->question_id = $question->id;
+            if ($value instanceof \Illuminate\Http\UploadedFile) {
+                $answer->file = Files::uploadLocalOrS3($value, 'documents');
+            } else {
+                $answer->answer = $value;
+            }
+            $answer->save();
+        }
     }
 }

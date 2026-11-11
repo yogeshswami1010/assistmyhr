@@ -335,7 +335,7 @@
 
         $(document).on('click', '.save-onboard', function () {
             $.easyAjax({
-                url: '{{ route('admin.job-onboard.store') }}',
+                url: @json(tenant_route('admin.job-onboard.store')),
                 container: '#createSchedule',
                 type: 'POST',
                 file: true

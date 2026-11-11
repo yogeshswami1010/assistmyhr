@@ -2,13 +2,15 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void
     {
+        if (DB::getDefaultConnection() === 'saas_tenant') return;
+
         $schema = Schema::connection('saas_landlord');
-        // Tenant migrations also run this file; enquiries belong only to the platform.
         if ($schema->hasTable('saas_website_enquiries')) return;
         $schema->create('saas_website_enquiries', function (Blueprint $table) {
             $table->id();
@@ -29,6 +31,8 @@ return new class extends Migration {
 
     public function down(): void
     {
+        if (DB::getDefaultConnection() === 'saas_tenant') return;
+
         Schema::connection('saas_landlord')->dropIfExists('saas_website_enquiries');
     }
 };

@@ -104,6 +104,16 @@ class JobApplication extends Model
         return $this->hasOne(Onboard::class);
     }
 
+    public function signingDocuments()
+    {
+        return $this->hasMany(CandidateSigningDocument::class);
+    }
+
+    public function latestSigningDocument()
+    {
+        return $this->hasOne(CandidateSigningDocument::class)->latestOfMany();
+    }
+
     public function getResumeUrlAttribute()
     {
         // show.blade.php eager-loads documents. Reuse that collection rather

@@ -29,7 +29,7 @@ class AdminReportController extends AdminBaseController
 
         $this->jobApplication = JobApplication::count();
         $this->job = Job::count();
-        $this->activeJobs = Job::where('status', 'active')->count();
+        $this->activeJobs = Job::open()->count();
 
         $countForStatus = function (string $status) {
             return JobApplication::query()
