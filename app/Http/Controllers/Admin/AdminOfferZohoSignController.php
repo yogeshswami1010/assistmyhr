@@ -25,7 +25,7 @@ class AdminOfferZohoSignController extends AdminBaseController
         if ($this->zohoEnabled) {
             $this->applications = JobApplication::with(['job', 'onboard'])
                 ->where(fn ($query) => $query
-                    ->whereHas('status', fn ($status) => $status->where('status', 'hired'))
+                    ->whereHas('status', fn ($status) => $status->hired())
                     ->orWhereHas('onboard', fn ($offer) => $offer
                         ->where('hired_status', 'offered')->orWhereNotNull('zoho_sign_request_id')))
                 ->latest('id')

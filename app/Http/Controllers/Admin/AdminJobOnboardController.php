@@ -59,7 +59,7 @@ class AdminJobOnboardController extends AdminBaseController
         $this->application = JobApplication::with(['job', 'status', 'job.location', 'location'])->findOrFail($request->id);
 
         // Abort if requested application status is not hired.
-        abort_if($this->application->status?->status !== 'hired', 403);
+        abort_unless($this->application->status?->isHired(), 403);
         if ($this->documentSign && $this->application->onboard) {
             return redirect(tenant_route('admin.document-sign.show', ['id' => $this->application->onboard->id]));
         }
@@ -91,7 +91,7 @@ class AdminJobOnboardController extends AdminBaseController
     private function storeOffer(StoreRequest $request, bool $documentSign): array
     {
         $application = JobApplication::whereKey($request->candidate_id)->lockForUpdate()->firstOrFail();
-        abort_if($application->status?->status !== 'hired', 403);
+        abort_unless($application->status?->isHired(), 403);
         if ($existing = $application->onboard) {
             return Reply::redirect($documentSign
                 ? tenant_route('admin.document-sign.show', ['id' => $existing->id])
