@@ -19,28 +19,40 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($offers as $offer)
+                    @forelse($applications as $application)
+                        @php($offer = $application->onboard)
                         <tr>
-                            <td>{{ $offer->applications?->full_name ?? '—' }}</td>
-                            <td>{{ $offer->applications?->job?->title ?? '—' }}</td>
-                            <td>@include('admin.document-sign.status', ['offer' => $offer])</td>
+                            <td>{{ $application->full_name }}</td>
+                            <td>{{ $application->job?->title ?? '—' }}</td>
                             <td>
-                                <a class="font-semibold text-blue-700 hover:underline"
-                                   href="{{ tenant_route('admin.document-sign.show', ['id' => $offer->id]) }}">
-                                    View signing details<span class="sr-only"> for {{ $offer->applications?->full_name ?? 'offer '.$offer->id }}</span>
-                                </a>
+                                @if($offer)
+                                    @include('admin.document-sign.status', ['offer' => $offer])
+                                @else
+                                    Ready to prepare offer
+                                @endif
+                            </td>
+                            <td>
+                                @if($offer)
+                                    <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.show', ['id' => $offer->id]) }}">
+                                        View signing details<span class="sr-only"> for {{ $application->full_name }}</span>
+                                    </a>
+                                @elseif($user->cans('add_job_applications'))
+                                    <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.prepare', ['id' => $application->id]) }}">
+                                        Prepare offer<span class="sr-only"> for {{ $application->full_name }}</span>
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4">Offers ready for signing will appear here. <a class="text-blue-700 underline" href="{{ tenant_route('admin.job-onboard.index') }}">Go to Onboarding</a></td>
+                            <td colspan="4">Applicants appear here when their status is set to Hired. <a class="text-blue-700 underline" href="{{ tenant_route('admin.job-applications.table') }}">Go to Job Applications</a></td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        @if($offers->hasPages())
-            <div class="mt-4">{{ $offers->links() }}</div>
+        @if($applications->hasPages())
+            <div class="mt-4">{{ $applications->links() }}</div>
         @endif
     @endif
 @endsection

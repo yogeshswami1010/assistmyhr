@@ -20,6 +20,9 @@
         @error('file_id')
             <p class="mb-4 text-danger" role="alert">{{ $message }}</p>
         @enderror
+        @error('offer_pdf')
+            <p class="mb-4 text-danger" role="alert">{{ $message }}</p>
+        @enderror
         @if(session('zoho_sign_message'))
             <p class="mb-4" role="status">{{ session('zoho_sign_message') }}</p>
         @endif
@@ -33,7 +36,7 @@
                     <button class="btn btn-outline-primary" type="submit">Refresh status</button>
                 </form>
             @else
-                <form method="POST" action="{{ tenant_route('admin.document-sign.configure', ['id' => $onboard->id]) }}">
+                <form method="POST" enctype="multipart/form-data" action="{{ tenant_route('admin.document-sign.configure', ['id' => $onboard->id]) }}">
                     @csrf
                     <label for="zoho-sign-file" class="font-semibold">Offer PDF</label>
                     <p class="mb-2 text-sm text-gray-600">Upload a PDF with the <code>@{{Signature}}</code> tag where the candidate should sign. Zoho emails the signing link after the candidate submits the offer form.</p>
@@ -43,9 +46,16 @@
                             <option value="{{ $file->id }}" @selected($onboard->zoho_sign_file_id == $file->id)>{{ $file->name }}</option>
                         @endforeach
                     </select>
+                    <label for="offer-pdf" class="font-semibold">Or upload an offer PDF</label>
+                    <input class="form-control mb-3" id="offer-pdf" name="offer_pdf" type="file" accept=".pdf,application/pdf">
                     <button class="btn btn-outline-primary" type="submit">Save signing method</button>
-                    <a class="ml-3 text-blue-700 hover:underline" href="{{ tenant_route('admin.job-onboard.edit', ['job_onboard' => $onboard->id]) }}">Upload an offer PDF</a>
                 </form>
+                @if($onboard->zoho_sign_file_id)
+                    <form class="mt-4" method="POST" action="{{ tenant_route('admin.document-sign.send', ['id' => $onboard->id]) }}">
+                        @csrf
+                        <button class="btn btn-primary" type="submit">Send offer link</button>
+                    </form>
+                @endif
             @endif
         @endif
     </div>
