@@ -69,6 +69,8 @@ Route::post('/zoom-webhook', [ZoomWebhookController::class, 'index'])
     ->name('zoom-webhook');
 Route::post('/telnyx-webhook', TelnyxWebhookController::class)
     ->name('telnyx-webhook');
+Route::post('/zoho-sign-webhook', \App\Http\Controllers\ZohoSignWebhookController::class)
+    ->name('zoho-sign.webhook');
 
 // ── Front public job board ─────────────────────────────────────────────────
 require __DIR__.'/website.php';
@@ -369,6 +371,13 @@ Route::middleware('auth')->group(function () {
             Route::get('job-onboard/data',              [AdminJobOnboardController::class, 'data'])->name('job-onboard.data');
             Route::get('job-onboard/send-offer/{id?}',  [AdminJobOnboardController::class, 'sendOffer'])->name('job-onboard.send-offer');
             Route::get('job-onboard/update-status/{id?}',[AdminJobOnboardController::class, 'updateStatus'])->name('job-onboard.update-status');
+            Route::prefix('document-sign')->name('document-sign.')->controller(\App\Http\Controllers\Admin\AdminOfferZohoSignController::class)->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('{id}', 'show')->whereNumber('id')->name('show');
+                Route::post('{id}', 'configure')->whereNumber('id')->name('configure');
+                Route::post('{id}/sync', 'sync')->whereNumber('id')->name('sync');
+                Route::get('{id}/pdf', 'download')->whereNumber('id')->name('pdf');
+            });
             Route::resource('job-onboard', AdminJobOnboardController::class);
 
             // Job Onboard Questions

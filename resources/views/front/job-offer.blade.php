@@ -155,18 +155,24 @@
                         </div>
                         @endif
 
-                        @if($offer->hired_status == 'offered')
+                        @if($offer->hired_status == 'offered' && $offer->zoho_sign_request_id && $offer->zoho_sign_status !== 'draft')
+                            <p class="my-8 rounded-md border border-blue-200 bg-blue-50 p-4" role="status">
+                                Check your email for the Zoho Sign request. Your offer will show as accepted here once Zoho confirms your signature.
+                            </p>
+                        @elseif($offer->hired_status == 'offered')
                         <div id="offeredBox">
                             <div class="my-8 text-center">
                                 <a onclick="actionJobOffer('accept')" class="bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors mr-4 inline-block"
-                                   href="javascript:;">@lang('app.accept')</a>
+                                   href="javascript:;">{{ $offer->zoho_sign_file_id ? ($offer->zoho_sign_request_id ? 'Retry Zoho Sign request' : 'Continue to Zoho Sign') : __('app.accept') }}</a>
+                                @unless($offer->zoho_sign_request_id)
                                 <a onclick="actionJobOffer('rejected')" class="bg-red-600 text-white px-4 py-3 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors inline-block"
                                    href="javascript:;">@lang('app.reject')</a>
+                                @endunless
                             </div>
                             
                            <div class="w-full md:w-2/3 mb-4"  id="signBox">
                             <form id="createForm" method="POST">
-                        @forelse($offer->onboardQuestion as $question)
+                        @foreach($offer->zoho_sign_request_id ? [] : $offer->onboardQuestion as $question)
                         <div class="mb-4">
                             <label class="block mb-1" for="answer[{{ $question->id}}]">{{ $question->question }}</label><br>
                             @if($question->type == 'text')
@@ -177,9 +183,11 @@
                             <span>@lang('modules.front.resumeFileType')</span>
                         @endif
                         </div>
-                    @empty
-                    @endforelse
+                    @endforeach
                 </form>
+                                @if($offer->zoho_sign_file_id)
+                                    <p>Submit to receive the signing link by email.</p>
+                                @else
                                 <div class="mb-4">
                                     <label class="block mb-1">@lang('app.signature')</label>
                                     <div class="wrapper border border-gray-300 rounded-md p-2">
@@ -192,6 +200,7 @@
                                     <button id="clear" class="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-sm"
                                     >@lang('app.clear')</button>
                                 </div>
+                                @endif
 
                             </div>
                             <div class="w-full mb-4 hidden" id="reasonBox">
@@ -210,15 +219,17 @@
 
 
                         @elseif($offer->hired_status == 'accepted')
+                            @if($offer->sign)
                             <div class="w-full" >
                                 <img class="w-full h-auto" src="{{ asset_url('offer/sign/'.$offer->sign) }}" alt="Candidate Signiture">
                             </div>
+                            @endif
                            <div class="p-4 rounded-md bg-green-50 text-green-800 border border-green-200 my-24" role="alert">
                                  @lang('messages.acceptedOffer')
                            </div>
                         @else
                             <div class="p-4 rounded-md bg-red-50 text-red-800 border border-red-200 my-24" role="alert">
-                                @lang('messages.rejectedOffer')
+                                {{ $offer->hired_status === 'canceled' && $offer->zoho_sign_request_id ? 'This signing request has expired or been recalled.' : __('messages.rejectedOffer') }}
                             </div>
                         @endif
                     </div>
@@ -239,7 +250,11 @@
         actionType = '';
         code = '{{ $offer->offer_code }}';
         $(function () {
+            $('#signBox').hide();
             var canvas = document.getElementById('signature-pad');
+            if (!canvas) {
+                return;
+            }
 
 // Adjust canvas coordinate space taking into account pixel ratio,
 // to make it look crisp on mobile devices.
@@ -275,12 +290,10 @@
                 }
             });
 
-            $('#signBox').hide();
         });
 
        function actionJobOffer (type) {
            actionType = type;
-           console.log(actionType);
            if(actionType == 'accept'){
                $('#signBox').show();
                $('#reasonBox').hide();
@@ -299,25 +312,14 @@
           var reason = $('#reason').val();
         
            if(actionType == 'accept'){
-          var inputTypes = [];
-
-          @forelse($offer->onboardQuestion as $question)
-          var ids = "{{ $question->id }}";
-          inputTypes.push($("input[name='answer["+ids+"]']").prop('value'));
-          @empty    
-          @endforelse
-        
-          $.each(inputTypes, function(key,val) {
-            
-            if(val == '' ){
-                return $.showToastr("Please provide data first.", 'error');
-            }
-        });
-
-                signature = signaturePad.toDataURL('image/png');
-
-               if (signaturePad.isEmpty()) {
+               if ($('#createForm .answer').toArray().some(input => !input.value)) {
+                   return $.showToastr("Please answer the onboarding questions.", 'error');
+               }
+               if (document.getElementById('signature-pad') && signaturePad.isEmpty()) {
                    return $.showToastr("Please provide a signature first.", 'error');
+               }
+               if (document.getElementById('signature-pad')) {
+                   signature = signaturePad.toDataURL('image/png');
                }
            }
            else{
@@ -331,6 +333,9 @@
                container: '#createForm',
                type: "POST",
                file: true,
+               error: function(xhr) {
+                   $.showToastr(xhr.responseJSON?.message || 'Could not submit your response. Please try again.', 'error');
+               },
                data: {
                    code: code,
                    type: actionType,
@@ -339,6 +344,9 @@
                    _token: '{{ csrf_token() }}'
                },
                success: function(data){
+                   if (data.status !== 'success' || data.action === 'redirect') {
+                       return;
+                   }
                    if(actionType == 'accept'){
                         var text = '<div class="p-4 rounded-md border bg-green-50 text-green-800 border-green-200 my-6" role="alert"> @lang('messages.acceptedOffer') </div>';
                    }

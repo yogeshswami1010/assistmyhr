@@ -15,5 +15,6 @@ class VerifyCsrfToken extends Middleware
         '/zoom-webhook',
         '/telnyx-webhook',
         '/candidate-email-webhook',
+        '/zoho-sign-webhook',
     ];
 }

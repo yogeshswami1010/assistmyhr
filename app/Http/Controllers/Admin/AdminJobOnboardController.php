@@ -19,6 +19,7 @@ use App\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -158,7 +159,7 @@ class AdminJobOnboardController extends AdminBaseController
     {
         abort_if(! $this->user->cans('view_job_applications'), 403);
 
-        $jobApplications = Onboard::select('on_board_details.id', 'job_applications.id as application_id', 'job_applications.full_name', 'jobs.title', 'job_locations.location', 'on_board_details.joining_date', 'on_board_details.accept_last_date', 'on_board_details.hired_status')
+        $jobApplications = Onboard::select('on_board_details.id', 'job_applications.id as application_id', 'job_applications.full_name', 'jobs.title', 'job_locations.location', 'on_board_details.joining_date', 'on_board_details.accept_last_date', 'on_board_details.hired_status', 'on_board_details.zoho_sign_request_id')
             ->join('job_applications', 'job_applications.id', 'on_board_details.job_application_id')
             ->leftJoin('jobs', 'jobs.id', 'job_applications.job_id')
             ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
@@ -170,6 +171,9 @@ class AdminJobOnboardController extends AdminBaseController
                 $action = '<div class="relative inline-block text-left"><button aria-expanded="false" data-toggle="dropdown" class="inline-flex items-center gap-1 rounded-lg border border-[#E2DED8] bg-[#EFF6FF] px-3 py-1.5 text-[12.5px] font-semibold text-[#2563EB] shadow-sm transition hover:bg-[#DBEAFE]" id="dropdownMenuButton" type="button">'.e(__('app.action')).' <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div class="hidden absolute right-0 z-[60] mt-1 min-w-[12rem] rounded-xl border border-[#E8E6E1] bg-white py-1 shadow-lg dropdown-menu" aria-labelledby="dropdownMenuButton">';
 
                 $action .= '<a href="'.route('admin.job-onboard.show', [$row->id]).'" class="'.$mi.'">'.e(__('app.view')).' '.e(__('app.offer')).'</a>';
+                if ($row->zoho_sign_request_id) {
+                    return $action.'</div></div>';
+                }
                 $action .= '<a href="'.route('admin.job-onboard.edit', [$row->id]).'" class="'.$mi.'">'.e(__('app.edit')).'</a>';
                 $action .= '<a href="javascript:;" data-row-id="'.$row->application_id.'" class="'.$mi.' send-offer">'.e(__('app.send')).' '.e(__('app.offer')).'</a>';
                 if ($row->hired_status != 'canceled') {
@@ -216,8 +220,16 @@ class AdminJobOnboardController extends AdminBaseController
      */
     public function update(StoreRequest $request, $id)
     {
-        // update On Board Details
-        $onBoard = Onboard::findOrFail($id);
+        return DB::transaction(fn () => $this->updateOffer($request, $id));
+    }
+
+    private function updateOffer(StoreRequest $request, $id)
+    {
+        abort_unless($this->user->cans('add_job_applications'), 403);
+        $onBoard = Onboard::whereKey($id)->lockForUpdate()->firstOrFail();
+        if ($onBoard->zoho_sign_request_id) {
+            return Reply::error('This offer is linked to a Zoho Sign request.');
+        }
         $onBoard->job_application_id = $request->candidate_id;
         $onBoard->department_id = $request->department;
         $onBoard->designation_id = $request->designation;
@@ -267,12 +279,18 @@ class AdminJobOnboardController extends AdminBaseController
      */
     public function destroy($id)
     {
-        $onBoardFiles = OnboardFiles::findOrFail($id);
-        File::delete(tenant_upload_path('onboard-files/'.$onBoardFiles->hashName));
+        return DB::transaction(function () use ($id) {
+            $file = OnboardFiles::findOrFail($id);
+            $offer = Onboard::whereKey($file->on_board_detail_id)->lockForUpdate()->firstOrFail();
+            if ((int) $offer->zoho_sign_file_id === (int) $file->id) {
+                return Reply::error('Change the signing method before deleting the selected offer PDF.');
+            }
 
-        OnboardFiles::destroy($id);
+            File::delete(tenant_upload_path('onboard-files/'.$file->hash_name));
+            $file->delete();
 
-        return Reply::success('messages.recordDeleted');
+            return Reply::success('messages.recordDeleted');
+        });
     }
 
     /**
@@ -310,7 +328,17 @@ class AdminJobOnboardController extends AdminBaseController
 
     public function sendOffer($userID)
     {
-        $jobApplication = JobApplication::select('id', 'job_id', 'full_name', 'email')->with(['job:id,title', 'onboard:id,offer_code,job_application_id,hired_status'])->where('id', $userID)->first();
+        return DB::transaction(fn () => $this->emailOffer($userID));
+    }
+
+    private function emailOffer($userID)
+    {
+        $jobApplication = JobApplication::select('id', 'job_id', 'full_name', 'email')->with('job:id,title')->findOrFail($userID);
+        $offer = $jobApplication->onboard()->lockForUpdate()->firstOrFail();
+        if ($offer->zoho_sign_request_id) {
+            return Reply::error('This offer is linked to a Zoho Sign request.');
+        }
+        $jobApplication->setRelation('onboard', $offer);
 
         if ($jobApplication->onboard->hired_status !== 'offered') {
             $jobApplication->onboard->hired_status = 'offered';
@@ -328,11 +356,16 @@ class AdminJobOnboardController extends AdminBaseController
      */
     public function updateStatus(UpdateStatus $request, $id)
     {
-        $onboard = Onboard::findOrFail($id);
-        $onboard->cancel_reason = $request->cancel_reason;
-        $onboard->hired_status = 'canceled';
-        $onboard->save();
+        return DB::transaction(function () use ($request, $id) {
+            $offer = Onboard::whereKey($id)->lockForUpdate()->firstOrFail();
+            if ($offer->zoho_sign_request_id) {
+                return Reply::error('Recall the signing request in Zoho Sign to cancel this offer.');
+            }
+            $offer->cancel_reason = $request->cancel_reason;
+            $offer->hired_status = 'canceled';
+            $offer->save();
 
-        return Reply::success(__('messages.offer.updatedSuccessfully'));
+            return Reply::success(__('messages.offer.updatedSuccessfully'));
+        });
     }
 }
