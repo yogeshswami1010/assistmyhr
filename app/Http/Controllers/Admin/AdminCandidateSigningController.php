@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\CandidateSigningDocument;
 use App\JobApplication;
 use App\Services\ZohoSign;
+use App\Services\ZohoSignException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -44,7 +45,13 @@ class AdminCandidateSigningController extends AdminBaseController
         $filename = Str::limit(trim($basename) ?: 'document', 180, '').'.pdf';
         try {
             $requestId = $zoho->createCandidateDraft($application, $file->getPathname(), $filename);
-        } catch (RuntimeException | ConnectionException $exception) {
+        } catch (ZohoSignException $exception) {
+            report($exception);
+            return back()->withErrors(['pdf' => $exception->getMessage()]);
+        } catch (ConnectionException $exception) {
+            report($exception);
+            return back()->withErrors(['pdf' => 'The ATS server could not reach Zoho. Check outbound HTTPS connectivity and try again.']);
+        } catch (RuntimeException $exception) {
             report($exception);
             return back()->withErrors(['pdf' => 'Zoho Sign could not create the draft. Check the connection and try again.']);
         }
@@ -76,6 +83,9 @@ class AdminCandidateSigningController extends AdminBaseController
                 'Cache-Control' => 'no-store',
                 'Referrer-Policy' => 'no-referrer',
             ]);
+        } catch (ZohoSignException $exception) {
+            report($exception);
+            return back()->withErrors(['pdf' => $exception->getMessage()]);
         } catch (RuntimeException | ConnectionException $exception) {
             report($exception);
             return back()->withErrors(['pdf' => 'The Zoho editor could not be opened. Check that embedded sending is available for your Zoho Sign account and try again.']);

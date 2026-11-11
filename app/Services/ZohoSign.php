@@ -60,7 +60,7 @@ class ZohoSign
             }
         }
 
-        $id = (string) data_get($this->json($response), 'requests.request_id');
+        $id = (string) data_get($this->json($response, 'create the PDF draft'), 'requests.request_id');
         if (! preg_match('/\A[0-9]{1,64}\z/', $id)) {
             throw new RuntimeException('Zoho Sign did not return a request ID.');
         }
@@ -124,7 +124,7 @@ class ZohoSign
             }
         }
 
-        $id = (string) data_get($this->json($response), 'requests.request_id');
+        $id = (string) data_get($this->json($response, 'create the PDF draft'), 'requests.request_id');
         if (! preg_match('/\A[0-9]{1,64}\z/', $id)) {
             throw new RuntimeException('Zoho Sign did not return a request ID.');
         }
@@ -138,14 +138,14 @@ class ZohoSign
         $response = $this->client()->asForm()->post('requests/'.$document->zoho_sign_request_id.'/embedsendtoken', [
             'testing' => config('zoho-sign.testing') ? 'true' : 'false',
         ]);
-        $url = $this->json($response)['send_url'] ?? null;
+        $url = $this->json($response, 'open the document editor')['send_url'] ?? null;
         $parts = is_string($url) ? parse_url($url) : false;
         if (($parts['scheme'] ?? null) !== 'https'
             || ($parts['host'] ?? null) !== 'sign.'.$this->regionalHost()
             || ($parts['path'] ?? null) !== '/embedsend'
             || isset($parts['user']) || isset($parts['pass'])
             || (isset($parts['port']) && $parts['port'] !== 443)) {
-            throw new RuntimeException('Zoho Sign did not return a valid editor link.');
+            throw new ZohoSignException('Zoho Sign did not return a valid editor link.');
         }
 
         return $url;
@@ -258,7 +258,14 @@ class ZohoSign
                 ]);
             $token = $response->json('access_token');
             if (! $response->successful() || ! is_string($token) || $token === '') {
-                throw new RuntimeException('Zoho Sign authentication failed.');
+                $hint = match ($response->json('error')) {
+                    'invalid_client' => 'Check ZOHO_SIGN_CLIENT_ID and the Zoho account region.',
+                    'invalid_client_secret' => 'Check ZOHO_SIGN_CLIENT_SECRET for the same Zoho Self Client.',
+                    'invalid_code', 'invalid_grant' => 'Check ZOHO_SIGN_REFRESH_TOKEN. It must be the refresh token from the same Zoho Self Client.',
+                    'access_denied' => 'Wait a moment and retry. If it persists, check the Zoho Self Client access.',
+                    default => 'Check the Zoho OAuth credentials and try again.',
+                };
+                throw new ZohoSignException('Zoho Accounts could not refresh the access token. '.$hint);
             }
 
             return $token;
@@ -276,11 +283,27 @@ class ZohoSign
         return $domain === 'zohocloud.ca' ? $domain : 'zoho.'.$domain;
     }
 
-    private function json(Response $response): array
+    private function json(Response $response, string $operation = 'process the request'): array
     {
         $data = $response->json();
-        if (! $response->successful() || ! is_array($data) || ($data['code'] ?? null) !== 0) {
-            throw new RuntimeException('Zoho Sign rejected the request. Check the document, account permissions, and API credits.');
+        if (! $response->successful() || ! is_array($data) || ! in_array($data['code'] ?? null, [0, '0'], true)) {
+            $code = $data['code'] ?? null;
+            $code = is_int($code) || (is_string($code) && ctype_digit($code) && strlen($code) <= 8)
+                ? (int) $code
+                : null;
+            $status = $response->status();
+            $hint = match ($code) {
+                8026 => 'Check that your Zoho Sign plan supports this operation.',
+                9018 => 'Try a smaller PDF.',
+                9020 => 'Export the document as a new PDF and try again.',
+                default => match ($status) {
+                    401, 403 => 'Check the Zoho account region and document permissions on the OAuth token.',
+                    429 => 'Wait a moment and try again.',
+                    default => 'Check the document and Zoho Sign account settings.',
+                },
+            };
+            $reference = $code === null ? "HTTP {$status}" : "HTTP {$status}, Zoho code {$code}";
+            throw new ZohoSignException("Zoho Sign could not {$operation} ({$reference}). {$hint}");
         }
 
         return $data;
