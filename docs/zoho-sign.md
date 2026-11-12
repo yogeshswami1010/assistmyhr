@@ -7,3 +7,5 @@
 5. Zoho emails the signing link directly to the applicant. Once complete, use **Download signed PDF** in **Document Sign** to retrieve the signed document and completion certificate. Recall an active request in Zoho Sign to cancel it.
 
 For a trial with your own test recipient, set `ZOHO_SIGN_TESTING=true`. Zoho applies a permanent test watermark to documents sent in this mode. [Zoho API testing](https://www.zoho.com/sign/api/getting-started-with-zoho-sign-api.html)
+
+For a staging test without a refresh token, generate a temporary token in **Zoho Sign → Developer settings → API token - development** and set `ZOHO_SIGN_DEVELOPMENT_TOKEN` on the ATS server. Set `ZOHO_SIGN_TESTING=true` and run `php artisan config:cache`. The token expires after 60 minutes and is ignored when testing is off. For production, use the refresh token from **API token - deployment** and remove the development token from the server environment. [Zoho API token setup](https://www.zoho.com/sign/api/quick-start-with-zoho-sign-api.html)
