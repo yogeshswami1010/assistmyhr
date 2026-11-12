@@ -137,9 +137,7 @@ class ZohoSign
 
     public function editorUrl(CandidateSigningDocument $document): string
     {
-        $response = $this->client()->asForm()->post('requests/'.$document->zoho_sign_request_id.'/embedsendtoken', [
-            'testing' => config('zoho-sign.testing') ? 'true' : 'false',
-        ]);
+        $response = $this->client()->send('POST', 'requests/'.$document->zoho_sign_request_id.'/embedsendtoken');
         $url = $this->json($response, 'open the document editor')['send_url'] ?? null;
         $parts = is_string($url) ? parse_url($url) : false;
         if (($parts['scheme'] ?? null) !== 'https'
