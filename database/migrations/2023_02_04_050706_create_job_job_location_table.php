@@ -1,7 +1,5 @@
 <?php
-use App\Job;
-use App\JobLocation;
-use App\JobJobLocation;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -22,15 +20,11 @@ return new class extends Migration
             $table->foreign('location_id')->references('id')->on('job_locations')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });
-        $jobs = Job::all();
-        foreach($jobs as $job)
-        {
-            $jobLocation = JobLocation::where('id', $job->location_id);
-            $jobLocation = new JobJobLocation;
-            $jobLocation->job_id = $job->id;
-            $jobLocation->location_id = $job->location_id;
-            $jobLocation->save();
-        }
+        $timestamp = now();
+        DB::table('job_job_locations')->insertUsing(
+            ['job_id', 'location_id', 'created_at', 'updated_at'],
+            DB::table('jobs')->select('id', 'location_id')->selectRaw('?, ?', [$timestamp, $timestamp])
+        );
     }
     /**
      * Reverse the migrations.
@@ -39,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('job_job_location');
+        Schema::dropIfExists('job_job_locations');
     }
 };

@@ -1,6 +1,6 @@
 <?php
 
-use App\Job;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -15,23 +15,14 @@ class AddRequiredColumnsColumnInJobsTable extends Migration
     public function up()
     {
         Schema::table('jobs', function (Blueprint $table) {
-            Schema::table('jobs', function (Blueprint $table) {
-                $table->text('required_columns')->after('status');
-            });
-    
-            $jobs = Job::select('id', 'title', 'required_columns')->get();
-    
-            $array = [
-                'gender' => false,
-                'dob' => false,
-                'country' => false
-            ];
-    
-            foreach ($jobs as $job) {
-                $job->required_columns = $array;
-                $job->save();
-            }
+            $table->text('required_columns')->after('status');
         });
+
+        DB::table('jobs')->update(['required_columns' => json_encode([
+            'gender' => false,
+            'dob' => false,
+            'country' => false,
+        ], JSON_THROW_ON_ERROR)]);
     }
 
     /**

@@ -1,7 +1,6 @@
 <?php
 
-use App\Job;
-use App\JobApplication;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -21,16 +20,14 @@ return new class extends Migration
             $table->text('address')->nullable()->after('phone');
         });
 
-        $jobs = Job::all();
-
-        foreach($jobs as $job)
-        {
-            if(is_null($job->required_columns->address))
-            {
-                $array = $job->required_columns;
-                $array['address'] = false;
-                $job->required_columns = $array;
-                $job->save();
+        foreach (DB::table('jobs')->select('id', 'required_columns')->lazyById() as $job) {
+            $columns = json_decode($job->required_columns ?? '', true);
+            $columns = is_array($columns) ? $columns : [];
+            if (!isset($columns['address'])) {
+                $columns['address'] = false;
+                DB::table('jobs')->where('id', $job->id)->update([
+                    'required_columns' => json_encode($columns, JSON_THROW_ON_ERROR),
+                ]);
             }
         }
 

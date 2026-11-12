@@ -1,7 +1,6 @@
 <?php
 
-use App\ApplicationSetting;
-use App\Job;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,23 +20,24 @@ class AddMetaDetailsAndSectionVisibilityColumnsInJobsTable extends Migration
             $table->text('section_visibility')->after('meta_details');
         });
 
-        $setting = ApplicationSetting::select('id')->first();
-
-        $jobs = Job::select('id', 'title', 'job_description', 'meta_details')->get();
+        $jobs = DB::table('jobs')->select('id', 'title', 'job_description')->lazyById();
         foreach ($jobs as $job) {
-            $job->meta_details = [
+            $metaDetails = [
                 'title' => $job->title,
                 'description' => strip_tags(Str::substr(html_entity_decode($job->job_description), 0, 150))
             ];
 
-            $job->section_visibility = [
+            $sectionVisibility = [
                 'profile_image' =>'yes',
                 'resume' => 'yes',
                 'cover_letter' => 'yes',
                 'terms_and_conditions' => 'yes'
             ];
 
-            $job->save();
+            DB::table('jobs')->where('id', $job->id)->update([
+                'meta_details' => json_encode($metaDetails, JSON_THROW_ON_ERROR),
+                'section_visibility' => json_encode($sectionVisibility, JSON_THROW_ON_ERROR),
+            ]);
         }
     }
 

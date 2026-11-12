@@ -3,8 +3,7 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
-use App\Company;
-use App\Job;
+use Illuminate\Support\Facades\DB;
 
 class AddCompanyIdColumn extends Migration
 {
@@ -15,18 +14,25 @@ class AddCompanyIdColumn extends Migration
      */
     public function up()
     {
-        Schema::table('jobs', function (Blueprint $table) {
-            $table->unsignedInteger('company_id')->nullable()->after('slug');
-            $table->foreign('company_id')
-                ->references('id')
-                ->on('companies')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
-        });
+        if (!Schema::hasColumn('jobs', 'company_id')) {
+            Schema::table('jobs', function (Blueprint $table) {
+                $table->unsignedInteger('company_id')->nullable()->after('slug');
+            });
+        }
 
-        $company = Company::first();
-        $jobs = Job::whereNull('company_id')
-            ->update(['company_id' => $company->id]);
+        $hasCompanyForeignKey = collect(Schema::getForeignKeys('jobs'))->contains(
+            fn (array $key) => $key['columns'] === ['company_id'] && $key['foreign_table'] === 'companies'
+        );
+        if (!$hasCompanyForeignKey) {
+            Schema::table('jobs', function (Blueprint $table) {
+                $table->foreign('company_id')
+                    ->references('id')->on('companies')
+                    ->onUpdate('cascade')->onDelete('cascade');
+            });
+        }
+
+        $companyId = DB::table('companies')->orderBy('id')->value('id');
+        DB::table('jobs')->whereNull('company_id')->update(['company_id' => $companyId]);
     }
 
     /**
