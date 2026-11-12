@@ -9,6 +9,7 @@ use App\Services\ZohoSignException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 
 class AdminCandidateSigningController extends AdminBaseController
@@ -36,7 +37,7 @@ class AdminCandidateSigningController extends AdminBaseController
         abort_unless($application->status?->isHired(), 403);
 
         if (! filter_var($application->email, FILTER_VALIDATE_EMAIL)) {
-            return back()->withErrors(['pdf' => 'Add a valid email address to the applicant before uploading a document.']);
+            throw ValidationException::withMessages(['pdf' => 'Add a valid email address to the applicant before uploading a document.']);
         }
 
         $file = $data['pdf'];
@@ -47,13 +48,13 @@ class AdminCandidateSigningController extends AdminBaseController
             $requestId = $zoho->createCandidateDraft($application, $file->getPathname(), $filename);
         } catch (ZohoSignException $exception) {
             report($exception);
-            return back()->withErrors(['pdf' => $exception->getMessage()]);
+            throw ValidationException::withMessages(['pdf' => $exception->getMessage()]);
         } catch (ConnectionException $exception) {
             report($exception);
-            return back()->withErrors(['pdf' => 'The ATS server could not reach Zoho. Check outbound HTTPS connectivity and try again.']);
+            throw ValidationException::withMessages(['pdf' => 'The ATS server could not reach Zoho. Check outbound HTTPS connectivity and try again.']);
         } catch (RuntimeException $exception) {
             report($exception);
-            return back()->withErrors(['pdf' => 'Zoho Sign could not create the draft. Check the connection and try again.']);
+            throw ValidationException::withMessages(['pdf' => 'Zoho Sign could not create the draft. Check the connection and try again.']);
         }
 
         $application->signingDocuments()->create([
@@ -62,8 +63,12 @@ class AdminCandidateSigningController extends AdminBaseController
             'zoho_sign_request_id' => $requestId,
         ]);
 
-        return redirect(tenant_route('admin.document-sign.prepare', ['id' => $application->id]))
-            ->with('zoho_sign_message', 'PDF uploaded. Open the Zoho editor to place fields and send it.');
+        $url = tenant_route('admin.document-sign.prepare', ['id' => $application->id]);
+        $request->session()->flash('zoho_sign_message', 'PDF uploaded. Open the Zoho editor to place fields and send it.');
+
+        return $request->expectsJson()
+            ? response()->json(['redirect_url' => $url], 201)
+            : redirect($url);
     }
 
     public function editor(int $id, ZohoSign $zoho)
