@@ -20,11 +20,13 @@
     .sign-upload-body { padding: 0 20px 20px; }
     .sign-picker { display: grid; justify-items: center; gap: 6px; padding: 18px 12px; border: 1px dashed #a8bde0; border-radius: 12px; background: #f5f8ff; text-align: center; }
     .sign-picker i { color: #275bc6; font-size: 1.3rem; }
-    .sign-picker label { margin: 0; color: #253b62; font-size: .875rem; font-weight: 700; }
+    .sign-picker { position: relative; }
+    .sign-picker label { margin: 4px 0 0; padding: 8px 14px; border: 1px solid #a8bde0; border-radius: 8px; background: #fff; color: #234b99; font-size: .875rem; font-weight: 700; cursor: pointer; }
+    .sign-picker input:focus-visible + label { outline: 2px solid #275bc6; outline-offset: 3px; }
+    .sign-picker input:disabled + label { opacity: .65; cursor: wait; }
     .sign-picker small { color: #52637a; }
-    .sign-picker input { width: 100%; max-width: 245px; margin-top: 6px; color: #33445b; font-size: .8rem; }
-    .sign-picker input::file-selector-button { margin-right: 8px; padding: 5px 9px; border: 1px solid #a8bde0; border-radius: 6px; background: #fff; color: #234b99; font-weight: 600; cursor: pointer; }
-    .sign-upload-button { width: 100%; margin-top: 14px; }
+    .sign-picker input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .sign-upload-progress { margin: 12px 0 0; color: #52637a; font-size: .875rem; overflow-wrap: anywhere; }
     .sign-panel .btn { border-radius: 8px; font-size: .85rem; font-weight: 600; }
     .sign-documents { margin: 0; padding: 0; list-style: none; }
     .sign-document { padding: 16px 20px; border-top: 1px solid #e4eaf2; }
@@ -80,12 +82,13 @@
                     <div class="sign-upload-body">
                         <div class="sign-picker">
                             <i class="fa fa-cloud-upload" aria-hidden="true"></i>
-                            <label for="signing-pdf">Choose a PDF</label>
-                            <small id="signing-pdf-limit">Up to {{ floor($maxUploadBytes / 104857.6) / 10 }} MB</small>
                             <input type="file" id="signing-pdf" name="pdf" accept=".pdf,application/pdf" aria-describedby="signing-pdf-limit" required>
+                            <label for="signing-pdf">Choose PDF to upload</label>
+                            <small id="signing-pdf-limit">Up to {{ floor($maxUploadBytes / 104857.6) / 10 }} MB</small>
                         </div>
+                        <p id="signing-upload-progress" class="sign-upload-progress" role="status" hidden></p>
                         <p id="signing-upload-error" class="sign-upload-error" role="alert" hidden></p>
-                        <button type="submit" class="btn btn-primary sign-upload-button">Upload PDF</button>
+                        <noscript><button type="submit" class="btn btn-primary mt-3">Upload PDF</button></noscript>
                     </div>
                 </form>
             @endif
@@ -143,7 +146,8 @@
             return;
         }
 
-        const button = form.querySelector('button[type="submit"]');
+        const picker = document.getElementById('signing-pdf');
+        const progress = document.getElementById('signing-upload-progress');
         const error = document.getElementById('signing-upload-error');
         const maxBytes = {{ $maxUploadBytes }};
         const showError = message => {
@@ -151,26 +155,28 @@
             error.hidden = false;
         };
 
-        form.addEventListener('submit', async event => {
-            event.preventDefault();
-            if (button.disabled) {
+        picker.addEventListener('change', async () => {
+            const file = picker.files[0];
+            if (!file || picker.disabled) {
                 return;
             }
 
             error.hidden = true;
-            const file = form.elements.pdf.files[0];
-            if (file && file.size > maxBytes) {
+            if (file.size > maxBytes) {
+                picker.value = '';
                 showError('This PDF exceeds the server upload limit. Try a smaller PDF.');
                 return;
             }
 
-            button.disabled = true;
-            button.textContent = 'Uploading PDF…';
+            const body = new FormData(form);
+            picker.disabled = true;
+            progress.textContent = 'Uploading ' + file.name + '…';
+            progress.hidden = false;
             try {
                 const response = await fetch(form.action, {
                     method: 'POST',
                     headers: { Accept: 'application/json' },
-                    body: new FormData(form),
+                    body,
                 });
                 const data = response.headers.get('content-type')?.includes('application/json')
                     ? await response.json()
@@ -193,8 +199,9 @@
             } catch {
                 showError('The connection was interrupted. Reload and check the document list before trying again.');
             } finally {
-                button.disabled = false;
-                button.textContent = 'Upload PDF';
+                picker.value = '';
+                picker.disabled = false;
+                progress.hidden = true;
             }
         });
     })();
