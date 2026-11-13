@@ -24,10 +24,12 @@ class ZohoSign
 
     public function enabled(): bool
     {
-        return filled(config('zoho-sign.client_id'))
-            && filled(config('zoho-sign.client_secret'))
-            && filled(config('zoho-sign.refresh_token'))
-            && in_array(config('zoho-sign.domain'), self::DOMAINS, true);
+        return in_array(config('zoho-sign.domain'), self::DOMAINS, true)
+            && ($this->developmentToken() !== null || (
+                filled(config('zoho-sign.client_id'))
+                && filled(config('zoho-sign.client_secret'))
+                && filled(config('zoho-sign.refresh_token'))
+            ));
     }
 
     public function createDraft(Onboard $offer): string
@@ -135,9 +137,7 @@ class ZohoSign
 
     public function editorUrl(CandidateSigningDocument $document): string
     {
-        $response = $this->client()->asForm()->post('requests/'.$document->zoho_sign_request_id.'/embedsendtoken', [
-            'testing' => config('zoho-sign.testing') ? 'true' : 'false',
-        ]);
+        $response = $this->client()->send('POST', 'requests/'.$document->zoho_sign_request_id.'/embedsendtoken');
         $url = $this->json($response, 'open the document editor')['send_url'] ?? null;
         $parts = is_string($url) ? parse_url($url) : false;
         if (($parts['scheme'] ?? null) !== 'https'
@@ -242,13 +242,28 @@ class ZohoSign
             throw new RuntimeException('Zoho Sign is unavailable for this workspace.');
         }
 
-        $domain = config('zoho-sign.domain');
         $host = $this->regionalHost();
-        $cacheKey = 'zoho-sign.token.'.hash('sha256', $domain.config('zoho-sign.client_id').config('zoho-sign.refresh_token'));
+        $token = $this->developmentToken() ?? $this->refreshAccessToken($host);
+
+        return Http::baseUrl("https://sign.{$host}/api/v1")
+            ->withHeaders(['Authorization' => 'Zoho-oauthtoken '.$token])
+            ->connectTimeout(5)->timeout(25)->withoutRedirecting();
+    }
+
+    private function developmentToken(): ?string
+    {
+        $token = trim((string) config('zoho-sign.development_token'));
+
+        return config('zoho-sign.testing') && $token !== '' ? $token : null;
+    }
+
+    private function refreshAccessToken(string $host): string
+    {
+        $cacheKey = 'zoho-sign.token.'.hash('sha256', $host.config('zoho-sign.client_id').config('zoho-sign.refresh_token'));
         $cache = config('saas.enabled')
             ? Cache::build(['driver' => 'file', 'path' => storage_path('framework/cache/data')])
             : Cache::store();
-        $token = $cache->remember($cacheKey, now()->addMinutes(45), function () use ($host) {
+        return $cache->remember($cacheKey, now()->addMinutes(45), function () use ($host) {
             $response = Http::asForm()->connectTimeout(5)->timeout(15)->withoutRedirecting()
                 ->post("https://accounts.{$host}/oauth/v2/token", [
                     'client_id' => config('zoho-sign.client_id'),
@@ -270,10 +285,6 @@ class ZohoSign
 
             return $token;
         });
-
-        return Http::baseUrl("https://sign.{$host}/api/v1")
-            ->withHeaders(['Authorization' => 'Zoho-oauthtoken '.$token])
-            ->connectTimeout(5)->timeout(25)->withoutRedirecting();
     }
 
     private function regionalHost(): string
@@ -297,7 +308,9 @@ class ZohoSign
                 9018 => 'Try a smaller PDF.',
                 9020 => 'Export the document as a new PDF and try again.',
                 default => match ($status) {
-                    401, 403 => 'Check the Zoho account region and document permissions on the OAuth token.',
+                    401, 403 => $this->developmentToken() !== null
+                        ? 'Check the Zoho region and generate a new API token under Developer settings → API token - development if it has expired.'
+                        : 'Check the Zoho account region and document permissions on the OAuth token.',
                     429 => 'Wait a moment and try again.',
                     default => 'Check the document and Zoho Sign account settings.',
                 },
