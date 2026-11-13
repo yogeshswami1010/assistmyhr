@@ -69,16 +69,12 @@ Route::post('/zoom-webhook', [ZoomWebhookController::class, 'index'])
     ->name('zoom-webhook');
 Route::post('/telnyx-webhook', TelnyxWebhookController::class)
     ->name('telnyx-webhook');
-Route::post('/zoho-sign-webhook', \App\Http\Controllers\ZohoSignWebhookController::class)
-    ->name('zoho-sign.webhook');
 
 // ── Front public job board ─────────────────────────────────────────────────
 require __DIR__.'/website.php';
 
 Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');
-Route::get('/job-feeds/jooble.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jooble'])->middleware('throttle:60,1')->name('jobs.feeds.jooble');
-Route::get('/job-feeds/assistmyhr.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'assistMyHr'])->middleware('throttle:60,1')->name('jobs.feeds.assistmyhr');
-Route::get('/job-feeds/postjobfree.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'postJobFree'])->middleware('throttle:60,1')->name('jobs.feeds.postjobfree');
+Route::get('/job-feeds/jooble.xml', \App\Http\Controllers\Front\JoobleFeedController::class)->middleware('throttle:60,1')->name('jobs.feeds.jooble');
 
 Route::name('jobs.')
     ->group(function () {
@@ -371,19 +367,6 @@ Route::middleware('auth')->group(function () {
             Route::get('job-onboard/data',              [AdminJobOnboardController::class, 'data'])->name('job-onboard.data');
             Route::get('job-onboard/send-offer/{id?}',  [AdminJobOnboardController::class, 'sendOffer'])->name('job-onboard.send-offer');
             Route::get('job-onboard/update-status/{id?}',[AdminJobOnboardController::class, 'updateStatus'])->name('job-onboard.update-status');
-            Route::prefix('document-sign')->name('document-sign.')->controller(\App\Http\Controllers\Admin\AdminOfferZohoSignController::class)->group(function () {
-                Route::get('/', 'index')->name('index');
-                Route::get('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'show'])->name('prepare');
-                Route::post('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'store'])->name('store');
-                Route::post('documents/{id}/editor', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'editor'])->whereNumber('id')->name('documents.editor');
-                Route::post('documents/{id}/sync', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'sync'])->whereNumber('id')->name('documents.sync');
-                Route::get('documents/{id}/pdf', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'download'])->whereNumber('id')->name('documents.pdf');
-                Route::get('{id}', 'show')->whereNumber('id')->name('show');
-                Route::post('{id}', 'configure')->whereNumber('id')->name('configure');
-                Route::post('{id}/send', 'send')->whereNumber('id')->name('send');
-                Route::post('{id}/sync', 'sync')->whereNumber('id')->name('sync');
-                Route::get('{id}/pdf', 'download')->whereNumber('id')->name('pdf');
-            });
             Route::resource('job-onboard', AdminJobOnboardController::class);
 
             // Job Onboard Questions
@@ -462,44 +445,45 @@ Route::middleware('auth')->group(function () {
 });
 Route::post('candidate-email-webhook', [\App\Http\Controllers\CandidateEmailWebhookController::class, '__invoke'])->name('candidate-email-webhook');
 
-// Route::get('/preview-client-review-email/{id}', function ($id) {
+Route::get('/preview-client-review-email/{id}', function ($id) {
 
-//     abort_unless(app()->environment('local'), 404);
+    abort_unless(app()->environment('local'), 404);
 
-//     $review = \App\CandidateClientReview::findOrFail($id);
+    $review = \App\CandidateClientReview::findOrFail($id);
 
-//     $message = \App\CandidateClientReviewMessage::where(
-//         'candidate_client_review_id', $review->id
-//     )
-//     ->where('direction', 'outbound')
-//     ->latest()
-//     ->firstOrFail();
+    $message = \App\CandidateClientReviewMessage::where(
+        'candidate_client_review_id', $review->id
+    )
+    ->where('direction', 'outbound')
+    ->latest()
+    ->firstOrFail();
 
-//     $sender = auth()->user() ?: \App\User::findOrFail(1);
+    $sender = auth()->user() ?: \App\User::findOrFail(1);
 
-//     $signature = \App\Services\CandidateEmailBody::render(
-//         '',
-//         $sender->email_signature,
-//         $sender->email_signature_image_url,
-//         $sender->email_signature_html
-//     );
+    $signature = \App\Services\CandidateEmailBody::render(
+        '',
+        $sender->email_signature,
+        $sender->email_signature_image_url,
 
-//     $application = \App\JobApplication::withTrashed()
-//         ->with('job.company')
-//         ->find($review->job_application_id);
+        $sender->email_signature_html
+    );
 
-//     $companyName = $application?->job?->company?->company_name
-//         ?: config('app.name');
+    $application = \App\JobApplication::withTrashed()
+        ->with('job.company')
+        ->find($review->job_application_id);
 
-//     return view('email.client-review-invitation', [
-//         'review' => $review,
-//         'bodyHtml' => \App\Services\ClientReviewContent::clean(
-//             (string) $message->body_html
-//         ),
-//         'reviewUrl' => app(\App\Services\CandidateClientReviewService::class)
-//             ->url($review),
-//         'signatureHtml' => $signature,
-//         'companyName' => $companyName,
-//     ]);
+    $companyName = $application?->job?->company?->company_name
+        ?: config('app.name');
 
-//     });
+    return view('email.client-review-invitation', [
+        'review' => $review,
+        'bodyHtml' => \App\Services\ClientReviewContent::clean(
+            (string) $message->body_html
+        ),
+        'reviewUrl' => app(\App\Services\CandidateClientReviewService::class)
+            ->url($review),
+        'signatureHtml' => $signature,
+        'companyName' => $companyName,
+    ]);
+
+    });
