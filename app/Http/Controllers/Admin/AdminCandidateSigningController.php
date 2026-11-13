@@ -43,6 +43,7 @@ class AdminCandidateSigningController extends AdminBaseController
             ...($client ? [
                 'client_email' => 'required|email:rfc|max:254',
                 'client_name' => 'nullable|string|max:150',
+                'client_subject' => 'nullable|string|max:150',
                 'client_message' => 'nullable|string|max:1000',
             ] : ['candidate_id' => 'required|integer']),
             'pdf' => 'required|file|mimes:pdf|extensions:pdf|max:10240',
@@ -61,7 +62,14 @@ class AdminCandidateSigningController extends AdminBaseController
         $filename = Str::limit(trim($basename) ?: 'document', 180, '').'.pdf';
         try {
             $requestId = $client
-                ? $zoho->createRecipientDraft($data['client_name'] ?? $email, $email, $file->getPathname(), $filename, $data['client_message'] ?? null)
+                ? $zoho->createRecipientDraft(
+                    $data['client_name'] ?? $email,
+                    $email,
+                    $file->getPathname(),
+                    $filename,
+                    $data['client_message'] ?? null,
+                    $data['client_subject'] ?? null,
+                )
                 : $zoho->createCandidateDraft($application, $file->getPathname(), $filename);
         } catch (ZohoSignException $exception) {
             report($exception);

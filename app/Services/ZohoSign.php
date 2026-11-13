@@ -99,7 +99,7 @@ class ZohoSign
         return $this->createRecipientDraft($application->full_name, $application->email, $pdfPath, $filename);
     }
 
-    public function createRecipientDraft(string $name, string $email, string $pdfPath, string $filename, ?string $message = null): string
+    public function createRecipientDraft(string $name, string $email, string $pdfPath, string $filename, ?string $message = null, ?string $title = null): string
     {
         $stream = fopen($pdfPath, 'rb');
         if ($stream === false) {
@@ -111,7 +111,7 @@ class ZohoSign
                 ->attach('file', $stream, $filename, ['Content-Type' => 'application/pdf'])
                 ->post('requests', [
                     'data' => json_encode(['requests' => [
-                        'request_name' => $filename,
+                        'request_name' => $title ?? $filename,
                         ...($message === null ? [] : ['notes' => $message]),
                         'expiration_days' => 30,
                         'is_sequential' => true,
