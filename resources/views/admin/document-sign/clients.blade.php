@@ -63,7 +63,7 @@
 @if($user->cans('add_job_applications'))
     <style>
         #client-signing-dialog {
-            width: min(750px, calc(100% - 24px));
+            width: min(560px, calc(100% - 24px));
             max-height: calc(100% - 24px);
             margin: auto;
             padding: 0;
@@ -79,12 +79,12 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 20px clamp(16px, 4vw, 28px);
+            padding: 12px 20px;
             border-bottom: 1px solid #dbe4ef;
         }
         .client-signing-close {
-            width: 40px;
-            height: 40px;
+            width: 34px;
+            height: 34px;
             border: 1px solid #dbe4ef;
             border-radius: 10px;
             background: #f5f7fa;
@@ -92,17 +92,24 @@
             font-size: 24px;
             line-height: 1;
         }
-        .client-signing-body { padding: 24px clamp(16px, 4vw, 28px); }
+        .client-signing-body { padding: 16px 20px; }
         .client-signing-field {
             display: block;
             width: 100%;
             margin-top: 6px;
             border: 1px solid #dbe4ef;
             border-radius: 10px;
-            padding: 11px 14px;
+            padding: 8px 12px;
         }
         .client-signing-field:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
-        textarea.client-signing-field { min-height: 150px; resize: vertical; }
+        #client-signing-dialog .ja-review-editor-wrap { margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 9px; overflow: hidden; }
+        #client-signing-dialog .ja-review-format { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; background: #f5f7fa; border-bottom: 1px solid #dbe4ef; }
+        #client-signing-dialog .ja-review-format > * { border: 1px solid #dbe4ef; border-radius: 4px; padding: 3px 6px; background: white; color: #475569; font: 12px Arial, sans-serif; }
+        #client-signing-dialog .ja-review-editor { min-height: 88px; max-height: 150px; overflow: auto; padding: 10px 12px; font: 14px/1.5 Arial, sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+        #client-signing-dialog .ja-review-editor:focus { outline: 2px solid #93c5fd; outline-offset: -2px; }
+        #client-signing-dialog .ja-review-editor:empty::before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
+        #client-signing-dialog .ja-review-editor ul { list-style: disc; padding-left: 22px; }
+        #client-signing-dialog .ja-review-editor ol { list-style: decimal; padding-left: 22px; }
         .client-signing-upload { background: #f5f7fa; }
         .client-signing-upload input { width: 100%; }
     </style>
@@ -120,7 +127,7 @@
             </ul>
         @endif
         <form method="POST" enctype="multipart/form-data" action="{{ tenant_route('admin.document-sign.clients.store') }}"
-              class="space-y-4" onsubmit="this.querySelector('button[type=submit]').disabled = true">
+              class="space-y-3">
             @csrf
             <label class="block font-medium">Client email
                 <input class="client-signing-field" type="email" name="client_email" placeholder="client@company.com" value="{{ old('client_email') }}" maxlength="254" required autofocus>
@@ -128,13 +135,16 @@
             <label class="block font-medium">Subject (optional)
                 <input class="client-signing-field" name="client_subject" placeholder="Document for signature" value="{{ old('client_subject') }}" maxlength="150">
             </label>
-            <label class="block font-medium">Email body (optional)
-                <textarea class="client-signing-field" name="client_message" rows="5" maxlength="1000" placeholder="Write your message to the client…">{{ old('client_message') }}</textarea>
-            </label>
+            <div>
+                <div class="font-medium">Email body (optional)</div>
+                @include('admin.job-applications.partials.client-review-editor', ['editorId' => 'client-signing-message'])
+                <textarea name="client_message" hidden>{{ old('client_message') }}</textarea>
+                <p id="client-signing-message-error" class="text-sm text-red-700" role="alert" hidden></p>
+            </div>
             <label class="block font-medium">PDF attachment (up to 10 MB)
                 <input class="client-signing-field client-signing-upload" type="file" name="pdf" accept=".pdf,application/pdf" required>
             </label>
-            <p class="text-sm text-slate-600">Your subject names the Zoho signing request. Add signing fields in the editor, then click Send there to email the client.</p>
+            <p class="text-sm text-slate-600">Zoho receives the message as text. Add signing fields in Zoho, then click Send there.</p>
             <div class="flex justify-end gap-2">
                 <button type="button" class="btn btn-outline-primary" onclick="this.closest('dialog').close()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Open Zoho editor</button>
@@ -142,6 +152,68 @@
         </form>
         </div>
     </dialog>
+    <script>
+        (() => {
+            const dialog = document.getElementById('client-signing-dialog');
+            const form = dialog.querySelector('form');
+            const editor = document.getElementById('client-signing-message');
+            const message = form.elements.client_message;
+            const error = document.getElementById('client-signing-message-error');
+            let selection;
+            editor.textContent = message.value;
+
+            document.addEventListener('selectionchange', () => {
+                const current = window.getSelection();
+                if (current.rangeCount && editor.contains(current.anchorNode) && editor.contains(current.focusNode)) {
+                    selection = current.getRangeAt(0).cloneRange();
+                }
+            });
+
+            dialog.querySelectorAll('[data-review-command]').forEach(control => {
+                const isButton = control.tagName === 'BUTTON';
+                if (isButton) control.addEventListener('mousedown', event => event.preventDefault());
+                control.addEventListener(isButton ? 'click' : 'change', () => {
+                    editor.focus();
+                    if (selection && editor.contains(selection.commonAncestorContainer)) {
+                        const current = window.getSelection();
+                        current.removeAllRanges();
+                        current.addRange(selection);
+                    }
+                    document.execCommand(control.dataset.reviewCommand, false, isButton ? null : control.value);
+                });
+            });
+
+            editor.addEventListener('paste', event => {
+                event.preventDefault();
+                document.execCommand('insertText', false, event.clipboardData.getData('text/plain'));
+            });
+
+            form.addEventListener('submit', event => {
+                const copy = editor.cloneNode(true);
+                copy.removeAttribute('id');
+                copy.style.cssText = 'position:absolute;visibility:hidden;';
+                copy.querySelectorAll('li').forEach(item => {
+                    const list = item.parentElement;
+                    const prefix = list.tagName === 'OL' ? (Array.from(list.children).indexOf(item) + 1) + '. ' : '• ';
+                    item.prepend(prefix);
+                });
+                editor.after(copy);
+                // innerText preserves the editor's visual line breaks.
+                copy.style.visibility = 'visible';
+                copy.style.opacity = '0';
+                message.value = copy.innerText.trim();
+                copy.remove();
+                error.hidden = message.value.length <= 1000;
+                if (!error.hidden) {
+                    event.preventDefault();
+                    error.textContent = 'Use 1,000 characters or fewer in the email body.';
+                    editor.focus();
+                    return;
+                }
+                form.querySelector('button[type=submit]').disabled = true;
+            });
+        })();
+    </script>
     @if($errors->clientSigning->any())
         <script>document.getElementById('client-signing-dialog').showModal();</script>
     @endif
