@@ -374,6 +374,7 @@ class AdminJobApplicationController extends AdminBaseController
             ->with([
                 'location',
                 'job.skills',
+                'job.statuses',
                 'status:id,status,color',
             ]);
 
@@ -513,16 +514,18 @@ class AdminJobApplicationController extends AdminBaseController
                     $parts[] = '<button type="button" onclick="jaMoveOne(' . $row->id . ',' . $nextId . ')" class="ja-act-btn move" title="Move to ' . $nextLabel . '">' . $nextLabel . ' <i class="fa fa-arrow-right" style="font-size:10px;margin-left:2px;"></i></button>';
                 }
 
-                // "Move to any stage" dropdown — content is populated client-side
-                // from jaStages so it always reflects the currently-selected job's pipeline.
+                // Each applicant can only move within their own job's pipeline.
                 if (!in_array($statusSlug, ['rejected', 'hired'])) {
+                    $stages = ($row->job?->statuses ?? collect())
+                        ->where('id', '!=', $row->status_id)
+                        ->map(fn ($stage) => ['id' => $stage->id, 'label' => ucfirst($stage->status), 'color' => $stage->color])
+                        ->values();
                     $dropdownId   = 'ja-move-drop-' . $row->id;
                     $dropdownHtml = '<div class="ja-move-wrap" style="position:relative;display:inline-flex;">';
                     $dropdownHtml .= '<button type="button" class="ja-act-btn" onclick="jaToggleDrop(\'' . $dropdownId . '\', this)" title="Move to stage" style="padding:5px 8px;border-radius:8px;"><i class="fa fa-chevron-down" style="font-size:10px;"></i></button>';
-                    // Empty container — jaToggleDrop fills it from jaStages on open
                     $dropdownHtml .= '<div id="' . $dropdownId . '" class="ja-move-drop"'
                         . ' data-app-id="' . $row->id . '"'
-                        . ' data-current-status="' . e($statusSlug) . '"'
+                        . ' data-stages="' . e($stages->toJson()) . '"'
                         . ' style="display:none;position:fixed;background:#fff;border:1.5px solid #E2DED8;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.13);z-index:99999;min-width:160px;max-height:220px;overflow-y:auto;">'
                         . '</div></div>';
                     $parts[] = $dropdownHtml;

@@ -724,23 +724,28 @@
         var isHidden = el.style.display === 'none';
 
         if (isHidden) {
-            // Populate dropdown from jaStages (reflects the current job's pipeline)
-            var appId         = el.getAttribute('data-app-id');
-            var currentStatus = el.getAttribute('data-current-status') || '';
-            var html = '';
-            jaStages.forEach(function(s) {
-                if (s.slug === currentStatus) return;
-                var dot   = s.color || '#6B7280';
-                var label = s.label || s.slug;
-                html += '<button type="button"'
-                    + ' onclick="jaMoveOne(' + appId + ',' + s.id + ');jaCloseDrop(\'' + id + '\')"'
-                    + ' style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:13px;font-weight:500;color:#1A1E2E;cursor:pointer;font-family:inherit;text-align:left;"'
-                    + ' onmouseover="this.style.background=\'#F1F3F7\'" onmouseout="this.style.background=\'none\'">'
-                    + '<span style="width:8px;height:8px;border-radius:50%;background:' + dot + ';flex-shrink:0;display:inline-block;"></span>'
-                    + label
-                    + '</button>';
+            var appId = Number(el.dataset.appId);
+            var stages = JSON.parse(el.dataset.stages || '[]');
+            el.replaceChildren();
+            stages.forEach(function(stage) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.style.cssText = 'display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:13px;font-weight:500;color:#1A1E2E;cursor:pointer;font-family:inherit;text-align:left;';
+                button.addEventListener('mouseenter', function() { button.style.background = '#F1F3F7'; });
+                button.addEventListener('mouseleave', function() { button.style.background = 'none'; });
+                button.addEventListener('click', function() {
+                    jaMoveOne(appId, stage.id);
+                    jaCloseDrop(id);
+                });
+                var dot = document.createElement('span');
+                dot.style.cssText = 'width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;';
+                dot.style.backgroundColor = stage.color || '#6B7280';
+                button.append(dot, stage.label);
+                el.appendChild(button);
             });
-            el.innerHTML = html || '<div style="padding:10px 14px;color:#8892A0;font-size:12px;">No stages available</div>';
+            if (!stages.length) {
+                el.innerHTML = '<div style="padding:10px 14px;color:#8892A0;font-size:12px;">No other stages available</div>';
+            }
 
             el.style.display = 'block';
 
