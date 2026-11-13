@@ -19,8 +19,11 @@ class CandidateSigningDocument extends Model
             return;
         }
 
-        self::whereKey($this->id)
-            ->whereNotIn('zoho_sign_status', ['completed', 'declined', 'rejected', 'expired', 'recalled'])
-            ->update(['zoho_sign_status' => $status]);
+        $query = self::whereKey($this->id)
+            ->whereNotIn('zoho_sign_status', ['completed', 'declined', 'rejected', 'expired', 'recalled']);
+        if ($status === 'inprogress') {
+            $query->where('zoho_sign_status', '!=', 'viewed');
+        }
+        $query->update(['zoho_sign_status' => $status]);
     }
 }

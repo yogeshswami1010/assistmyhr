@@ -1,6 +1,7 @@
 {{ match ($offer->zoho_sign_status) {
     'draft' => 'Draft',
     'inprogress' => 'Awaiting signature',
+    'viewed' => 'Viewed by recipient',
     'completed' => 'Signed',
     'declined', 'rejected' => 'Declined',
     'recalled' => 'Recalled',

@@ -96,6 +96,11 @@ class ZohoSign
 
     public function createCandidateDraft(JobApplication $application, string $pdfPath, string $filename): string
     {
+        return $this->createRecipientDraft($application->full_name, $application->email, $pdfPath, $filename);
+    }
+
+    public function createRecipientDraft(string $name, string $email, string $pdfPath, string $filename, ?string $message = null): string
+    {
         $stream = fopen($pdfPath, 'rb');
         if ($stream === false) {
             throw new RuntimeException('The uploaded PDF could not be read.');
@@ -107,12 +112,13 @@ class ZohoSign
                 ->post('requests', [
                     'data' => json_encode(['requests' => [
                         'request_name' => $filename,
+                        ...($message === null ? [] : ['notes' => $message]),
                         'expiration_days' => 30,
                         'is_sequential' => true,
                         'actions' => [[
                             'action_type' => 'SIGN',
-                            'recipient_name' => $application->full_name,
-                            'recipient_email' => $application->email,
+                            'recipient_name' => $name,
+                            'recipient_email' => $email,
                             'signing_order' => 0,
                             'verify_recipient' => true,
                             'verification_type' => 'EMAIL',

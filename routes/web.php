@@ -373,6 +373,7 @@ Route::middleware('auth')->group(function () {
             Route::get('job-onboard/update-status/{id?}',[AdminJobOnboardController::class, 'updateStatus'])->name('job-onboard.update-status');
             Route::prefix('document-sign')->name('document-sign.')->controller(\App\Http\Controllers\Admin\AdminOfferZohoSignController::class)->group(function () {
                 Route::get('/', 'index')->name('index');
+                Route::post('clients', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'storeClient'])->name('clients.store');
                 Route::get('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'show'])->name('prepare');
                 Route::post('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'store'])->name('store');
                 Route::post('documents/{id}/editor', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'editor'])->whereNumber('id')->name('documents.editor');

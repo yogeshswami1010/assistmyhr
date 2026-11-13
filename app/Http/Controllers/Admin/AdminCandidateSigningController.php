@@ -28,15 +28,30 @@ class AdminCandidateSigningController extends AdminBaseController
 
     public function store(Request $request, ZohoSign $zoho)
     {
+        return $this->storeDraft($request, $zoho, false);
+    }
+
+    public function storeClient(Request $request, ZohoSign $zoho)
+    {
+        return $this->storeDraft($request, $zoho, true);
+    }
+
+    private function storeDraft(Request $request, ZohoSign $zoho, bool $client)
+    {
         $this->authorizeSigning($zoho, true);
-        $data = $request->validate([
-            'candidate_id' => 'required|integer',
+        $data = $request->validateWithBag($client ? 'clientSigning' : 'default', [
+            ...($client ? [
+                'client_email' => 'required|email:rfc|max:254',
+                'client_name' => 'nullable|string|max:150',
+                'client_message' => 'nullable|string|max:1000',
+            ] : ['candidate_id' => 'required|integer']),
             'pdf' => 'required|file|mimes:pdf|extensions:pdf|max:10240',
         ]);
-        $application = JobApplication::with('status')->findOrFail($data['candidate_id']);
-        abort_unless($application->status?->isHired(), 403);
+        $application = $client ? null : JobApplication::with('status')->findOrFail($data['candidate_id']);
+        abort_unless($client || $application->status?->isHired(), 403);
+        $email = $client ? $data['client_email'] : $application->email;
 
-        if (! filter_var($application->email, FILTER_VALIDATE_EMAIL)) {
+        if (! $client && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw ValidationException::withMessages(['pdf' => 'Add a valid email address to the applicant before uploading a document.']);
         }
 
@@ -45,23 +60,32 @@ class AdminCandidateSigningController extends AdminBaseController
         $basename = preg_replace('/[[:cntrl:]]/', '', $basename);
         $filename = Str::limit(trim($basename) ?: 'document', 180, '').'.pdf';
         try {
-            $requestId = $zoho->createCandidateDraft($application, $file->getPathname(), $filename);
+            $requestId = $client
+                ? $zoho->createRecipientDraft($data['client_name'] ?? $email, $email, $file->getPathname(), $filename, $data['client_message'] ?? null)
+                : $zoho->createCandidateDraft($application, $file->getPathname(), $filename);
         } catch (ZohoSignException $exception) {
             report($exception);
-            throw ValidationException::withMessages(['pdf' => $exception->getMessage()]);
+            throw ValidationException::withMessages(['pdf' => $exception->getMessage()])->errorBag($client ? 'clientSigning' : 'default');
         } catch (ConnectionException $exception) {
             report($exception);
-            throw ValidationException::withMessages(['pdf' => 'The ATS server could not reach Zoho. Check outbound HTTPS connectivity and try again.']);
+            throw ValidationException::withMessages(['pdf' => 'The ATS server could not reach Zoho. Check outbound HTTPS connectivity and try again.'])->errorBag($client ? 'clientSigning' : 'default');
         } catch (RuntimeException $exception) {
             report($exception);
-            throw ValidationException::withMessages(['pdf' => 'Zoho Sign could not create the draft. Check the connection and try again.']);
+            throw ValidationException::withMessages(['pdf' => 'Zoho Sign could not create the draft. Check the connection and try again.'])->errorBag($client ? 'clientSigning' : 'default');
         }
 
-        $application->signingDocuments()->create([
+        $attributes = [
             'filename' => $filename,
-            'recipient_email' => $application->email,
+            'recipient_email' => $email,
             'zoho_sign_request_id' => $requestId,
-        ]);
+        ];
+        if ($client) {
+            $document = CandidateSigningDocument::create($attributes);
+            $request->session()->flash('zoho_sign_message', 'Client draft saved. You can reopen it from Client documents.');
+
+            return $this->editor($document->id, $zoho);
+        }
+        $application->signingDocuments()->create($attributes);
 
         $url = tenant_route('admin.document-sign.prepare', ['id' => $application->id]);
         $request->session()->flash('zoho_sign_message', 'PDF uploaded. Open the Zoho editor to place fields and send it.');
@@ -75,7 +99,7 @@ class AdminCandidateSigningController extends AdminBaseController
     {
         $this->authorizeSigning($zoho, true);
         $document = CandidateSigningDocument::with('application.status')->findOrFail($id);
-        abort_unless($document->application->status?->isHired(), 403);
+        abort_unless($document->job_application_id === null || $document->application?->status?->isHired(), 403);
 
         try {
             $status = $zoho->status($document);
@@ -111,7 +135,7 @@ class AdminCandidateSigningController extends AdminBaseController
         return back()->with('zoho_sign_message', 'Zoho Sign status refreshed.');
     }
 
-    public function download(int $id, ZohoSign $zoho)
+    public function download(int $id, Request $request, ZohoSign $zoho)
     {
         $this->authorizeSigning($zoho);
         $document = CandidateSigningDocument::findOrFail($id);
@@ -126,7 +150,8 @@ class AdminCandidateSigningController extends AdminBaseController
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="signed-document-'.$document->id.'.pdf"',
+            'Content-Disposition' => ($request->boolean('inline') ? 'inline' : 'attachment').'; filename="signed-document-'.$document->id.'.pdf"',
+            'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store',
         ]);
     }
