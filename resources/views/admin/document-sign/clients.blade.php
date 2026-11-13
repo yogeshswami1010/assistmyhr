@@ -71,6 +71,7 @@
             border-radius: 22px;
             background: #fff;
             color: #162541;
+            font-size: 13px;
             box-shadow: 0 24px 80px #0f172a40;
         }
         #client-signing-dialog::backdrop { background: #16254199; }
@@ -83,16 +84,24 @@
             border-bottom: 1px solid #dbe4ef;
         }
         .client-signing-close {
-            width: 34px;
-            height: 34px;
+            width: 30px;
+            height: 30px;
             border: 1px solid #dbe4ef;
             border-radius: 10px;
             background: #f5f7fa;
             color: #64748b;
-            font-size: 24px;
+            font-size: 19px;
             line-height: 1;
         }
         .client-signing-body { padding: 16px 20px; }
+        #client-signing-title { font-size: 17px; line-height: 1.35; }
+        #client-signing-dialog .client-signing-help { font-size: 12px; line-height: 1.45; }
+        #client-signing-dialog .client-signing-actions .btn {
+            min-height: 32px;
+            padding: 6px 12px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
         .client-signing-field {
             display: block;
             width: 100%;
@@ -100,12 +109,13 @@
             border: 1px solid #dbe4ef;
             border-radius: 10px;
             padding: 8px 12px;
+            font-size: inherit;
         }
         .client-signing-field:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
         #client-signing-dialog .ja-review-editor-wrap { margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 9px; overflow: hidden; }
         #client-signing-dialog .ja-review-format { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; background: #f5f7fa; border-bottom: 1px solid #dbe4ef; }
-        #client-signing-dialog .ja-review-format > * { border: 1px solid #dbe4ef; border-radius: 4px; padding: 3px 6px; background: white; color: #475569; font: 12px Arial, sans-serif; }
-        #client-signing-dialog .ja-review-editor { min-height: 88px; max-height: 150px; overflow: auto; padding: 10px 12px; font: 14px/1.5 Arial, sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+        #client-signing-dialog .ja-review-format > * { border: 1px solid #dbe4ef; border-radius: 4px; padding: 3px 6px; background: white; color: #475569; font: 11px Arial, sans-serif; }
+        #client-signing-dialog .ja-review-editor { min-height: 88px; max-height: 150px; overflow: auto; padding: 10px 12px; font: 13px/1.5 Arial, sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
         #client-signing-dialog .ja-review-editor:focus { outline: 2px solid #93c5fd; outline-offset: -2px; }
         #client-signing-dialog .ja-review-editor:empty::before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
         #client-signing-dialog .ja-review-editor ul { list-style: disc; padding-left: 22px; }
@@ -115,7 +125,7 @@
     </style>
     <dialog id="client-signing-dialog" aria-labelledby="client-signing-title">
         <header class="client-signing-header">
-            <h2 id="client-signing-title" class="text-xl font-semibold">Send document to client</h2>
+            <h2 id="client-signing-title" class="font-semibold">Send document to client</h2>
             <button type="button" class="client-signing-close" aria-label="Close" onclick="this.closest('dialog').close()">&times;</button>
         </header>
         <div class="client-signing-body">
@@ -144,8 +154,8 @@
             <label class="block font-medium">PDF attachment (up to 10 MB)
                 <input class="client-signing-field client-signing-upload" type="file" name="pdf" accept=".pdf,application/pdf" required>
             </label>
-            <p class="text-sm text-slate-600">Zoho receives the message as text. Add signing fields in Zoho, then click Send there.</p>
-            <div class="flex justify-end gap-2">
+            <p class="client-signing-help text-slate-600">Zoho receives the message as text. Add signing fields in Zoho, then click Send there.</p>
+            <div class="client-signing-actions flex justify-end gap-2">
                 <button type="button" class="btn btn-outline-primary" onclick="this.closest('dialog').close()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Open Zoho editor</button>
             </div>
