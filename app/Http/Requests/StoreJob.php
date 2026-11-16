@@ -45,13 +45,13 @@ class StoreJob extends CoreRequest
 
             // Made pay_type and salary fields optional / conditional
             'pay_type'             => 'nullable|in:Range,Starting,Maximum,Exact Amount',
-            'starting_salary'      => 'nullable|required_with:pay_type',
+            'starting_salary'      => 'nullable|required_with:pay_type|numeric|min:0',
             'pay_according'        => 'nullable',
             'company_location'     => 'nullable|string|max:191',
         ];
 
         if (request('pay_type') == 'Range') {
-            $rules['maximum_salary'] = 'required|gt:starting_salary';
+            $rules['maximum_salary'] = 'required|numeric|gt:starting_salary';
         }
 
         return $rules;
@@ -83,15 +83,15 @@ class StoreJob extends CoreRequest
         ];
 
         if (request('pay_type') == 'Range') {
-            $msg['starting_salary.required'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required_with'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
             $msg['maximum_salary.required']  = __('modules.jobs.maximumSalary').' '.__('errors.fieldRequired');
             $msg['maximum_salary.gt']        = __('modules.jobs.maximumSalary').' must be greater than starting salary.';
         } elseif (request('pay_type') == 'Starting') {
-            $msg['starting_salary.required'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required_with'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
         } elseif (request('pay_type') == 'Maximum') {
-            $msg['starting_salary.required'] = __('modules.jobs.maximumSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required_with'] = __('modules.jobs.maximumSalary').' '.__('errors.fieldRequired');
         } elseif (request('pay_type') == 'Exact Amount') {
-            $msg['starting_salary.required'] = __('modules.jobs.exactSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required_with'] = __('modules.jobs.exactSalary').' '.__('errors.fieldRequired');
         }
 
         return $msg;

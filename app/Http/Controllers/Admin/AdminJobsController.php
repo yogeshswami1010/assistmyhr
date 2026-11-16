@@ -226,11 +226,7 @@ class AdminJobsController extends AdminBaseController
         $job->status = $request->status ?: 'open';
         $job->job_type_id = $request->job_type_id;
         $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
-        $job->pay_type = $request->pay_type;
-        $job->pay_according = $request->pay_according;
-        $job->starting_salary = $request->starting_salary;
-        $job->maximum_salary = $request->maximum_salary;
-        $job->currency_id = $request->currency_id;
+        $this->setJobPay($job, $request);
         $job->required_columns = $required_columns;
         $job->section_visibility = $section_visibility;
         $job->meta_details = [
@@ -244,10 +240,6 @@ class AdminJobsController extends AdminBaseController
 
         if ($request->show_work_experience == 'yes') {
             $job->show_work_experience = true;
-        }
-
-        if ($request->show_salary == 'yes') {
-            $job->show_salary = true;
         }
 
         $jobData = $job->save();
@@ -410,11 +402,7 @@ class AdminJobsController extends AdminBaseController
         $job->status = $request->input('status', $job->status);
         $job->job_type_id = $request->job_type_id;
         $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
-        $job->pay_type = $request->pay_type;
-        $job->pay_according = $request->pay_according;
-        $job->starting_salary = $request->starting_salary;
-        $job->maximum_salary = $request->maximum_salary;
-        $job->currency_id = $request->currency_id;
+        $this->setJobPay($job, $request);
         $job->required_columns = $required_columns;
         $job->section_visibility = $section_visibility;
         $job->meta_details = [
@@ -432,13 +420,6 @@ class AdminJobsController extends AdminBaseController
             $job->show_work_experience = true;
         } else {
             $job->show_work_experience = false;
-        }
-
-        if ($request->show_salary == 'yes') {
-            $job->show_salary = true;
-        } else {
-
-            $job->show_salary = false;
         }
 
         $job->save();
@@ -477,6 +458,23 @@ class AdminJobsController extends AdminBaseController
         $this->syncJobStatuses($id, $request);
 
         return Reply::redirect(route('admin.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));
+    }
+
+    private function setJobPay(Job $job, StoreJob $request): void
+    {
+        $job->pay_type = $request->validated('pay_type');
+        $job->starting_salary = $request->validated('starting_salary');
+        $job->maximum_salary = match ($job->pay_type) {
+            'Range' => $request->validated('maximum_salary'),
+            'Maximum' => $job->starting_salary,
+            default => null,
+        };
+        $job->pay_according = $request->pay_according;
+        $job->currency_id = $request->currency_id;
+
+        if ($request->has('show_salary')) {
+            $job->show_salary = $request->boolean('show_salary');
+        }
     }
 
     private function setWorkExperience(Job $job, array $selections): void

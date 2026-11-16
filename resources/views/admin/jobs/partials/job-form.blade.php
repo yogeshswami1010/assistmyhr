@@ -595,9 +595,10 @@
                                 <input
                                     class="form-control rounded-xl border border-gray-200 py-2.5 text-[13px] pl-8 pr-3.5"
                                     type="number"
+                                    step="0.01"
                                     id="startingSalary"
                                     name="starting_salary"
-                                    value="{{ $job ? $job->starting_salary : null }}"
+                                    value="{{ $job?->pay_type === 'Maximum' ? ($job->maximum_salary ?? $job->starting_salary) : $job?->starting_salary }}"
                                 >
                             </div>
                         </div>
@@ -610,6 +611,7 @@
                                 <input
                                     class="form-control rounded-xl border border-gray-200 py-2.5 text-[13px] pl-8 pr-3.5"
                                     type="number"
+                                    step="0.01"
                                     id="maximunSalary"
                                     name="maximum_salary"
                                     value="{{ $job ? $job->maximum_salary : null }}"
