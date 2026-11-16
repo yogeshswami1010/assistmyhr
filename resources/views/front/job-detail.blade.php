@@ -5,6 +5,7 @@
 @php
     $locationLabel = $job->publicLocationLabel();
     $salaryLabel = $job->publicSalaryLabel();
+    $experienceLabel = $job->work_experience_label;
 @endphp
 
 <section class="fr-mini-hero relative px-6 pt-10 pb-12">
@@ -93,11 +94,11 @@
                         <p class="fr-sidebar-label">@lang('menu.totalPositions')</p>
                         <p class="fr-sidebar-value">{{ $job->total_positions }}</p>
                     </div>
-                    @if($job->show_work_experience)
-                    <div class="pt-4 border-t border-[#F0EEE9]">
-                        <p class="fr-sidebar-label">@lang('modules.jobs.workExperience')</p>
-                        <p class="fr-sidebar-value">{{ $job->work_experience_label ?: '--' }}</p>
-                    </div>
+                    @if($experienceLabel !== '')
+                        <div class="pt-4 border-t border-[#F0EEE9]">
+                            <p class="fr-sidebar-label">@lang('modules.jobs.workExperience')</p>
+                            <p class="fr-sidebar-value">{{ $experienceLabel }}</p>
+                        </div>
                     @endif
                     @if($job->show_job_type && $job->jobType)
                     <div class="pt-4 border-t border-[#F0EEE9]">
