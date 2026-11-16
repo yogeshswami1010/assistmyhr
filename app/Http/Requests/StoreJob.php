@@ -35,7 +35,7 @@ class StoreJob extends CoreRequest
             // Made job_type_id optional
             'job_type_id'          => 'nullable|exists:job_types,id',
             'work_experience_ids' => 'nullable|array|max:30',
-            'work_experience_ids.*' => ['nullable', 'string', 'max:195', function ($attribute, $value, $fail) {
+            'work_experience_ids.*' => ['bail', 'required', 'string', 'max:195', function ($attribute, $value, $fail) {
                 $isNew = str_starts_with($value, 'new:') && trim(substr($value, 4)) !== '';
                 $isExisting = ctype_digit($value) && \App\WorkExperience::whereKey($value)->exists();
                 if (! $isNew && ! $isExisting) {
@@ -79,7 +79,7 @@ class StoreJob extends CoreRequest
     public function messages()
     {
         $msg = [
-            'work_experience_ids.required' => __('modules.jobs.workExperience').' '.__('errors.fieldRequired'),
+            'work_experience_ids.*.required' => __('modules.jobs.workExperience').' '.__('errors.fieldRequired'),
         ];
 
         if (request('pay_type') == 'Range') {

@@ -225,23 +225,7 @@ class AdminJobsController extends AdminBaseController
         $job->start_date = now()->toDateString();  
         $job->status = $request->status ?: 'open';
         $job->job_type_id = $request->job_type_id;
-        $experienceIds = [];
-        foreach ($request->work_experience_ids as $value) {
-            if (str_starts_with($value, 'new:')) {
-                $name = trim(substr($value, 4));
-                $experience = WorkExperience::where('work_experience', $name)->first();
-                if (! $experience) {
-                    $experience = new WorkExperience;
-                    $experience->work_experience = $name;
-                    $experience->save();
-                }
-                $experienceIds[] = $experience->id;
-            } else {
-                $experienceIds[] = (int) $value;
-            }
-        }
-        $job->work_experience_ids = array_values(array_unique($experienceIds));
-        $job->work_experience_id = $experienceIds[0];
+        $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
         $job->pay_type = $request->pay_type;
         $job->pay_according = $request->pay_according;
         $job->starting_salary = $request->starting_salary;
@@ -425,23 +409,7 @@ class AdminJobsController extends AdminBaseController
         $job->start_date = $request->filled('start_date') ? $request->start_date : ($job->publicationDate() ?? now()->toDateString());
         $job->status = $request->input('status', $job->status);
         $job->job_type_id = $request->job_type_id;
-        $experienceIds = [];
-        foreach ($request->work_experience_ids as $value) {
-            if (str_starts_with($value, 'new:')) {
-                $name = trim(substr($value, 4));
-                $experience = WorkExperience::where('work_experience', $name)->first();
-                if (! $experience) {
-                    $experience = new WorkExperience;
-                    $experience->work_experience = $name;
-                    $experience->save();
-                }
-                $experienceIds[] = $experience->id;
-            } else {
-                $experienceIds[] = (int) $value;
-            }
-        }
-        $job->work_experience_ids = array_values(array_unique($experienceIds));
-        $job->work_experience_id = $experienceIds[0];
+        $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
         $job->pay_type = $request->pay_type;
         $job->pay_according = $request->pay_according;
         $job->starting_salary = $request->starting_salary;
@@ -509,6 +477,30 @@ class AdminJobsController extends AdminBaseController
         $this->syncJobStatuses($id, $request);
 
         return Reply::redirect(route('admin.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));
+    }
+
+    private function setWorkExperience(Job $job, array $selections): void
+    {
+        $experienceIds = [];
+        foreach ($selections as $value) {
+            if (! str_starts_with($value, 'new:')) {
+                $experienceIds[] = (int) $value;
+
+                continue;
+            }
+
+            $name = trim(substr($value, 4));
+            $experience = WorkExperience::where('work_experience', $name)->first();
+            if (! $experience) {
+                $experience = new WorkExperience;
+                $experience->work_experience = $name;
+                $experience->save();
+            }
+            $experienceIds[] = $experience->id;
+        }
+
+        $job->work_experience_ids = array_values(array_unique($experienceIds));
+        $job->work_experience_id = $experienceIds[0] ?? null;
     }
 
     private function syncJobStatuses(int $jobId, $request): void
