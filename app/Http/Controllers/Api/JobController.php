@@ -47,24 +47,16 @@ class JobController extends Controller
         return Job::published()
             ->when(!$allJobs, fn ($query) => $query->where('company_id', (int) $companyId))
             ->whereHas('company', fn ($query) => $query->where('status', 'active'))
-            ->with(['company', 'category', 'jobType', 'workExperience', 'jobLocation', 'currency']);
+            ->with(['company', 'category', 'jobType', 'workExperience', 'jobLocation', 'location', 'currency']);
     }
 
     private function formatJob(Job $job): array
     {
-        $salary = null;
-        if ($job->show_salary) {
-            $symbol = $job->currency?->currency_symbol ?? '';
-            $salary = match ($job->pay_type) {
-                'Range' => $symbol.number_format($job->starting_salary).' - '.$symbol.number_format($job->maximum_salary),
-                'Maximum' => $symbol.number_format($job->maximum_salary),
-                default => $symbol.number_format($job->starting_salary),
-            };
-            if ($job->pay_according) {
-                $salary .= ' / '.$job->pay_according;
-            }
-        }
         $location = $job->jobLocation->first();
+        $locationLabel = $job->jobLocation->pluck('location')->implode(', ');
+        if (trim($locationLabel) === '') {
+            $locationLabel = trim((string) $job->location?->location) ?: trim((string) $job->company_location);
+        }
 
         // Whitelist public fields rather than serialize ATS models.
         return [
@@ -74,11 +66,11 @@ class JobController extends Controller
             'slug' => $job->slug,
             'description' => trim(html_entity_decode(strip_tags($job->job_description ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
             'requirements' => trim(html_entity_decode(strip_tags($job->job_requirement ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
-            'location' => $job->jobLocation->pluck('location')->implode(', '),
+            'location' => $locationLabel,
             'category' => $job->category?->name ?? '',
             'company' => $job->company?->show_in_frontend === 'true' ? $job->company->company_name : '',
             'job_type' => $job->jobType?->job_type ?? '',
-            'salary' => $salary,
+            'salary' => $this->formatSalary($job),
             'experience' => $job->work_experience_label,
             'start_date' => $job->start_date?->format('Y-m-d'),
             'end_date' => $job->end_date?->format('Y-m-d'),
@@ -86,5 +78,31 @@ class JobController extends Controller
             'api_detail_url' => url('/api/jobs/'.$job->id),
             'apply_url' => tenant_route('jobs.jobApply', [$job->slug, $location?->id]),
         ];
+    }
+
+    private function formatSalary(Job $job): ?string
+    {
+        if (!$job->show_salary) {
+            return null;
+        }
+
+        $amounts = match ($job->pay_type) {
+            'Range' => [$job->starting_salary, $job->maximum_salary],
+            'Maximum' => [$job->maximum_salary ?? $job->starting_salary],
+            default => [$job->starting_salary],
+        };
+        $amounts = array_filter($amounts, 'is_numeric');
+        if ($amounts === []) {
+            return null;
+        }
+
+        $symbol = $job->currency?->currency_symbol ?? '';
+        $formatted = array_map(static function ($amount) use ($symbol) {
+            $amount = (float) $amount;
+
+            return $symbol.number_format($amount, $amount === floor($amount) ? 0 : 2);
+        }, $amounts);
+
+        return implode(' - ', $formatted).($job->pay_according ? ' / '.$job->pay_according : '');
     }
 }
