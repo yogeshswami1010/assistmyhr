@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Staging workspaces use synthetic candidates.
+        if (app()->environment('staging')) {
+            return;
+        }
+
         $path = database_path('imports/cfdb7-2026-08-28.csv');
         if (!is_file($path)) {
             throw new RuntimeException('Consortium registration import CSV was not found: '.$path);
@@ -83,6 +88,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (app()->environment('staging')) {
+            return;
+        }
+
         DB::table('consortium_registrations')->where('legacy_source', 'cfdb7')->delete();
     }
 };

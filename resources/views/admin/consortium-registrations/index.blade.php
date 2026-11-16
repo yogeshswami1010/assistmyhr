@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('page-title-html') Consortium <em>Registrations</em> @endsection
-@section('page-subtitle') Candidate registrations submitted from consortiumstaffing.ca @endsection
+@section('page-subtitle') Review candidate registrations @endsection
+@section('create-button')
+@if(app()->environment('staging'))
+    <a href="{{ tenant_route('consortium-registration.create') }}" target="_blank" rel="noopener" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white">Open Registration Form</a>
+@endif
+@endsection
 @section('content')
 @include('admin.partials.candidate-communications')
 @if(session('success'))

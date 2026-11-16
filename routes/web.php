@@ -48,6 +48,7 @@ use App\Http\Controllers\Admin\StorageController;
 use App\Http\Controllers\Admin\ZoomMeetingSettingController;
 use App\Http\Controllers\Front\FrontJobOfferController;
 use App\Http\Controllers\Front\FrontJobsController;
+use App\Http\Controllers\Front\ConsortiumRegistrationController;
 use App\Http\Controllers\Admin\AdminJobApiSettingsController;
 use App\Http\Controllers\Admin\AdminConsortiumRegistrationController;
 use App\Http\Controllers\NotificationController;
@@ -74,6 +75,14 @@ Route::post('/zoho-sign-webhook', \App\Http\Controllers\ZohoSignWebhookControlle
 
 // ── Front public job board ─────────────────────────────────────────────────
 require __DIR__.'/website.php';
+
+if (app()->environment('staging')) {
+    Route::get('/consortium-registration', [ConsortiumRegistrationController::class, 'create'])
+        ->name('consortium-registration.create');
+    Route::post('/consortium-registration', [ConsortiumRegistrationController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('consortium-registration.store');
+}
 
 Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');
 Route::get('/job-feeds/jooble.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jooble'])->middleware('throttle:60,1')->name('jobs.feeds.jooble');
