@@ -27,6 +27,7 @@ use SebastianBergmann\CodeCoverage\Report\Xml\Project;
 use App\ThemeSetting;
 use App\User;
 use App\ZoomSetting;
+use Illuminate\Support\Facades\DB;
 
 class AdminBaseController extends Controller
 {
@@ -110,15 +111,38 @@ class AdminBaseController extends Controller
             // Eager-load only the `permissions` relation to avoid calling a non-existent nested `permission` relation.
             $this->getPermissions = User::with('roles.permissions')->find($this->user->id);
             $userPermissions = array();
-            foreach ($this->getPermissions->roles[0]->permissions as $key => $value) {
-                // Depending on how `Role::permissions()` is defined, `$value` can be either:
-                // 1) a pivot-like object that has `permission` relation, or
-                // 2) a `Permission` model directly (has `name`).
-                $userPermissions[] = isset($value->permission)
-                    ? $value->permission->name
-                    : $value->name;
-            }
+
+if ($this->getPermissions && $this->getPermissions->roles->count() > 0) {
+    foreach ($this->getPermissions->roles as $role) {
+        foreach ($role->permissions as $value) {
+            $userPermissions[] = isset($value->permission)
+                ? $value->permission->name
+                : $value->name;
+        }
+    }
+}
+
+$this->userPermissions = array_unique($userPermissions);
             $this->userPermissions = $userPermissions;
+            // Load Super Admin feature permissions for the current tenant
+            $tenantFeatures = [];
+
+            if (config('saas.enabled')) {
+                $tenant = app(\App\Saas\TenantContext::class)->current();
+
+                if ($tenant) {
+                    $tenantFeatures = DB::connection('saas_landlord')
+                        ->table('tenant_features')
+                        ->where('tenant_id', $tenant->id)
+                        ->where('is_enabled', 1)
+                        ->pluck('is_enabled', 'feature_key')
+                        ->toArray();
+                }
+            }
+
+            $this->data['tenantFeatures'] = $tenantFeatures;
+
+            view()->share('tenantFeatures', $tenantFeatures);
             
             view()->share('languages', $this->languageSettings);
             

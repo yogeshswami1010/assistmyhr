@@ -11,6 +11,73 @@
 <style>
 .co-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:22px}.co-grid .card,.co-login.card{border:1px solid #e2e8f0;box-shadow:none;margin:0 0 22px}.co-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}.co-account .co-heading{justify-content:flex-start}.co-heading h2,.co-login h2{margin:0 0 6px;font-size:20px}.co-avatar{width:52px;height:52px;flex-shrink:0;background:#eff6ff;color:#2563eb;border-radius:15px;display:grid;place-items:center;font-size:24px;font-weight:700}.co-muted{color:#64748b;font-size:13px}.co-details{margin:24px 0 0}.co-details>div{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-top:1px solid #f1f5f9}.co-details dt{color:#64748b;font-size:13px}.co-details dd{margin:0;font-size:13px;font-weight:600;overflow-wrap:anywhere;text-align:right}.co-badge{display:inline-block;padding:5px 12px;border-radius:20px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:600}.co-badge.active,.co-badge.trialing{background:#ecfdf5;color:#047857}.co-badge.suspended,.co-badge.expired,.co-badge.failed{background:#fff1f2;color:#be123c}.co-eyebrow{font-size:10px;letter-spacing:1.2px;color:#64748b;font-weight:700}.co-expiry{display:flex;flex-direction:column;gap:6px;border-top:1px solid #e2e8f0;padding:24px 0;margin-top:22px}.co-expiry strong{font-size:27px;color:#17233b}.co-usage{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:22px}.co-metric{display:flex;flex-direction:column;gap:10px;background:white;border:1px solid #e2e8f0;border-radius:16px;padding:22px}.co-metric strong{font-size:28px;color:#17233b}.co-footnote{font-size:11px;color:#94a3b8}.co-login p{margin:0 0 20px}.co-copy{display:flex;gap:12px;align-items:center}.co-copy .bs-f-input{flex:1;min-width:0;margin:0}.co-copy button{white-space:nowrap;margin:0}.co-login [role=status]{display:block;margin-top:10px}@media(max-width:1000px){.co-grid{grid-template-columns:1fr}.co-usage{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:550px){.co-usage{grid-template-columns:1fr}.co-copy{align-items:stretch;flex-direction:column}.co-details>div{flex-direction:column;gap:6px}.co-details dd{text-align:left}}
 </style>
+<style>
+
+/* Feature permission rows */
+.feature-permission-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.feature-permission-row strong {
+    font-size: 15px;
+    color: #17233b;
+}
+
+/* Toggle switch */
+.feature-toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.feature-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.feature-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 30px;
+    transition: 0.25s;
+}
+
+.feature-slider:before {
+    position: absolute;
+    content: "";
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.feature-toggle input:checked + .feature-slider {
+    background: #2563eb;
+}
+
+.feature-toggle input:checked + .feature-slider:before {
+    transform: translateX(22px);
+}
+
+.feature-toggle input:focus-visible + .feature-slider {
+    outline: 2px solid #2563eb;
+    outline-offset: 3px;
+}
+</style>
 @endpush
 @section('platform-content')
 <div style="display:flex;justify-content:flex-end;margin-bottom:16px">@include('saas.client-access-button', ['tenant' => $tenant])</div>
@@ -24,6 +91,15 @@
 <button type="button" role="tab" id="client-tab-outlook" aria-controls="client-panel-outlook" aria-selected="false" data-client-tab="outlook" tabindex="-1">Outlook Inbox</button>
 <button type="button" role="tab" id="client-tab-history" aria-controls="client-panel-history" aria-selected="false" data-client-tab="history" tabindex="-1">History</button>
 <button type="button" role="tab" id="client-tab-account" aria-controls="client-panel-account" aria-selected="false" data-client-tab="account" tabindex="-1">Account Controls</button>
+<button type="button"
+    role="tab"
+    id="client-tab-features"
+    aria-controls="client-panel-features"
+    aria-selected="false"
+    data-client-tab="features"
+    tabindex="-1">
+    Feature Access
+</button>
 </nav>
 <section class="client-panel" role="tabpanel" id="client-panel-overview" aria-labelledby="client-tab-overview">
 @php($currentPlan = $tenant->subscription?->plan)
@@ -101,42 +177,191 @@
 <div class="card" style="border-color:#fecdd3"><h2 style="color:#be123c">Delete client</h2><p class="muted">Remove this client from the platform and revoke their login and Jobs API access. The client database and uploaded files remain on the server for recovery. This action removes the subscription and cannot be undone from this page.</p><form method="post" action="{{ route('superadmin.tenants.destroy',$tenant) }}" onsubmit="return window.confirm('Delete this client and revoke their access? The database and files will be retained for recovery.');">@csrf<input type="hidden" name="client_tab" value="account"> @method('DELETE')<button type="submit" style="background:#be123c">Delete client</button></form></div>
 @endif
 </section>
+
+
+<section class="client-panel"
+    role="tabpanel"
+    id="client-panel-features"
+    aria-labelledby="client-tab-features"
+    hidden>
+
+    <div class="card">
+
+        <h2>Client Feature Permissions</h2>
+        @if(session('status'))
+    <div class="notice success">
+        {{ session('status') }}
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="notice error">
+        <strong>Please correct the following errors:</strong>
+
+        <ul style="margin:8px 0 0;padding-left:20px;">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+        <form method="POST"
+            action="{{ route('superadmin.tenants.features', $tenant) }}">
+
+            @csrf
+
+            <input type="hidden" name="client_tab" value="features">
+
+            @foreach($featureDefinitions as $key => $feature)
+
+                <div class="feature-permission-row">
+
+                    <strong>{{ $feature['name'] }}</strong>
+
+                    <label class="feature-toggle">
+
+                        <input type="hidden"
+                            name="features[{{ $key }}]"
+                            value="0">
+
+                        <input type="checkbox"
+                            name="features[{{ $key }}]"
+                            value="1"
+                            @checked(old('features.'.$key, $tenantFeatures[$key] ?? false))>
+
+                        <span class="feature-slider"></span>
+
+                    </label>
+
+                </div>
+
+            @endforeach
+
+            <button type="submit" style="margin-top:20px">
+                Save Permissions
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
 <script>
 (function () {
-    document.getElementById('copy-client-login').addEventListener('click', async function () {
-        var input = document.getElementById('client-login-link');
-        var status = document.getElementById('copy-client-status');
-        try { await navigator.clipboard.writeText(input.value); status.textContent = 'Login link copied.'; }
-        catch (e) { input.focus(); input.select(); status.textContent = 'Select and copy the login link.'; }
-    });
-    var tabs = Array.from(document.querySelectorAll('[data-client-tab]'));
-    var storageKey = 'client-detail-tab:' + window.location.pathname;
-    function selectTab(name, focus) {
-        if (!tabs.some(function (tab) { return tab.dataset.clientTab === name; })) name = 'overview';
-        tabs.forEach(function (tab) {
-            var selected = tab.dataset.clientTab === name;
-            tab.setAttribute('aria-selected', selected ? 'true' : 'false');
-            tab.tabIndex = selected ? 0 : -1;
-            document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
-            if (selected && focus) tab.focus();
+
+    // Copy client login link
+    var copyButton = document.getElementById('copy-client-login');
+
+    if (copyButton) {
+        copyButton.addEventListener('click', async function () {
+
+            var input = document.getElementById('client-login-link');
+            var status = document.getElementById('copy-client-status');
+
+            if (!input || !status) return;
+
+            try {
+                await navigator.clipboard.writeText(input.value);
+                status.textContent = 'Login link copied.';
+            } catch (e) {
+                input.focus();
+                input.select();
+                status.textContent = 'Select and copy the login link.';
+            }
         });
-        try { sessionStorage.setItem(storageKey, name); } catch (e) {}
     }
+
+    // Client detail tabs
+    var tabs = Array.from(
+        document.querySelectorAll('[data-client-tab]')
+    );
+
+    var storageKey = 'client-detail-tab:' + window.location.pathname;
+
+    function selectTab(name, focus) {
+
+        // Default tab
+        if (!tabs.some(function (tab) {
+            return tab.dataset.clientTab === name;
+        })) {
+            name = 'overview';
+        }
+
+        tabs.forEach(function (tab) {
+
+            var selected = tab.dataset.clientTab === name;
+
+            tab.setAttribute(
+                'aria-selected',
+                selected ? 'true' : 'false'
+            );
+
+            tab.tabIndex = selected ? 0 : -1;
+
+            var panelId = tab.getAttribute('aria-controls');
+            var panel = document.getElementById(panelId);
+
+            if (panel) {
+                panel.hidden = !selected;
+            }
+
+            if (selected && focus) {
+                tab.focus();
+            }
+        });
+
+        // Remember selected tab
+        try {
+            sessionStorage.setItem(storageKey, name);
+        } catch (e) {}
+    }
+
+    // Tab click and keyboard navigation
     tabs.forEach(function (tab, index) {
-        tab.addEventListener('click', function () { selectTab(tab.dataset.clientTab, false); });
+
+        tab.addEventListener('click', function () {
+            selectTab(tab.dataset.clientTab, false);
+        });
+
         tab.addEventListener('keydown', function (event) {
+
             var next = index;
-            if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
-            else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
-            else if (event.key === 'Home') next = 0;
-            else if (event.key === 'End') next = tabs.length - 1;
-            else return;
-            event.preventDefault(); selectTab(tabs[next].dataset.clientTab, true);
+
+            if (event.key === 'ArrowRight') {
+                next = (index + 1) % tabs.length;
+            }
+            else if (event.key === 'ArrowLeft') {
+                next = (index + tabs.length - 1) % tabs.length;
+            }
+            else if (event.key === 'Home') {
+                next = 0;
+            }
+            else if (event.key === 'End') {
+                next = tabs.length - 1;
+            }
+            else {
+                return;
+            }
+
+            event.preventDefault();
+
+            selectTab(tabs[next].dataset.clientTab, true);
         });
     });
+
+    // Restore previously selected tab
     var initial = @json(old('client_tab', session('client_tab')));
-    if (!initial) { try { initial = sessionStorage.getItem(storageKey); } catch (e) {} }
+
+    if (!initial) {
+        try {
+            initial = sessionStorage.getItem(storageKey);
+        } catch (e) {}
+    }
+
     selectTab(initial || 'overview', false);
+
 })();
 </script>
 @endsection

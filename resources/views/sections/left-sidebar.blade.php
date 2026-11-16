@@ -43,7 +43,10 @@
             </a>
 
         @endif
-        @if($user->cans('view_job_applications'))
+        @if(
+    ($tenantFeatures['document_sign'] ?? false)
+    && $user->cans('view_job_applications')
+)
             <a href="{{ route('admin.candidate-marketing.index') }}" class="ra-nav-link {{ request()->is('admin/candidate-marketing*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="job-applications" /></span>
                 <span class="ra-nl">Candidate Marketing</span>
@@ -62,7 +65,10 @@
         @endif
         <div class="ra-sec-title">@lang('menu.recruitment')</div>
 
-        @if($user->cans('view_job_applications'))
+        @if(
+    ($tenantFeatures['document_sign'] ?? false)
+    && $user->cans('view_job_applications')
+)
             <a href="{{ tenant_route('admin.document-sign.index') }}" class="ra-nav-link {{ request()->routeIs('admin.document-sign.*') ? 'on' : '' }}" @if(request()->routeIs('admin.document-sign.*')) aria-current="page" @endif>
                 <span class="ra-ni" aria-hidden="true">
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20H4m12.5-16.5 4 4M8 16l1-4 8.5-8.5a2.83 2.83 0 0 1 4 4L13 16l-5 1Z"/></svg>
