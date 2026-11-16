@@ -529,7 +529,13 @@
                                         <option @if ($job && $job->pay_type == 'Maximum') selected @endif value="Maximum">@lang('modules.jobs.maximumSalary')</option>
                                         <option @if ($job && $job->pay_type == 'Exact Amount') selected @endif value="Exact Amount">@lang('modules.jobs.exactSalary')</option>
                                     </select>
-                                   
+                                    <input type="hidden" name="show_salary" value="no">
+                                    <label class="mt-3 flex cursor-pointer items-center gap-2 text-[13px] font-medium text-slate-600">
+                                        <input type="checkbox" name="show_salary" value="yes"
+                                               class="rounded border-gray-300 text-primary focus:ring-primary"
+                                               @checked(old('show_salary', $job?->show_salary ? 'yes' : 'no') === 'yes')>
+                                        {{ __('Show salary on public job posts') }}
+                                    </label>
                                 </div>
                             </div>
                         </div>
