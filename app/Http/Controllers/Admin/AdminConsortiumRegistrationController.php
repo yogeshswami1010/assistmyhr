@@ -253,6 +253,7 @@ class AdminConsortiumRegistrationController extends AdminBaseController
         $this->pageTitle = 'Temp Staffing';
         $this->applications = JobApplication::query()
             ->where('is_temp_staffing', true)
+            ->whereNull('moved_to_trash_at')
             ->with(['job:id,title,company_id', 'job.company:id,company_name', 'status:id,status,color'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
