@@ -2,6 +2,11 @@
 
 @section('content')
 
+@php
+    $locationLabel = $job->publicLocationLabel();
+    $salaryLabel = $job->publicSalaryLabel();
+@endphp
+
 <section class="fr-mini-hero relative px-6 pt-10 pb-12">
     <div class="max-w-6xl mx-auto relative z-10">
         <nav class="fr-breadcrumb flex flex-wrap items-center mb-6">
@@ -18,16 +23,12 @@
                     <span class="fr-badge bg-white/10 text-white/70">{{ ucwords($job->category->name) }}</span>
                 </div>
                 <h1 class="text-white font-bold leading-tight tracking-[-0.02em] text-[clamp(22px,3.5vw,40px)]">{{ ucwords($job->title) }}</h1>
-                <div class="flex flex-wrap items-center gap-4 mt-3 text-[13px] text-white/55">
-                   
-                    <span class="flex items-center gap-1.5">
+                @if($locationLabel !== '')
+                    <div class="flex items-center gap-1.5 mt-3 text-[13px] text-white/55">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                
-{{ optional($locations)->location ? ucwords($locations->location) : 'Not Specified' }}
-
-
-                    </span>
-                </div>
+                        {{ $locations?->location ?: $locationLabel }}
+                    </div>
+                @endif
             </div>
             <a href="{{ tenant_route('jobs.jobApply', [$job->slug, $locations ? $locations->id : null]) }}" class="fr-btn-lg shrink-0 text-center inline-block">@lang('modules.front.applyForJob')</a>
         </div>
@@ -62,11 +63,19 @@
         <aside class="lg:w-72 shrink-0">
             <div class="sticky top-24 flex flex-col gap-4">
                 <div class="fr-sidebar-card flex flex-col gap-5">
-                    <div>
-                        <p class="fr-sidebar-label">@lang('menu.locations')</p>
-                        <p class="fr-sidebar-value">{{ $locations ? ucwords($locations->location) : '—' }}</p>
-                    </div>
-                    <div class="pt-4 border-t border-[#F0EEE9]">
+                    @if($locationLabel !== '')
+                        <div>
+                            <p class="fr-sidebar-label">@lang('menu.locations')</p>
+                            <p class="fr-sidebar-value">{{ $locationLabel }}</p>
+                        </div>
+                    @endif
+                    @if($salaryLabel !== null)
+                        <div @class(['pt-4 border-t border-[#F0EEE9]' => $locationLabel !== ''])>
+                            <p class="fr-sidebar-label">@lang('menu.salary')</p>
+                            <p class="fr-sidebar-value">{{ $salaryLabel }}</p>
+                        </div>
+                    @endif
+                    <div @class(['pt-4 border-t border-[#F0EEE9]' => $locationLabel !== '' || $salaryLabel !== null])>
                         <p class="fr-sidebar-label">@lang('menu.jobCategory')</p>
                         <p class="fr-sidebar-value">{{ ucwords($job->category->name) }}</p>
                     </div>
@@ -96,64 +105,6 @@
                         <p class="fr-sidebar-value">{{ $job->jobType->job_type }}</p>
                     </div>
                     @endif
-                   @if($job->show_salary)
-
-                    @php
-                        $currencySymbol = $job->currency->currency_symbol ?? '$';
-                    @endphp
-
-                    @if($job->pay_type == 'Range')
-                        <div class="pt-4 border-t border-[#F0EEE9]">
-                            <p class="fr-sidebar-label">
-                                @lang('menu.salary') @lang('modules.jobs.range')
-                            </p>
-
-                            <p class="fr-sidebar-value">
-                                {{ $currencySymbol }}{{ number_format($job->starting_salary) }}
-                                -
-                                {{ $currencySymbol }}{{ number_format($job->maximum_salary) }}
-                                /{{ $job->pay_according }}
-                            </p>
-                        </div>
-
-                    @elseif($job->pay_type == 'Starting')
-                        <div class="pt-4 border-t border-[#F0EEE9]">
-                            <p class="fr-sidebar-label">
-                                @lang('modules.jobs.startingSalary')
-                            </p>
-
-                            <p class="fr-sidebar-value">
-                                {{ $currencySymbol }}{{ number_format($job->starting_salary) }}
-                                /{{ $job->pay_according }}
-                            </p>
-                        </div>
-
-                    @elseif($job->pay_type == 'Maximum')
-                        <div class="pt-4 border-t border-[#F0EEE9]">
-                            <p class="fr-sidebar-label">
-                                @lang('modules.jobs.maximumSalary')
-                            </p>
-
-                            <p class="fr-sidebar-value">
-                                {{ $currencySymbol }}{{ number_format($job->maximum_salary) }}
-                                /{{ $job->pay_according }}
-                            </p>
-                        </div>
-
-                    @elseif($job->pay_type == 'Exact Amount')
-                        <div class="pt-4 border-t border-[#F0EEE9]">
-                            <p class="fr-sidebar-label">
-                                @lang('modules.jobs.exactSalary')
-                            </p>
-
-                            <p class="fr-sidebar-value">
-                                {{ $currencySymbol }}{{ number_format($job->starting_salary) }}
-                                /{{ $job->pay_according }}
-                            </p>
-                        </div>
-                    @endif
-
-                @endif
                 </div>
 
                 <div class="fr-sidebar-card text-center">

@@ -257,7 +257,7 @@ class FrontJobsController extends FrontBaseController
 
     public function jobDetail($slug, $location = null)
     {
-        $this->job = Job::with(['workExperience', 'jobType'])
+        $this->job = Job::with(['workExperience', 'jobType', 'jobLocation', 'location', 'currency'])
             ->where('slug', $slug)
             ->publicJobPage()
             ->firstOrFail();

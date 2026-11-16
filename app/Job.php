@@ -116,6 +116,42 @@ class Job extends Model
             ?: trim((string) $this->company_location);
     }
 
+    public function publicLocationLabel(): string
+    {
+        $label = $this->jobLocation->pluck('location')->implode(', ');
+        if (trim($label) !== '') {
+            return $label;
+        }
+
+        return trim((string) $this->location?->location) ?: trim((string) $this->company_location);
+    }
+
+    public function publicSalaryLabel(): ?string
+    {
+        if (!$this->show_salary) {
+            return null;
+        }
+
+        $amounts = match ($this->pay_type) {
+            'Range' => [$this->starting_salary, $this->maximum_salary],
+            'Maximum' => [$this->maximum_salary ?? $this->starting_salary],
+            default => [$this->starting_salary],
+        };
+        $amounts = array_filter($amounts, 'is_numeric');
+        if ($amounts === []) {
+            return null;
+        }
+
+        $symbol = $this->currency?->currency_symbol ?? '';
+        $formatted = array_map(static function ($amount) use ($symbol) {
+            $amount = (float) $amount;
+
+            return $symbol.number_format($amount, $amount === floor($amount) ? 0 : 2);
+        }, $amounts);
+
+        return implode(' - ', $formatted).($this->pay_according ? ' / '.$this->pay_according : '');
+    }
+
     public function joobleContentIssue(): ?string
     {
         if (blank($this->slug) || blank($this->title)) {
