@@ -159,6 +159,9 @@
                         </th>
                         <th class="w-12 whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">#</th>
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('modules.jobs.jobTitle')</th>
+                        <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">
+                        Start Date
+                    </th>
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('app.company')</th>
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('modules.dashboard.totalOpenings')</th>
                         <th class="whitespace-nowrap px-4 py-2.5 text-left text-[10.5px] font-bold uppercase tracking-wide text-[#8892A0]">@lang('menu.locations')</th>
@@ -374,10 +377,21 @@
             html += '<td class="px-4 py-3 align-middle text-[12.5px] font-semibold text-[#C4CBD4]">' + String(i + 1).padStart(2, '0') + '</td>';
             html += '<td class="px-4 py-3 align-middle">'
                 + '<a href="' + esc(j.editUrl) + '" class="text-[13.5px] font-bold leading-snug text-[#1A1E2E] hover:text-[#2563EB] transition-colors">' + esc(j.title) + '</a>';
-            html += '<div class="mt-1 flex flex-wrap items-center gap-2">';
-            html += '<span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11.5px] font-semibold" style="background:' + c.bg + ';color:' + c.tc + '">' + esc(j.category) + '</span>';
-            html += '<span class="text-[11px] font-semibold text-[#B0B8C4]">' + esc(j.jobType) + '</span></div></td>';
-            html += '<td class="px-4 py-3 align-middle">';
+          html += '<div class="mt-1 flex flex-wrap items-center gap-2">';
+html += '<span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11.5px] font-semibold" style="background:' + c.bg + ';color:' + c.tc + '">' + esc(j.category) + '</span>';
+html += '<span class="text-[11px] font-semibold text-[#B0B8C4]">' + esc(j.jobType) + '</span></div></td>';
+
+html += '<td class="px-4 py-3 align-middle text-[12px] font-medium text-[#5A6478]">';
+html += esc(j.startDate
+    ? new Date(j.startDate).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    })
+    : '—');
+html += '</td>';
+
+html += '<td class="px-4 py-3 align-middle">';
             html += '<div class="text-[11.5px] font-semibold text-[#3D4A5C]">' + esc(j.company) + '</div>';
             if (j.companyLocation) {
                 html += '<div class="mt-0.5 flex items-center gap-1 text-[11px] text-[#B0B8C4]">';
