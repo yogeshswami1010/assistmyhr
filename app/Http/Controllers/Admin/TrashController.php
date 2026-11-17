@@ -84,7 +84,9 @@ class TrashController extends AdminBaseController
             }));
         }
 
-        if ($selectedType === 'all' || $selectedType === 'consortium-registration') {
+        $consortiumEnabled = app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration');
+        abort_if($selectedType === 'consortium-registration' && !$consortiumEnabled, 404);
+        if ($consortiumEnabled && in_array($selectedType, ['all', 'consortium-registration'], true)) {
             $items = $items->concat(ConsortiumRegistration::onlyTrashed()->get()->map(function ($registration) {
                 return (object) [
                     'id' => $registration->id,
@@ -155,6 +157,7 @@ class TrashController extends AdminBaseController
     private function trashedItem(string $type, int $id)
     {
         abort_unless(isset(self::TYPES[$type]), 404);
+        abort_if($type === 'consortium-registration' && !app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration'), 404);
         $query = self::TYPES[$type]::onlyTrashed();
         if ($type === 'application') {
             $query->whereNotNull('moved_to_trash_at');

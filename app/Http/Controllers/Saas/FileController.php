@@ -16,6 +16,9 @@ class FileController extends Controller
         $root = realpath($context->root().'/uploads');
         $file = realpath($root.'/'.$path);
         abort_unless($root && $file && str_starts_with($file, $root.DIRECTORY_SEPARATOR) && is_file($file), 404);
+        $registrationResumes = $root.DIRECTORY_SEPARATOR.'registration-resumes'.DIRECTORY_SEPARATOR;
+        abort_if(str_starts_with($file, $registrationResumes) && !$context->featureEnabled('consortium_registration'), 404);
+
         $response = response()->file($file, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff', 'Content-Security-Policy' => "sandbox; default-src 'none'"]);
         if (!in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf'], true)) {
             $response->setContentDisposition('attachment', basename($file));
