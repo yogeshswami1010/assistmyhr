@@ -251,7 +251,9 @@
 </div>
 @endif
 
-@include('admin.job-applications.partials.temp-staffing-control')
+@if(app(\App\Saas\TenantContext::class)->featureEnabled('temp_staffing'))
+                        @include('admin.job-applications.partials.temp-staffing-control')
+                    @endif
                 </div>
                 <div class="ja-pdf-toolbar-tabs">
 
@@ -847,7 +849,7 @@ function jaSaveMarketingLabel(appId) {
                         @endif
                     </div>
 
-                    @if($consortiumRegistration)
+                    @if($consortiumRegistration && app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration'))
                         @include('admin.consortium-registrations.partials.information-card', ['registration' => $consortiumRegistration])
                     @endif
 

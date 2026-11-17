@@ -202,6 +202,7 @@ class PlatformController extends Controller
     {
         return $this->platformView('saas.platform-requests', ['requests' => AuditLog::with('tenant')->where('action', 'subscription.change_requested')->latest('id')->paginate(25), 'plans' => Plan::all()->keyBy('id'), 'pageTitle' => 'Client requests']);
     }
+
     public function tenant(Tenant $tenant)
     {
         $tenant->setAttribute('owner_email_verified', $this->ownerEmailVerified($tenant));
@@ -221,9 +222,44 @@ class PlatformController extends Controller
         }
         catch (\Throwable $e) { report($e); }
         finally { $context->reset(); }
-        return $this->platformView('saas.platform-tenant', ['tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get(),
+        $tenantFeatures = DB::connection('saas_landlord')->table('tenant_features')
+            ->where('tenant_id', $tenant->id)
+            ->pluck('is_enabled', 'feature_key')
+            ->all();
+
+        return $this->platformView('saas.platform-tenant', [
+            'featureDefinitions' => config('tenant_features', []),
+            'tenantFeatures' => $tenantFeatures,'tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get(),
             'microsoftApp' => app(\App\Services\MicrosoftReplyAppSettings::class)->metadata($tenant), 'outlookMailbox' => $outlookMailbox, 'clientSmtp' => $clientSmtp, 'clientImap' => $clientImap]);
     }
+    public function updateTenantFeatures(Request $request, Tenant $tenant)
+    {
+        $features = config('tenant_features', []);
+        $validated = $request->validate([
+            'features' => ['nullable', 'array'],
+            'features.*' => ['nullable', 'boolean'],
+        ]);
+        $submitted = $validated['features'] ?? [];
+        $now = now();
+        $rows = [];
+        foreach (array_keys($features) as $key) {
+            $rows[] = [
+                'tenant_id' => $tenant->id,
+                'feature_key' => $key,
+                'is_enabled' => (bool) ($submitted[$key] ?? false),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        DB::connection('saas_landlord')->table('tenant_features')
+            ->upsert($rows, ['tenant_id', 'feature_key'], ['is_enabled', 'updated_at']);
+
+        return redirect()->route('superadmin.tenants.show', $tenant)
+            ->with('client_tab', 'features')
+            ->with('status', 'Client feature permissions updated successfully.');
+    }
+
     public function updateTenant(Request $request, Tenant $tenant)
     {
         $data = $request->validate(['status' => ['required', Rule::in(['active', 'suspended'])], 'reason' => ['required', 'string', 'max:1000']]);

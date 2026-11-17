@@ -27,6 +27,7 @@ use SebastianBergmann\CodeCoverage\Report\Xml\Project;
 use App\ThemeSetting;
 use App\User;
 use App\ZoomSetting;
+use Illuminate\Support\Facades\DB;
 
 class AdminBaseController extends Controller
 {
@@ -119,6 +120,25 @@ class AdminBaseController extends Controller
                     : $value->name;
             }
             $this->userPermissions = $userPermissions;
+            // Load Super Admin feature permissions for the current tenant
+            $tenantFeatures = [];
+
+            if (config('saas.enabled')) {
+                $tenant = app(\App\Saas\TenantContext::class)->current();
+
+                if ($tenant) {
+                    $tenantFeatures = DB::connection('saas_landlord')
+                        ->table('tenant_features')
+                        ->where('tenant_id', $tenant->id)
+                        ->where('is_enabled', 1)
+                        ->pluck('is_enabled', 'feature_key')
+                        ->toArray();
+                }
+            }
+
+            $this->data['tenantFeatures'] = $tenantFeatures;
+
+            view()->share('tenantFeatures', $tenantFeatures);
             
             view()->share('languages', $this->languageSettings);
             

@@ -21,7 +21,7 @@
                              <label class="badge bg-danger">@lang('app.rejected')</label>
                         @endif
                     </h4>
-                    @if($user->cans('view_job_applications') && app(\App\Services\ZohoSign::class)->enabled() && ($onboard->hired_status === 'offered' || $onboard->zoho_sign_request_id))
+                    @if($user->cans('view_job_applications') && app(\App\Saas\TenantContext::class)->featureEnabled('document_sign') && app(\App\Services\ZohoSign::class)->enabled() && ($onboard->hired_status === 'offered' || $onboard->zoho_sign_request_id))
                         <a class="btn btn-outline-primary mb-4" href="{{ tenant_route('admin.document-sign.show', ['id' => $onboard->id]) }}">Open in Document Sign</a>
                     @endif
                     <form id="createSchedule" class="ajax-form" method="post">
