@@ -1,5 +1,5 @@
 @include('admin.job-applications.partials.candidate-call-history', ['candidateCalls' => $candidateCalls ?? collect()])
-@if(isset($tempStaffingHistories) && $tempStaffingHistories->isNotEmpty())
+@if(isset($tempStaffingHistories) && $tempStaffingHistories->isNotEmpty() && app(\App\Saas\TenantContext::class)->featureEnabled('temp_staffing'))
 <div class="ja-card">
     <div class="ja-card-title"><i class="fa fa-users"></i> Temp Staffing History</div>
     @foreach($tempStaffingHistories as $history)

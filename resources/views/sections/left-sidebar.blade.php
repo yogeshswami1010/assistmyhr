@@ -43,10 +43,7 @@
             </a>
 
         @endif
-        @if(
-    ($tenantFeatures['document_sign'] ?? false)
-    && $user->cans('view_job_applications')
-)
+        @if($user->cans('view_job_applications'))
             <a href="{{ route('admin.candidate-marketing.index') }}" class="ra-nav-link {{ request()->is('admin/candidate-marketing*') ? 'on' : '' }}">
                 <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="job-applications" /></span>
                 <span class="ra-nl">Candidate Marketing</span>
@@ -65,10 +62,7 @@
         @endif
         <div class="ra-sec-title">@lang('menu.recruitment')</div>
 
-        @if(
-    ($tenantFeatures['document_sign'] ?? false)
-    && $user->cans('view_job_applications')
-)
+        @if($user->cans('view_job_applications') && (!config('saas.enabled') || ($tenantFeatures['document_sign'] ?? false)))
             <a href="{{ tenant_route('admin.document-sign.index') }}" class="ra-nav-link {{ request()->routeIs('admin.document-sign.*') ? 'on' : '' }}" @if(request()->routeIs('admin.document-sign.*')) aria-current="page" @endif>
                 <span class="ra-ni" aria-hidden="true">
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20H4m12.5-16.5 4 4M8 16l1-4 8.5-8.5a2.83 2.83 0 0 1 4 4L13 16l-5 1Z"/></svg>
@@ -103,13 +97,13 @@
             @endphp
             <span id="internal-messages-sidebar-count" class="{{ $sidebarInternalUnread > 0 ? '' : 'hidden' }} ml-auto min-w-[20px] rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">{{ $sidebarInternalUnread }}</span>
         </a>
-        @if(!config('saas.enabled') || app()->environment('staging'))
+        @if(app(\App\Saas\TenantContext::class)->featureEnabled('temp_staffing'))
         <a href="{{ route('admin.temp-staffing.index') }}" class="ra-nav-link {{ request()->is('admin/temp-staffing*') ? 'on' : '' }}">
             <span class="ra-ni" aria-hidden="true"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.29-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.29.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
             <span class="ra-nl">Temp Staffing</span>
         </a>
         @endif
-        @if(app()->environment('staging'))
+        @if(app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration'))
         <a href="{{ route('admin.consortium-registrations.index') }}" class="ra-nav-link {{ request()->is('admin/consortium-registrations*') ? 'on' : '' }}">
             <span class="ra-ni" aria-hidden="true"><i class="fa fa-address-card-o"></i></span>
             <span class="ra-nl">Consortium Registrations</span>

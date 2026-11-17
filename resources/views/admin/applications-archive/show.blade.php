@@ -568,7 +568,9 @@
                     </div>
                     @endif
 
-                    @include('admin.job-applications.partials.temp-staffing-control')
+                    @if(app(\App\Saas\TenantContext::class)->featureEnabled('temp_staffing'))
+                        @include('admin.job-applications.partials.temp-staffing-control')
+                    @endif
 
 <script>
                     function jaToggleMarketing(appId) {

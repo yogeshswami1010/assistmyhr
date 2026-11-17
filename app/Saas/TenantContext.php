@@ -28,6 +28,19 @@ class TenantContext
     }
 
     public function current(): ?Tenant { return $this->tenant; }
+    public function featureEnabled(string $feature): bool
+    {
+        if (!config('saas.enabled')) {
+            return $feature === 'temp_staffing' || app()->environment('staging');
+        }
+
+        return $this->tenant !== null && DB::connection('saas_landlord')->table('tenant_features')
+            ->where('tenant_id', $this->tenant->id)
+            ->where('feature_key', $feature)
+            ->where('is_enabled', true)
+            ->exists();
+    }
+
     public function root(?Tenant $tenant = null): string
     {
         $tenant ??= $this->tenant;

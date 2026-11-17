@@ -266,20 +266,23 @@ class AdminConsortiumRegistrationController extends AdminBaseController
             ->latest('temp_staffing_at')
             ->paginate(25, ['*'], 'application_page')
             ->withQueryString();
-        $this->registrations = ConsortiumRegistration::query()
-            ->where('is_temp_staffing', true)
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($inner) use ($search) {
-                    $inner->where('first_name', 'like', '%'.$search.'%')
-                        ->orWhere('last_name', 'like', '%'.$search.'%')
-                        ->orWhere('email', 'like', '%'.$search.'%')
-                        ->orWhere('phone', 'like', '%'.$search.'%')
-                        ->orWhere('city', 'like', '%'.$search.'%');
-                });
-            })
-            ->latest('temp_staffing_at')
-            ->paginate(25)
-            ->withQueryString();
+        $this->registrations = null;
+        if (app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration')) {
+            $this->registrations = ConsortiumRegistration::query()
+                ->where('is_temp_staffing', true)
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($inner) use ($search) {
+                        $inner->where('first_name', 'like', '%'.$search.'%')
+                            ->orWhere('last_name', 'like', '%'.$search.'%')
+                            ->orWhere('email', 'like', '%'.$search.'%')
+                            ->orWhere('phone', 'like', '%'.$search.'%')
+                            ->orWhere('city', 'like', '%'.$search.'%');
+                    });
+                })
+                ->latest('temp_staffing_at')
+                ->paginate(25)
+                ->withQueryString();
+        }
 
         return view('admin.temp-staffing.index', $this->data);
     }
