@@ -30,6 +30,7 @@ class ZohoSignWebhookController extends Controller
 
         $status = match (data_get($payload, 'notifications.operation_type')) {
             'RequestSubmitted' => 'inprogress',
+            'RequestViewed' => 'viewed',
             'RequestCompleted' => 'completed',
             'RequestRejected' => 'declined',
             'RequestRecalled' => 'recalled',
@@ -59,7 +60,13 @@ class ZohoSignWebhookController extends Controller
 
             $document = CandidateSigningDocument::where('zoho_sign_request_id', $id)->first();
             if ($document) {
-                $document->applyStatus($status);
+                if ($status !== 'viewed' || $document->job_application_id === null) {
+                    $document->applyStatus($status);
+                }
+                return;
+            }
+
+            if ($status === 'viewed') {
                 return;
             }
 

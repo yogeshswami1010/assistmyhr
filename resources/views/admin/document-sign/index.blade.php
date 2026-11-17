@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-subtitle', 'Send PDFs to applicants for signature through Zoho Sign.')
+@section('page-subtitle', 'Send PDFs to clients and applicants for signature through Zoho Sign.')
 
 @section('content')
     @if(!$zohoEnabled)
@@ -8,6 +8,8 @@
             Zoho Sign is unavailable for this workspace. Ask your administrator to check the connection.
         </div>
     @else
+        @include('admin.document-sign.clients')
+        <h2 class="mb-3 mt-6 text-lg font-semibold">Applicant documents</h2>
         <div class="jc-table-card overflow-x-auto">
             <table class="jc-cat-table w-full">
                 <thead>
