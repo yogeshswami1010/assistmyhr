@@ -88,7 +88,7 @@ class CandidateCommunicationController extends AdminBaseController
         $data = $request->validate([
             'channel' => ['required', 'in:email,sms'],
             'recipients' => ['required', 'array', 'min:1', 'max:100'],
-            'recipients.*.type' => ['required', 'in:application,registration'],
+            'recipients.*.type' => ['required', (app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration') ? 'in:application,registration' : 'in:application')],
             'recipients.*.id' => ['required', 'integer', 'min:1'],
         ]);
         $seen = [];
@@ -123,7 +123,7 @@ class CandidateCommunicationController extends AdminBaseController
         $data = $request->validate([
             'channel' => ['required', 'in:email,sms'],
             'recipients' => ['required', 'array', 'min:1', 'max:100'],
-            'recipients.*.type' => ['required', 'in:application,registration'],
+            'recipients.*.type' => ['required', (app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration') ? 'in:application,registration' : 'in:application')],
             'recipients.*.id' => ['required', 'integer', 'min:1'],
             'source' => ['nullable', 'in:ai-search,candidates'],
             'subject' => ['required_if:channel,email', 'nullable', 'string', 'max:191'],

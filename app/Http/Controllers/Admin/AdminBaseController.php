@@ -111,18 +111,14 @@ class AdminBaseController extends Controller
             // Eager-load only the `permissions` relation to avoid calling a non-existent nested `permission` relation.
             $this->getPermissions = User::with('roles.permissions')->find($this->user->id);
             $userPermissions = array();
-
-if ($this->getPermissions && $this->getPermissions->roles->count() > 0) {
-    foreach ($this->getPermissions->roles as $role) {
-        foreach ($role->permissions as $value) {
-            $userPermissions[] = isset($value->permission)
-                ? $value->permission->name
-                : $value->name;
-        }
-    }
-}
-
-$this->userPermissions = array_unique($userPermissions);
+            foreach ($this->getPermissions->roles[0]->permissions as $key => $value) {
+                // Depending on how `Role::permissions()` is defined, `$value` can be either:
+                // 1) a pivot-like object that has `permission` relation, or
+                // 2) a `Permission` model directly (has `name`).
+                $userPermissions[] = isset($value->permission)
+                    ? $value->permission->name
+                    : $value->name;
+            }
             $this->userPermissions = $userPermissions;
             // Load Super Admin feature permissions for the current tenant
             $tenantFeatures = [];

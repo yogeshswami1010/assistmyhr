@@ -227,6 +227,7 @@
 
                         <input type="checkbox"
                             name="features[{{ $key }}]"
+                            aria-label="{{ $feature['name'] }}"
                             value="1"
                             @checked(old('features.'.$key, $tenantFeatures[$key] ?? false))>
 

@@ -202,143 +202,60 @@ class PlatformController extends Controller
     {
         return $this->platformView('saas.platform-requests', ['requests' => AuditLog::with('tenant')->where('action', 'subscription.change_requested')->latest('id')->paginate(25), 'plans' => Plan::all()->keyBy('id'), 'pageTitle' => 'Client requests']);
     }
-    
+
     public function tenant(Tenant $tenant)
     {
-    $tenant->setAttribute(
-        'owner_email_verified',
-        $this->ownerEmailVerified($tenant)
-    );
-
-    $context = app(TenantContext::class);
-
-    $usage = null;
-    $outlookMailbox = null;
-    $clientSmtp = null;
-    $clientImap = null;
-
-    try {
-        $context->activate($tenant);
-
-        $usage = app(QuotaService::class)->usage();
-
-        $clientImap = DB::table('tenant_service_settings')
-            ->first(['imap_host', 'imap_port']);
-
-        $clientSmtp = \App\EmailSetting::first()?->only([
-            'mail_host',
-            'mail_port',
-            'mail_encryption',
-            'mail_username',
-            'mail_from_name',
-            'mail_from_email',
-            'verified'
-        ]);
-
-        if (\Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes')) {
-            $outlookMailbox = \App\CandidateReplyMailbox::first([
-                'email',
-                'last_synced_at',
-                'sync_error'
-            ]);
+        $tenant->setAttribute('owner_email_verified', $this->ownerEmailVerified($tenant));
+        $context = app(TenantContext::class);
+        $usage = null;
+        $outlookMailbox = null;
+        $clientSmtp = null;
+        $clientImap = null;
+        try {
+            $context->activate($tenant);
+            $usage = app(QuotaService::class)->usage();
+            $clientImap = DB::table('tenant_service_settings')->first(['imap_host', 'imap_port']);
+            $clientSmtp = \App\EmailSetting::first()?->only(['mail_host', 'mail_port', 'mail_encryption', 'mail_username', 'mail_from_name', 'mail_from_email', 'verified']);
+            if (\Illuminate\Support\Facades\Schema::hasTable('candidate_reply_mailboxes')) {
+                $outlookMailbox = \App\CandidateReplyMailbox::first(['email', 'last_synced_at', 'sync_error']);
+            }
         }
+        catch (\Throwable $e) { report($e); }
+        finally { $context->reset(); }
+        $tenantFeatures = DB::connection('saas_landlord')->table('tenant_features')
+            ->where('tenant_id', $tenant->id)
+            ->pluck('is_enabled', 'feature_key')
+            ->all();
+
+        return $this->platformView('saas.platform-tenant', [
+            'featureDefinitions' => config('tenant_features', []),
+            'tenantFeatures' => $tenantFeatures,'tenant' => $tenant->load('subscription.plan'), 'usage' => $usage, 'plans' => Plan::where('enabled', true)->get(), 'logs' => $tenant->auditLogs()->with('admin')->limit(50)->get(),
+            'microsoftApp' => app(\App\Services\MicrosoftReplyAppSettings::class)->metadata($tenant), 'outlookMailbox' => $outlookMailbox, 'clientSmtp' => $clientSmtp, 'clientImap' => $clientImap]);
     }
-    catch (\Throwable $e) {
-        report($e);
-    }
-    finally {
-        $context->reset();
-    }
-
-    // Available feature definitions
-    $featureDefinitions = config('tenant_features', []);
-
-    // Fetch permissions for this client from the central database
-   $tenantFeatures = DB::connection('saas_landlord')
-    ->table('tenant_features')
-    ->where('tenant_id', $tenant->id)
-    ->pluck('is_enabled', 'feature_key')
-    ->toArray();
-
-    return $this->platformView('saas.platform-tenant', [
-        'tenant' => $tenant->load('subscription.plan'),
-
-        'usage' => $usage,
-        'plans' => Plan::where('enabled', true)->get(),
-
-        'logs' => $tenant->auditLogs()
-            ->with('admin')
-            ->limit(50)
-            ->get(),
-
-        'microsoftApp' => app(
-            \App\Services\MicrosoftReplyAppSettings::class
-        )->metadata($tenant),
-
-        'outlookMailbox' => $outlookMailbox,
-        'clientSmtp' => $clientSmtp,
-        'clientImap' => $clientImap,
-
-        // Feature access data
-        'featureDefinitions' => $featureDefinitions,
-        'tenantFeatures' => $tenantFeatures,
-    ]);
-    }
-
-
-
     public function updateTenantFeatures(Request $request, Tenant $tenant)
     {
-        abort_unless(Auth::guard('platform')->check(), 403);
-
-        $featureDefinitions = config('tenant_features', []);
-
-       $validated = $request->validate([
-        'features' => ['nullable', 'array'],
-        'features.*' => ['nullable', Rule::in(['0', '1'])],
+        $features = config('tenant_features', []);
+        $validated = $request->validate([
+            'features' => ['nullable', 'array'],
+            'features.*' => ['nullable', 'boolean'],
         ]);
+        $submitted = $validated['features'] ?? [];
+        $now = now();
+        $rows = [];
+        foreach (array_keys($features) as $key) {
+            $rows[] = [
+                'tenant_id' => $tenant->id,
+                'feature_key' => $key,
+                'is_enabled' => (bool) ($submitted[$key] ?? false),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
 
-        $submittedFeatures = $validated['features'] ?? [];
+        DB::connection('saas_landlord')->table('tenant_features')
+            ->upsert($rows, ['tenant_id', 'feature_key'], ['is_enabled', 'updated_at']);
 
-        $connection = DB::connection('saas_landlord');
-
-        $connection->transaction(function () use (
-            $tenant,
-            $featureDefinitions,
-            $submittedFeatures,
-            $connection
-        ) {
-            foreach ($featureDefinitions as $key => $feature) {
-                $enabled = isset($submittedFeatures[$key])
-                    && $submittedFeatures[$key] === '1';
-
-                $existing = $connection->table('tenant_features')
-                    ->where('tenant_id', $tenant->id)
-                    ->where('feature_key', $key)
-                    ->exists();
-
-                if ($existing) {
-                    $connection->table('tenant_features')
-                        ->where('tenant_id', $tenant->id)
-                        ->where('feature_key', $key)
-                        ->update([
-                            'is_enabled' => $enabled,
-                            'updated_at' => now(),
-                        ]);
-                } else {
-                    $connection->table('tenant_features')->insert([
-                        'tenant_id' => $tenant->id,
-                        'feature_key' => $key,
-                        'is_enabled' => $enabled,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-        });
-
-        return redirect()
-            ->route('superadmin.tenants.show', $tenant)
+        return redirect()->route('superadmin.tenants.show', $tenant)
             ->with('client_tab', 'features')
             ->with('status', 'Client feature permissions updated successfully.');
     }

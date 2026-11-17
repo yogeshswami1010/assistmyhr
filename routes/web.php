@@ -49,6 +49,7 @@ use App\Http\Controllers\Admin\ZoomMeetingSettingController;
 use App\Http\Controllers\Front\FrontJobOfferController;
 use App\Http\Controllers\Front\FrontJobsController;
 use App\Http\Controllers\Front\ConsortiumRegistrationController;
+use App\Http\Middleware\RequireTenantFeature;
 use App\Http\Controllers\Admin\AdminJobApiSettingsController;
 use App\Http\Controllers\Admin\AdminConsortiumRegistrationController;
 use App\Http\Controllers\NotificationController;
@@ -76,13 +77,13 @@ Route::post('/zoho-sign-webhook', \App\Http\Controllers\ZohoSignWebhookControlle
 // ── Front public job board ─────────────────────────────────────────────────
 require __DIR__.'/website.php';
 
-if (app()->environment('staging')) {
+Route::middleware(RequireTenantFeature::class.':consortium_registration')->group(function () {
     Route::get('/consortium-registration', [ConsortiumRegistrationController::class, 'create'])
         ->name('consortium-registration.create');
     Route::post('/consortium-registration', [ConsortiumRegistrationController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('consortium-registration.store');
-}
+});
 
 Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');
 Route::get('/job-feeds/jooble.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jooble'])->middleware('throttle:60,1')->name('jobs.feeds.jooble');
@@ -338,7 +339,7 @@ Route::middleware('auth')->group(function () {
             Route::get('job-applications/{id}/profile-tab/{tab}',         [AdminJobApplicationController::class, 'profileTab'])->name('job-applications.profile-tab');
             Route::post('job-applications/bulk-parse-resume',             [AdminJobApplicationController::class, 'bulkParseResume'])->name('job-applications.bulk-parse-resume');
             Route::post('job-applications/{id}/send-sms',                 [AdminJobApplicationController::class, 'sendSms'])->name('job-applications.send-sms');
-            Route::post('job-applications/{id}/temp-staffing',           [AdminJobApplicationController::class, 'toggleTempStaffing'])->name('job-applications.temp-staffing');
+            Route::post('job-applications/{id}/temp-staffing',           [AdminJobApplicationController::class, 'toggleTempStaffing'])->middleware(RequireTenantFeature::class.':temp_staffing')->name('job-applications.temp-staffing');
             Route::post('job-applications/{id}/update-resume',            [AdminJobApplicationController::class, 'updateResume'])->name('job-applications.update-resume');
             Route::get('job-applications/{id}/resume',                    [AdminJobApplicationController::class, 'viewResume'])->name('job-applications.resume.view');
             Route::get('job-applications/resume-history/{history}',       [AdminJobApplicationController::class, 'viewResumeHistory'])->name('job-applications.resume-history.view');
@@ -418,13 +419,13 @@ Route::middleware('auth')->group(function () {
             Route::resource('interview-schedule', InterviewScheduleController::class);
 
             // Team & Company
-            Route::get('temp-staffing', [AdminConsortiumRegistrationController::class, 'tempStaffingIndex'])->name('temp-staffing.index');
-            Route::post('consortium-registrations/{registration}/temp-staffing', [AdminConsortiumRegistrationController::class, 'toggleTempStaffing'])->name('consortium-registrations.temp-staffing');
-            Route::get('consortium-registrations', [AdminConsortiumRegistrationController::class, 'index'])->name('consortium-registrations.index');
-            Route::delete('consortium-registrations/{registration}', [AdminConsortiumRegistrationController::class, 'destroy'])->name('consortium-registrations.destroy');
-            Route::post('consortium-registrations/{registration}/move-to-job', [AdminConsortiumRegistrationController::class, 'moveToJob'])->name('consortium-registrations.move-to-job');
-            Route::get('consortium-registrations/{registration}', [AdminConsortiumRegistrationController::class, 'show'])->name('consortium-registrations.show');
-            Route::get('consortium-registrations/{registration}/resume', [AdminConsortiumRegistrationController::class, 'resume'])->name('consortium-registrations.resume');
+            Route::get('temp-staffing', [AdminConsortiumRegistrationController::class, 'tempStaffingIndex'])->middleware(RequireTenantFeature::class.':temp_staffing')->name('temp-staffing.index');
+            Route::post('consortium-registrations/{registration}/temp-staffing', [AdminConsortiumRegistrationController::class, 'toggleTempStaffing'])->middleware(RequireTenantFeature::class.':consortium_registration,temp_staffing')->name('consortium-registrations.temp-staffing');
+            Route::get('consortium-registrations', [AdminConsortiumRegistrationController::class, 'index'])->middleware(RequireTenantFeature::class.':consortium_registration')->name('consortium-registrations.index');
+            Route::delete('consortium-registrations/{registration}', [AdminConsortiumRegistrationController::class, 'destroy'])->middleware(RequireTenantFeature::class.':consortium_registration')->name('consortium-registrations.destroy');
+            Route::post('consortium-registrations/{registration}/move-to-job', [AdminConsortiumRegistrationController::class, 'moveToJob'])->middleware(RequireTenantFeature::class.':consortium_registration')->name('consortium-registrations.move-to-job');
+            Route::get('consortium-registrations/{registration}', [AdminConsortiumRegistrationController::class, 'show'])->middleware(RequireTenantFeature::class.':consortium_registration')->name('consortium-registrations.show');
+            Route::get('consortium-registrations/{registration}/resume', [AdminConsortiumRegistrationController::class, 'resume'])->middleware(RequireTenantFeature::class.':consortium_registration')->name('consortium-registrations.resume');
             Route::get('internal-messages', [AdminInternalMessageController::class, 'index'])->name('internal-messages.index');
             Route::get('internal-messages/conversation/{recipient}', [AdminInternalMessageController::class, 'conversation'])->name('internal-messages.conversation');
             Route::post('internal-messages', [AdminInternalMessageController::class, 'store'])->name('internal-messages.store');

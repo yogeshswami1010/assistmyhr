@@ -48,6 +48,7 @@ body.consortium-profile-fullscreen #consortium-job-application-profile > .ja-two
 <div id="consortium-job-application-profile" style="min-height:650px;display:flex;align-items:center;justify-content:center;color:#8892A0;font-size:13px;">
     <span><i class="fa fa-spinner fa-spin"></i> Loading complete candidate profile...</span>
 </div>
+@if(app(\App\Saas\TenantContext::class)->featureEnabled('temp_staffing'))
 <form id="consortium-temp-staffing-toolbar" method="POST" action="{{ route('admin.consortium-registrations.temp-staffing', $registration) }}" style="display:none">
     @csrf
     <input type="hidden" name="add" value="{{ $registration->is_temp_staffing ? 0 : 1 }}">
@@ -72,6 +73,7 @@ body.consortium-profile-fullscreen #consortium-job-application-profile > .ja-two
         @endforelse
     </div>
 </div>
+@endif
 <div id="consortium-personal-information" style="display:none">
     @if($jobMoves->isEmpty())
         @include('admin.consortium-registrations.partials.information-card', ['registration' => $registration])
@@ -191,7 +193,7 @@ body.consortium-profile-fullscreen #consortium-job-application-profile > .ja-two
             window.setTimeout(appendTempStaffingHistory, 150);
             window.setTimeout(appendTempStaffingHistory, 700);
         });
-        var backUrl = @json(request('from') === 'temp-staffing' ? route('admin.temp-staffing.index', request()->except('from')) : route('admin.consortium-registrations.index', request()->query()));
+        var backUrl = @json(request('from') === 'temp-staffing' && app(\App\Saas\TenantContext::class)->featureEnabled('temp_staffing') ? route('admin.temp-staffing.index', request()->except('from')) : route('admin.consortium-registrations.index', request()->query()));
         $host.find('.right-side-toggle').removeClass('right-side-toggle').off('click').on('click', function () { window.location.href = backUrl; });
 
         // The embedded profile normally navigates JobApplication IDs. On the
