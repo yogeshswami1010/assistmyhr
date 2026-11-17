@@ -255,10 +255,9 @@ class AdminJobApplicationController extends AdminBaseController
 
         $this->jobs = Job::activeJobs();
 
-        $this->locations = JobJobLocation::select('job_job_locations.*')
-            ->with(['job', 'location_data'])
-            ->join('jobs', 'jobs.id', 'job_job_locations.job_id')
-            ->get();
+        $this->locations = JobJobLocation::with(['job:id,title', 'location:id,location'])
+            ->get()
+            ->filter(fn (JobJobLocation $assignment) => $assignment->job !== null && $assignment->location !== null);
 
         $this->gender = [
             'male' => __('modules.front.male'),
