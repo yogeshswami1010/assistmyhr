@@ -465,61 +465,77 @@
                            
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                               <div class="form-group mb-0 flex min-h-0 flex-col">
-    <label for="work_experience" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
-        @lang('modules.jobs.workExperience')
-    </label>
+                                {{-- Work Experience --}}
+                                <div class="form-group mb-0 flex min-h-0 flex-col">
+                                    <label for="work_experience" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                                        @lang('modules.jobs.workExperience')
+                                    </label>
 
-    <div class="flex items-center gap-2">
-        <div id="work-experience-select-wrapper" class="min-w-0 flex-1">
-           <select name="work_experience_ids[]" multiple id="work_experience"
-    data-placeholder="Select Work Experience"
-    class="select2 form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
-    style="width: 100%;">
+                                    <style>
+                                        /* leave room on the right so selected tags never run under the + button */
+                                        #work-experience-select-wrapper .select2-container--default .select2-selection--multiple {
+                                            min-height: 44px;
+                                            padding-right: 48px;
+                                            border-radius: 12px;
+                                        }
+                                    </style>
 
-    @foreach ($workExperiences as $workExperience)
-        <option
-            @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id]))
-                selected
-            @endif
-            value="{{ $workExperience->id }}">
-            {{ $workExperience->work_experience }}
-        </option>
-    @endforeach
-</select>
-        </div>
+                                    {{-- One box: select + "+" button inside it; add-new input overlays this same box.
+                                         Inline styles on purpose, so no Tailwind rebuild is needed. --}}
+                                    <div id="work-experience-row" style="position:relative; min-height:44px;">
 
-      <button type="button"
-    title="@lang('app.add') @lang('modules.jobs.workExperience')"
-    id="addWorkExperience"
-    aria-controls="new-work-experience-wrapper" aria-expanded="false"
-    class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
-    aria-label="@lang('app.add') @lang('modules.jobs.workExperience')">
-    <i class="fa fa-plus" aria-hidden="true"></i>
-</button>
-    </div>
+                                        <div id="work-experience-select-wrapper" style="min-width:0;">
+                                            <select name="work_experience_ids[]" multiple id="work_experience"
+                                                data-placeholder="Select Work Experience"
+                                                class="select2 form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
+                                                style="width: 100%;">
+                                                @foreach ($workExperiences as $workExperience)
+                                                    <option
+                                                        @if ($job && in_array($workExperience->id, $job->work_experience_ids ?: [$job->work_experience_id]))
+                                                            selected
+                                                        @endif
+                                                        value="{{ $workExperience->id }}">
+                                                        {{ $workExperience->work_experience }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
 
-    <div id="new-work-experience-wrapper" class="mt-2 hidden">
-        <div style="display: flex; align-items: stretch; gap: 8px; width: 100%;">
-            <input type="text" id="work_experience_new" maxlength="191" disabled
-                aria-label="{{ __('Add New Work Experience') }}"
-                placeholder="{{ __('Add New Work Experience') }}"
-                style="flex: 1 1 0%; min-width: 0; width: 0;"
-                class="form-control rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none focus:border-[#2563EB]">
+                                        {{-- + button INSIDE the box (right edge) --}}
+                                        <button type="button"
+                                            title="@lang('app.add') @lang('modules.jobs.workExperience')"
+                                            id="addWorkExperience"
+                                            aria-controls="new-work-experience-wrapper" aria-expanded="false"
+                                            aria-label="@lang('app.add') @lang('modules.jobs.workExperience')"
+                                            style="position:absolute; right:6px; top:50%; transform:translateY(-50%); z-index:5; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; cursor:pointer;">
+                                            <i class="fa fa-plus" aria-hidden="true"></i>
+                                        </button>
 
-            <button type="button" id="add-work-experience-inline"
-                style="flex: 0 0 auto; padding: 0 14px; border-radius: 12px; background: #2563EB; color: white; font-size: 13px; font-weight: 600;">
-                {{ __('Add') }}
-            </button>
+                                        {{-- Add-new: hidden by default, covers the same box when your JS shows it --}}
+                                        <div id="new-work-experience-wrapper" class="hidden" style="position:absolute; top:0; right:0; bottom:0; left:0; z-index:10;">
+                                            <div style="display:flex; align-items:center; gap:6px; height:100%; padding:0 6px; background:#fff; border:1px solid #2563EB; border-radius:12px; box-shadow:0 0 0 3px rgba(37,99,235,.1);">
+                                                <input type="text" id="work_experience_new" maxlength="191" disabled
+                                                    aria-label="{{ __('Add New Work Experience') }}"
+                                                    placeholder="{{ __('Add New Work Experience') }}"
+                                                    style="flex:1 1 0%; min-width:0; height:100%; padding:0 8px; border:0; background:transparent; box-shadow:none; outline:none; font-size:13px; color:#0F1F3D;">
 
-            <button type="button" id="reset-work-experience"
-                style="flex: 0 0 36px; border: 1px solid #E5E7EB; border-radius: 12px; background: white; color: #64748B;"
-                aria-label="{{ __('Cancel adding work experience') }}">
-                &times;
-            </button>
-        </div>
-    </div>
-</div>
+                                                <button type="button" id="add-work-experience-inline"
+                                                    style="flex:0 0 auto; height:32px; padding:0 12px; border:0; border-radius:8px; background:#2563EB; color:#fff; font-size:12px; font-weight:600; cursor:pointer;">
+                                                    {{ __('Add') }}
+                                                </button>
+
+                                                <button type="button" id="reset-work-experience"
+                                                    aria-label="{{ __('Cancel adding work experience') }}"
+                                                    style="flex:0 0 32px; width:32px; height:32px; border:1px solid #E5E7EB; border-radius:8px; background:#fff; color:#64748B; font-size:16px; line-height:1; cursor:pointer;">
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                {{-- Show Pay By --}}
                                 <div class="form-group mb-0 flex min-h-0 flex-col">
                                     <label for="paytype" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.showPayBy')</label>
                                     <select name="pay_type" id="paytype" class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
@@ -1225,5 +1241,58 @@ document.addEventListener('DOMContentLoaded', function () {
     if (window.jQuery) { jQuery(sel).on('change', sync); } // in case Select2 styles this field
     sync();
 });
+</script>
+
+<script>
+// ── Work Experience: "+" opens the add-new input over the same box; "×" closes it ──
+(function () {
+    function parts() {
+        return {
+            wrap:  document.getElementById('new-work-experience-wrapper'),
+            input: document.getElementById('work_experience_new'),
+            plus:  document.getElementById('addWorkExperience'),
+            sel:   document.getElementById('work_experience')
+        };
+    }
+
+    function openNew() {
+        var p = parts();
+        if (!p.wrap) return;
+        p.wrap.classList.remove('hidden');
+        p.wrap.style.display = 'block';
+        if (p.plus)  p.plus.setAttribute('aria-expanded', 'true');
+        if (p.input) { p.input.disabled = false; p.input.focus(); }
+    }
+
+    function closeNew() {
+        var p = parts();
+        if (!p.wrap) return;
+        p.wrap.style.display = '';
+        p.wrap.classList.add('hidden');
+        if (p.plus)  p.plus.setAttribute('aria-expanded', 'false');
+        if (p.input) { p.input.value = ''; p.input.disabled = true; }
+    }
+
+    // Capture phase on window: runs before any other click handler on "+",
+    // so it works whatever the older JS does (and avoids a double open/close).
+    window.addEventListener('click', function (e) {
+        if (!e.target || !e.target.closest) return;
+        if (e.target.closest('#addWorkExperience')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            openNew();
+        } else if (e.target.closest('#reset-work-experience')) {
+            closeNew();   // not stopped, so any existing reset logic still runs
+        }
+    }, true);
+
+    // When a new work experience is saved, the existing Add logic appends an <option>;
+    // close the box at that point so the select comes back.
+    document.addEventListener('DOMContentLoaded', function () {
+        var sel = parts().sel;
+        if (!sel || !window.MutationObserver) return;
+        new MutationObserver(closeNew).observe(sel, { childList: true });
+    });
+})();
 </script>
 @include('admin.jobs.partials.question-create-modal')
