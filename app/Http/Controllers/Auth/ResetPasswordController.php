@@ -24,13 +24,6 @@ class ResetPasswordController extends Controller
     use ResetsPasswords;
 
     /**
-     * Where to redirect users after resetting their password.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/admin/dashboard';
-
-    /**
      * Create a new controller instance.
      *
      * @return void
@@ -50,15 +43,11 @@ class ResetPasswordController extends Controller
         );
     }
 
-    protected function redirectTo()
+    protected function redirectTo(): string
     {
-        $user = auth()->user();
-        if($user->hasRole('admin')){
-            return 'admin/dashboard';
+        if (config('saas.enabled') && !$this->guard()->user()->hasVerifiedEmail()) {
+            return tenant_route('verification.notice');
         }
-        elseif($user->hasRole('employee')){
-            return 'member/dashboard';
-        }
-
+        return tenant_route('admin.dashboard');
     }
 }
