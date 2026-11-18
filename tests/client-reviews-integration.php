@@ -30,7 +30,7 @@ $temporary = sys_get_temp_dir().'/ats-client-review-test-'.bin2hex(random_bytes(
 mkdir($temporary, 0700, true);
 $app = new Application($root);
 $app->instance('config', new Repository([
-    'app' => ['key' => 'client-review-test-key-only', 'url' => 'https://ats.example.test', 'timezone' => 'Asia/Calcutta', 'debug' => false],
+    'app' => ['name' => 'Default Application Name', 'key' => 'client-review-test-key-only', 'url' => 'https://ats.example.test', 'timezone' => 'Asia/Calcutta', 'debug' => false],
     'database' => ['default' => 'sqlite', 'connections' => ['sqlite' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '', 'foreign_key_constraints' => true]]],
     'view' => ['paths' => [$root.'/resources/views'], 'compiled' => $temporary],
     'filesystems' => ['default' => 'local', 'disks' => ['local' => ['driver' => 'local', 'root' => $temporary.'/files', 'throw' => true]]],
@@ -74,6 +74,9 @@ Schema::create('job_applications', function (Blueprint $table) {
     $table->increments('id'); $table->string('full_name'); $table->unsignedInteger('job_id')->nullable(); $table->timestamp('deleted_at')->nullable(); $table->timestamp('moved_to_trash_at')->nullable(); $table->timestamps();
 });
 Schema::create('jobs', function (Blueprint $table) { $table->increments('id'); $table->string('title'); });
+Schema::create('company_settings', function (Blueprint $table) {
+    $table->increments('id'); $table->string('company_name');
+});
 Schema::create('documents', function (Blueprint $table) {
     $table->increments('id'); $table->unsignedInteger('documentable_id'); $table->string('documentable_type');
     $table->string('name'); $table->string('hashname'); $table->string('original_name'); $table->timestamps();
@@ -86,6 +89,7 @@ $clientMessageMigration = require $root.'/database/migrations/2026_10_05_000003_
 $clientMessageMigration->up();
 DB::table('users')->insert(['id' => 1, 'name' => 'Team Member', 'email' => 'team@example.test', 'email_signature_html' => '<strong>Team signature</strong>']);
 DB::table('jobs')->insert(['id' => 1, 'title' => 'Developer']);
+DB::table('company_settings')->insert(['company_name' => 'Client Business & Co.']);
 DB::table('job_applications')->insert(['id' => 42, 'full_name' => 'Sample Candidate', 'job_id' => 1]);
 DB::table('job_applications')->insert(['id' => 43, 'full_name' => 'Another Candidate', 'job_id' => 1]);
 DB::table('documents')->insert(['documentable_id' => 43, 'documentable_type' => App\JobApplication::class, 'name' => 'Resume', 'hashname' => 'shared.pdf', 'original_name' => 'Candidate CV.pdf']);
@@ -137,6 +141,7 @@ $review->refresh();
 check($review->isAvailable(), 'Successful delivery enables the review');
 check($outgoing->fresh()->mail_status === 'sent' && count($transport->sent) === 1, 'Store delivery status');
 check($transport->sent[0]['to'] === 'client@example.test' && str_contains($transport->sent[0]['html'], '<b>Our introduction</b>') && str_contains($transport->sent[0]['html'], 'View candidate &amp; give review'), 'Send rich text with review button to client');
+check(str_contains($transport->sent[0]['html'], 'Client Business &amp; Co.'), 'Use the company name from Business Settings in the email header');
 $service->send($review, $outgoing, $sender);
 check(count($transport->sent) === 1, 'A repeated send request must not duplicate the email');
 $url = $service->url($review);

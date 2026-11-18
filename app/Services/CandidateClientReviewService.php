@@ -3,11 +3,11 @@ namespace App\Services;
 
 use App\CandidateClientReview;
 use App\CandidateClientReviewMessage;
+use App\CompanySetting;
 use App\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use App\JobApplication;
 
 class CandidateClientReviewService
 {
@@ -38,9 +38,7 @@ class CandidateClientReviewService
         abort_if($review->revoked_at || !$review->expires_at->isFuture(), 410, 'This review link is no longer active.');
         $signature = CandidateEmailBody::render('', $sender->email_signature, $sender->email_signature_image_url, $sender->email_signature_html);
 
-        // Company name shown at the top of the email (from the candidate's job)
-        $application = \App\JobApplication::withTrashed()->with('job.company')->find($review->job_application_id);
-        $companyName = $application?->job?->company?->company_name ?: config('app.name');
+        $companyName = CompanySetting::first()?->company_name ?: config('app.name');
 
         $html = view('email.client-review-invitation', [
             'review' => $review, 'bodyHtml' => ClientReviewContent::clean((string) $locked->body_html),
