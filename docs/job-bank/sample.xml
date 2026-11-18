@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jobs>
+  <!-- Fictional test records for schema review. Do not import as vacancies. -->
+  <job>
+    <action><![CDATA[A]]></action>
+    <id><![CDATA[assistmyhr-demo-001]]></id>
+    <updated_at><![CDATA[20261118090000]]></updated_at>
+    <title><![CDATA[Administrative assistant]]></title>
+    <noc_code><![CDATA[13110]]></noc_code>
+    <noc_title><![CDATA[Administrative assistants]]></noc_title>
+    <employer><![CDATA[Example Employer]]></employer>
+    <description><![CDATA[Schedule meetings and coordinate office correspondence. Français : organiser les réunions et coordonner la correspondance.]]></description>
+    <city><![CDATA[Ottawa]]></city>
+    <province><![CDATA[ON]]></province>
+    <country><![CDATA[CA]]></country>
+    <vacancies><![CDATA[1]]></vacancies>
+    <url><![CDATA[https://example.invalid/jobs/assistmyhr-demo-001]]></url>
+    <apply_url><![CDATA[https://example.invalid/jobs/assistmyhr-demo-001/apply]]></apply_url>
+  </job>
+  <job>
+    <action><![CDATA[U]]></action>
+    <id><![CDATA[assistmyhr-demo-002]]></id>
+    <updated_at><![CDATA[20261118091000]]></updated_at>
+    <title><![CDATA[Administrative assistant]]></title>
+    <noc_code><![CDATA[13110]]></noc_code>
+    <noc_title><![CDATA[Administrative assistants]]></noc_title>
+    <employer><![CDATA[Example Employer]]></employer>
+    <description><![CDATA[Maintain office records and coordinate appointments.]]></description>
+    <city><![CDATA[Montréal]]></city>
+    <province><![CDATA[QC]]></province>
+    <country><![CDATA[CA]]></country>
+    <vacancies><![CDATA[2]]></vacancies>
+    <url><![CDATA[https://example.invalid/jobs/assistmyhr-demo-002]]></url>
+    <apply_url><![CDATA[https://example.invalid/jobs/assistmyhr-demo-002/apply]]></apply_url>
+  </job>
+  <job>
+    <action><![CDATA[D]]></action>
+    <id><![CDATA[assistmyhr-demo-003]]></id>
+    <updated_at><![CDATA[20261118092000]]></updated_at>
+  </job>
+</jobs>
