@@ -66,7 +66,7 @@ class JobBoardFeedController
             return;
         }
 
-        foreach (Tenant::where('status', 'active')->with('subscription')->lazyById() as $tenant) {
+        foreach (Tenant::where('status', 'active')->withEnabledFeature('job_board_publishing')->with('subscription')->lazyById() as $tenant) {
             if (!$tenant->hasAccess()) {
                 continue;
             }
@@ -123,7 +123,7 @@ class JobBoardFeedController
         $xml->startElement($selection === 'publish_on_postjobfree' ? 'source' : 'jobs');
 
         if (config('saas.enabled')) {
-            foreach (Tenant::where('status', 'active')->with('subscription')->lazyById() as $tenant) {
+            foreach (Tenant::where('status', 'active')->withEnabledFeature('job_board_publishing')->with('subscription')->lazyById() as $tenant) {
                 if ($tenant->hasAccess()) {
                     $this->writeWorkspaceJobs($xml, $tenant, $selection);
                 }

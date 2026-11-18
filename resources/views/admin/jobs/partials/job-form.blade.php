@@ -422,6 +422,7 @@
     </select>
 </div>
                             </div>
+                            @if(!config('saas.enabled') || !empty($tenantFeatures['job_board_publishing']))
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
                                 <p class="text-xs text-slate-600">Choose which public feeds should include this job while it is Open. The feeds include the saved salary when a currency is set.</p>
@@ -464,6 +465,7 @@
                                     <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.jobbank') }}" target="_blank" rel="noopener">{{ route('jobs.feeds.jobbank') }}</a>
                                 </div>
                             </div>
+                            @endif
                             <div class="form-group mb-0">
                                 <label for="job_skills" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('menu.skills')</label>
                                 <select class="form-control select2 select2-multiple w-full" id="job_skills" multiple="multiple" data-placeholder="@lang('app.add') @lang('menu.skills')" name="skill_id[]" style="width: 100%;">

@@ -19,7 +19,7 @@ class JobBankFeed
             foreach ($publishedJobs() as $reference => $fields) {
                 $payload = json_encode($fields, JSON_THROW_ON_ERROR);
                 $oldPayload = $previous->pull($reference);
-                $snapshot[] = $this->record('A', $reference, $recordedAt, $fields);
+                $snapshot[$reference] = $this->record('A', $reference, $recordedAt, $fields);
 
                 if ($oldPayload !== $payload) {
                     DB::table('job_bank_feed_state')->updateOrInsert(['reference' => $reference], ['payload' => $payload]);
@@ -33,11 +33,14 @@ class JobBankFeed
             }
 
             if ($from === null) {
-                return $snapshot;
+                return array_values($snapshot);
             }
 
             return DB::table('job_bank_feed_events')->where('recorded_at', '>=', $from)
-                ->orderBy('id')->pluck('payload')->map(fn ($payload) => json_decode($payload, true, 512, JSON_THROW_ON_ERROR))->all();
+                ->orderBy('id')->pluck('payload')
+                ->map(fn ($payload) => json_decode($payload, true, 512, JSON_THROW_ON_ERROR))
+                ->filter(fn ($record) => $record['action'] === 'D' || isset($snapshot[$record['id']]))
+                ->all();
         });
     }
 

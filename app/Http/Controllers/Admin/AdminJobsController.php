@@ -39,6 +39,19 @@ class AdminJobsController extends AdminBaseController
         $this->pageIcon = 'icon-badge';
     }
 
+    private function saveJobBoardSelections(Job $job, StoreJob $request): void
+    {
+        if (config('saas.enabled') && empty($this->tenantFeatures['job_board_publishing'])) {
+            return;
+        }
+
+        foreach (['publish_on_jooble', 'publish_on_assistmyhr', 'publish_on_postjobfree', 'publish_on_jobbank'] as $field) {
+            if ($request->has($field)) {
+                $job->{$field} = $request->boolean($field);
+            }
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -209,10 +222,7 @@ class AdminJobsController extends AdminBaseController
         $job->title = $request->title;
         $job->job_code = $request->job_code;
         $job->job_description = $request->job_description;
-        $job->publish_on_jooble = $request->boolean('publish_on_jooble');
-        $job->publish_on_assistmyhr = $request->boolean('publish_on_assistmyhr');
-        $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
-        $job->publish_on_jobbank = $request->boolean('publish_on_jobbank');
+        $this->saveJobBoardSelections($job, $request);
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
         if ($request->filled('category_new')) {
@@ -380,18 +390,7 @@ class AdminJobsController extends AdminBaseController
         $job->title = $request->title;
         $job->job_code = $request->job_code;
         $job->job_description = $request->job_description;
-        if ($request->has('publish_on_jooble')) {
-            $job->publish_on_jooble = $request->boolean('publish_on_jooble');
-        }
-        if ($request->has('publish_on_assistmyhr')) {
-            $job->publish_on_assistmyhr = $request->boolean('publish_on_assistmyhr');
-        }
-        if ($request->has('publish_on_postjobfree')) {
-            $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
-        }
-        if ($request->has('publish_on_jobbank')) {
-            $job->publish_on_jobbank = $request->boolean('publish_on_jobbank');
-        }
+        $this->saveJobBoardSelections($job, $request);
 
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
