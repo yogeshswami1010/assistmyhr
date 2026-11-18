@@ -20,6 +20,11 @@ class StoreJob extends CoreRequest
             'job_code'           => 'nullable|string|max:100',
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
+            'publish_on_jobbank' => 'sometimes|boolean',
+            'jobbank_noc_code' => ['nullable', 'required_if:publish_on_jobbank,1', 'regex:/\A[0-9]{5}\z/'],
+            'jobbank_noc_title' => 'nullable|required_if:publish_on_jobbank,1|string|max:191',
+            'jobbank_city' => 'nullable|required_if:publish_on_jobbank,1|string|max:191',
+            'jobbank_province' => ['nullable', 'required_if:publish_on_jobbank,1', Rule::in(Job::JOB_BANK_PROVINCES)],
             'total_positions'    => 'required|numeric',
 
             // New manual-entry fields
@@ -52,6 +57,10 @@ class StoreJob extends CoreRequest
 
         if (request('pay_type') == 'Range') {
             $rules['maximum_salary'] = 'required|numeric|gt:starting_salary';
+        }
+
+        if ($this->boolean('publish_on_jobbank')) {
+            $rules['total_positions'] = 'required|integer|min:1';
         }
 
         return $rules;

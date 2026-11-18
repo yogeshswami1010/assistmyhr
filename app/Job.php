@@ -17,6 +17,8 @@ class Job extends Model
     public const STATUS_FILLED  = 'filled';
     public const STATUS_ON_HOLD = 'on_hold';
 
+    public const JOB_BANK_PROVINCES = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
+
     public const STATUSES = [
         self::STATUS_OPEN    => 'Open',
         self::STATUS_CLOSED  => 'Closed',
@@ -44,6 +46,7 @@ class Job extends Model
         'publish_on_jooble'    => 'boolean',
         'publish_on_assistmyhr' => 'boolean',
         'publish_on_postjobfree' => 'boolean',
+        'publish_on_jobbank' => 'boolean',
     ];
 
     protected $appends = [
@@ -181,6 +184,17 @@ class Job extends Model
     {
         return $query->open()->withinPublicationWindow()
             ->whereHas('company', fn ($query) => $query->where('status', 'active'));
+    }
+
+    public function jobBankFeedIssue(): ?string
+    {
+        return match (true) {
+            $this->company?->show_in_frontend !== 'true' || blank($this->company?->company_name) => 'Select a company with a public employer name.',
+            !preg_match('/\A[0-9]{5}\z/', (string) $this->jobbank_noc_code) || blank($this->jobbank_noc_title) => 'Enter a five-digit NOC code and its title.',
+            blank($this->jobbank_city) || !in_array($this->jobbank_province, self::JOB_BANK_PROVINCES, true) => 'Enter a Canadian city and province or territory.',
+            (int) $this->total_positions < 1 => 'Enter at least one vacancy.',
+            default => $this->joobleContentIssue(),
+        };
     }
 
     public function sluggable(): array

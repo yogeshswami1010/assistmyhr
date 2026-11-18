@@ -447,6 +447,42 @@
                                         <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.'.$board) }}" target="_blank" rel="noopener">{{ route('jobs.feeds.'.$board) }}</a>
                                     </div>
                                 @endforeach
+                                <div class="mt-3">
+                                    <input type="hidden" name="publish_on_jobbank" value="0">
+                                    <label class="flex items-center gap-2 text-sm text-slate-700">
+                                        <input type="checkbox" name="publish_on_jobbank" value="1"
+                                            @checked(old('publish_on_jobbank', $isEdit && $job?->publish_on_jobbank))>
+                                        Include this job in the Job Bank feed
+                                    </label>
+                                    <p class="mt-1 text-xs text-slate-600">By selecting this, you confirm that the direct employer submitted this Canadian vacancy, agreed to share it on Job Bank, and is eligible under Job Bank’s incoming-feed rules.</p>
+                                    @if($isEdit && $job?->publish_on_jobbank)
+                                        @php $jobBankIssue = $jobBoardFeedIssue ?? $job->jobBankFeedIssue(); @endphp
+                                        @if($jobBankIssue)
+                                            <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $jobBankIssue }}</p>
+                                        @else
+                                            <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the Job Bank feed.</p>
+                                        @endif
+                                    @endif
+                                    <div class="mt-2 grid gap-2 md:grid-cols-2">
+                                        @foreach(['jobbank_noc_code' => 'NOC code', 'jobbank_noc_title' => 'NOC title', 'jobbank_city' => 'Canadian city'] as $field => $label)
+                                            <label class="text-xs text-slate-700">
+                                                {{ $label }}
+                                                <input class="form-control" name="{{ $field }}" maxlength="{{ $field === 'jobbank_noc_code' ? 5 : 191 }}"
+                                                    value="{{ old($field, $job?->{$field}) }}">
+                                            </label>
+                                        @endforeach
+                                        <label class="text-xs text-slate-700">
+                                            Province or territory
+                                            <select class="form-control" name="jobbank_province">
+                                                <option value="">Select province or territory</option>
+                                                @foreach(\App\Job::JOB_BANK_PROVINCES as $province)
+                                                    <option value="{{ $province }}" @selected(old('jobbank_province', $job?->jobbank_province) === $province)>{{ $province }}</option>
+                                                @endforeach
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.jobbank') }}" target="_blank" rel="noopener">{{ route('jobs.feeds.jobbank') }}</a>
+                                </div>
                             </div>
                             <div class="form-group mb-0">
                                 <label for="job_skills" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('menu.skills')</label>
