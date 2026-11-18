@@ -18,7 +18,6 @@ class StoreJob extends CoreRequest
             'job_code'           => 'nullable|string|max:100',
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
-            'publish_on_jobbank' => 'sometimes|boolean',
             'total_positions'    => 'required|numeric',
 
             // New manual-entry fields

@@ -45,7 +45,7 @@ class AdminJobsController extends AdminBaseController
             return;
         }
 
-        foreach (['publish_on_jooble', 'publish_on_assistmyhr', 'publish_on_postjobfree', 'publish_on_jobbank'] as $field) {
+        foreach (['publish_on_jooble', 'publish_on_assistmyhr', 'publish_on_postjobfree'] as $field) {
             if ($request->has($field)) {
                 $job->{$field} = $request->boolean($field);
             }
@@ -316,14 +316,13 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
         $this->job = Job::findOrFail($id);
-        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree || $this->job->publish_on_jobbank) {
-            $this->jobBoardPublicationIssue = match (true) {
+        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree) {
+            $this->jobBoardFeedIssue = match (true) {
                 $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
                 $this->job->company?->status !== 'active' => 'Select an active company.',
                 !Job::publicJobPage()->whereKey($id)->exists() => 'Check the job’s publication and expiry dates.',
-                default => null,
+                default => $this->job->joobleContentIssue(),
             };
-            $this->jobBoardFeedIssue = $this->jobBoardPublicationIssue ?? $this->job->joobleContentIssue();
         }
         $this->categories = JobCategory::all();
         $this->skills = Skill::where('category_id', $this->job->category_id)->get();

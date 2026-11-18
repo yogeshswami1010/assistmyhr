@@ -44,7 +44,6 @@ class Job extends Model
         'publish_on_jooble'    => 'boolean',
         'publish_on_assistmyhr' => 'boolean',
         'publish_on_postjobfree' => 'boolean',
-        'publish_on_jobbank' => 'boolean',
     ];
 
     protected $appends = [

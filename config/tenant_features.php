@@ -3,7 +3,7 @@
 return [
     'job_board_publishing' => [
         'name' => 'Job Board Publishing',
-        'description' => 'Allows the client to publish jobs to Jooble, AssistMyHR, PostJobFree, and Job Bank.',
+        'description' => 'Allows the client to publish jobs to Jooble, Jobxoom, and PostJobFree.',
     ],
     'document_sign' => [
         'name' => 'Document Sign',

@@ -90,7 +90,6 @@ Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetC
 Route::get('/job-feeds/jooble.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jooble'])->middleware('throttle:60,1')->name('jobs.feeds.jooble');
 Route::get('/job-feeds/assistmyhr.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'assistMyHr'])->middleware('throttle:60,1')->name('jobs.feeds.assistmyhr');
 Route::get('/job-feeds/postjobfree.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'postJobFree'])->middleware('throttle:60,1')->name('jobs.feeds.postjobfree');
-Route::get('/job-feeds/job-bank.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jobBank'])->middleware('throttle:60,1')->name('jobs.feeds.jobbank');
 
 Route::name('jobs.')
     ->group(function () {

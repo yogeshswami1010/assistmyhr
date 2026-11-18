@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Front;
 use App\Job;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
-use App\Services\JobBankFeed;
-use DateTimeImmutable;
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -30,89 +27,6 @@ class JobBoardFeedController
     public function postJobFree(): Response
     {
         return $this->feed('publish_on_postjobfree');
-    }
-
-    public function jobBank(Request $request, JobBankFeed $feed): Response
-    {
-        $from = $request->query('from');
-        if ($from !== null) {
-            abort_unless(is_string($from) && preg_match('/\A[0-9]{14}\z/', $from), 400, 'Expected from in YYYYMMDDhhmmss format (UTC).');
-            $date = DateTimeImmutable::createFromFormat('!YmdHis', $from, new \DateTimeZone('UTC'));
-            abort_unless($date && $date->format('YmdHis') === $from, 400, 'Invalid from timestamp.');
-        }
-
-        $records = $feed->records($from, fn () => $this->jobBankJobs());
-        $xml = new XMLWriter;
-        $xml->openMemory();
-        $xml->startDocument('1.0', 'UTF-8');
-        $xml->startElement('jobs');
-        foreach ($records as $record) {
-            $xml->startElement('job');
-            foreach ($record as $field => $value) {
-                $this->writeCdata($xml, $field, $value);
-            }
-            $xml->endElement();
-        }
-        $xml->endElement();
-        $xml->endDocument();
-
-        return new Response($xml->outputMemory(), 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'Cache-Control' => 'no-store']);
-    }
-
-    private function jobBankJobs(): iterable
-    {
-        if (!config('saas.enabled')) {
-            yield from $this->jobBankRecords(Job::query());
-            return;
-        }
-
-        foreach (Tenant::where('status', 'active')->withEnabledFeature('job_board_publishing')->with('subscription')->lazyById() as $tenant) {
-            if (!$tenant->hasAccess()) {
-                continue;
-            }
-
-            $connectionKey = 'database.connections.'.self::CONNECTION;
-            $previous = config($connectionKey);
-            config([$connectionKey => app(TenantContext::class)->connectionConfig($tenant)]);
-
-            try {
-                yield from $this->jobBankRecords(Job::on(self::CONNECTION), $tenant);
-            } finally {
-                DB::purge(self::CONNECTION);
-                config([$connectionKey => $previous]);
-            }
-        }
-    }
-
-    private function jobBankRecords(Builder $query, ?Tenant $tenant = null): iterable
-    {
-        $jobs = $query->publicJobPage()->where('publish_on_jobbank', true)
-            ->with(['company', 'jobLocation.country'])->lazyById();
-        $publicBaseUrl = rtrim(config('app.url'), '/');
-
-        foreach ($jobs as $job) {
-            $location = $job->jobLocation->first();
-            $parameters = [$job->slug, $location?->id];
-            if ($tenant) {
-                $parameters['workspace'] = $tenant->slug;
-            }
-
-            $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
-            yield $reference => array_filter([
-                'title' => $job->title,
-                'noc_code' => $job->jobbank_noc_code,
-                'noc_title' => $job->jobbank_noc_title,
-                'employer' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
-                'description' => $job->job_description,
-                'city' => $job->jobbank_city,
-                'province' => $job->jobbank_province,
-                'location' => $job->joobleRegion(),
-                'country' => $location?->country?->country_code,
-                'vacancies' => (string) $job->total_positions,
-                'url' => $publicBaseUrl.route('jobs.jobDetail', $parameters, false),
-                'apply_url' => $publicBaseUrl.route('jobs.jobApply', $parameters, false),
-            ], fn ($value) => filled($value));
-        }
     }
 
     private function feed(string $selection): Response

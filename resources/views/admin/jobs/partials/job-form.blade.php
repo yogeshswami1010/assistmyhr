@@ -448,21 +448,6 @@
                                         <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.'.$board) }}" target="_blank" rel="noopener">{{ route('jobs.feeds.'.$board) }}</a>
                                     </div>
                                 @endforeach
-                                <div class="mt-3">
-                                    <input type="hidden" name="publish_on_jobbank" value="0">
-                                    <label class="flex items-center gap-2 text-sm text-slate-700">
-                                        <input type="checkbox" name="publish_on_jobbank" value="1"
-                                            @checked(old('publish_on_jobbank', $isEdit && $job?->publish_on_jobbank))>
-                                        Include this job in the Job Bank feed
-                                    </label>
-                                    @if($isEdit && $job?->publish_on_jobbank)
-                                        @if(!empty($jobBoardPublicationIssue))
-                                            <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $jobBoardPublicationIssue }}</p>
-                                        @else
-                                            <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the Job Bank feed.</p>
-                                        @endif
-                                    @endif
-                                </div>
                             </div>
                             @endif
                             <div class="form-group mb-0">

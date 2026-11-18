@@ -6,13 +6,4 @@ The 2025 incoming-feed guide specifies lowercase field names, CDATA values, a NO
 
 The sample proposes the XML structure, field names apart from `action`, `U` and `D` action values, and a minimal delete record. Confirm these with Job Bank, along with required fields, field formats, supported characters, timestamp timezone and boundary behavior, and how Job Bank will access and test the feed.
 
-## ATS preview feed
-
-Set `APP_URL` to the public careers host and apply the database migration. For SaaS installations, also run the tenant migrations. Create or edit a job, select **Include this job in the Job Bank feed** under **Job boards**, and save it. The preview uses the existing job details and includes selected jobs while they are publicly open within their publication dates.
-
-- `GET /job-feeds/job-bank.xml` returns currently eligible jobs as add records.
-- `GET /job-feeds/job-bank.xml?from=20261118090000` returns recorded changes since that UTC timestamp, inclusive. Consumers should allow for replay at the timestamp boundary.
-
-The feed compares eligible postings against its last observed state on each request. It records an add for a new listing, an update when exported fields change, and a delete when a previously observed listing is closed, expired, deselected, deleted, or otherwise ineligible. Multiple job changes between requests may be combined into one observed change.
-
-Confirm employer consent and eligibility before sharing the feed. The preview omits missing fields, including NOC code and title on new jobs. Job Bank requires both NOC values for import. Complete the NOC mapping and confirm the schema and duplicate-posting rules before supplying the live URL.
+This sample is retained for reference. The ATS no longer serves a Job Bank feed.
