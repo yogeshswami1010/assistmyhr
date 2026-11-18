@@ -46,11 +46,13 @@ class InitializeSaasTenant
             if ($request->is('login') && $request->isMethod('POST') && is_string($request->input('email'))) {
                 $email = strtolower(trim($request->input('email')));
                 $request->merge(['email' => $email]);
-                if (!$request->filled('workspace')) {
+                $selectedWorkspace = $request->input('workspace');
+                // Older unscoped sign-in forms submit main as their default workspace.
+                if (!$request->filled('workspace') || $selectedWorkspace === 'main') {
                     $matches = Tenant::whereRaw('LOWER(owner_email) = ?', [$email])->whereNotIn('status', ['provisioning', 'failed'])->limit(2)->get();
                     if ($matches->count() === 1) {
                         $request->merge(['workspace' => $matches->first()->slug]);
-                    } elseif ($matches->count() > 1) {
+                    } elseif ($matches->count() > 1 && !$matches->contains('slug', $selectedWorkspace)) {
                         throw \Illuminate\Validation\ValidationException::withMessages(['email' => 'Please use your company sign-in link to access this account.']);
                     }
                 }
