@@ -87,33 +87,31 @@ class JobBoardFeedController
     private function jobBankRecords(Builder $query, ?Tenant $tenant = null): iterable
     {
         $jobs = $query->publicJobPage()->where('publish_on_jobbank', true)
-            ->with(['company', 'jobLocation'])->lazyById();
+            ->with(['company', 'jobLocation.country'])->lazyById();
         $publicBaseUrl = rtrim(config('app.url'), '/');
 
         foreach ($jobs as $job) {
-            if ($job->jobBankFeedIssue() !== null) {
-                continue;
-            }
-
-            $parameters = [$job->slug, $job->jobLocation->first()?->id];
+            $location = $job->jobLocation->first();
+            $parameters = [$job->slug, $location?->id];
             if ($tenant) {
                 $parameters['workspace'] = $tenant->slug;
             }
 
             $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
-            yield $reference => [
+            yield $reference => array_filter([
                 'title' => $job->title,
                 'noc_code' => $job->jobbank_noc_code,
                 'noc_title' => $job->jobbank_noc_title,
-                'employer' => $job->company->company_name,
+                'employer' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
                 'description' => $job->job_description,
                 'city' => $job->jobbank_city,
                 'province' => $job->jobbank_province,
-                'country' => 'CA',
+                'location' => $job->joobleRegion(),
+                'country' => $location?->country?->country_code,
                 'vacancies' => (string) $job->total_positions,
                 'url' => $publicBaseUrl.route('jobs.jobDetail', $parameters, false),
                 'apply_url' => $publicBaseUrl.route('jobs.jobApply', $parameters, false),
-            ];
+            ], fn ($value) => filled($value));
         }
     }
 

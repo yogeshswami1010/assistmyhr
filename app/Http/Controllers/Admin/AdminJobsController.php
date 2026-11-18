@@ -157,19 +157,6 @@ class AdminJobsController extends AdminBaseController
         return view('admin.jobs.create', $this->data);
     }
 
-    private function saveJobBankSelection(Job $job, StoreJob $request): void
-    {
-        if ($request->has('publish_on_jobbank')) {
-            $job->publish_on_jobbank = $request->boolean('publish_on_jobbank');
-        }
-
-        foreach (['jobbank_noc_code', 'jobbank_noc_title', 'jobbank_city', 'jobbank_province'] as $field) {
-            if ($request->has($field)) {
-                $job->{$field} = $request->input($field);
-            }
-        }
-    }
-
     /**
      * Store a newly created resource in storage.
      *
@@ -225,7 +212,7 @@ class AdminJobsController extends AdminBaseController
         $job->publish_on_jooble = $request->boolean('publish_on_jooble');
         $job->publish_on_assistmyhr = $request->boolean('publish_on_assistmyhr');
         $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
-        $this->saveJobBankSelection($job, $request);
+        $job->publish_on_jobbank = $request->boolean('publish_on_jobbank');
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
         if ($request->filled('category_new')) {
@@ -320,12 +307,13 @@ class AdminJobsController extends AdminBaseController
         abort_if(! $this->user->cans('edit_jobs'), 403);
         $this->job = Job::findOrFail($id);
         if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree || $this->job->publish_on_jobbank) {
-            $this->jobBoardFeedIssue = match (true) {
+            $this->jobBoardPublicationIssue = match (true) {
                 $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
                 $this->job->company?->status !== 'active' => 'Select an active company.',
                 !Job::publicJobPage()->whereKey($id)->exists() => 'Check the job’s publication and expiry dates.',
-                default => $this->job->joobleContentIssue(),
+                default => null,
             };
+            $this->jobBoardFeedIssue = $this->jobBoardPublicationIssue ?? $this->job->joobleContentIssue();
         }
         $this->categories = JobCategory::all();
         $this->skills = Skill::where('category_id', $this->job->category_id)->get();
@@ -401,7 +389,9 @@ class AdminJobsController extends AdminBaseController
         if ($request->has('publish_on_postjobfree')) {
             $job->publish_on_postjobfree = $request->boolean('publish_on_postjobfree');
         }
-        $this->saveJobBankSelection($job, $request);
+        if ($request->has('publish_on_jobbank')) {
+            $job->publish_on_jobbank = $request->boolean('publish_on_jobbank');
+        }
 
         $job->total_positions = $request->total_positions;
         // Handle manual category entry
