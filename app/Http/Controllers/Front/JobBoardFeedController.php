@@ -120,7 +120,7 @@ class JobBoardFeedController
         $xml = new XMLWriter;
         $xml->openMemory();
         $xml->startDocument('1.0', 'UTF-8');
-        $xml->startElement($selection === 'publish_on_postjobfree' ? 'source' : 'jobs');
+        $xml->startElement($selection === 'publish_on_jooble' ? 'jobs' : 'source');
 
         if (config('saas.enabled')) {
             foreach (Tenant::where('status', 'active')->withEnabledFeature('job_board_publishing')->with('subscription')->lazyById() as $tenant) {
@@ -154,9 +154,10 @@ class JobBoardFeedController
 
     private function writeJobs(XMLWriter $xml, Builder $query, string $selection, ?Tenant $tenant = null): void
     {
-        $jobs = $query->publicJobPage()->where($selection, true)
-            ->with(['company', 'jobLocation', 'jobType', 'currency'])->lazyById();
+        $assistMyHr = $selection === 'publish_on_assistmyhr';
         $postJobFree = $selection === 'publish_on_postjobfree';
+        $jobs = $query->publicJobPage()->where($selection, true)
+            ->with(['company', $assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])->lazyById();
 
         foreach ($jobs as $job) {
             if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue() !== null)) {
@@ -168,31 +169,57 @@ class JobBoardFeedController
                 $jobRouteParameters['workspace'] = $tenant->slug;
             }
             $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
-            $fields = $postJobFree ? $this->postJobFreeFields($job, $jobRouteParameters, $reference) : [
-                'link' => route('jobs.jobDetail', $jobRouteParameters),
-                'apply_url' => route('jobs.jobApply', $jobRouteParameters),
-                'name' => $job->title,
-                'region' => $job->joobleRegion(),
-                'description' => $job->job_description,
-                'pubdate' => $job->publicationDate()->format('d.m.Y'),
-                'updated' => $job->updated_at?->format('d.m.Y'),
-                'expire' => $job->publicationEndDate()?->format('d.m.Y'),
-                'company' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
-                'jobtype' => $job->jobType?->job_type,
-                'salary' => $this->salary($job),
-            ];
+            $fields = match ($selection) {
+                'publish_on_assistmyhr' => $this->assistMyHrFields($job, $jobRouteParameters, $reference),
+                'publish_on_postjobfree' => $this->postJobFreeFields($job, $jobRouteParameters, $reference),
+                default => $this->joobleFields($job, $jobRouteParameters),
+            };
 
             $xml->startElement('job');
-            if (!$postJobFree) {
+            if (!$postJobFree && !$assistMyHr) {
                 $xml->writeAttribute('id', $reference);
             }
             foreach ($fields as $name => $value) {
-                if (filled($value)) {
+                if ($assistMyHr && $name !== 'description') {
+                    $xml->writeElement($name, $this->xmlText((string) $value));
+                } elseif (filled($value)) {
                     $this->writeCdata($xml, $name, $value);
                 }
             }
             $xml->endElement();
         }
+    }
+
+    private function assistMyHrFields(Job $job, array $routeParameters, string $reference): array
+    {
+        return [
+            'title' => $job->title,
+            'url' => route('jobs.jobDetail', $routeParameters),
+            'company' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
+            'location' => $job->joobleRegion(),
+            'country' => $job->jobLocation->first()?->country?->country_code,
+            'referencenumber' => $reference,
+            'salary' => $this->salary($job),
+            'jobtype' => $job->jobType?->job_type,
+            'description' => $job->job_description,
+        ];
+    }
+
+    private function joobleFields(Job $job, array $routeParameters): array
+    {
+        return [
+            'link' => route('jobs.jobDetail', $routeParameters),
+            'apply_url' => route('jobs.jobApply', $routeParameters),
+            'name' => $job->title,
+            'region' => $job->joobleRegion(),
+            'description' => $job->job_description,
+            'pubdate' => $job->publicationDate()->format('d.m.Y'),
+            'updated' => $job->updated_at?->format('d.m.Y'),
+            'expire' => $job->publicationEndDate()?->format('d.m.Y'),
+            'company' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
+            'jobtype' => $job->jobType?->job_type,
+            'salary' => $this->salary($job),
+        ];
     }
 
     private function postJobFreeFields(Job $job, array $routeParameters, string $reference): array
@@ -233,9 +260,14 @@ class JobBoardFeedController
     private function writeCdata(XMLWriter $xml, string $name, string $value): void
     {
         // Strip characters disallowed by XML 1.0 and split embedded CDATA terminators.
-        $value = preg_replace('/[^\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $value) ?? '';
+        $value = $this->xmlText($value);
         $xml->startElement($name);
         $xml->writeRaw('<![CDATA['.str_replace(']]>', ']]]]><![CDATA[>', $value).']]>');
         $xml->endElement();
+    }
+
+    private function xmlText(string $value): string
+    {
+        return preg_replace('/[^\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $value) ?? '';
     }
 }
