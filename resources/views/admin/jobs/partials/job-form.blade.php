@@ -426,7 +426,7 @@
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
                                 <p class="text-xs text-slate-600">Choose which public feeds should include this job while it is Open. The feeds include the saved salary when a currency is set.</p>
-                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'AssistMyHR', 'postjobfree' => 'PostJobFree'] as $board => $label)
+                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'Jobxoom', 'postjobfree' => 'PostJobFree'] as $board => $label)
                                     @php
                                         $field = 'publish_on_'.$board;
                                         $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
@@ -436,7 +436,7 @@
                                         <label class="flex items-center gap-2 text-sm text-slate-700">
                                             <input type="checkbox" name="{{ $field }}" value="1"
                                                 @checked(old($field, $isEdit && $job?->{$field}))>
-                                            Include this job in the {{ $label }} feed
+                                            {{ $board === 'assistmyhr' ? 'Include this job in Jobxoom' : 'Include this job in the '.$label.' feed' }}
                                         </label>
                                         @if($isEdit && $job?->{$field})
                                             @if($feedIssue)
@@ -462,7 +462,6 @@
                                             <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the Job Bank feed.</p>
                                         @endif
                                     @endif
-                                    <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.jobbank') }}" target="_blank" rel="noopener">{{ route('jobs.feeds.jobbank') }}</a>
                                 </div>
                             </div>
                             @endif
