@@ -60,7 +60,7 @@
         </button>
 
         <p class="mt-2 animate-auth-fade-up text-center opacity-0 [animation-delay:320ms]">
-            <a href="{{ route('login') }}" class="text-[13px] font-semibold text-blue-600 hover:text-blue-700">{{ __('Login') }}</a>
+            <a href="{{ tenant_route('login') }}" class="text-[13px] font-semibold text-blue-600 hover:text-blue-700">{{ __('Login') }}</a>
         </p>
     </form>
 @endsection

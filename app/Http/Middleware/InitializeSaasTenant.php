@@ -46,13 +46,11 @@ class InitializeSaasTenant
             if ($request->is('login') && $request->isMethod('POST') && is_string($request->input('email'))) {
                 $email = strtolower(trim($request->input('email')));
                 $request->merge(['email' => $email]);
-                $matches = Tenant::whereRaw('LOWER(owner_email) = ?', [$email])->whereNotIn('status', ['provisioning', 'failed'])->limit(2)->get();
-                if ($matches->count() === 1) {
-                    $request->merge(['workspace' => $matches->first()->slug]);
-                } elseif ($matches->count() > 1) {
-                    // Existing duplicate owners can still sign in through their company link.
-                    $selected = $request->input('workspace');
-                    if (!$matches->contains('slug', $selected)) {
+                if (!$request->filled('workspace')) {
+                    $matches = Tenant::whereRaw('LOWER(owner_email) = ?', [$email])->whereNotIn('status', ['provisioning', 'failed'])->limit(2)->get();
+                    if ($matches->count() === 1) {
+                        $request->merge(['workspace' => $matches->first()->slug]);
+                    } elseif ($matches->count() > 1) {
                         throw \Illuminate\Validation\ValidationException::withMessages(['email' => 'Please use your company sign-in link to access this account.']);
                     }
                 }

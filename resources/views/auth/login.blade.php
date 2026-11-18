@@ -6,14 +6,15 @@
     $authFieldEye = ' pr-11';
     $authBtn = 'flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-bold tracking-wide text-white transition-all hover:-translate-y-px hover:bg-blue-700 hover:shadow-[0_6px_22px_rgba(37,99,235,0.4)] active:translate-y-0';
     $authSecondary = 'flex w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-[#E2DED8] bg-white py-[13px] text-[13.5px] font-semibold text-[#1A1E2E] no-underline transition-[border-color,box-shadow] hover:border-blue-600 hover:shadow-[0_4px_14px_rgba(37,99,235,0.12)]';
+    $workspace = config('saas.enabled') ? app(\App\Saas\TenantContext::class)->current()?->slug : null;
     $rememberDevice = (bool) old('remember', config('saas.enabled'));
 @endphp
 
 @section('content')
     <form action="{{ route('login') }}" id="loginform" method="post" class="flex flex-col gap-4">
         @csrf
-        @if(config('saas.enabled'))
-        <input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">
+        @if($workspace && ($workspace !== 'main' || request()->filled('workspace')))
+        <input type="hidden" name="workspace" value="{{ $workspace }}">
         @endif
 
         <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
@@ -69,7 +70,7 @@
                 </button>
                 <label for="remember" id="remember-label" class="cursor-pointer select-none text-[13px] font-medium text-[#5A6478]">{{ __('Remember me') }}</label>
             </div>
-            <a href="#" id="to-recover" class="shrink-0 text-[13px] font-semibold text-blue-600 hover:text-blue-700">{{ __('Forgot password?') }}</a>
+            <a href="{{ tenant_route('password.request') }}" class="shrink-0 text-[13px] font-semibold text-blue-600 hover:text-blue-700">{{ __('Forgot password?') }}</a>
         </div>
 
         @if(config('saas.enabled'))
@@ -112,42 +113,6 @@
 </a>
     </form>
 
-    <form class="hidden flex flex-col gap-4" method="post" id="recoverform" action="{{ route('password.email') }}">
-        @csrf
-        @if(config('saas.enabled'))<input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">@endif
-
-        <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
-            <h1 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">@lang('app.recoverPassword')</h1>
-            <p class="mt-2 text-sm text-[#8892A0]">@lang('app.enterEmailInstruction')</p>
-        </div>
-
-        @if (session('status'))
-            <div class="flex items-center gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3" role="status">
-                <p class="text-[13px] font-semibold text-emerald-800">{{ session('status') }}</p>
-            </div>
-        @endif
-
-        <div>
-            <label for="recover_email" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-[#5A6478]">{{ __('E-Mail Address') }}</label>
-            <div class="group relative">
-                <svg class="pointer-events-none absolute left-3.5 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-[#B0B8C4] transition-colors group-focus-within:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                <input type="email" id="recover_email" name="email" required
-                    class="{{ $authField }} {{ $errors->has('email') ? $authFieldErr : '' }}"
-                    placeholder="{{ __('E-Mail Address') }}" value="{{ old('email') }}" autocomplete="email">
-            </div>
-            @if ($errors->has('email'))
-                <p class="mt-1.5 text-[11.5px] text-red-500">{{ $errors->first('email') }}</p>
-            @endif
-        </div>
-
-        <button type="submit" class="{{ $authBtn }}">
-            @lang('app.sendPasswordLink')
-        </button>
-
-        <p class="text-center">
-            <a href="#" id="back-to-login" class="text-[13px] font-semibold text-[#8892A0] hover:text-[#5A6478]">{{ __('← Back to Login') }}</a>
-        </p>
-    </form>
 @endsection
 
 @push('scripts')

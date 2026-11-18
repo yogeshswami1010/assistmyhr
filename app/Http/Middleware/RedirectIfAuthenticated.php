@@ -18,21 +18,12 @@ class RedirectIfAuthenticated
     public function handle($request, Closure $next, $guard = null)
     {
         if (Auth::guard($guard)->check()) {
-
-//            if(Auth::user()->hasRole('admin')){
-//                return redirect(route('admin.dashboard'));
-//            }
-
-            $user = auth()->user();
+            $user = Auth::guard($guard)->user();
             if (config('saas.enabled') && !$user->hasVerifiedEmail()) {
                 return redirect(tenant_route('verification.notice'));
             }
-            if($user->hasRole('admin')){
-                return redirect(route('admin.dashboard'));
-            }
-            elseif($user->hasRole('employee')){
-                return redirect(route('member.dashboard'));
-            }
+
+            return redirect(tenant_route('admin.dashboard'));
         }
 
         return $next($request);

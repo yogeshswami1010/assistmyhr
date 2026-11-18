@@ -153,14 +153,16 @@ class LoginController extends Controller
         if ($request->expectsJson()) {
             return response()->json(['message' => $message, 'errors' => ['email' => [$message]]], 422);
         }
-        return redirect()->route('login')->withErrors(['email' => $message])->withInput($request->only('email'));
+        $loginUrl = $request->filled('workspace') ? tenant_route('login') : route('login');
+
+        return redirect($loginUrl)->withErrors(['email' => $message])->withInput($request->only('email'));
     }
     protected function redirectTo()
     {
         if (config('saas.enabled') && !$this->guard()->user()->hasVerifiedEmail()) {
             return tenant_route('verification.notice');
         }
-        return 'admin/dashboard';
+        return tenant_route('admin.dashboard');
     }
 
     protected function attemptLogin(Request $request)

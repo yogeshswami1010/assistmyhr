@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\ThemeSetting;
 use App\Traits\SmtpSettings;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 
 class ForgotPasswordController extends Controller
 {
@@ -21,7 +24,9 @@ class ForgotPasswordController extends Controller
     |
     */
 
-    use SendsPasswordResetEmails, SmtpSettings;
+    use SendsPasswordResetEmails, SmtpSettings {
+        sendResetLinkEmail as private sendResetLinkThroughBroker;
+    }
 
     /**
      * Create a new controller instance.
@@ -32,6 +37,39 @@ class ForgotPasswordController extends Controller
     {
         parent::__construct();
         $this->middleware('guest');
-        $this->setMailConfigs();
+    }
+
+    public function showLinkRequestForm()
+    {
+        return view('auth.passwords.email', [
+            'setting' => $this->companySetting,
+            'frontTheme' => ThemeSetting::first(),
+        ]);
+    }
+
+    public function sendResetLinkEmail(Request $request)
+    {
+        try {
+            if (!config('saas.enabled')) {
+                $this->setMailConfigs();
+
+                return $this->sendResetLinkThroughBroker($request);
+            }
+
+            // Delivery uses platform SMTP. The broker and generated link still use the current workspace.
+            $previous = config()->getMany(['mail.driver', 'mail.default']);
+            config(['mail.driver' => null, 'mail.default' => 'platform']);
+            try {
+                return $this->sendResetLinkThroughBroker($request);
+            } finally {
+                config($previous);
+            }
+        } catch (TransportExceptionInterface|RfcComplianceException|\InvalidArgumentException $exception) {
+            report($exception);
+
+            throw ValidationException::withMessages([
+                'email' => __('We could not send a reset link right now. Please try again shortly.'),
+            ]);
+        }
     }
 }

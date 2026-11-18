@@ -38,8 +38,9 @@ class ResetPasswordController extends Controller
     {
         $setting = CompanySetting::first();
         $frontTheme = ThemeSetting::first();
+        $email = $request->query('email');
         return view('auth.passwords.reset')->with(
-            ['token' => $token, 'setting' => $setting,'frontTheme'=>$frontTheme]
+            ['token' => $token, 'setting' => $setting, 'frontTheme' => $frontTheme, 'email' => is_string($email) ? $email : null]
         );
     }
 

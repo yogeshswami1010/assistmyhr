@@ -1,49 +1,46 @@
-@extends('layouts.app')
+@extends('layouts.marketing-auth')
+
+@php
+    $authField = 'w-full rounded-xl border-[1.5px] border-[#E2DED8] bg-white py-[13px] pl-11 pr-4 text-[13.5px] leading-normal text-[#1A1E2E] outline-none transition-[border-color,box-shadow] placeholder:text-[#B0B8C4] focus:border-blue-600 focus:ring-[3px] focus:ring-blue-600/10';
+    $authFieldErr = 'border-red-500 ring-[3px] ring-red-500/10 focus:border-red-500 focus:ring-red-500/10';
+    $authBtn = 'flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-bold tracking-wide text-white transition-all hover:-translate-y-px hover:bg-blue-700 hover:shadow-[0_6px_22px_rgba(37,99,235,0.4)] active:translate-y-0';
+@endphp
 
 @section('content')
-<div class="container mx-auto px-4">
-    <div class="flex justify-center">
-        <div class="w-full max-w-2xl">
-            <div class="bg-white rounded-lg shadow-md border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200 font-semibold text-lg">{{ __('Reset Password') }}</div>
+    <form class="flex flex-col gap-4" method="post" action="{{ tenant_route('password.email') }}">
+        @csrf
+        @if(config('saas.enabled'))<input type="hidden" name="workspace" value="{{ app(\App\Saas\TenantContext::class)->current()?->slug }}">@endif
 
-                <div class="p-6">
-                    @if (session('status'))
-                        <div class="p-4 rounded-md bg-green-50 text-green-800 border border-green-200 mb-4" role="alert">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('password.email') }}">
-                        @csrf
-
-                        <div class="mb-4">
-                            <div class="flex flex-col md:flex-row md:items-center">
-                                <label for="email" class="md:w-1/3 md:text-right md:pr-4 mb-2 md:mb-0">{{ __('E-Mail Address') }}</label>
-
-                                <div class="md:w-2/3">
-                                    <input id="email" type="email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent{{ $errors->has('email') ? ' border-red-500' : '' }}" name="email" value="{{ old('email') }}" required>
-
-                                    @if ($errors->has('email'))
-                                        <span class="text-red-600 text-sm mt-1 block">
-                                            <strong>{{ $errors->first('email') }}</strong>
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-0">
-                            <div class="flex justify-end md:justify-start md:ml-1/3">
-                                <button type="submit" class="bg-primary text-white px-4 py-2 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors">
-                                    {{ __('Send Password Reset Link') }}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="mb-2 animate-auth-fade-up opacity-0 [animation-delay:50ms]">
+            <h1 class="text-[28px] font-extrabold leading-tight tracking-tight text-[#1A1E2E]">@lang('app.recoverPassword')</h1>
+            <p class="mt-2 text-sm text-[#8892A0]">@lang('app.enterEmailInstruction')</p>
         </div>
-    </div>
-</div>
+
+        @if (session('status'))
+            <div class="flex items-center gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3" role="status">
+                <p class="text-[13px] font-semibold text-emerald-800">{{ session('status') }}</p>
+            </div>
+        @endif
+
+        <div>
+            <label for="recover_email" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-[#5A6478]">{{ __('E-Mail Address') }}</label>
+            <div class="group relative">
+                <svg class="pointer-events-none absolute left-3.5 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-[#B0B8C4] transition-colors group-focus-within:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <input type="email" id="recover_email" name="email" required
+                    class="{{ $authField }} {{ $errors->has('email') ? $authFieldErr : '' }}"
+                    placeholder="{{ __('E-Mail Address') }}" value="{{ old('email') }}" autocomplete="email">
+            </div>
+            @if ($errors->has('email'))
+                <p class="mt-1.5 text-[11.5px] text-red-500">{{ $errors->first('email') }}</p>
+            @endif
+        </div>
+
+        <button type="submit" class="{{ $authBtn }}">
+            @lang('app.sendPasswordLink')
+        </button>
+
+        <p class="text-center">
+            <a href="{{ tenant_route('login') }}" class="text-[13px] font-semibold text-[#8892A0] hover:text-[#5A6478]">{{ __('← Back to Login') }}</a>
+        </p>
+    </form>
 @endsection

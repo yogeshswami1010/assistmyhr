@@ -47,28 +47,6 @@
         </div>
     </main>
     @include('marketing.footer')
-    <script>
-        document.getElementById('to-recover')?.addEventListener('click', function (event) {
-            event.preventDefault();
-            const loginForm = document.getElementById('loginform');
-            const recoverForm = document.getElementById('recoverform');
-            if (loginForm && recoverForm) {
-                loginForm.classList.add('hidden');
-                recoverForm.classList.remove('hidden');
-                document.getElementById('recover_email')?.focus();
-            }
-        });
-        document.getElementById('back-to-login')?.addEventListener('click', function (event) {
-            event.preventDefault();
-            const loginForm = document.getElementById('loginform');
-            const recoverForm = document.getElementById('recoverform');
-            if (loginForm && recoverForm) {
-                recoverForm.classList.add('hidden');
-                loginForm.classList.remove('hidden');
-                document.getElementById('login_email')?.focus();
-            }
-        });
-    </script>
     @stack('scripts')
 </body>
 </html>
