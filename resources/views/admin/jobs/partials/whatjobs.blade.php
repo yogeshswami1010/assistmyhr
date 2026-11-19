@@ -14,6 +14,7 @@
     $workArrangement = empty($whatJobsSync['id']) && $showWhatJobsField('jobWorkFrom');
     $employmentSubtype = $showWhatJobsField('jobEmploymentSubType', 'jobDetailsEmploymentSubType');
     $sector = $showWhatJobsField('jobSector');
+    $selectedSector = \App\Services\WhatJobsJobDetails::canonicalSector(old('whatjobs.jobSector', $whatJobsDetails['jobSector'] ?? null));
     $contractDuration = $showWhatJobsField('jobLength') || $showWhatJobsField('jobPeriod');
     $selectedSubtype = (string) old('whatjobs.jobEmploymentSubType', $whatJobsDetails['jobEmploymentSubType'] ?? '');
 @endphp
@@ -65,7 +66,7 @@
                         <select id="whatjobs_jobSector" name="whatjobs[jobSector]" class="form-control">
                             <option value="">Select a sector</option>
                             @foreach(\App\Services\WhatJobsJobDetails::SECTORS as $option)
-                                <option value="{{ $option }}" @selected(old('whatjobs.jobSector', $whatJobsDetails['jobSector'] ?? '') === $option)>{{ $option }}</option>
+                                <option value="{{ \Illuminate\Support\Str::slug($option) }}" @selected($selectedSector === $option)>{{ $option }}</option>
                             @endforeach
                         </select>
                     </div>

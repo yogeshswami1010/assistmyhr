@@ -13,6 +13,16 @@ class StoreJob extends CoreRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $details = $this->input('whatjobs');
+        $sector = $details['jobSector'] ?? null;
+        if (is_string($sector) && ($canonical = WhatJobsJobDetails::canonicalSector($sector)) !== null) {
+            $details['jobSector'] = $canonical;
+            $this->merge(['whatjobs' => $details]);
+        }
+    }
+
     public function rules()
     {
         $rules = [

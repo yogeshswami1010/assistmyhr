@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Country;
 use App\Job;
 use App\JobLocation;
+use Illuminate\Support\Str;
 
 class WhatJobsJobDetails
 {
@@ -120,12 +121,16 @@ class WhatJobsJobDetails
         ], fn ($value) => $value !== null && $value !== ''));
     }
 
-    private static function canonicalSector(?string $sector): ?string
+    public static function canonicalSector(mixed $sector): ?string
     {
-        $sector = trim((string) $sector);
-        $sector = preg_replace('/\s+and\s+|\s*&\s*/i', ' & ', $sector);
+        if (!is_string($sector)) {
+            return null;
+        }
+
+        $sector = html_entity_decode(trim($sector), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $sector = Str::slug(preg_replace('/\s+and\s+/i', ' & ', $sector));
         foreach (self::SECTORS as $option) {
-            if (strcasecmp($sector, $option) === 0) {
+            if ($sector === Str::slug($option)) {
                 return $option;
             }
         }
