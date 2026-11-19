@@ -1,62 +1,70 @@
 <section aria-labelledby="client-documents-title">
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 id="client-documents-title" class="text-lg font-semibold">Client documents</h2>
+    <header class="sign-overview-header">
+        <h2 id="client-documents-title">Client documents</h2>
         @if($user->cans('add_job_applications'))
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('client-signing-dialog').showModal()">
-                Send document to client
+            <button type="button" class="sign-overview-action sign-overview-primary" onclick="document.getElementById('client-signing-dialog').showModal()">
+                <i class="fa fa-plus" aria-hidden="true"></i> Send document to client
             </button>
         @endif
-    </div>
+    </header>
 
     @if(session('zoho_sign_message'))
-        <p class="mb-3 rounded-lg bg-green-50 p-3 text-green-800" role="status">{{ session('zoho_sign_message') }}</p>
+        <p class="mx-5 my-3 rounded-lg bg-green-50 p-3 text-green-800" role="status">{{ session('zoho_sign_message') }}</p>
     @endif
     @error('pdf')
-        <p class="mb-3 rounded-lg bg-red-50 p-3 text-red-700" role="alert">{{ $message }}</p>
+        <p class="mx-5 my-3 rounded-lg bg-red-50 p-3 text-red-700" role="alert">{{ $message }}</p>
     @enderror
 
-    <div class="jc-table-card overflow-x-auto">
-        <table class="jc-cat-table w-full">
-            <thead><tr>
-                <th scope="col">Document</th>
-                <th scope="col">Recipient</th>
-                <th scope="col">Signing status</th>
-                <th scope="col">Actions</th>
-            </tr></thead>
-            <tbody>
-                @forelse($clientDocuments as $document)
-                    <tr>
-                        <td>{{ $document->filename }}</td>
-                        <td>{{ $document->recipient_email }}</td>
-                        <td>@include('admin.document-sign.status', ['offer' => $document])</td>
-                        <td>
-                            <div class="flex flex-wrap items-center gap-2">
-                                @if($document->zoho_sign_status === 'completed')
-                                    <a class="btn btn-outline-primary" target="_blank" rel="noopener" href="{{ tenant_route('admin.document-sign.documents.pdf', ['id' => $document->id, 'inline' => 1]) }}">View signed PDF</a>
-                                    <a class="btn btn-outline-primary" href="{{ tenant_route('admin.document-sign.documents.pdf', ['id' => $document->id]) }}">Download</a>
-                                @elseif($user->cans('add_job_applications'))
-                                    @if($document->zoho_sign_status === 'draft')
-                                        <form method="POST" action="{{ tenant_route('admin.document-sign.documents.editor', ['id' => $document->id]) }}">
+    @if($clientDocuments->isEmpty())
+        <div class="sign-overview-empty">
+            <i class="fa fa-file-text-o" aria-hidden="true"></i>
+            <h3>No client documents yet</h3>
+            @if($user->cans('add_job_applications'))
+                <p>Use <strong>Send document to client</strong> to upload a PDF for signature.</p>
+            @endif
+        </div>
+    @else
+        <div class="overflow-x-auto">
+            <table class="sign-overview-table">
+                <thead><tr>
+                    <th scope="col">Document</th>
+                    <th scope="col">Recipient</th>
+                    <th scope="col">Signing status</th>
+                    <th scope="col">Actions</th>
+                </tr></thead>
+                <tbody>
+                    @foreach($clientDocuments as $document)
+                        <tr>
+                            <td>{{ $document->filename }}</td>
+                            <td>{{ $document->recipient_email }}</td>
+                            <td><span class="sign-overview-status" data-status="{{ $document->zoho_sign_status }}">@include('admin.document-sign.status', ['offer' => $document])</span></td>
+                            <td>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    @if($document->zoho_sign_status === 'completed')
+                                        <a class="btn btn-outline-primary" target="_blank" rel="noopener" href="{{ tenant_route('admin.document-sign.documents.pdf', ['id' => $document->id, 'inline' => 1]) }}">View signed PDF</a>
+                                        <a class="btn btn-outline-primary" href="{{ tenant_route('admin.document-sign.documents.pdf', ['id' => $document->id]) }}">Download</a>
+                                    @elseif($user->cans('add_job_applications'))
+                                        @if($document->zoho_sign_status === 'draft')
+                                            <form method="POST" action="{{ tenant_route('admin.document-sign.documents.editor', ['id' => $document->id]) }}">
+                                                @csrf
+                                                <button class="btn btn-primary">Open Zoho editor</button>
+                                            </form>
+                                        @endif
+                                        <form method="POST" action="{{ tenant_route('admin.document-sign.documents.sync', ['id' => $document->id]) }}">
                                             @csrf
-                                            <button class="btn btn-primary">Open Zoho editor</button>
+                                            <button class="btn btn-outline-primary">Refresh status</button>
                                         </form>
                                     @endif
-                                    <form method="POST" action="{{ tenant_route('admin.document-sign.documents.sync', ['id' => $document->id]) }}">
-                                        @csrf
-                                        <button class="btn btn-outline-primary">Refresh status</button>
-                                    </form>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="4">No client documents yet.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
     @if($clientDocuments->hasPages())
-        <div class="mt-4">{{ $clientDocuments->links() }}</div>
+        <div class="sign-overview-pagination">{{ $clientDocuments->appends(['tab' => 'clients'])->links() }}</div>
     @endif
 </section>
 

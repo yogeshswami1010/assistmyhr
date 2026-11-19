@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="mb-4 flex flex-wrap gap-4">
-        <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.index') }}">All signing requests</a>
+        <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.index', ['tab' => 'applicants']) }}">Applicant Documents</a>
         <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.job-onboard.show', ['job_onboard' => $onboard->id]) }}">View offer</a>
     </div>
 

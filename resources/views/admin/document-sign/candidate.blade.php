@@ -56,7 +56,7 @@
 @section('content')
     <div class="sign-workspace">
         <nav aria-label="Document Sign navigation">
-            <a href="{{ tenant_route('admin.document-sign.index') }}"><i class="fa fa-arrow-left" aria-hidden="true"></i>Document Sign</a>
+            <a href="{{ tenant_route('admin.document-sign.index', ['tab' => 'applicants']) }}"><i class="fa fa-arrow-left" aria-hidden="true"></i>Applicant Documents</a>
             @if($application->onboard)
                 <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.show', ['id' => $application->onboard->id]) }}">View existing offer</a>
             @endif
