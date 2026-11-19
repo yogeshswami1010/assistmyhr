@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'job_board_publishing' => [
+        'name' => 'Job Board Publishing',
+        'description' => 'Allows the client to publish jobs to supported job boards, including WhatJobs.',
+    ],
     'document_sign' => [
         'name' => 'Document Sign',
         'description' => 'Allows the client to access the Document Sign module.',

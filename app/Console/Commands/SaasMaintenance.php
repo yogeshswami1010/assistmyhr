@@ -15,7 +15,7 @@ class SaasMaintenance extends Command
     {
         if (!config('saas.enabled')) { return self::SUCCESS; }
         $commands = match ($this->argument('task')) {
-            'minute' => ['candidate-emails:import-replies', 'client-reviews:notify'],
+            'minute' => ['candidate-emails:import-replies', 'client-reviews:notify', 'whatjobs:sync'],
             'daily' => ['job-check-status', 'candidates:purge'],
             default => [],
         };

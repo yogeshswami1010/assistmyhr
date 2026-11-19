@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Requests;
-use App\Job;
+use App\Services\WhatJobsPublisher;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Validation\Rule;
@@ -20,6 +20,7 @@ class StoreJob extends CoreRequest
             'job_code'           => 'nullable|string|max:100',
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
+            'publish_on_whatjobs' => 'sometimes|boolean',
             'total_positions'    => 'required|numeric',
 
             // New manual-entry fields
@@ -52,6 +53,42 @@ class StoreJob extends CoreRequest
 
         if (request('pay_type') == 'Range') {
             $rules['maximum_salary'] = 'required|gt:starting_salary';
+        }
+
+        if ($this->boolean('publish_on_whatjobs')) {
+            $needsLocation = (int) $this->input('whatjobs.jobWorkFrom') !== 4;
+            $isContract = (int) $this->input('whatjobs.jobEmploymentSubType') === 1;
+            $rules = array_replace($rules, [
+                'title' => 'required|string|min:3|max:120',
+                'total_positions' => 'required|integer|between:1,100',
+                'whatjobs.countryCode' => 'required|regex:/^[A-Z]{2}$/D',
+                'whatjobs.jobWorkFrom' => ['required', Rule::in(array_keys(WhatJobsPublisher::WORK_FROM))],
+                'whatjobs.jobLocationAddress' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'between:5,64'],
+                'whatjobs.city' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'max:100'],
+                'whatjobs.state' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'max:100'],
+                'whatjobs.zip' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'between:3,9'],
+                'whatjobs.jobEmploymentType' => ['required', Rule::in(array_keys(WhatJobsPublisher::EMPLOYMENT_TYPE))],
+                'whatjobs.jobEmploymentSubType' => ['required', Rule::in(array_keys(WhatJobsPublisher::EMPLOYMENT_SUBTYPE))],
+                'whatjobs.jobPeriod' => [Rule::requiredIf($isContract), 'nullable', Rule::in(array_keys(WhatJobsPublisher::CONTRACT_PERIOD))],
+                'whatjobs.jobLength' => [Rule::requiredIf($isContract), 'nullable', 'integer', 'min:1'],
+                'whatjobs.jobScheduleType' => ['required', Rule::in(array_keys(WhatJobsPublisher::SCHEDULE))],
+                'whatjobs.jobScheduleTypeOther' => [
+                    Rule::requiredIf((int) $this->input('whatjobs.jobScheduleType') === 12),
+                    'nullable', 'string', function ($attribute, $value, $fail) {
+                        $count = WhatJobsPublisher::wordCount($value);
+                        if ($count < 30 || $count > 300) {
+                            $fail('The WhatJobs custom schedule must contain 30–300 words.');
+                        }
+                    },
+                ],
+                'whatjobs.jobSector' => 'required|string|max:120',
+                'job_description' => ['required', 'string', function ($attribute, $value, $fail) {
+                    $count = WhatJobsPublisher::wordCount($value);
+                    if ($count < 150 || $count > 1000) {
+                        $fail('WhatJobs requires a job description of 150–1,000 words.');
+                    }
+                }],
+            ]);
         }
 
         return $rules;
