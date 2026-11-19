@@ -188,11 +188,15 @@ class WhatJobsPublisher
                     ->post('https://api.whatjobs.com/api/v1/jobs/submit/json', [
                         'data' => json_encode([['command' => $command] + array_filter($fields, fn ($value) => filled($value))], JSON_THROW_ON_ERROR),
                     ]);
-                $result = self::responseDetails($response->json());
-                if ($response->status() === 200 && ($result['success'] ?? null) === true
-                    && ($command !== 'add' || ctype_digit((string) ($result['jobID'] ?? '')))) {
+                $body = $response->json();
+                $result = self::responseDetails($body);
+                $accepted = self::responseAccepted($result);
+                $remoteId = $result['jobID'] ?? null;
+                $hasId = (is_string($remoteId) || is_int($remoteId))
+                    && ctype_digit((string) $remoteId) && ltrim((string) $remoteId, '0') !== '';
+                if ($response->status() === 200 && $accepted && ($command !== 'add' || $hasId)) {
                     if ($command === 'add') {
-                        $changes['id'] = (string) $result['jobID'];
+                        $changes['id'] = (string) $remoteId;
                     }
                     $url = self::listingUrl($result['jobUrl'] ?? null);
                     if ($url !== null) {
@@ -200,13 +204,7 @@ class WhatJobsPublisher
                     }
                     $state = array_replace($state, $changes);
                 } else {
-                    $error = match ($response->status()) {
-                        203, 400 => is_string($result['message'] ?? null)
-                            ? Str::limit(strip_tags(str_replace($token, '[redacted]', $result['message'])), 300)
-                            : 'WhatJobs rejected the job details.',
-                        401 => 'WhatJobs rejected the API token.',
-                        default => 'WhatJobs did not confirm the request (HTTP '.$response->status().').',
-                    };
+                    $error = self::responseError($response->status(), $result, $token, $accepted);
                 }
             } catch (ConnectionException) {
                 $error = 'Could not confirm the request with WhatJobs. Check the posting before retrying.';
@@ -230,9 +228,39 @@ class WhatJobsPublisher
 
     public static function responseDetails(mixed $body): array
     {
-        $result = $body['response'] ?? $body[0]['response'] ?? [];
+        if (!is_array($body)) {
+            return [];
+        }
+        $item = is_array($body[0] ?? null) ? $body[0] : $body;
+        $result = $item['response'] ?? $item;
 
         return is_array($result) ? $result : [];
+    }
+
+    private static function responseAccepted(array $result): bool
+    {
+        return in_array($result['success'] ?? null, [true, 1, '1', 'true'], true);
+    }
+
+    private static function responseError(int $status, array $result, string $token, bool $accepted): string
+    {
+        if ($status === 401) {
+            return 'WhatJobs rejected the API token.';
+        }
+        if ($status === 200 && $accepted) {
+            return 'WhatJobs reported success but returned no valid posting ID. Check the WhatJobs dashboard before retrying.';
+        }
+
+        $message = $result['message'] ?? null;
+        if (in_array($status, [200, 203, 400], true) && is_string($message) && trim($message) !== '') {
+            return Str::limit(strip_tags(str_replace($token, '[redacted]', $message)), 300);
+        }
+
+        return match ($status) {
+            200 => 'WhatJobs returned HTTP 200 without a recognizable posting confirmation. Check the WhatJobs dashboard before retrying.',
+            203, 400 => 'WhatJobs rejected the job details.',
+            default => 'WhatJobs did not confirm the request (HTTP '.$status.').',
+        };
     }
 
     private function recordResult(Job $job, array $state, string $command, ?string $error): string
