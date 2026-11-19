@@ -73,10 +73,11 @@
                                                         </a>
                                                     @endif
                                                     @if($user->cans('add_job_applications'))
-                                                        <form method="POST" action="{{ tenant_route('admin.document-sign.candidates.remove', ['id' => $application->id]) }}" class="m-0">
+                                                        <form method="POST" action="{{ tenant_route('admin.document-sign.candidates.remove', ['id' => $application->id]) }}"
+                                                              class="m-0" data-confirm-sign-removal="{{ $application->full_name }}">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="sign-overview-action sign-overview-remove"
+                                                            <button type="submit" class="sign-overview-action sign-overview-remove" disabled
                                                                     aria-label="Remove {{ $application->full_name }} from Document Sign" title="Remove from Document Sign">
                                                                 <span aria-hidden="true">×</span>
                                                             </button>
@@ -101,4 +102,33 @@
 
 @push('head-script')
     @include('admin.document-sign.overview-styles')
+@endpush
+
+@push('footer-script')
+    <script>
+        document.querySelectorAll('form[data-confirm-sign-removal]').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                var question = 'Remove ' + form.dataset.confirmSignRemoval + ' from Document Sign?';
+
+                if (typeof swal !== 'function') {
+                    if (window.confirm(question)) form.submit();
+                    return;
+                }
+
+                swal({
+                    title: question,
+                    text: 'Existing signing records will be kept.',
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, remove',
+                    confirmButtonColor: '#b91c1c',
+                    cancelButtonText: 'Cancel'
+                }, function (confirmed) {
+                    if (confirmed) form.submit();
+                });
+            });
+            form.querySelector('button[type="submit"]').disabled = false;
+        });
+    </script>
 @endpush
