@@ -233,13 +233,19 @@ class WhatJobsPublisher
         }
         $item = is_array($body[0] ?? null) ? $body[0] : $body;
         $result = $item['response'] ?? $item;
+        if (is_array($result[0] ?? null)) {
+            $result = $result[0];
+        }
 
         return is_array($result) ? $result : [];
     }
 
     private static function responseAccepted(array $result): bool
     {
-        return in_array($result['success'] ?? null, [true, 1, '1', 'true'], true);
+        $message = $result['message'] ?? null;
+
+        return in_array($result['success'] ?? null, [true, 1, '1', 'true'], true)
+            && !(is_string($message) && preg_match('/^\s*invalid command\b/i', $message));
     }
 
     private static function responseError(int $status, array $result, string $token, bool $accepted): string
@@ -248,12 +254,15 @@ class WhatJobsPublisher
             return 'WhatJobs rejected the API token.';
         }
         if ($status === 200 && $accepted) {
-            return 'WhatJobs reported success but returned no valid posting ID. Check the WhatJobs dashboard before retrying.';
+            $message = $result['message'] ?? null;
+            $details = is_string($message) && trim($message) !== '' ? ' '.self::cleanResponseMessage($message, $token) : '';
+
+            return 'WhatJobs returned no valid posting ID.'.$details.' Check the WhatJobs dashboard before retrying.';
         }
 
         $message = $result['message'] ?? null;
         if (in_array($status, [200, 203, 400], true) && is_string($message) && trim($message) !== '') {
-            return Str::limit(strip_tags(str_replace($token, '[redacted]', $message)), 300);
+            return self::cleanResponseMessage($message, $token);
         }
 
         return match ($status) {
@@ -261,6 +270,11 @@ class WhatJobsPublisher
             203, 400 => 'WhatJobs rejected the job details.',
             default => 'WhatJobs did not confirm the request (HTTP '.$status.').',
         };
+    }
+
+    private static function cleanResponseMessage(string $message, string $token): string
+    {
+        return Str::limit(strip_tags(str_replace($token, '[redacted]', $message)), 300);
     }
 
     private function recordResult(Job $job, array $state, string $command, ?string $error): string
