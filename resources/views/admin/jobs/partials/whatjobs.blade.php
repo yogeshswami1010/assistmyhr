@@ -62,9 +62,12 @@
                 @if($sector)
                     <div class="form-group mb-0">
                         <label for="whatjobs_jobSector" class="text-xs font-semibold text-slate-700">WhatJobs sector</label>
-                        <input id="whatjobs_jobSector" name="whatjobs[jobSector]" class="form-control" maxlength="120"
-                            value="{{ old('whatjobs.jobSector', $whatJobsDetails['jobSector'] ?? '') }}">
-                        <a class="text-xs text-blue-700 underline" href="https://www.whatjobs.com/ats/api" target="_blank" rel="noopener noreferrer">WhatJobs sector list</a>
+                        <select id="whatjobs_jobSector" name="whatjobs[jobSector]" class="form-control">
+                            <option value="">Select a sector</option>
+                            @foreach(\App\Services\WhatJobsJobDetails::SECTORS as $option)
+                                <option value="{{ $option }}" @selected(old('whatjobs.jobSector', $whatJobsDetails['jobSector'] ?? '') === $option)>{{ $option }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 @endif
             </div>
@@ -95,8 +98,10 @@
                 const details = document.getElementById('whatjobs-required-details');
                 const subtype = document.getElementById('whatjobs_jobEmploymentSubType');
                 const duration = document.getElementById('whatjobs-contract-duration');
+                const sector = document.getElementById('whatjobs_jobSector');
                 const refresh = () => {
                     details.hidden = !publish.checked;
+                    if (sector) sector.required = publish.checked;
                     if (duration && subtype) duration.hidden = subtype.value !== '1';
                 };
                 publish.addEventListener('change', refresh);

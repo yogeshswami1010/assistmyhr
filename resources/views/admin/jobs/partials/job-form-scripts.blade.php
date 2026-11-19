@@ -321,6 +321,9 @@
                 if (document.getElementById('location_new')?.dataset.locationLookupPending) {
                     return;
                 }
+                if (document.getElementById('whatjobs_jobSector')?.reportValidity() === false) {
+                    return;
+                }
                 jobRichSyncAll();
                 var serialized = $('#createForm').serializeArray();
                 var requestPayload = {};

@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Http\Requests;
+use App\Services\WhatJobsJobDetails;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Validation\Rule;
 
 class StoreJob extends CoreRequest
 {
@@ -22,7 +24,12 @@ class StoreJob extends CoreRequest
             'whatjobs' => 'sometimes|array:jobWorkFrom,jobEmploymentSubType,jobSector,jobLength,jobPeriod',
             'whatjobs.jobWorkFrom' => 'nullable|integer|between:1,5',
             'whatjobs.jobEmploymentSubType' => 'nullable|integer|between:1,8',
-            'whatjobs.jobSector' => 'nullable|string|max:120',
+            'whatjobs.jobSector' => [
+                'sometimes',
+                Rule::requiredIf($this->boolean('publish_on_whatjobs')),
+                'nullable',
+                Rule::in(WhatJobsJobDetails::SECTORS),
+            ],
             'whatjobs.jobLength' => 'nullable|integer|min:1',
             'whatjobs.jobPeriod' => 'nullable|integer|between:1,3',
             'total_positions'    => 'required|numeric',

@@ -14,6 +14,22 @@ class WhatJobsJobDetails
         5 => 'Freelance', 6 => 'Apprenticeship', 7 => 'Graduate', 8 => 'Maternity cover',
     ];
     public const CONTRACT_PERIODS = [1 => 'Days', 2 => 'Months', 3 => 'Years'];
+    public const SECTORS = [
+        'Accounting', 'Administrative', 'Agriculture Forestry', 'AI & Emerging Technologies',
+        'Apprenticeships & Trainee', 'Architecture', 'Arts & Entertainment', 'Automotive',
+        'Aviation', 'Banking & Finance', 'Beauty & Wellness', 'Catering', 'Charity & Voluntary',
+        'Chemical Engineering', 'Childcare', 'Civil Engineering', 'Cleaning & Sanitation',
+        'Community & Social Care', 'Construction', 'Creative & Digital', 'Crypto & Blockchain',
+        'Customer Service & Helpdesk', 'Dental', 'Driving & Transport', 'E Commerce & Social Media',
+        'Education & Teaching', 'Electrical Engineering', 'Energy', 'FMCG', 'Government & Non Profit',
+        'Graduate', 'Healthcare', 'Hospitality & Tourism', 'Human Resources', 'Industrial Engineering',
+        'Information Security', 'Installation & Maintenance', 'Insurance', 'IT & Software', 'Legal',
+        'Leisure & Sports', 'Logistics & Warehousing', 'Management', 'Management Consultancy',
+        'Manufacturing & Production', 'Marketing', 'Mechanical Engineering', 'Media & PR', 'Medical',
+        'Military & Public Safety', 'Mining', 'Nursing', 'Oil & Gas', 'Pharmaceutical',
+        'Project Management', 'Purchasing', 'Real Estate', 'Recruitment Consultancy', 'Retail',
+        'Sales', 'Scientific Research & Development', 'Telecoms', 'Therapy', 'Veterinary',
+    ];
 
     public function forJob(Job $job, ?JobLocation $location, ?string $postedCountry): array
     {
@@ -67,13 +83,14 @@ class WhatJobsJobDetails
         $category = trim((string) $job->category?->name);
         $sectorCategory = preg_match('/\bgraphic[ -]design(?:er)?\b/i', (string) $job->title)
             ? 'graphic design' : strtolower($category);
-        $sector = filled($saved['jobSector'] ?? null) ? $saved['jobSector'] : match ($sectorCategory) {
+        $categorySector = match ($sectorCategory) {
             'graphic design', 'graphic designer', 'creative and digital' => 'Creative & Digital',
             'hr' => 'Human Resources',
             'software', 'information technology', 'it' => 'IT & Software',
             'customer service', 'helpdesk' => 'Customer Service & Helpdesk',
             default => $category,
         };
+        $sector = self::canonicalSector($saved['jobSector'] ?? null) ?? self::canonicalSector($categorySector);
 
         if ($countrySuffix && count($locationParts) > 1) {
             array_pop($locationParts);
@@ -84,6 +101,8 @@ class WhatJobsJobDetails
             'state' => $this->descriptionField($description, 'state|province|region'),
             'zip' => $this->descriptionField($description, 'postal code|zip code|postcode'),
         ]);
+        unset($saved['jobSector']);
+
         return array_replace($saved, $addressFromDescription, $this->locationFields($locationParts), array_filter([
             'countryCode' => $postedCountry ?? $locationCountry
                 ?? $countrySuffix
@@ -99,6 +118,19 @@ class WhatJobsJobDetails
             'jobLength' => $saved['jobLength'] ?? (isset($duration[1]) ? (int) $duration[1] : null),
             'jobPeriod' => $saved['jobPeriod'] ?? (isset($duration[2]) ? ['day' => 1, 'month' => 2, 'year' => 3][rtrim(strtolower($duration[2]), 's')] : null),
         ], fn ($value) => $value !== null && $value !== ''));
+    }
+
+    private static function canonicalSector(?string $sector): ?string
+    {
+        $sector = trim((string) $sector);
+        $sector = preg_replace('/\s+and\s+|\s*&\s*/i', ' & ', $sector);
+        foreach (self::SECTORS as $option) {
+            if (strcasecmp($sector, $option) === 0) {
+                return $option;
+            }
+        }
+
+        return null;
     }
 
     private function descriptionField(string $description, string $labels): ?string
