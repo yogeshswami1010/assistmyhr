@@ -35,6 +35,7 @@ class Kernel extends ConsoleKernel
         }
         $schedule->command('candidate-emails:import-replies')->everyMinute()->withoutOverlapping();
         $schedule->command('client-reviews:notify')->everyMinute()->withoutOverlapping();
+        $schedule->command('whatjobs:sync')->everyMinute()->withoutOverlapping();
         // Moved to routes/console.php
     }
 

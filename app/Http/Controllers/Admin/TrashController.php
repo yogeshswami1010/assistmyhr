@@ -142,6 +142,13 @@ class TrashController extends AdminBaseController
             return redirect()->back()->withErrors(['trash' => 'This job has applicants and cannot be permanently deleted. Applicants and their records are preserved. You can restore the job.']);
         }
 
+        if ($type === 'job' && !empty($item->whatjobs_sync['active'])) {
+            app(\App\Services\WhatJobsPublisher::class)->sync($item, false);
+            if (!empty($item->fresh()->whatjobs_sync['active'])) {
+                return redirect()->back()->withErrors(['trash' => 'WhatJobs could not pause this posting. Try again before permanently deleting the job.']);
+            }
+        }
+
         if ($type === 'application' && $item->photo) {
             Storage::delete('candidate-photos/'.$item->photo);
         }

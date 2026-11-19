@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'whatjobs' => [
+        'token' => env('WHATJOBS_FEED_TOKEN'),
+        'application_type_field' => env('WHATJOBS_APPLICATION_TYPE_FIELD', 'jobApplicationType'),
+    ],
     'microsoft_reply' => [
         'client_id' => env('MICROSOFT_REPLY_CLIENT_ID'),
         'client_secret' => env('MICROSOFT_REPLY_CLIENT_SECRET'),

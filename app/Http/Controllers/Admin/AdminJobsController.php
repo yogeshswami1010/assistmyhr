@@ -18,6 +18,7 @@ use App\JobSkill;
 use App\JobType;
 use App\Notifications\NewJobOpening;
 use App\Question;
+use App\Services\WhatJobsPublisher;
 use App\Skill;
 use App\Support\RaDataTableHtml;
 use App\WorkExperience;
@@ -50,6 +51,20 @@ class AdminJobsController extends AdminBaseController
                 $job->{$field} = $request->boolean($field);
             }
         }
+        if ($request->has('publish_on_whatjobs')) {
+            $job->publish_on_whatjobs = $request->boolean('publish_on_whatjobs');
+            if ($job->publish_on_whatjobs) {
+                $job->whatjobs_settings = $request->validated('whatjobs');
+            }
+        }
+    }
+
+    private function syncWhatJobs(Job $job, string $message): string
+    {
+        $publishingEnabled = !config('saas.enabled') || !empty($this->tenantFeatures['job_board_publishing']);
+        $result = app(WhatJobsPublisher::class)->sync($job, $publishingEnabled);
+
+        return $result ? $message.' '.e($result) : $message;
     }
 
     /**
@@ -118,7 +133,7 @@ class AdminJobsController extends AdminBaseController
         $job->setPostingStatus($current === 'open' ? Job::STATUS_CLOSED : Job::STATUS_OPEN);
         $job->save();
 
-        return Reply::successWithData(__('messages.updatedSuccessfully'), ['new_status' => $job->status]);
+        return Reply::successWithData($this->syncWhatJobs($job, __('messages.updatedSuccessfully')), ['new_status' => $job->status]);
     }
 
     public function bulkDestroy(Request $request)
@@ -290,7 +305,7 @@ class AdminJobsController extends AdminBaseController
 
         event(new JobAlertEvent($job));
 
-        return Reply::redirect(route('admin.jobs.index'), __('menu.jobs').' '.__('messages.createdSuccessfully'));
+        return Reply::redirect(route('admin.jobs.index'), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.createdSuccessfully')));
     }
 
     /**
@@ -462,7 +477,7 @@ class AdminJobsController extends AdminBaseController
 
         $this->syncJobStatuses($id, $request);
 
-        return Reply::redirect(route('admin.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));
+        return Reply::redirect(route('admin.jobs.index'), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.updatedSuccessfully')));
     }
 
     private function setJobPay(Job $job, StoreJob $request): void
@@ -603,9 +618,14 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('delete_jobs'), 403);
 
-        Job::destroy($id);
+        $job = Job::find($id);
+        if ($job) {
+            $job->delete();
+        }
 
-        return Reply::success('Job moved to Trash. Applicants have been preserved.');
+        $message = 'Job moved to Trash. Applicants have been preserved.';
+
+        return Reply::success($job ? $this->syncWhatJobs($job, $message) : $message);
     }
 
     public function data()
@@ -882,7 +902,7 @@ class AdminJobsController extends AdminBaseController
         $job->status = Job::STATUS_OPEN;
         $job->save();
 
-        return Reply::success(__('messages.updatedSuccessfully'));
+        return Reply::success($this->syncWhatJobs($job, __('messages.updatedSuccessfully')));
     }
 
     public function aiGenerateContent(Request $request)
