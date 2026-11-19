@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\AiApiKey;
 use App\ApplicationStatus;
 use App\Company;
+use App\Country;
 use App\Events\JobAlertEvent;
 use App\Helper\Reply;
 use App\Http\Requests\StoreJob;
@@ -283,9 +284,7 @@ class AdminJobsController extends AdminBaseController
 
       // Handle manual location entry
         if ($request->filled('location_new')) {
-            $newLocation = JobLocation::firstOrCreate(
-                ['location' => trim($request->location_new)]
-            );
+            $newLocation = $this->findOrCreateJobLocation(trim($request->location_new), $this->jobLocationCountryId($request));
             $locationIds = [$newLocation->id];
         } else {
             $locationIds = $request->location_id ?? [];
@@ -456,9 +455,12 @@ class AdminJobsController extends AdminBaseController
         $job->questions()->sync($this->jobQuestionsWithResume($request->question));
 
         $locationName = trim((string) $request->location_new);
-        if ($locationName === '' || $locationName !== $job->jobLocation->first()?->location) {
+        $currentLocation = $job->jobLocation->first();
+        $countryId = $this->jobLocationCountryId($request);
+        if ($locationName === '' || $locationName !== $currentLocation?->location
+            || ($countryId !== null && $countryId !== (int) $currentLocation?->country_id)) {
             $locationIds = $locationName !== ''
-                ? [JobLocation::firstOrCreate(['location' => $locationName])->id]
+                ? [$this->findOrCreateJobLocation($locationName, $countryId)->id]
                 : array_filter((array) $request->location_id, fn ($id) => $id && $id !== 'new');
 
             DB::transaction(function () use ($job, $locationIds) {
@@ -516,6 +518,23 @@ class AdminJobsController extends AdminBaseController
 
         $job->work_experience_ids = array_values(array_unique($experienceIds));
         $job->work_experience_id = $experienceIds[0] ?? null;
+    }
+
+    private function jobLocationCountryId(StoreJob $request): ?int
+    {
+        $countryCode = $request->validated('location_country_code');
+
+        return $countryCode ? Country::where('country_code', $countryCode)->value('id') : null;
+    }
+
+    private function findOrCreateJobLocation(string $name, ?int $countryId): JobLocation
+    {
+        $attributes = ['location' => $name];
+        if ($countryId !== null) {
+            $attributes['country_id'] = $countryId;
+        }
+
+        return JobLocation::firstOrCreate($attributes);
     }
 
     private function syncJobStatuses(int $jobId, $request): void

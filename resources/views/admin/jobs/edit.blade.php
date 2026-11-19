@@ -13,3 +13,5 @@
 @endsection
 
 @include('admin.jobs.partials.job-form-scripts')
+
+@include('admin.jobs.partials.job-location-search')

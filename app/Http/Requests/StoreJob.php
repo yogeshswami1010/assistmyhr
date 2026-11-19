@@ -25,6 +25,7 @@ class StoreJob extends CoreRequest
             'company_new'          => 'nullable|string|max:191',
             'category_new'         => 'nullable|string|max:191',
             'location_new'         => 'nullable|string|max:191',
+            'location_country_code' => 'nullable|regex:/^[A-Z]{2}$/D',
 
             // Existing selects
             'company'              => 'nullable',

@@ -77,7 +77,9 @@ class WhatJobsJobDetails
         return array_replace($saved, $addressFromDescription, $this->locationFields($locationParts), array_filter([
             'countryCode' => $postedCountry ?? $locationCountry
                 ?? $countrySuffix
-                ?? $this->countryCode($this->descriptionField($description, 'country')),
+                ?? $this->countryCode($this->descriptionField($description, 'country'))
+                ?? $this->countryCode($saved['countryCode'] ?? null)
+                ?? $this->countryCode(config('services.whatjobs.default_country_code')),
             'jobWorkFrom' => $workFrom,
             'jobEmploymentType' => $employmentType,
             'jobEmploymentSubType' => $employmentSubtype,

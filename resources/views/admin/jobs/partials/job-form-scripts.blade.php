@@ -315,6 +315,9 @@
             });
 
             $('#save-form').click(function () {
+                if (document.getElementById('location_new')?.dataset.locationLookupPending) {
+                    return;
+                }
                 jobRichSyncAll();
                 var serialized = $('#createForm').serializeArray();
                 var requestPayload = {};

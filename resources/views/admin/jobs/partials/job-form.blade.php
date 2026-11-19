@@ -408,6 +408,7 @@
                                         class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
                                         placeholder="{{ __('Enter job location') }}" maxlength="191"
                                         value="{{ old('location_new', $job?->jobLocation->first()?->location) }}">
+                                    <input type="hidden" id="location_country_code" name="location_country_code" value="{{ old('location_country_code') }}">
                                 </div>
                                @php $currentStatus = $job->status ?? 'open'; @endphp
 <div class="form-group mb-0">

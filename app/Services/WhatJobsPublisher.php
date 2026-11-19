@@ -253,14 +253,17 @@ class WhatJobsPublisher
         if ($status === 401) {
             return 'WhatJobs rejected the API token.';
         }
+        $message = $result['message'] ?? null;
+        if (in_array($status, [200, 203, 400], true) && is_string($message)
+            && preg_match('/\bcountrycode\b.*\bmissing\b/i', $message)) {
+            return 'WhatJobs requires a country code. Add the country to the job’s Locations field or configure WHATJOBS_DEFAULT_COUNTRY_CODE.';
+        }
         if ($status === 200 && $accepted) {
-            $message = $result['message'] ?? null;
             $details = is_string($message) && trim($message) !== '' ? ' '.self::cleanResponseMessage($message, $token) : '';
 
             return 'WhatJobs returned no valid posting ID.'.$details.' Check the WhatJobs dashboard before retrying.';
         }
 
-        $message = $result['message'] ?? null;
         if (in_array($status, [200, 203, 400], true) && is_string($message) && trim($message) !== '') {
             return self::cleanResponseMessage($message, $token);
         }
