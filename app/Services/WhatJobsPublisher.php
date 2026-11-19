@@ -70,13 +70,10 @@ class WhatJobsPublisher
             $employmentSubtype = $settings['jobEmploymentSubType'] ?? null;
             $scheduleType = $settings['jobScheduleType'] ?? null;
             $workFrom = $settings['jobWorkFrom'] ?? null;
-            $startDate = $job->publicationDate()?->format('Y-m-d');
             $content = array_filter([
                 'jobEmploymentType' => $employmentType === null ? null : (int) $employmentType,
                 'jobEmploymentSubType' => $employmentSubtype === null ? null : (int) $employmentSubtype,
                 'jobScheduleType' => $scheduleType === null ? null : (int) $scheduleType,
-                'jobStartType' => $startDate === null ? null : 3,
-                'jobStartByDate' => $startDate,
                 'jobSector' => $settings['jobSector'] ?? null,
                 'jobDescription' => $this->description($job),
                 'jobOpeningCount' => filled($job->total_positions) ? (string) $job->total_positions : null,
@@ -96,9 +93,14 @@ class WhatJobsPublisher
 
             $contentHash = hash('sha256', json_encode($content, JSON_THROW_ON_ERROR));
             if (!$remoteId) {
+                $startDate = $job->publicationDate()?->format('Y-m-d');
+                // WhatJobs rejects past dates even when they are formatted correctly.
+                $hasCurrentStartDate = $startDate !== null && $startDate >= today()->toDateString();
                 $add = [
                     'jobTitle' => $job->title,
                     'jobWorkFrom' => $workFrom === null ? null : (int) $workFrom,
+                    'jobStartType' => $hasCurrentStartDate ? 3 : 2,
+                    'jobStartByDate' => $hasCurrentStartDate ? $startDate : null,
                     $applicationField => 2,
                     'jobCommunicationURL' => tenant_route('jobs.jobApply', ['slug' => $job->slug, 'location' => $location?->id]),
                 ];
