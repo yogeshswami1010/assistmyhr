@@ -124,13 +124,13 @@
                     event.preventDefault();
 
                     if (profileRequest) profileRequest.abort();
-                    status.textContent = 'Opening candidate profile…';
-                    status.hidden = false;
+                    status.hidden = true;
 
                     profileRequest = $.getJSON(link.dataset.signProfileUrl)
                         .done(function (response) {
                             if (response.status !== 'success' || !response.view) {
                                 status.textContent = 'Could not open the candidate profile. Please try again.';
+                                status.hidden = false;
                                 return;
                             }
 
@@ -144,6 +144,7 @@
                         .fail(function (_request, reason) {
                             if (reason !== 'abort') {
                                 status.textContent = 'Could not open the candidate profile. Please try again.';
+                                status.hidden = false;
                             }
                         });
                 });
