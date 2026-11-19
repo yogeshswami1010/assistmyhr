@@ -26,6 +26,7 @@
                         <h2 id="applicant-documents-title">Applicant documents</h2>
                         <a class="sign-overview-action" href="{{ tenant_route('admin.job-applications.table') }}">Open Job Applications <i class="fa fa-arrow-right" aria-hidden="true"></i></a>
                     </header>
+                    <p id="sign-profile-status" class="mx-5 my-3 text-sm text-slate-600" role="status" hidden></p>
                     @if(session('document_sign_candidate_removed'))
                         <p class="mx-5 my-3 rounded-lg bg-green-50 p-3 text-green-800" role="status">{{ session('document_sign_candidate_removed') }}</p>
                     @endif
@@ -52,6 +53,7 @@
                                         <tr>
                                             <td>
                                                 <a class="rounded-sm text-blue-700 underline-offset-4 hover:underline focus-visible:underline"
+                                                   data-sign-profile-url="{{ tenant_route('admin.job-applications.show', ['job_application' => $application->id]) }}"
                                                    href="{{ tenant_route('admin.job-applications.table', ['open' => $application->id, 'tab' => 'details']) }}">
                                                     {{ $application->full_name }}
                                                 </a>
@@ -111,6 +113,43 @@
 
 @push('footer-script')
     <script>
+        (function () {
+            var status = document.getElementById('sign-profile-status');
+            if (!status) return;
+
+            var profileRequest;
+            document.querySelectorAll('[data-sign-profile-url]').forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                    event.preventDefault();
+
+                    if (profileRequest) profileRequest.abort();
+                    status.textContent = 'Opening candidate profile…';
+                    status.hidden = false;
+
+                    profileRequest = $.getJSON(link.dataset.signProfileUrl)
+                        .done(function (response) {
+                            if (response.status !== 'success' || !response.view) {
+                                status.textContent = 'Could not open the candidate profile. Please try again.';
+                                return;
+                            }
+
+                            if (window.jaDisposeApplicantProfile) window.jaDisposeApplicantProfile();
+                            $('#right-sidebar-content').html(response.view);
+                            $('#right-sidebar').removeClass('translate-x-full').addClass('translate-x-0');
+                            $('#right-sidebar-backdrop').removeClass('hidden').css('display', 'block');
+                            if (window.initCandidateCalls) window.initCandidateCalls(document.getElementById('candidate-calls'));
+                            status.hidden = true;
+                        })
+                        .fail(function (_request, reason) {
+                            if (reason !== 'abort') {
+                                status.textContent = 'Could not open the candidate profile. Please try again.';
+                            }
+                        });
+                });
+            });
+        })();
+
         document.querySelectorAll('form[data-confirm-sign-removal]').forEach(function (form) {
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
