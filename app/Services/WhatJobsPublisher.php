@@ -245,6 +245,7 @@ class WhatJobsPublisher
         $message = $result['message'] ?? null;
 
         return in_array($result['success'] ?? null, [true, 1, '1', 'true'], true)
+            && !(is_array($message) && $message !== [])
             && !(is_string($message) && preg_match('/^\s*invalid command\b/i', $message));
     }
 
@@ -267,12 +268,33 @@ class WhatJobsPublisher
         if (in_array($status, [200, 203, 400], true) && is_string($message) && trim($message) !== '') {
             return self::cleanResponseMessage($message, $token);
         }
+        if (in_array($status, [200, 203, 400], true) && is_array($message)) {
+            $messages = self::validationMessages($message);
+            if ($messages !== []) {
+                return self::cleanResponseMessage(implode(' ', array_unique($messages)), $token);
+            }
+        }
 
         return match ($status) {
             200 => 'WhatJobs returned HTTP 200 without a recognizable posting confirmation. Check the WhatJobs dashboard before retrying.',
             203, 400 => 'WhatJobs rejected the job details.',
             default => 'WhatJobs did not confirm the request (HTTP '.$status.').',
         };
+    }
+
+    private static function validationMessages(array $errors, string $field = ''): array
+    {
+        $messages = [];
+        foreach ($errors as $key => $error) {
+            $label = is_string($key) ? $key : $field;
+            if (is_array($error)) {
+                array_push($messages, ...self::validationMessages($error, $label));
+            } elseif (is_string($error) && trim($error) !== '') {
+                $messages[] = ($label === '' ? '' : $label.': ').trim($error);
+            }
+        }
+
+        return $messages;
     }
 
     private static function cleanResponseMessage(string $message, string $token): string
