@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 use App\Services\WhatJobsPublisher;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Validation\Rule;
 
 class StoreJob extends CoreRequest
 {
@@ -36,7 +35,7 @@ class StoreJob extends CoreRequest
             // Made job_type_id optional
             'job_type_id'          => 'nullable|exists:job_types,id',
             'work_experience_ids' => 'nullable|array|max:30',
-            'work_experience_ids.*' => ['bail', 'required', 'string', 'max:195', function ($attribute, $value, $fail) {
+            'work_experience_ids.*' => ['nullable', 'string', 'max:195', function ($attribute, $value, $fail) {
                 $isNew = str_starts_with($value, 'new:') && trim(substr($value, 4)) !== '';
                 $isExisting = ctype_digit($value) && \App\WorkExperience::whereKey($value)->exists();
                 if (! $isNew && ! $isExisting) {
@@ -46,42 +45,19 @@ class StoreJob extends CoreRequest
 
             // Made pay_type and salary fields optional / conditional
             'pay_type'             => 'nullable|in:Range,Starting,Maximum,Exact Amount',
-            'starting_salary'      => 'nullable|required_with:pay_type|numeric|min:0',
+            'starting_salary'      => 'nullable|required_with:pay_type',
             'pay_according'        => 'nullable',
             'company_location'     => 'nullable|string|max:191',
         ];
 
         if (request('pay_type') == 'Range') {
-            $rules['maximum_salary'] = 'required|numeric|gt:starting_salary';
+            $rules['maximum_salary'] = 'required|gt:starting_salary';
         }
 
         if ($this->boolean('publish_on_whatjobs')) {
-            $needsLocation = (int) $this->input('whatjobs.jobWorkFrom') !== 4;
-            $isContract = (int) $this->input('whatjobs.jobEmploymentSubType') === 1;
             $rules = array_replace($rules, [
                 'title' => 'required|string|min:3|max:120',
                 'total_positions' => 'required|integer|between:1,100',
-                'whatjobs.countryCode' => 'required|regex:/^[A-Z]{2}$/D',
-                'whatjobs.jobWorkFrom' => ['required', Rule::in(array_keys(WhatJobsPublisher::WORK_FROM))],
-                'whatjobs.jobLocationAddress' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'between:5,64'],
-                'whatjobs.city' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'max:100'],
-                'whatjobs.state' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'max:100'],
-                'whatjobs.zip' => [Rule::requiredIf($needsLocation), 'nullable', 'string', 'between:3,9'],
-                'whatjobs.jobEmploymentType' => ['required', Rule::in(array_keys(WhatJobsPublisher::EMPLOYMENT_TYPE))],
-                'whatjobs.jobEmploymentSubType' => ['required', Rule::in(array_keys(WhatJobsPublisher::EMPLOYMENT_SUBTYPE))],
-                'whatjobs.jobPeriod' => [Rule::requiredIf($isContract), 'nullable', Rule::in(array_keys(WhatJobsPublisher::CONTRACT_PERIOD))],
-                'whatjobs.jobLength' => [Rule::requiredIf($isContract), 'nullable', 'integer', 'min:1'],
-                'whatjobs.jobScheduleType' => ['required', Rule::in(array_keys(WhatJobsPublisher::SCHEDULE))],
-                'whatjobs.jobScheduleTypeOther' => [
-                    Rule::requiredIf((int) $this->input('whatjobs.jobScheduleType') === 12),
-                    'nullable', 'string', function ($attribute, $value, $fail) {
-                        $count = WhatJobsPublisher::wordCount($value);
-                        if ($count < 30 || $count > 300) {
-                            $fail('The WhatJobs custom schedule must contain 30–300 words.');
-                        }
-                    },
-                ],
-                'whatjobs.jobSector' => 'required|string|max:120',
                 'job_description' => ['required', 'string', function ($attribute, $value, $fail) {
                     $count = WhatJobsPublisher::wordCount($value);
                     if ($count < 150 || $count > 1000) {
@@ -116,19 +92,19 @@ class StoreJob extends CoreRequest
     public function messages()
     {
         $msg = [
-            'work_experience_ids.*.required' => __('modules.jobs.workExperience').' '.__('errors.fieldRequired'),
+            'work_experience_ids.required' => __('modules.jobs.workExperience').' '.__('errors.fieldRequired'),
         ];
 
         if (request('pay_type') == 'Range') {
-            $msg['starting_salary.required_with'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
             $msg['maximum_salary.required']  = __('modules.jobs.maximumSalary').' '.__('errors.fieldRequired');
             $msg['maximum_salary.gt']        = __('modules.jobs.maximumSalary').' must be greater than starting salary.';
         } elseif (request('pay_type') == 'Starting') {
-            $msg['starting_salary.required_with'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required'] = __('modules.jobs.startingSalary').' '.__('errors.fieldRequired');
         } elseif (request('pay_type') == 'Maximum') {
-            $msg['starting_salary.required_with'] = __('modules.jobs.maximumSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required'] = __('modules.jobs.maximumSalary').' '.__('errors.fieldRequired');
         } elseif (request('pay_type') == 'Exact Amount') {
-            $msg['starting_salary.required_with'] = __('modules.jobs.exactSalary').' '.__('errors.fieldRequired');
+            $msg['starting_salary.required'] = __('modules.jobs.exactSalary').' '.__('errors.fieldRequired');
         }
 
         return $msg;

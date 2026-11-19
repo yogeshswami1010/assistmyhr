@@ -4,25 +4,13 @@ namespace App\Services;
 
 use App\Job;
 use App\Saas\TenantContext;
+use DomainException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class WhatJobsPublisher
 {
-    public const WORK_FROM = [1 => 'Home', 2 => 'Office', 3 => 'Hybrid', 4 => 'Remote', 5 => 'Onsite'];
-    public const EMPLOYMENT_TYPE = [1 => 'Full-time', 2 => 'Part-time'];
-    public const EMPLOYMENT_SUBTYPE = [
-        1 => 'Contract', 2 => 'Seasonal', 3 => 'Temporary', 4 => 'Permanent', 5 => 'Freelance',
-        6 => 'Apprenticeship', 7 => 'Graduate', 8 => 'Maternity cover',
-    ];
-    public const SCHEDULE = [
-        1 => '8-hour shift', 2 => '10-hour shift', 3 => '12-hour shift', 4 => 'Day shift',
-        5 => 'Night shift', 6 => 'Monday to Friday', 7 => 'Holidays', 8 => 'Weekend availability',
-        9 => 'Weekends only', 10 => 'No weekends', 11 => 'Overtime', 12 => 'Other',
-    ];
-    public const CONTRACT_PERIOD = [1 => 'Days', 2 => 'Months', 3 => 'Years'];
-
     public static function wordCount(string $html): int
     {
         $text = preg_replace('/<[^>]+>/u', ' ', $html);
@@ -60,16 +48,25 @@ class WhatJobsPublisher
                 return null;
             }
 
+            if (!$shouldPublish) {
+                return $this->send($job, $state, 'pause', [
+                    'countryCode' => $state['country'],
+                    'jobIdent' => $remoteId,
+                ], ['active' => false]);
+            }
+
+            $location = $job->jobLocation()->with('country')->orderBy('job_locations.id')->first();
+            try {
+                $settings = app(WhatJobsJobDetails::class)->forJob($job, $location, $state['country'] ?? null);
+            } catch (DomainException $exception) {
+                return $this->recordResult($job, $state, $remoteId ? 'update' : 'add', $exception->getMessage());
+            }
+
             $tenant = app(TenantContext::class)->current();
-            $settings = $job->whatjobs_settings ?? [];
             $identity = [
-                'countryCode' => $state['country'] ?? $settings['countryCode'],
+                'countryCode' => $settings['countryCode'],
                 'jobIdent' => $remoteId ?? ($tenant ? $tenant->id.str_pad((string) $job->id, 10, '0', STR_PAD_LEFT) : (string) $job->id),
             ];
-
-            if (!$shouldPublish) {
-                return $this->send($job, $state, 'pause', $identity, ['active' => false]);
-            }
 
             $applicationField = config('services.whatjobs.application_type_field') === 'jobCommunicationType'
                 ? 'jobCommunicationType' : 'jobApplicationType';
@@ -93,7 +90,6 @@ class WhatJobsPublisher
 
             $contentHash = hash('sha256', json_encode($content, JSON_THROW_ON_ERROR));
             if (!$remoteId) {
-                $location = $job->jobLocation()->orderBy('job_locations.id')->first();
                 $add = [
                     'jobTitle' => $job->title,
                     'jobWorkFrom' => (int) $settings['jobWorkFrom'],
@@ -155,6 +151,10 @@ class WhatJobsPublisher
                     if ($command === 'add') {
                         $changes['id'] = (string) $result['jobID'];
                     }
+                    $url = self::listingUrl($result['jobUrl'] ?? null);
+                    if ($url !== null) {
+                        $changes['url'] = $url;
+                    }
                     $state = array_replace($state, $changes);
                 } else {
                     $error = match ($response->status()) {
@@ -170,6 +170,23 @@ class WhatJobsPublisher
             }
         }
 
+        return $this->recordResult($job, $state, $command, $error);
+    }
+
+    public static function listingUrl(mixed $url): ?string
+    {
+        if (!is_string($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+        $parts = parse_url($url);
+        $host = strtolower($parts['host'] ?? '');
+
+        return ($parts['scheme'] ?? '') === 'https' && !isset($parts['user'])
+            && ($host === 'whatjobs.com' || str_ends_with($host, '.whatjobs.com')) ? $url : null;
+    }
+
+    private function recordResult(Job $job, array $state, string $command, ?string $error): string
+    {
         $state['error'] = $error;
         $state['error_command'] = $error !== null ? $command : null;
         $job->whatjobs_sync = $state;
