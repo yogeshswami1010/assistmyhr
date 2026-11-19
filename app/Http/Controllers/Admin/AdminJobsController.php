@@ -301,7 +301,7 @@ class AdminJobsController extends AdminBaseController
 
         event(new JobAlertEvent($job));
 
-        return Reply::redirect(route('admin.jobs.index'), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.createdSuccessfully')));
+        return Reply::redirect(tenant_route('admin.jobs.index', [], false), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.createdSuccessfully')));
     }
 
     /**
@@ -476,7 +476,7 @@ class AdminJobsController extends AdminBaseController
 
         $this->syncJobStatuses($id, $request);
 
-        return Reply::redirect(route('admin.jobs.index'), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.updatedSuccessfully')));
+        return Reply::redirect(tenant_route('admin.jobs.index', [], false), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.updatedSuccessfully')));
     }
 
     private function setJobPay(Job $job, StoreJob $request): void

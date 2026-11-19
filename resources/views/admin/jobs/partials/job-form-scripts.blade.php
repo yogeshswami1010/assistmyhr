@@ -1,6 +1,8 @@
 @php
     $isEdit = $isEdit ?? false;
-    $jobFormSaveUrl = $isEdit ? route('admin.jobs.update', $job->id) : route('admin.jobs.store');
+    $jobFormSaveUrl = $isEdit
+        ? tenant_route('admin.jobs.update', ['job' => $job->id], false)
+        : tenant_route('admin.jobs.store', [], false);
 @endphp
 @push('footer-script')
     <script src="{{ asset('assets/node_modules_files/select2/dist/js/select2.full.min.js') }}" type="text/javascript"></script>
@@ -134,7 +136,8 @@
 
             $('#category_id').change(function () {
                 var id = $(this).val();
-                var url = "{{ route('admin.job-categories.getSkills', ':id') }}".replace(':id', id);
+                var url = @json(tenant_route('admin.job-categories.getSkills', ['categoryId' => 'CATEGORY_ID'], false))
+                    .replace('CATEGORY_ID', encodeURIComponent(id));
                 var selectedQuestions = $('#job-questions-box input[name="question[]"]:checked').map(function () {
                     return $(this).val();
                 }).get();
@@ -266,7 +269,7 @@
                 jobFormPreviewRefresh();
 
                 $('#addJobType').click(function () {
-                    var url = "{{ route('admin.job-type.create') }}";
+                    var url = @json(tenant_route('admin.job-type.create', [], false));
                     $('#job-aux-modal-title').text(@json(__('modules.jobs.jobType')));
                     $.ajaxModal('#addDepartmentModal', url);
                 });
@@ -334,6 +337,7 @@
                 console.log('save-form request payload:', requestPayload);
                 $.easyAjax({
                     url: jobFormSaveUrl,
+                    sessionExpiredMessage: @json(__('Your session could not be verified. Copy any unsaved changes, then sign in again and reopen this job.')),
                     container: '#createForm',
                     type: 'POST',
                     redirect: true,

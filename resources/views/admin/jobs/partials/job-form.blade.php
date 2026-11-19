@@ -932,7 +932,7 @@
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         @lang('app.save')
                     </button>
-                    <a href="{{ route('admin.jobs.index') }}" class="inline-flex w-full items-center justify-center rounded-xl border border-[#E2DED8] bg-white px-6 py-3 text-[13.5px] font-semibold text-[#8892A0] transition hover:bg-gray-100 hover:text-slate-700">@lang('app.cancel')</a>
+                    <a href="{{ tenant_route('admin.jobs.index', [], false) }}" class="inline-flex w-full items-center justify-center rounded-xl border border-[#E2DED8] bg-white px-6 py-3 text-[13.5px] font-semibold text-[#8892A0] transition hover:bg-gray-100 hover:text-slate-700">@lang('app.cancel')</a>
                 </div>
 
             </div>

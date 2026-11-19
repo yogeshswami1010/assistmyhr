@@ -44,7 +44,7 @@ data.delete('radio_options[]');options.forEach(value=>data.append('radio_options
 }else{data.delete('radio_options[]');data.delete('is_knockout');data.delete('knockout_answer');}
 save.disabled=true;
 try{
-const response=await fetch(@json(tenant_route('admin.questions.store')),{method:'POST',body:data,headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}),result=await response.json();
+const response=await fetch(@json(tenant_route('admin.questions.store', [], false)),{method:'POST',body:data,headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}),result=await response.json();
 if(!response.ok){error.textContent=result.errors?Object.values(result.errors).flat().join('\n'):(result.message||'Could not create question.');return;}
 if(!result.question || !result.view){error.textContent='Could not create question. Please try again.';return;}
 const template=document.createElement('template');template.innerHTML=result.view.trim();const row=template.content.firstElementChild;

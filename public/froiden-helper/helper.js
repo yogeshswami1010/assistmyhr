@@ -63,6 +63,10 @@
         // Default error handler
         if (typeof opt.error != 'function') {
             opt.error = function (jqXHR, textStatus, errorThrown) {
+                if ((jqXHR.status === 401 || jqXHR.status === 419) && opt.sessionExpiredMessage) {
+                    showResponseMessage(opt.sessionExpiredMessage, 'error');
+                    return;
+                }
                 try {
                     var response = JSON.parse(jqXHR.responseText);
                     if (typeof response == 'object') {
