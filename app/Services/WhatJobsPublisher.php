@@ -191,7 +191,7 @@ class WhatJobsPublisher
                 $response = Http::withHeaders(['x-feed-token' => $token])->acceptJson()
                     ->connectTimeout(3)->timeout(8)->withoutRedirecting()->asMultipart()
                     ->post('https://api.whatjobs.com/api/v1/jobs/submit/json', [
-                        'data' => json_encode([['command' => $command] + array_filter($fields, fn ($value) => filled($value))], JSON_THROW_ON_ERROR),
+                        'data' => json_encode([self::requestFields($command, $fields)], JSON_THROW_ON_ERROR),
                     ]);
                 $body = $response->json();
                 $result = self::responseDetails($body);
@@ -217,6 +217,35 @@ class WhatJobsPublisher
         }
 
         return $this->recordResult($job, $state, $command, $error);
+    }
+
+    private static function requestFields(string $command, array $fields): array
+    {
+        $payload = ['command' => $command] + array_filter($fields, fn ($value) => filled($value));
+        if ($command !== 'add') {
+            return $payload;
+        }
+
+        $required = [
+            'countryCode', 'jobIdent', 'jobTitle', 'jobWorkFrom', 'jobEmploymentType',
+            'jobEmploymentSubType', 'jobStartType', 'jobScheduleType', 'jobSector',
+            'jobDescription', 'jobOpeningCount', 'jobCommunicationURL',
+        ];
+        $workFrom = (int) ($payload['jobWorkFrom'] ?? 0);
+        if (in_array($workFrom, [1, 2, 3, 5], true)) {
+            array_push($required, 'jobLocationAddress', 'city', 'state', 'zip');
+        }
+        if ((int) ($payload['jobEmploymentSubType'] ?? 0) === 1) {
+            array_push($required, 'jobLength', 'jobPeriod');
+        }
+        if ((int) ($payload['jobStartType'] ?? 0) === 3) {
+            $required[] = 'jobStartByDate';
+        }
+        if ((int) ($payload['jobScheduleType'] ?? 0) === 12) {
+            $required[] = 'jobScheduleTypeOther';
+        }
+
+        return $payload + array_fill_keys($required, null);
     }
 
     public static function listingUrl(mixed $url): ?string
