@@ -24,9 +24,7 @@
         'cover_letter' => __('modules.jobs.coverLetter'),
         'terms_and_conditions' => __('modules.jobs.termsAndConditions'),
     ];
-    $startDateVal = $job && $job->start_date
-        ? $job->start_date->format('Y-m-d')
-        : \Carbon\Carbon::now()->format('Y-m-d');
+    $startDateVal = $job?->publicationDate()?->format('Y-m-d') ?? now()->toDateString();
     $endDateVal = $job && $job->end_date
         ? $job->end_date->format('Y-m-d')
         : \Carbon\Carbon::now()->addMonth()->format('Y-m-d');
@@ -422,6 +420,13 @@
         @endforeach
     </select>
 </div>
+                                <div class="form-group mb-0">
+                                    <label for="job_start_date" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                                        {{ __('Job start date') }}
+                                    </label>
+                                    <input type="date" id="job_start_date" value="{{ $startDateVal }}" readonly
+                                        class="form-control w-full rounded-xl border border-gray-200 bg-slate-50 px-3.5 py-2.5 text-[13px] text-[#0F1F3D]">
+                                </div>
                             </div>
                             @if(!config('saas.enabled') || !empty($tenantFeatures['job_board_publishing']))
                             <div class="rounded-xl border border-gray-200 p-4">
