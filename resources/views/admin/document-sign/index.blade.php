@@ -29,14 +29,14 @@
                             <td>
                                 @if($application->latestSigningDocument)
                                     @include('admin.document-sign.status', ['offer' => $application->latestSigningDocument])
-                                @elseif($offer)
+                                @elseif($offer?->zoho_sign_request_id)
                                     @include('admin.document-sign.status', ['offer' => $offer])
                                 @else
                                     Ready to upload
                                 @endif
                             </td>
                             <td>
-                                @if($application->latestSigningDocument || $application->status?->isHired())
+                                @if($application->latestSigningDocument || $application->document_sign_added_at)
                                     <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.prepare', ['id' => $application->id]) }}">
                                         {{ $application->latestSigningDocument ? 'View documents' : 'Upload PDF' }}<span class="sr-only"> for {{ $application->full_name }}</span>
                                     </a>
@@ -49,7 +49,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4">Applicants appear here when their status is set to Hired. <a class="text-blue-700 underline" href="{{ tenant_route('admin.job-applications.table') }}">Go to Job Applications</a></td>
+                            <td colspan="4">Open a candidate profile and select Add Sign Document to add them here. <a class="text-blue-700 underline" href="{{ tenant_route('admin.job-applications.table') }}">Go to Job Applications</a></td>
                         </tr>
                     @endforelse
                 </tbody>

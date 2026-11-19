@@ -109,6 +109,13 @@ class JobApplication extends Model
         return $this->hasMany(CandidateSigningDocument::class);
     }
 
+    public function scopeInDocumentSign($query)
+    {
+        return $query->where(fn ($candidate) => $candidate
+            ->whereNotNull('document_sign_added_at')
+            ->orWhereHas('signingDocuments'));
+    }
+
     public function latestSigningDocument()
     {
         return $this->hasOne(CandidateSigningDocument::class)->latestOfMany();

@@ -343,6 +343,7 @@ function jaSaveMarketingLabel(appId) {
                         <i class="fa fa-file-text-o"></i> Job Description
                     </button>
                     @include('admin.job-applications.partials.resume-update-control')
+                    @include('admin.job-applications.partials.document-sign-control')
                     @if($resumeUrl)
                         <a href="{{ $resumeUrl }}" target="_blank" class="ja-pdf-btn ja-current-resume-link"><i class="fa fa-external-link"></i> View</a>
                         <a href="{{ $resumeUrl }}" download class="ja-pdf-btn ja-current-resume-link"><i class="fa fa-download"></i> Download</a>

@@ -649,6 +649,7 @@
                     <button type="button" class="ja-pdf-btn" onclick="jaShowJobDesc()">
                         <i class="fa fa-file-text-o"></i> Job Description
                     </button>
+                    @include('admin.job-applications.partials.document-sign-control')
                     @if($resumeUrl)
                         @include('admin.job-applications.partials.resume-update-control')
                         <a href="{{ $resumeUrl }}" target="_blank" class="ja-pdf-btn ja-current-resume-link"><i class="fa fa-external-link"></i> View</a>

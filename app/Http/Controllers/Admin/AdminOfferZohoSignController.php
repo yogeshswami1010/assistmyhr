@@ -28,12 +28,10 @@ class AdminOfferZohoSignController extends AdminBaseController
                 ->paginate(15, ['*'], 'client_documents')
                 ->withQueryString()
                 ->appends(tenant_parameters());
-            $this->applications = JobApplication::with(['job', 'status', 'onboard', 'latestSigningDocument'])
+            $this->applications = JobApplication::with(['job', 'onboard', 'latestSigningDocument'])
                 ->where(fn ($query) => $query
-                    ->whereHas('status', fn ($status) => $status->hired())
-                    ->orWhereHas('signingDocuments')
-                    ->orWhereHas('onboard', fn ($offer) => $offer
-                        ->where('hired_status', 'offered')->orWhereNotNull('zoho_sign_request_id')))
+                    ->inDocumentSign()
+                    ->orWhereHas('onboard', fn ($offer) => $offer->whereNotNull('zoho_sign_request_id')))
                 ->latest('id')
                 ->paginate(25)
                 ->withQueryString()

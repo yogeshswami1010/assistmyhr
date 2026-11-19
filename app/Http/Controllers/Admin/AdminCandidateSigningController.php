@@ -14,12 +14,21 @@ use RuntimeException;
 
 class AdminCandidateSigningController extends AdminBaseController
 {
+    public function addCandidate(int $id, ZohoSign $zoho)
+    {
+        $this->authorizeSigning($zoho, true);
+        $application = JobApplication::findOrFail($id);
+        JobApplication::whereKey($application->id)->whereNull('document_sign_added_at')
+            ->update(['document_sign_added_at' => now()]);
+
+        return redirect()->to(tenant_route('admin.document-sign.prepare', ['id' => $application->id]), 303);
+    }
+
     public function show(Request $request, ZohoSign $zoho)
     {
         $this->authorizeSigning($zoho);
         $data = $request->validate(['id' => 'required|integer']);
-        $this->application = JobApplication::with(['status', 'onboard'])->findOrFail($data['id']);
-        abort_unless($this->application->status?->isHired() || $this->application->signingDocuments()->exists(), 404);
+        $this->application = JobApplication::inDocumentSign()->with('onboard')->findOrFail($data['id']);
         $this->documents = $this->application->signingDocuments()->latest('id')->get();
         $this->pageTitle = 'Document Sign';
 
@@ -48,8 +57,7 @@ class AdminCandidateSigningController extends AdminBaseController
             ] : ['candidate_id' => 'required|integer']),
             'pdf' => 'required|file|mimes:pdf|extensions:pdf|max:10240',
         ]);
-        $application = $client ? null : JobApplication::with('status')->findOrFail($data['candidate_id']);
-        abort_unless($client || $application->status?->isHired(), 403);
+        $application = $client ? null : JobApplication::inDocumentSign()->findOrFail($data['candidate_id']);
         $email = $client ? $data['client_email'] : $application->email;
 
         if (! $client && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -106,8 +114,8 @@ class AdminCandidateSigningController extends AdminBaseController
     public function editor(int $id, ZohoSign $zoho)
     {
         $this->authorizeSigning($zoho, true);
-        $document = CandidateSigningDocument::with('application.status')->findOrFail($id);
-        abort_unless($document->job_application_id === null || $document->application?->status?->isHired(), 403);
+        $document = CandidateSigningDocument::with('application')->findOrFail($id);
+        abort_unless($document->job_application_id === null || $document->application, 403);
 
         try {
             $status = $zoho->status($document);

@@ -56,7 +56,7 @@
 @section('content')
     <div class="sign-workspace">
         <nav aria-label="Document Sign navigation">
-            <a href="{{ tenant_route('admin.document-sign.index') }}"><i class="fa fa-arrow-left" aria-hidden="true"></i>All applicants</a>
+            <a href="{{ tenant_route('admin.document-sign.index') }}"><i class="fa fa-arrow-left" aria-hidden="true"></i>Document Sign</a>
             @if($application->onboard)
                 <a class="font-semibold text-blue-700 hover:underline" href="{{ tenant_route('admin.document-sign.show', ['id' => $application->onboard->id]) }}">View existing offer</a>
             @endif
@@ -70,7 +70,7 @@
         @endif
 
         <div class="sign-layout">
-            @if($application->status?->isHired() && $user->cans('add_job_applications'))
+            @if($user->cans('add_job_applications'))
                 <form id="signing-upload-form" class="sign-panel sign-upload" method="POST"
                       enctype="multipart/form-data" action="{{ tenant_route('admin.document-sign.store') }}">
                     @csrf
@@ -114,7 +114,7 @@
                                         @if($document->zoho_sign_status === 'completed')
                                             <a class="btn btn-outline-primary" href="{{ tenant_route('admin.document-sign.documents.pdf', ['id' => $document->id]) }}"><i class="fa fa-download" aria-hidden="true"></i>Download signed PDF</a>
                                         @else
-                                            @if($document->zoho_sign_status === 'draft' && $application->status?->isHired())
+                                            @if($document->zoho_sign_status === 'draft')
                                                 <form method="POST" target="_blank" rel="noopener" action="{{ tenant_route('admin.document-sign.documents.editor', ['id' => $document->id]) }}">
                                                     @csrf
                                                     <button class="btn btn-primary" type="submit"><i class="fa fa-external-link" aria-hidden="true"></i>Open Zoho editor</button>

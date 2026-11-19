@@ -1302,7 +1302,8 @@ class AdminJobApplicationController extends AdminBaseController
                 'country', 'state', 'city', 'photo', 'skills', 'skype_id',
                 'cover_letter', 'job_id', 'status_id', 'location_id',
                 'candidate_origin', 'origin_user_id',
-                'is_marketing', 'marketing_label', 'is_temp_staffing', 'temp_staffing_at', 'temp_staffing_by', 'created_at', 'updated_at',
+                'is_marketing', 'marketing_label', 'is_temp_staffing', 'temp_staffing_at', 'temp_staffing_by',
+                'created_at', 'updated_at', 'deleted_at',
             ])
             ->with([
                 'originUser:id,name',
