@@ -33,6 +33,10 @@ class WhatJobsPublisher
 
             $state = $job->whatjobs_sync ?? [];
             $remoteId = $state['id'] ?? null;
+            $tenant = app(TenantContext::class)->current();
+            $submittedIdent = $state['job_ident'] ?? ($tenant
+                ? $tenant->id.str_pad((string) $job->id, 10, '0', STR_PAD_LEFT)
+                : (string) $job->id);
             $active = $state['active'] ?? false;
             $shouldPublish = $publishingEnabled && $job->publish_on_whatjobs && !$job->trashed()
                 && $job->newQuery()->publicJobPage()->whereKey($job->id)->exists();
@@ -44,14 +48,19 @@ class WhatJobsPublisher
             }
 
             // Leave rejected submissions for the recruiter to correct and save again.
-            if ($scheduled && $shouldPublish && self::visibleError($state) !== null) {
+            $error = self::visibleError($state);
+            $usesLegacyId = $remoteId !== null && ($state['job_ident'] ?? null) === null
+                && (string) $remoteId !== $submittedIdent
+                && self::isUnknownJob($error)
+                && str_contains((string) $error, 'ident '.$remoteId.' ');
+            if ($scheduled && $shouldPublish && $error !== null && !$usesLegacyId) {
                 return null;
             }
 
             if (!$shouldPublish) {
                 return $this->send($job, $state, 'pause', [
                     'countryCode' => $state['country'] ?? null,
-                    'jobIdent' => $remoteId,
+                    'jobIdent' => $submittedIdent,
                 ], ['active' => false]);
             }
 
@@ -59,10 +68,9 @@ class WhatJobsPublisher
                 ?? $job->location()->with('country')->first();
             $settings = app(WhatJobsJobDetails::class)->forJob($job, $location, $state['country'] ?? null);
 
-            $tenant = app(TenantContext::class)->current();
             $identity = [
                 'countryCode' => $settings['countryCode'] ?? null,
-                'jobIdent' => $remoteId ?? ($tenant ? $tenant->id.str_pad((string) $job->id, 10, '0', STR_PAD_LEFT) : (string) $job->id),
+                'jobIdent' => $submittedIdent,
             ];
 
             $applicationField = config('services.whatjobs.application_type_field') === 'jobCommunicationType'
@@ -202,6 +210,7 @@ class WhatJobsPublisher
                     if ($command === 'add') {
                         $changes['id'] = (string) $remoteId;
                     }
+                    $changes['job_ident'] = (string) $fields['jobIdent'];
                     $url = self::listingUrl($result['jobUrl'] ?? null);
                     if ($url !== null) {
                         $changes['url'] = $url;
@@ -279,7 +288,13 @@ class WhatJobsPublisher
 
         return in_array($result['success'] ?? null, [true, 1, '1', 'true'], true)
             && !(is_array($message) && $message !== [])
+            && !self::isUnknownJob($message)
             && !(is_string($message) && preg_match('/^\s*invalid command\b/i', $message));
+    }
+
+    private static function isUnknownJob(mixed $message): bool
+    {
+        return is_string($message) && preg_match('/\bjob with ident\s+\d+\s+does not exists?\b/i', $message) === 1;
     }
 
     private static function responseError(int $status, array $result, string $token, bool $accepted): string
