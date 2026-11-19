@@ -50,7 +50,12 @@
                                     @foreach($applications as $application)
                                         @php($offer = $application->onboard)
                                         <tr>
-                                            <td>{{ $application->full_name }}</td>
+                                            <td>
+                                                <a class="rounded-sm text-blue-700 underline-offset-4 hover:underline focus-visible:underline"
+                                                   href="{{ tenant_route('admin.job-applications.table', ['open' => $application->id, 'tab' => 'details']) }}">
+                                                    {{ $application->full_name }}
+                                                </a>
+                                            </td>
                                             <td>{{ $application->job?->title ?? '—' }}</td>
                                             <td>
                                                 @if($application->latestSigningDocument)
