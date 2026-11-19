@@ -17,6 +17,10 @@
             <button type="submit" style="background:transparent;border:0;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer;padding:4px">Resend email</button>
         </form>
     @endif
+    @if(config('saas.enabled') && ($dashboardTenant = app(\App\Saas\TenantContext::class)->current()))
+        <a href="{{ route('saas.workspace', $dashboardTenant->slug) }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Company Login</a>
+        <button type="button" data-ats-install class="rounded-xl px-4 py-2 text-[12.5px] font-semibold" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Install ATS app</button>
+    @endif
     @if($tourAvailable ?? false)
         <a href="{{ tenant_route('admin.dashboard', ['tour' => 1]) }}" class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-4 py-2 rounded-xl" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe">Guided Tour</a>
     @endif
@@ -27,6 +31,9 @@
         </a>
     @endif
     </div>
+    @if(isset($dashboardTenant))
+        <p class="mt-1 text-xs text-slate-500" data-ats-install-status role="status" aria-live="polite"></p>
+    @endif
 @endsection
 
 @push('head-script')
@@ -34,30 +41,6 @@
 @endpush
 
 @section('content')
-@if(config('saas.enabled') && ($dashboardTenant = app(\App\Saas\TenantContext::class)->current()))
-<section class="mb-4 rounded-2xl border border-slate-200 bg-white p-4" aria-labelledby="dashboard-login-title">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 id="dashboard-login-title" class="text-sm font-semibold">Your company login URL</h2><p class="mt-1 text-xs text-slate-500">Save this link to sign in to your company's ATS.</p></div>
-        <div class="flex flex-wrap items-center gap-2">
-            <button type="button" data-ats-install class="rounded-xl px-4 py-2 text-xs font-semibold" style="background:#2563eb;color:#fff">Install ATS app</button>
-            <button type="button" id="dashboard-copy-login" class="rounded-xl px-4 py-2 text-xs font-semibold" style="background:#eff6ff;color:#2563eb">Copy link</button>
-        </div>
-    </div>
-    <a id="dashboard-login-url" href="{{ route('saas.workspace', $dashboardTenant->slug) }}" class="mt-3 block text-sm" style="color:#2563eb;overflow-wrap:anywhere">{{ route('saas.workspace', $dashboardTenant->slug) }}</a>
-    <span id="dashboard-copy-status" role="status" aria-live="polite" class="text-xs text-slate-500"></span>
-    <p class="mt-3 text-xs text-slate-500" data-ats-install-status role="status" aria-live="polite">Install your ATS on your desktop or home screen for quick access.</p>
-</section>
-<script>
-async function copyDashboardLogin(event){
-    event.preventDefault();
-    const link=document.getElementById('dashboard-login-url'),status=document.getElementById('dashboard-copy-status');
-    try{await navigator.clipboard.writeText(link.href);status.textContent='Login link copied.';}
-    catch(error){const range=document.createRange();range.selectNodeContents(link);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);status.textContent='Select and copy your login link.';}
-}
-document.getElementById('dashboard-copy-login').addEventListener('click',copyDashboardLogin);
-document.getElementById('dashboard-login-url').addEventListener('click',copyDashboardLogin);
-</script>
-@endif
 @if(session('status'))<div role="status" class="mb-4 rounded-xl p-4" style="background:#eff6ff;color:#1e40af">{{ session('status') }}</div>@endif
 @if($errors->has('delivery'))<div role="alert" class="mb-4 rounded-xl p-4" style="background:#fff1f2;color:#be123c">{{ $errors->first('delivery') }}</div>@endif
 @if(($showWelcome ?? false) || ($replayTour ?? false)) @include('admin.dashboard.welcome') @endif
