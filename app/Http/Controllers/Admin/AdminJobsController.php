@@ -54,6 +54,13 @@ class AdminJobsController extends AdminBaseController
         }
         if ($request->has('publish_on_whatjobs')) {
             $job->publish_on_whatjobs = $request->boolean('publish_on_whatjobs');
+            $details = $request->validated('whatjobs', []);
+            if ($job->publish_on_whatjobs && $details !== []) {
+                $job->whatjobs_settings = array_filter(
+                    array_replace($job->whatjobs_settings ?? [], $details),
+                    fn ($value) => filled($value)
+                );
+            }
         }
     }
 

@@ -19,6 +19,12 @@ class StoreJob extends CoreRequest
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
             'publish_on_whatjobs' => 'sometimes|boolean',
+            'whatjobs' => 'sometimes|array:jobWorkFrom,jobEmploymentSubType,jobSector,jobLength,jobPeriod',
+            'whatjobs.jobWorkFrom' => 'nullable|integer|between:1,5',
+            'whatjobs.jobEmploymentSubType' => 'nullable|integer|between:1,8',
+            'whatjobs.jobSector' => 'nullable|string|max:120',
+            'whatjobs.jobLength' => 'nullable|integer|min:1',
+            'whatjobs.jobPeriod' => 'nullable|integer|between:1,3',
             'total_positions'    => 'required|numeric',
 
             // New manual-entry fields

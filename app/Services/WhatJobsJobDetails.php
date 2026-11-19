@@ -8,6 +8,13 @@ use App\JobLocation;
 
 class WhatJobsJobDetails
 {
+    public const WORK_ARRANGEMENTS = [1 => 'Home', 2 => 'Office', 3 => 'Hybrid', 4 => 'Remote', 5 => 'Onsite'];
+    public const EMPLOYMENT_SUBTYPES = [
+        1 => 'Contract', 2 => 'Seasonal', 3 => 'Temporary', 4 => 'Permanent',
+        5 => 'Freelance', 6 => 'Apprenticeship', 7 => 'Graduate', 8 => 'Maternity cover',
+    ];
+    public const CONTRACT_PERIODS = [1 => 'Days', 2 => 'Months', 3 => 'Years'];
+
     public function forJob(Job $job, ?JobLocation $location, ?string $postedCountry): array
     {
         $saved = $job->whatjobs_settings ?? [];
@@ -34,7 +41,8 @@ class WhatJobsJobDetails
         $workFrom = $this->matchCode($work, [
             3 => 'hybrid', 4 => 'remote', 1 => 'work[ -]from[ -]home',
             2 => 'office[ -]based|office', 5 => 'on[ -]?site|in[ -]person',
-        ]) ?? $saved['jobWorkFrom'] ?? config('services.whatjobs.default_work_from');
+        ]) ?? config('services.whatjobs.default_work_from');
+        $workFrom = $saved['jobWorkFrom'] ?? $workFrom;
         $scheduleType = $this->matchCode($schedule, [
             1 => '8[ -]hour shifts?', 2 => '10[ -]hour shifts?', 3 => '12[ -]hour shifts?',
             4 => 'day shifts?', 5 => 'night shifts?', 6 => 'mon(?:day)?\s*(?:to|through|[-–])\s*fri(?:day)?',
@@ -49,20 +57,19 @@ class WhatJobsJobDetails
             1 => '(?:on )?contract', 2 => 'seasonal', 3 => 'temporary', 4 => 'permanent',
             5 => 'freelance', 6 => 'apprenticeship', 7 => 'graduate', 8 => 'maternity cover',
         ];
-        $employmentSubtype = $this->matchCode($jobType, $subtypes)
-            ?? $this->matchCode($this->descriptionField($description, 'employment subtype|employment type|job type') ?? '', $subtypes)
+        $employmentSubtype = $saved['jobEmploymentSubType'] ?? $this->matchCode($jobType, $subtypes)
+            ?? $this->matchCode($this->descriptionField($description, 'employment subtype|employment types?|job types?') ?? '', $subtypes)
             ?? $this->matchCode($description, [
                 1 => '(?:days?|months?|years?)\s+(?:fixed-term\s+)?contract|fixed[ -]term contract',
                 4 => 'permanent (?:full[ -]time |part[ -]time )?(?:job|role|position|employment)',
-            ])
-            ?? $saved['jobEmploymentSubType'] ?? null;
+            ]);
         preg_match('/\b(\d+)\s*[- ]?\s*(days?|months?|years?)\s+(?:fixed-term\s+)?contract\b/i', $employment, $duration);
         $category = trim((string) $job->category?->name);
-        $sector = match (strtolower($category)) {
+        $sector = $saved['jobSector'] ?? match (strtolower($category)) {
             'hr' => 'Human Resources',
             'software', 'information technology', 'it' => 'IT & Software',
             'customer service', 'helpdesk' => 'Customer Service & Helpdesk',
-            default => $saved['jobSector'] ?? $category,
+            default => $category,
         };
 
         if ($countrySuffix && count($locationParts) > 1) {
@@ -86,8 +93,8 @@ class WhatJobsJobDetails
             'jobScheduleType' => $scheduleType,
             'jobScheduleTypeOther' => $customSchedule,
             'jobSector' => $sector,
-            'jobLength' => isset($duration[1]) ? (int) $duration[1] : null,
-            'jobPeriod' => isset($duration[2]) ? ['day' => 1, 'month' => 2, 'year' => 3][rtrim(strtolower($duration[2]), 's')] : null,
+            'jobLength' => $saved['jobLength'] ?? (isset($duration[1]) ? (int) $duration[1] : null),
+            'jobPeriod' => $saved['jobPeriod'] ?? (isset($duration[2]) ? ['day' => 1, 'month' => 2, 'year' => 3][rtrim(strtolower($duration[2]), 's')] : null),
         ], fn ($value) => $value !== null && $value !== ''));
     }
 
