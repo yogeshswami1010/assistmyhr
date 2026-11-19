@@ -18,10 +18,22 @@ class AdminCandidateSigningController extends AdminBaseController
     {
         $this->authorizeSigning($zoho, true);
         $application = JobApplication::findOrFail($id);
-        JobApplication::whereKey($application->id)->whereNull('document_sign_added_at')
-            ->update(['document_sign_added_at' => now()]);
+        JobApplication::whereKey($application->id)
+            ->where(fn ($candidate) => $candidate->whereNull('document_sign_added_at')->orWhereNotNull('document_sign_removed_at'))
+            ->update(['document_sign_added_at' => now(), 'document_sign_removed_at' => null]);
 
         return redirect()->to(tenant_route('admin.document-sign.prepare', ['id' => $application->id]), 303);
+    }
+
+    public function removeCandidate(int $id, ZohoSign $zoho)
+    {
+        $this->authorizeSigning($zoho, true);
+        $application = JobApplication::findOrFail($id);
+        JobApplication::whereKey($application->id)->whereNull('document_sign_removed_at')
+            ->update(['document_sign_removed_at' => now()]);
+
+        return redirect()->to(tenant_route('admin.document-sign.index', ['tab' => 'applicants']), 303)
+            ->with('document_sign_candidate_removed', "{$application->full_name} was removed from Document Sign.");
     }
 
     public function show(Request $request, ZohoSign $zoho)

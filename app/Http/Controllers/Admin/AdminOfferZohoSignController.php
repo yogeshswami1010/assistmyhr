@@ -29,6 +29,7 @@ class AdminOfferZohoSignController extends AdminBaseController
                 ->withQueryString()
                 ->appends(tenant_parameters());
             $this->applications = JobApplication::with(['job', 'onboard', 'latestSigningDocument'])
+                ->whereNull('document_sign_removed_at')
                 ->where(fn ($query) => $query
                     ->inDocumentSign()
                     ->orWhereHas('onboard', fn ($offer) => $offer->whereNotNull('zoho_sign_request_id')))

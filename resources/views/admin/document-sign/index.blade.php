@@ -26,6 +26,9 @@
                         <h2 id="applicant-documents-title">Applicant documents</h2>
                         <a class="sign-overview-action" href="{{ tenant_route('admin.job-applications.table') }}">Open Job Applications <i class="fa fa-arrow-right" aria-hidden="true"></i></a>
                     </header>
+                    @if(session('document_sign_candidate_removed'))
+                        <p class="mx-5 my-3 rounded-lg bg-green-50 p-3 text-green-800" role="status">{{ session('document_sign_candidate_removed') }}</p>
+                    @endif
                     @if($applications->isEmpty())
                         <div class="sign-overview-empty">
                             <i class="fa fa-file-text-o" aria-hidden="true"></i>
@@ -40,7 +43,7 @@
                                         <th scope="col">Candidate</th>
                                         <th scope="col">Job</th>
                                         <th scope="col">Signing status</th>
-                                        <th scope="col"><span class="sr-only">Action</span></th>
+                                        <th scope="col"><span class="sr-only">Actions</span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -59,15 +62,27 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($application->latestSigningDocument || $application->document_sign_added_at)
-                                                    <a class="sign-overview-action" href="{{ tenant_route('admin.document-sign.prepare', ['id' => $application->id]) }}">
-                                                        {{ $application->latestSigningDocument || !$user->cans('add_job_applications') ? 'View documents' : 'Upload PDF' }}<span class="sr-only"> for {{ $application->full_name }}</span>
-                                                    </a>
-                                                @elseif($offer)
-                                                    <a class="sign-overview-action" href="{{ tenant_route('admin.document-sign.show', ['id' => $offer->id]) }}">
-                                                        View signing details<span class="sr-only"> for {{ $application->full_name }}</span>
-                                                    </a>
-                                                @endif
+                                                <div class="flex items-center gap-2">
+                                                    @if($application->latestSigningDocument || $application->document_sign_added_at)
+                                                        <a class="sign-overview-action" href="{{ tenant_route('admin.document-sign.prepare', ['id' => $application->id]) }}">
+                                                            {{ $application->latestSigningDocument || !$user->cans('add_job_applications') ? 'View documents' : 'Upload PDF' }}<span class="sr-only"> for {{ $application->full_name }}</span>
+                                                        </a>
+                                                    @elseif($offer)
+                                                        <a class="sign-overview-action" href="{{ tenant_route('admin.document-sign.show', ['id' => $offer->id]) }}">
+                                                            View signing details<span class="sr-only"> for {{ $application->full_name }}</span>
+                                                        </a>
+                                                    @endif
+                                                    @if($user->cans('add_job_applications'))
+                                                        <form method="POST" action="{{ tenant_route('admin.document-sign.candidates.remove', ['id' => $application->id]) }}" class="m-0">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="sign-overview-action sign-overview-remove"
+                                                                    aria-label="Remove {{ $application->full_name }} from Document Sign" title="Remove from Document Sign">
+                                                                <span aria-hidden="true">×</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach

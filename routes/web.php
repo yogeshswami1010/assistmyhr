@@ -387,6 +387,7 @@ Route::middleware('auth')->group(function () {
                 Route::post('clients', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'storeClient'])->name('clients.store');
                 Route::get('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'show'])->name('prepare');
                 Route::post('candidates/{id}', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'addCandidate'])->whereNumber('id')->name('candidates.add');
+                Route::delete('candidates/{id}', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'removeCandidate'])->whereNumber('id')->name('candidates.remove');
                 Route::post('prepare', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'store'])->name('store');
                 Route::post('documents/{id}/editor', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'editor'])->whereNumber('id')->name('documents.editor');
                 Route::post('documents/{id}/sync', [\App\Http\Controllers\Admin\AdminCandidateSigningController::class, 'sync'])->whereNumber('id')->name('documents.sync');

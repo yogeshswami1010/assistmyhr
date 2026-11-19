@@ -71,6 +71,8 @@
     .sign-overview-table td:first-child { font-weight: 650; }
     .sign-overview-table tbody tr:hover { background: #f8fafc; }
     .sign-overview-table .btn, .sign-overview-table .sign-overview-action { padding: 6px 10px; font-size: 12px; min-height: 32px; }
+    .sign-overview-table .sign-overview-remove { min-width: 32px; color: #64748b; font-size: 20px; line-height: 1; }
+    .sign-overview-table .sign-overview-remove:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
     .sign-overview-status {
         display: inline-block;
         padding: 4px 9px;
