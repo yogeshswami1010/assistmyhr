@@ -105,7 +105,7 @@
         @endif
         @if(app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration'))
         <a href="{{ route('admin.consortium-registrations.index') }}" class="ra-nav-link {{ request()->is('admin/consortium-registrations*') ? 'on' : '' }}">
-            <span class="ra-ni" aria-hidden="true"><i class="fa fa-address-card-o"></i></span>
+            <span class="ra-ni" aria-hidden="true"><x-ra-sidebar-icon name="consortium-registrations" /></span>
             <span class="ra-nl">Consortium Registrations</span>
         </a>
         @endif
