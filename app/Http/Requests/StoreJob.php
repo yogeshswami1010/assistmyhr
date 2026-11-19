@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Requests;
-use App\Services\WhatJobsPublisher;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Request;
 
@@ -52,19 +51,6 @@ class StoreJob extends CoreRequest
 
         if (request('pay_type') == 'Range') {
             $rules['maximum_salary'] = 'required|gt:starting_salary';
-        }
-
-        if ($this->boolean('publish_on_whatjobs')) {
-            $rules = array_replace($rules, [
-                'title' => 'required|string|min:3|max:120',
-                'total_positions' => 'required|integer|between:1,100',
-                'job_description' => ['required', 'string', function ($attribute, $value, $fail) {
-                    $count = WhatJobsPublisher::wordCount($value);
-                    if ($count < 150 || $count > 1000) {
-                        $fail('WhatJobs requires a job description of 150–1,000 words.');
-                    }
-                }],
-            ]);
         }
 
         return $rules;

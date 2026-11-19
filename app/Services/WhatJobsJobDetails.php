@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Country;
 use App\Job;
 use App\JobLocation;
-use DomainException;
 
 class WhatJobsJobDetails
 {
@@ -75,7 +74,7 @@ class WhatJobsJobDetails
             'state' => $this->descriptionField($description, 'state|province|region'),
             'zip' => $this->descriptionField($description, 'postal code|zip code|postcode'),
         ]);
-        $settings = array_replace($saved, $addressFromDescription, $this->locationFields($locationParts), array_filter([
+        return array_replace($saved, $addressFromDescription, $this->locationFields($locationParts), array_filter([
             'countryCode' => $postedCountry ?? $locationCountry
                 ?? $countrySuffix
                 ?? $this->countryCode($this->descriptionField($description, 'country')),
@@ -88,30 +87,6 @@ class WhatJobsJobDetails
             'jobLength' => isset($duration[1]) ? (int) $duration[1] : null,
             'jobPeriod' => isset($duration[2]) ? ['day' => 1, 'month' => 2, 'year' => 3][rtrim(strtolower($duration[2]), 's')] : null,
         ], fn ($value) => $value !== null && $value !== ''));
-
-        $required = [
-            'countryCode' => 'country in Locations', 'jobEmploymentType' => 'full-time or part-time employment',
-            'jobEmploymentSubType' => 'employment subtype (such as permanent or contract)',
-            'jobScheduleType' => 'work schedule in the job description', 'jobSector' => 'job category',
-        ];
-        if (!$postedCountry) {
-            $required['jobWorkFrom'] = 'work arrangement required by WhatJobs';
-            if ($workFrom !== null && (int) $workFrom !== 4) {
-                $required += ['jobLocationAddress' => 'street address', 'city' => 'city', 'state' => 'state or province', 'zip' => 'postal code'];
-            }
-        }
-        if ((int) $employmentSubtype === 1) {
-            $required['jobLength'] = $required['jobPeriod'] = 'contract duration in the job description (such as 6-month contract)';
-        }
-        if ((int) $scheduleType === 12) {
-            $required['jobScheduleTypeOther'] = 'custom schedule';
-        }
-        $missing = array_unique(array_filter($required, fn ($label, $key) => blank($settings[$key] ?? null), ARRAY_FILTER_USE_BOTH));
-        if ($missing) {
-            throw new DomainException('WhatJobs needs these details in the saved job: '.implode(', ', $missing).'.');
-        }
-
-        return $settings;
     }
 
     private function descriptionField(string $description, string $labels): ?string

@@ -2,6 +2,7 @@
     $whatJobsSelected = old('publish_on_whatjobs', $isEdit && $job?->publish_on_whatjobs);
     $whatJobsSync = $job?->whatjobs_sync ?? [];
     $whatJobsUrl = \App\Services\WhatJobsPublisher::listingUrl($whatJobsSync['url'] ?? null);
+    $whatJobsError = \App\Services\WhatJobsPublisher::visibleError($whatJobsSync);
 @endphp
 <div class="mt-3">
     <input type="hidden" name="publish_on_whatjobs" value="0">
@@ -18,13 +19,12 @@
             <a class="mt-1 inline-block text-xs text-blue-700 underline" href="{{ $whatJobsUrl }}"
                 target="_blank" rel="noopener noreferrer">View on WhatJobs</a>
         @endif
-    @elseif($whatJobsSelected && empty($whatJobsSync['error']))
+    @elseif($whatJobsSelected && $whatJobsError === null)
         <p class="mt-1 text-xs text-slate-600">Waiting for submission to WhatJobs.</p>
     @endif
-    @if(!empty($whatJobsSync['error']))
+    @if($whatJobsError !== null)
         <p class="mt-1 text-xs font-semibold text-amber-800">
-            {{ !empty($whatJobsSync['id']) ? 'Last sync failed.' : 'Posting could not be confirmed.' }}
-            {{ $whatJobsSync['error'] }}
+            {{ $whatJobsError }}
         </p>
     @endif
 </div>

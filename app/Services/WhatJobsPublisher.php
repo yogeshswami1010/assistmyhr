@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Job;
 use App\Saas\TenantContext;
-use DomainException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -44,56 +43,51 @@ class WhatJobsPublisher
             }
 
             // Leave rejected submissions for the recruiter to correct and save again.
-            if ($scheduled && $shouldPublish && !empty($state['error'])) {
+            if ($scheduled && $shouldPublish && self::visibleError($state) !== null) {
                 return null;
             }
 
             if (!$shouldPublish) {
                 return $this->send($job, $state, 'pause', [
-                    'countryCode' => $state['country'],
+                    'countryCode' => $state['country'] ?? null,
                     'jobIdent' => $remoteId,
                 ], ['active' => false]);
             }
 
             $location = $job->jobLocation()->with('country')->orderBy('job_locations.id')->first()
                 ?? $job->location()->with('country')->first();
-            try {
-                $settings = app(WhatJobsJobDetails::class)->forJob($job, $location, $state['country'] ?? null);
-            } catch (DomainException $exception) {
-                return $this->recordResult($job, $state, $remoteId ? 'update' : 'add', $exception->getMessage());
-            }
+            $settings = app(WhatJobsJobDetails::class)->forJob($job, $location, $state['country'] ?? null);
 
             $tenant = app(TenantContext::class)->current();
             $identity = [
-                'countryCode' => $settings['countryCode'],
+                'countryCode' => $settings['countryCode'] ?? null,
                 'jobIdent' => $remoteId ?? ($tenant ? $tenant->id.str_pad((string) $job->id, 10, '0', STR_PAD_LEFT) : (string) $job->id),
             ];
 
             $applicationField = config('services.whatjobs.application_type_field') === 'jobCommunicationType'
                 ? 'jobCommunicationType' : 'jobApplicationType';
-            $description = $job->job_description;
-            $experience = $job->work_experience_label;
-            if (filled($experience) && !str_contains($description, $experience)) {
-                $withExperience = $description.'<p>Work experience: '.e($experience).'</p>';
-                if (self::wordCount($withExperience) <= 1000) {
-                    $description = $withExperience;
+            $employmentType = $settings['jobEmploymentType'] ?? null;
+            $employmentSubtype = $settings['jobEmploymentSubType'] ?? null;
+            $scheduleType = $settings['jobScheduleType'] ?? null;
+            $workFrom = $settings['jobWorkFrom'] ?? null;
+            $content = array_filter([
+                'jobEmploymentType' => $employmentType === null ? null : (int) $employmentType,
+                'jobEmploymentSubType' => $employmentSubtype === null ? null : (int) $employmentSubtype,
+                'jobScheduleType' => $scheduleType === null ? null : (int) $scheduleType,
+                'jobSector' => $settings['jobSector'] ?? null,
+                'jobDescription' => $this->description($job),
+                'jobOpeningCount' => filled($job->total_positions) ? (string) $job->total_positions : null,
+                'jobReferenceId' => $job->job_code ?: (string) $job->id,
+                'jobSkills' => $job->skills()->with('skill')->get()->pluck('skill.name')->filter()->unique()->values()->all(),
+            ], fn ($value) => filled($value));
+            if ((int) $employmentSubtype === 1) {
+                foreach (['jobPeriod', 'jobLength'] as $field) {
+                    if (isset($settings[$field])) {
+                        $content[$field] = (int) $settings[$field];
+                    }
                 }
             }
-            $content = [
-                'jobEmploymentType' => (int) $settings['jobEmploymentType'],
-                'jobEmploymentSubType' => (int) $settings['jobEmploymentSubType'],
-                'jobScheduleType' => (int) $settings['jobScheduleType'],
-                'jobStartType' => 1,
-                'jobSector' => $settings['jobSector'],
-                'jobDescription' => $description,
-                'jobOpeningCount' => (string) (int) $job->total_positions,
-                'jobReferenceId' => $job->job_code ?: (string) $job->id,
-            ];
-            if ($content['jobEmploymentSubType'] === 1) {
-                $content['jobPeriod'] = (int) $settings['jobPeriod'];
-                $content['jobLength'] = (int) $settings['jobLength'];
-            }
-            if ($content['jobScheduleType'] === 12) {
+            if ((int) $scheduleType === 12 && filled($settings['jobScheduleTypeOther'] ?? null)) {
                 $content['jobScheduleTypeOther'] = $settings['jobScheduleTypeOther'];
             }
 
@@ -101,11 +95,11 @@ class WhatJobsPublisher
             if (!$remoteId) {
                 $add = [
                     'jobTitle' => $job->title,
-                    'jobWorkFrom' => (int) $settings['jobWorkFrom'],
+                    'jobWorkFrom' => $workFrom === null ? null : (int) $workFrom,
                     $applicationField => 2,
                     'jobCommunicationURL' => tenant_route('jobs.jobApply', ['slug' => $job->slug, 'location' => $location?->id]),
                 ];
-                if ($add['jobWorkFrom'] !== 4) {
+                if ((int) $workFrom !== 4) {
                     $add += array_intersect_key($settings, array_flip(['city', 'state', 'zip', 'jobLocationAddress']));
                 }
                 if ($job->company?->show_in_frontend === 'true') {
@@ -141,6 +135,46 @@ class WhatJobsPublisher
         });
     }
 
+    private function description(Job $job): string
+    {
+        $description = $job->job_description;
+        $details = [
+            'Work experience' => $job->work_experience_label,
+            'Salary' => $job->show_salary ? $this->salary($job) : null,
+        ];
+        foreach ($details as $label => $value) {
+            if (filled($value) && !str_contains($description, $value)) {
+                $extended = $description.'<p>'.$label.': '.e($value).'</p>';
+                if (self::wordCount($extended) <= 1000) {
+                    $description = $extended;
+                }
+            }
+        }
+
+        return $description;
+    }
+
+    private function salary(Job $job): ?string
+    {
+        $amount = match ($job->pay_type) {
+            'Range' => implode('–', array_filter([$job->starting_salary, $job->maximum_salary], fn ($value) => filled($value))),
+            'Maximum' => filled($job->maximum_salary ?: $job->starting_salary) ? 'Up to '.($job->maximum_salary ?: $job->starting_salary) : null,
+            'Starting' => filled($job->starting_salary) ? 'From '.$job->starting_salary : null,
+            default => $job->starting_salary,
+        };
+
+        return filled($amount)
+            ? trim($amount.' '.($job->currency?->currency_code ?? '')).($job->pay_according ? ' / '.$job->pay_according : '')
+            : null;
+    }
+
+    public static function visibleError(array $state): ?string
+    {
+        $error = $state['error'] ?? null;
+
+        return $error && !str_starts_with($error, 'WhatJobs needs these details in the saved job:') ? $error : null;
+    }
+
     private function send(Job $job, array $state, string $command, array $fields, array $changes): string
     {
         $token = trim((string) config('services.whatjobs.token'));
@@ -152,7 +186,7 @@ class WhatJobsPublisher
                 $response = Http::withHeaders(['x-feed-token' => $token])->acceptJson()
                     ->connectTimeout(3)->timeout(8)->withoutRedirecting()->asMultipart()
                     ->post('https://api.whatjobs.com/api/v1/jobs/submit/json', [
-                        'data' => json_encode([['command' => $command] + $fields], JSON_THROW_ON_ERROR),
+                        'data' => json_encode([['command' => $command] + array_filter($fields, fn ($value) => filled($value))], JSON_THROW_ON_ERROR),
                     ]);
                 $result = self::responseDetails($response->json());
                 if ($response->status() === 200 && ($result['success'] ?? null) === true
