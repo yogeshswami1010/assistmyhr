@@ -40,9 +40,10 @@ class EndDateStatus extends Command
     {
         $current_date = now()->format('Y-m-d');
 
-        Job::whereDate('end_date', '<', $current_date)->update([
-            'status' => 'inactive',
-        ]);
+        Job::open()
+            ->where('end_date', 'not like', '0000-00-00%')
+            ->whereDate('end_date', '<', $current_date)
+            ->update(['status' => 'inactive']);
 
         $this->info('status update Successfully.');
     }

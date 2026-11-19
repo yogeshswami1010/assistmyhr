@@ -110,6 +110,15 @@ class Job extends Model
         return str_starts_with((string) $this->getRawOriginal('end_date'), '0000-00-00') ? null : $this->end_date;
     }
 
+    public function setPostingStatus(string $status): void
+    {
+        $this->status = $status;
+
+        if ($status === self::STATUS_OPEN && $this->publicationEndDate()?->lt(today())) {
+            $this->end_date = null;
+        }
+    }
+
     public function joobleRegion(): string
     {
         return $this->jobLocation->pluck('location')->map(fn ($location) => trim((string) $location))->filter()->unique()->implode(', ')

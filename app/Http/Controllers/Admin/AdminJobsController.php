@@ -115,7 +115,7 @@ class AdminJobsController extends AdminBaseController
         }
 
         $current = in_array($job->status, ['closed', 'inactive']) ? 'closed' : 'open';
-        $job->status = $current === 'open' ? 'closed' : 'open';
+        $job->setPostingStatus($current === 'open' ? Job::STATUS_CLOSED : Job::STATUS_OPEN);
         $job->save();
 
         return Reply::successWithData(__('messages.updatedSuccessfully'), ['new_status' => $job->status]);
@@ -402,7 +402,9 @@ class AdminJobsController extends AdminBaseController
             $job->category_id = $request->category_id;
         }
         $job->start_date = $request->filled('start_date') ? $request->start_date : ($job->publicationDate() ?? now()->toDateString());
-        $job->status = $request->input('status', $job->status);
+        if ($request->filled('status')) {
+            $job->setPostingStatus($request->input('status'));
+        }
         $job->job_type_id = $request->job_type_id;
         $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
         $this->setJobPay($job, $request);

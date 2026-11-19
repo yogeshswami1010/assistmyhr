@@ -39,9 +39,10 @@ class ExpiredJob extends Command
     public function handle()
     {
         $current_date = now()->format('Y-m-d');
-        Job::where('end_date', '<', $current_date)->update([
-            'status' => 'expired',
-        ]);
+        Job::open()
+            ->where('end_date', 'not like', '0000-00-00%')
+            ->whereDate('end_date', '<', $current_date)
+            ->update(['status' => 'expired']);
         $this->info('Expired job update Successfully.');
     }
 }
