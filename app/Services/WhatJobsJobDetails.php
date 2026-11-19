@@ -41,7 +41,7 @@ class WhatJobsJobDetails
         $workFrom = $this->matchCode($work, [
             3 => 'hybrid', 4 => 'remote', 1 => 'work[ -]from[ -]home',
             2 => 'office[ -]based|office', 5 => 'on[ -]?site|in[ -]person',
-        ]) ?? config('services.whatjobs.default_work_from');
+        ]) ?? config('services.whatjobs.default_work_from') ?? 5;
         $workFrom = $saved['jobWorkFrom'] ?? $workFrom;
         $scheduleType = $this->matchCode($schedule, [
             1 => '8[ -]hour shifts?', 2 => '10[ -]hour shifts?', 3 => '12[ -]hour shifts?',
@@ -65,7 +65,10 @@ class WhatJobsJobDetails
             ]);
         preg_match('/\b(\d+)\s*[- ]?\s*(days?|months?|years?)\s+(?:fixed-term\s+)?contract\b/i', $employment, $duration);
         $category = trim((string) $job->category?->name);
-        $sector = $saved['jobSector'] ?? match (strtolower($category)) {
+        $sectorCategory = preg_match('/\bgraphic[ -]design(?:er)?\b/i', (string) $job->title)
+            ? 'graphic design' : strtolower($category);
+        $sector = filled($saved['jobSector'] ?? null) ? $saved['jobSector'] : match ($sectorCategory) {
+            'graphic design', 'graphic designer', 'creative and digital' => 'Creative & Digital',
             'hr' => 'Human Resources',
             'software', 'information technology', 'it' => 'IT & Software',
             'customer service', 'helpdesk' => 'Customer Service & Helpdesk',
