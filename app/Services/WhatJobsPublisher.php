@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\CompanySetting;
 use App\Job;
 use App\Saas\TenantContext;
 use Illuminate\Http\Client\ConnectionException;
@@ -70,7 +71,9 @@ class WhatJobsPublisher
             $employmentSubtype = $settings['jobEmploymentSubType'] ?? null;
             $scheduleType = $settings['jobScheduleType'] ?? null;
             $workFrom = $settings['jobWorkFrom'] ?? null;
+            $companyName = trim((string) CompanySetting::on($job->getConnectionName())->value('company_name'));
             $content = array_filter([
+                'companyName' => $companyName,
                 'jobEmploymentType' => $employmentType === null ? null : (int) $employmentType,
                 'jobEmploymentSubType' => $employmentSubtype === null ? null : (int) $employmentSubtype,
                 'jobScheduleType' => $scheduleType === null ? null : (int) $scheduleType,
@@ -107,10 +110,6 @@ class WhatJobsPublisher
                 if ((int) $workFrom !== 4) {
                     $add += array_intersect_key($settings, array_flip(['city', 'state', 'zip', 'jobLocationAddress']));
                 }
-                if ($job->company?->show_in_frontend === 'true') {
-                    $add['companyName'] = $job->company->company_name;
-                }
-
                 return $this->send($job, $state, 'add', $identity + $content + $add, [
                     'country' => $identity['countryCode'],
                     'active' => true,
