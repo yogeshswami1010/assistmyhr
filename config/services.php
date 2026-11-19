@@ -4,6 +4,9 @@ return [
     'whatjobs' => [
         'token' => env('WHATJOBS_FEED_TOKEN'),
         'application_type_field' => env('WHATJOBS_APPLICATION_TYPE_FIELD', 'jobApplicationType'),
+        'default_work_from' => filter_var(env('WHATJOBS_DEFAULT_WORK_FROM'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 5, 'default' => null],
+        ]),
     ],
     'microsoft_reply' => [
         'client_id' => env('MICROSOFT_REPLY_CLIENT_ID'),

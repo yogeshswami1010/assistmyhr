@@ -55,7 +55,8 @@ class WhatJobsPublisher
                 ], ['active' => false]);
             }
 
-            $location = $job->jobLocation()->with('country')->orderBy('job_locations.id')->first();
+            $location = $job->jobLocation()->with('country')->orderBy('job_locations.id')->first()
+                ?? $job->location()->with('country')->first();
             try {
                 $settings = app(WhatJobsJobDetails::class)->forJob($job, $location, $state['country'] ?? null);
             } catch (DomainException $exception) {
@@ -70,13 +71,21 @@ class WhatJobsPublisher
 
             $applicationField = config('services.whatjobs.application_type_field') === 'jobCommunicationType'
                 ? 'jobCommunicationType' : 'jobApplicationType';
+            $description = $job->job_description;
+            $experience = $job->work_experience_label;
+            if (filled($experience) && !str_contains($description, $experience)) {
+                $withExperience = $description.'<p>Work experience: '.e($experience).'</p>';
+                if (self::wordCount($withExperience) <= 1000) {
+                    $description = $withExperience;
+                }
+            }
             $content = [
                 'jobEmploymentType' => (int) $settings['jobEmploymentType'],
                 'jobEmploymentSubType' => (int) $settings['jobEmploymentSubType'],
                 'jobScheduleType' => (int) $settings['jobScheduleType'],
                 'jobStartType' => 1,
                 'jobSector' => $settings['jobSector'],
-                'jobDescription' => $job->job_description,
+                'jobDescription' => $description,
                 'jobOpeningCount' => (string) (int) $job->total_positions,
                 'jobReferenceId' => $job->job_code ?: (string) $job->id,
             ];
@@ -145,7 +154,7 @@ class WhatJobsPublisher
                     ->post('https://api.whatjobs.com/api/v1/jobs/submit/json', [
                         'data' => json_encode([['command' => $command] + $fields], JSON_THROW_ON_ERROR),
                     ]);
-                $result = $response->json('response');
+                $result = self::responseDetails($response->json());
                 if ($response->status() === 200 && ($result['success'] ?? null) === true
                     && ($command !== 'add' || ctype_digit((string) ($result['jobID'] ?? '')))) {
                     if ($command === 'add') {
@@ -158,7 +167,7 @@ class WhatJobsPublisher
                     $state = array_replace($state, $changes);
                 } else {
                     $error = match ($response->status()) {
-                        203 => is_string($result['message'] ?? null)
+                        203, 400 => is_string($result['message'] ?? null)
                             ? Str::limit(strip_tags(str_replace($token, '[redacted]', $result['message'])), 300)
                             : 'WhatJobs rejected the job details.',
                         401 => 'WhatJobs rejected the API token.',
@@ -183,6 +192,13 @@ class WhatJobsPublisher
 
         return ($parts['scheme'] ?? '') === 'https' && !isset($parts['user'])
             && ($host === 'whatjobs.com' || str_ends_with($host, '.whatjobs.com')) ? $url : null;
+    }
+
+    public static function responseDetails(mixed $body): array
+    {
+        $result = $body['response'] ?? $body[0]['response'] ?? [];
+
+        return is_array($result) ? $result : [];
     }
 
     private function recordResult(Job $job, array $state, string $command, ?string $error): string

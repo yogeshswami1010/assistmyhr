@@ -35,7 +35,7 @@ class WhatJobsJobDetails
         $workFrom = $this->matchCode($work, [
             3 => 'hybrid', 4 => 'remote', 1 => 'work[ -]from[ -]home',
             2 => 'office[ -]based|office', 5 => 'on[ -]?site|in[ -]person',
-        ]) ?? $saved['jobWorkFrom'] ?? null;
+        ]) ?? $saved['jobWorkFrom'] ?? config('services.whatjobs.default_work_from');
         $scheduleType = $this->matchCode($schedule, [
             1 => '8[ -]hour shifts?', 2 => '10[ -]hour shifts?', 3 => '12[ -]hour shifts?',
             4 => 'day shifts?', 5 => 'night shifts?', 6 => 'mon(?:day)?\s*(?:to|through|[-–])\s*fri(?:day)?',
@@ -52,6 +52,10 @@ class WhatJobsJobDetails
         ];
         $employmentSubtype = $this->matchCode($jobType, $subtypes)
             ?? $this->matchCode($this->descriptionField($description, 'employment subtype|employment type|job type') ?? '', $subtypes)
+            ?? $this->matchCode($description, [
+                1 => '(?:days?|months?|years?)\s+(?:fixed-term\s+)?contract|fixed[ -]term contract',
+                4 => 'permanent (?:full[ -]time |part[ -]time )?(?:job|role|position|employment)',
+            ])
             ?? $saved['jobEmploymentSubType'] ?? null;
         preg_match('/\b(\d+)\s*[- ]?\s*(days?|months?|years?)\s+(?:fixed-term\s+)?contract\b/i', $employment, $duration);
         $category = trim((string) $job->category?->name);
@@ -65,10 +69,16 @@ class WhatJobsJobDetails
         if ($countrySuffix && count($locationParts) > 1) {
             array_pop($locationParts);
         }
-        $settings = array_replace($saved, $this->locationFields($locationParts), array_filter([
+        $addressFromDescription = array_filter([
+            'jobLocationAddress' => $this->descriptionField($description, 'street address|worksite address'),
+            'city' => $this->descriptionField($description, 'city'),
+            'state' => $this->descriptionField($description, 'state|province|region'),
+            'zip' => $this->descriptionField($description, 'postal code|zip code|postcode'),
+        ]);
+        $settings = array_replace($saved, $addressFromDescription, $this->locationFields($locationParts), array_filter([
             'countryCode' => $postedCountry ?? $locationCountry
-                ?? $this->countryCode($this->descriptionField($description, 'country'))
-                ?? $countrySuffix,
+                ?? $countrySuffix
+                ?? $this->countryCode($this->descriptionField($description, 'country')),
             'jobWorkFrom' => $workFrom,
             'jobEmploymentType' => $employmentType,
             'jobEmploymentSubType' => $employmentSubtype,
@@ -85,8 +95,8 @@ class WhatJobsJobDetails
             'jobScheduleType' => 'work schedule in the job description', 'jobSector' => 'job category',
         ];
         if (!$postedCountry) {
-            $required['jobWorkFrom'] = 'work arrangement (such as Remote or Onsite) in the job description';
-            if ((int) $workFrom !== 4) {
+            $required['jobWorkFrom'] = 'work arrangement required by WhatJobs';
+            if ($workFrom !== null && (int) $workFrom !== 4) {
                 $required += ['jobLocationAddress' => 'street address', 'city' => 'city', 'state' => 'state or province', 'zip' => 'postal code'];
             }
         }
@@ -146,14 +156,21 @@ class WhatJobsJobDetails
 
     private function locationFields(array $parts): array
     {
-        if (count($parts) === 3 && preg_match('/^(.+?)\s+(\d[\d-]{2,8}|[A-Z]\d[A-Z] \d[A-Z]\d|[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2})$/i', $parts[2], $matches)) {
-            $parts[2] = $matches[1];
+        $postalCode = '\d[\d-]{2,8}|[A-Z]\d[A-Z] \d[A-Z]\d|[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}';
+        $regionIndex = count($parts) - 1;
+        if (in_array(count($parts), [2, 3], true)
+            && preg_match('/^(.+?)\s+('.$postalCode.')$/i', $parts[$regionIndex], $matches)) {
+            $parts[$regionIndex] = $matches[1];
             $parts[] = $matches[2];
         }
-        if (count($parts) !== 4) {
-            return [];
-        }
 
-        return array_combine(['jobLocationAddress', 'city', 'state', 'zip'], $parts);
+        return match (count($parts)) {
+            4 => array_combine(['jobLocationAddress', 'city', 'state', 'zip'], $parts),
+            3 => preg_match('/^(?:'.$postalCode.')$/i', $parts[2])
+                ? array_combine(['city', 'state', 'zip'], $parts)
+                : array_combine(['jobLocationAddress', 'city', 'state'], $parts),
+            2 => array_combine(['city', 'state'], $parts),
+            default => [],
+        };
     }
 }
