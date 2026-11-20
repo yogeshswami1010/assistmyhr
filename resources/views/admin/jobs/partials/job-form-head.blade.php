@@ -61,8 +61,9 @@
         border-radius: 1px;
         background: currentColor;
     }
-    .job-select-add::before { width: 12px; height: 2px; }
-    .job-select-add::after { width: 2px; height: 12px; }
+    .job-select-add::before { width: 8px; height: 1.5px; }
+    .job-select-add::after { width: 1.5px; height: 8px; }
+    .job-form-page #createForm button .fa-plus { font-size: 0.5625rem; }
     .job-select-add:hover { background: #dbeafe; }
     .job-select-add:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
