@@ -243,31 +243,10 @@
 <div class="ja-board-scope -mx-4 -mt-2 flex min-h-[calc(100dvh-9.5rem)] flex-col bg-[#EEF0F5] sm:-mx-6">
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-5 pt-5 sm:px-6">
 
-        {{-- ── Top toolbar ── --}}
-        <div class="mb-0 flex flex-shrink-0 flex-wrap items-center gap-2.5">
-            {{-- View toggle --}}
-            <div class="inline-flex gap-0.5 rounded-[10px] bg-[#F1F3F7] p-0.5">
-                <span class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1A1E2E] shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-                    @lang('app.tableView')
-                </span>
-            </div>
-
-            {{-- Export --}}
-            <button type="button" onclick="exportJobApplication()" class="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E2DED8] bg-white px-3.5 py-[7px] text-[12.5px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB]">
-                <i class="fa fa-upload"></i>
-                @lang('menu.export')
-            </button>
-        </div>
-
         {{-- ── Filter bar (collapsible) ── --}}
         <div id="ja-table-filter-bar" class="border-b border-[#E8E6E1] bg-white mt-3">
             <div class="px-5 sm:px-6">
-                <div class="flex items-center justify-between gap-2 pb-3 pt-0.5">
-                    <h4 class="text-[13px] font-bold text-[#1A1E2E]">@lang('app.filterBy')</h4>
-                   
-                </div>
-                <form id="filter-form" class="flex flex-wrap items-end gap-3.5 pb-3">
+                <form id="filter-form" class="flex flex-wrap items-end gap-3.5 py-3">
 
                     <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
                         <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('app.status')</label>
@@ -309,24 +288,6 @@
                             @empty
                             @endforelse
                         </select>
-                    </div>
-
-                   
-
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[240px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('modules.jobApplication.allQuestion')</label>
-                        <select class="select2 w-full" name="question" id="questions">
-                            <option value="all">@lang('modules.jobApplication.allQuestion')</option>
-                            @forelse($questions as $question)
-                                <option value="{{ $question->id }}">{{ ucfirst($question->question) }}</option>
-                            @empty
-                            @endforelse
-                        </select>
-                    </div>
-
-                    <div class="hidden flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]" id="question_value">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('app.filterBy')</label>
-                        <input type="text" class="form-control rounded-[10px] border-[1.5px] border-[#E2DED8] bg-[#F8F7F4] text-[13px]" name="question_value" id="question-value" placeholder="">
                     </div>
 
                     <div class="flex w-full flex-wrap items-center gap-2.5 pt-1">
@@ -467,8 +428,6 @@
                 company: $('#company').val() || 'all',
                 location: $('#location').val() || 'all',
                 jobs: $('#jobs').val() || 'all',
-                questions: $('#questions').val() || 'all',
-                question_value: $('#question-value').val() || '',
                 knockout: !!jaShowKO
             }));
         } catch (e) {}
@@ -796,10 +755,7 @@
         var company        = $('#company').val()        || 'all';
         var jobs           = $('#jobs').val()           || 'all';
         var location       = $('#location').val()       || 'all';
-        var questions      = $('#questions').val()      || 'all';
-        var question_value = $('#question-value').val() || '';
 
-        console.log('jaLoadTabCounts sending:', { company, jobs, location, questions, question_value });
 
         $.ajax({
             url: '{{ route("admin.job-applications.stage-counts") }}',
@@ -808,8 +764,6 @@
                 company:        company,
                 jobs:           jobs,
                 location:       location,
-                questions:      questions,
-                question_value: question_value
             },
             success: function(res) {
                 console.log('stage-counts response:', res);
@@ -844,10 +798,8 @@
     function tableLoad(type) {
         var status         = $('#status').val();
         var jobs           = $('#jobs').val();
-        var questions      = $('#questions').val();
         var location       = $('#location').val();
         var company        = $('#company').val();
-        var question_value = $('#question-value').val();
         var knockout       = jaShowKO ? 1 : 0;
 
         // Destroy existing instance cleanly
@@ -882,8 +834,6 @@
                     status_name:    jaStatusNameFilter,
                     location:       location,
                     jobs:           jobs,
-                    questions:      questions,
-                    question_value: question_value,
                     company:        company,
                     knockout:       knockout
                 });
@@ -939,7 +889,6 @@
         if (($('#company').val()   || 'all') !== 'all') n++;
         if (($('#jobs').val()      || 'all') !== 'all') n++;
         if (($('#location').val()  || 'all') !== 'all') n++;
-        if (($('#questions').val() || 'all') !== 'all') n++;
         var $b = $('#ja-table-filter-active-count');
         $b.text(n).toggleClass('show', n > 0);
     }
@@ -951,18 +900,7 @@
         $('#toggle-filter').toggleClass('ja-filter-btn-active', $bar.hasClass('ja-filter-open'));
     });
 
-    // ── Question value toggle ────────────────────────────────────
-    $('#question_value').addClass('hidden');
-    $('#questions').on('change', function() {
-        if ($(this).val() === 'all') {
-            $('#question_value').addClass('hidden');
-            $('#question-value').val('');
-        } else {
-            $('#question_value').removeClass('hidden');
-        }
-    });
-
-    // Auto-apply on any filter change (select or text input)
+    // Auto-apply on any filter change
     var jaFilterDebounce;
     function jaApplyFilters() {
         clearTimeout(jaFilterDebounce);
@@ -981,9 +919,6 @@
         jaApplyFilters();
     });
 
-    $('#question-value').on('input', function() {
-        jaApplyFilters();
-    });
     $('#reset-filters').on('click', function() {
         try { sessionStorage.removeItem(jaFilterStorageKey); } catch (e) {}
         window.location.href = '{{ route('admin.job-applications.table') }}';
@@ -1074,19 +1009,6 @@
             }
         });
     });
-
-    // ── Export ───────────────────────────────────────────────────
-    function exportJobApplication() {
-        var startDate = 0, endDate = 0;
-        var status   = $('#status').val();
-        var jobs     = $('#jobs').val();
-        var location = $('#location').val();
-        var url = '{{ route('admin.job-applications.export', [':status',':location',':startDate',':endDate',':jobs']) }}';
-        url = url.replace(':status', status).replace(':location', location)
-                 .replace(':startDate', startDate).replace(':endDate', endDate)
-                 .replace(':jobs', jobs);
-        window.location.href = url;
-    }
 
     // ── Create schedule ──────────────────────────────────────────
     function createSchedule(id) {
@@ -1244,8 +1166,6 @@ if (jobFromUrl) {
     savedFilters.company = 'all';
     savedFilters.location = 'all';
     savedFilters.jobs = jobFromUrl;
-    savedFilters.questions = 'all';
-    savedFilters.question_value = '';
     savedFilters.knockout = false;
     savedFilters.status = statusFromUrl || 'all';
 }
@@ -1265,12 +1185,6 @@ function jaRestoreSelect(selector, value) {
 jaRestoreSelect('#company', savedFilters.company);
 jaRestoreSelect('#location', savedFilters.location);
 jaRestoreSelect('#jobs', savedFilters.jobs);
-jaRestoreSelect('#questions', savedFilters.questions);
-$('#question-value').val(savedFilters.question_value || '');
-if (($('#questions').val() || 'all') !== 'all') {
-    $('#question_value').removeClass('hidden');
-}
-
 jaShowKO = !statusFromUrl && savedFilters.knockout === true;
 jaActiveStageId = restoredStatus;
 jaRestoreSelect('#status', restoredStatus);
