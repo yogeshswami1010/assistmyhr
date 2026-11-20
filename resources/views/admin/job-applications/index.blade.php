@@ -300,7 +300,7 @@
         </div>
 
         {{-- ── Stage tabs ── --}}
-        <div class="flex bg-white border-b border-[#E8E6E1] overflow-x-auto mt-3 rounded-t-[12px]" id="ja-stage-tabs-row">
+        <div class="flex bg-white border-b border-[#E8E6E1] overflow-x-auto mt-3" id="ja-stage-tabs-row" style="border-radius: 0">
 
             {{-- All Applicants tab --}}
             <button
@@ -335,7 +335,7 @@
         </div>
 
         {{-- ── Table ── --}}
-        <div class="jc-table-card table-wrapper ra-dt-wrap w-full overflow-hidden rounded-b-[12px] border border-t-0 border-[#E8E6E1] bg-white shadow-sm">
+        <div class="jc-table-card table-wrapper ra-dt-wrap w-full overflow-hidden border border-t-0 border-[#E8E6E1] bg-white shadow-sm" style="border-radius: 0">
             <table id="myTable" class="jc-cat-table display w-full" style="width:100%">
              <thead>
                 <tr>
