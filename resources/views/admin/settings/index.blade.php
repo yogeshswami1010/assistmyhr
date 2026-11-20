@@ -76,21 +76,21 @@
                             <label for="company_email" class="mb-1.5 flex items-center gap-1 text-[11.5px] font-bold tracking-wide text-[#5A6478]">@lang('modules.accountSettings.companyEmail') <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#B0B8C4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                <input type="email" class="bs-f-input pl-10" id="company_email" name="company_email" value="{{ $global->company_email }}" required>
+                                <input type="email" class="bs-f-input bs-f-input-with-icon" id="company_email" name="company_email" value="{{ $global->company_email }}" required>
                             </div>
                         </div>
                         <div>
                             <label for="company_phone" class="mb-1.5 flex items-center gap-1 text-[11.5px] font-bold tracking-wide text-[#5A6478]">@lang('modules.accountSettings.companyPhone') <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#B0B8C4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                                <input type="tel" class="bs-f-input pl-10" id="company_phone" name="company_phone" value="{{ $global->company_phone }}" required>
+                                <input type="tel" class="bs-f-input bs-f-input-with-icon" id="company_phone" name="company_phone" value="{{ $global->company_phone }}" required>
                             </div>
                         </div>
                         <div>
                             <label for="website" class="mb-1.5 flex items-center gap-1 text-[11.5px] font-bold tracking-wide text-[#5A6478]">@lang('modules.accountSettings.companyWebsite') <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#B0B8C4]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                                <input type="text" class="bs-f-input pl-10" id="website" name="website" value="{{ $global->website }}" required>
+                                <input type="text" class="bs-f-input bs-f-input-with-icon" id="website" name="website" value="{{ $global->website }}" required>
                             </div>
                         </div>
                     </div>

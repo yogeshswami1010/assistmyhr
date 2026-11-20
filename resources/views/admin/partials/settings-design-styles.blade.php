@@ -1,6 +1,7 @@
 {{-- Shared form + card styling for admin settings pages (matches business settings). --}}
 <style>
     .bs-f-input { width: 100%; border: 1.5px solid #E2DED8; border-radius: 11px; padding: 10px 14px; font-size: 13.5px; color: #1A1E2E; background: #fff; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .bs-f-input.bs-f-input-with-icon { padding-left: 2.5rem; }
     .bs-f-input:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09); }
     .bs-f-input::placeholder { color: #C4CBD4; }
     .bs-f-input.bs-readonly { background: #F8F9FB; color: #5A6478; }
