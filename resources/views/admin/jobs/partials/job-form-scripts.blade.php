@@ -134,7 +134,7 @@
                 });
             }
 
-            $('#category_id').change(function () {
+            $('#category_id').on('change', function (event, draftFields) {
                 var id = $(this).val();
                 var url = @json(tenant_route('admin.job-categories.getSkills', ['categoryId' => 'CATEGORY_ID'], false))
                     .replace('CATEGORY_ID', encodeURIComponent(id));
@@ -155,6 +155,9 @@
                                     checkboxClass: 'icheckbox_flat-blue',
                                 });
                             }
+                        }
+                        if (draftFields) {
+                            restoreJobDraftFields(draftFields, '#job_skills, #job-questions-box input');
                         }
                         reinitJobSkillsSelect2();
                         jobFormPreviewRefresh();
@@ -261,6 +264,8 @@
                 $i.val(v).trigger('change');
             });
 
+            @include('admin.jobs.partials.job-form-autosave')
+
             $(document).ready(function () {
                 jobRichInitEditor('job_description_editor', 'job_description');
                 jobRichInitEditor('job_requirement_editor', 'job_requirement');
@@ -315,6 +320,7 @@
                         $('#add-work-experience-inline').trigger('click');
                     }
                 });
+                initJobDraftAutosave();
             });
 
             let savingJob = false;
@@ -338,6 +344,11 @@
                     type: 'POST',
                     redirect: true,
                     data: $('#createForm').serialize() + (saveDraft ? '&save_as_draft=1' : ''),
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            clearJobDraftAutosave();
+                        }
+                    },
                     complete: function () {
                         savingJob = false;
                         $.easyUnblockUI('#createForm');

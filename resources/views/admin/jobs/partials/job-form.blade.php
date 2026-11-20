@@ -894,6 +894,7 @@
                     @endif
                     <a href="{{ tenant_route('admin.jobs.index', [], false) }}" class="inline-flex w-full items-center justify-center rounded-xl border border-[#E2DED8] bg-white px-6 py-3 text-[13.5px] font-semibold text-[#8892A0] transition hover:bg-gray-100 hover:text-slate-700">@lang('app.cancel')</a>
                 </div>
+                <p id="job-draft-autosave-status" role="status" class="text-xs text-slate-600 empty:hidden"></p>
 
             </div>
         </div>
@@ -1052,6 +1053,38 @@ $(document).ready(function () {
     var dragSrc = null;
 
     if (!list) return;
+
+    list.addEventListener('job-draft-read', function (event) {
+        list.querySelectorAll('.job-status-row:not([data-fixed="1"])').forEach(function (row) {
+            event.detail.push({
+                id: row.querySelector('input[name="job_status_id[]"]').value,
+                name: row.querySelector('input[name="job_status_name[]"]').value,
+                color: row.querySelector('input[name="job_status_color[]"]').value,
+            });
+        });
+    });
+
+    list.addEventListener('job-draft-restore', function (event) {
+        const rows = Array.from(list.querySelectorAll('.job-status-row:not([data-fixed="1"])'));
+        const existing = new Map(rows.map(row => [row.querySelector('input[name="job_status_id[]"]').value, row]));
+        for (const stage of event.detail) {
+            if (typeof stage?.id !== 'string' || typeof stage.name !== 'string' ||
+                !/^#[0-9a-f]{6}$/i.test(stage.color)) {
+                continue;
+            }
+            const row = stage.id ? existing.get(stage.id) : makeRow();
+            if (!row) continue;
+            row.querySelector('input[name="job_status_name[]"]').value = stage.name;
+            row.querySelector('input[name="job_status_color[]"]').value = stage.color;
+            list.appendChild(row);
+            existing.delete(stage.id);
+        }
+        rows.forEach(row => {
+            const id = row.querySelector('input[name="job_status_id[]"]').value;
+            if (!id || existing.has(id)) row.remove();
+        });
+        syncEmpty();
+    });
 
     function clearDragIndicators() {
         list.querySelectorAll('.job-status-row').forEach(function (row) {
