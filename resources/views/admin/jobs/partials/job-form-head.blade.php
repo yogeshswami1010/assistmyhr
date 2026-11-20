@@ -35,24 +35,36 @@
         box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
         outline: none !important;
     }
-    .job-company-field { position: relative; }
-    .job-form-page #createForm select#company { padding-right: 4.75rem !important; }
-    .job-company-add {
+    .job-company-field, .job-select-with-add { position: relative; }
+    .job-form-page #createForm .job-select-with-add select.job-form-sel.form-control:not([multiple]) {
+        padding-right: 4.5rem !important;
+    }
+    .job-select-add {
         position: absolute;
-        right: 2rem;
-        top: 50%;
-        transform: translateY(-50%);
-        display: grid;
-        place-items: center;
+        inset: 0 1.75rem 0 auto;
+        margin-block: auto;
+        display: block;
         width: 2rem;
         height: 2rem;
+        padding: 0;
+        border: 0;
         border-radius: 0.5rem;
         color: #2563eb;
         background: #eff6ff;
-        font-size: 1.125rem;
-        line-height: 1;
     }
-    .job-company-add:hover { background: #dbeafe; }
+    .job-select-add::before, .job-select-add::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 1px;
+        background: currentColor;
+    }
+    .job-select-add::before { width: 12px; height: 2px; }
+    .job-select-add::after { width: 2px; height: 12px; }
+    .job-select-add:hover { background: #dbeafe; }
+    .job-select-add:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
     /* Date inputs — same footprint as selects */
     .job-form-page #createForm #date-start.form-control,

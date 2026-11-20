@@ -55,7 +55,7 @@
                                         @lang('Company') <span class="text-red-500">*</span>
                                     </label>
 
-                                    <div id="company-select-wrapper" class="job-company-field" @if(filled(old('company_new'))) hidden @endif>
+                                    <div id="company-select-wrapper" class="job-select-with-add" @if(filled(old('company_new'))) hidden @endif>
                                         <select name="company" id="company"
                                             class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
                                             @disabled(filled(old('company_new')))>
@@ -66,9 +66,9 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <button type="button" id="add-new-company" class="job-company-add"
+                                        <button type="button" id="add-new-company" class="job-select-add"
                                             aria-controls="new-company-wrapper" aria-label="{{ __('Add New Company') }}"
-                                            title="{{ __('Add New Company') }}">+</button>
+                                            title="{{ __('Add New Company') }}"></button>
                                     </div>
 
                                     <div id="new-company-wrapper" class="job-company-field" @unless(filled(old('company_new'))) hidden @endunless>
@@ -215,7 +215,7 @@
                                         @lang('modules.jobs.jobType')
                                     </label>
 
-                                    <div class="flex items-center gap-2">
+                                    <div class="job-select-with-add">
                                         <select name="job_type_id" id="job_type"
                                             class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10">
                                             <option value="">—</option>
@@ -230,10 +230,8 @@
                                         <button type="button"
                                             title="@lang('app.add') @lang('modules.jobs.jobType')"
                                             id="addJobType"
-                                            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-sm text-white shadow-sm transition hover:bg-blue-700"
-                                            aria-label="@lang('app.add') @lang('modules.jobs.jobType')">
-                                            <i class="fa fa-plus" aria-hidden="true"></i>
-                                        </button>
+                                            class="job-select-add"
+                                            aria-label="@lang('app.add') @lang('modules.jobs.jobType')"></button>
                                     </div>
                                 </div>
                                 <div class="form-group mb-0">
