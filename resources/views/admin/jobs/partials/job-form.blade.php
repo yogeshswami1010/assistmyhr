@@ -80,7 +80,7 @@
                                     </select>
 
                                     {{-- New Company Text Field --}}
-                                    <div id="new-company-wrapper" class="relative hidden">
+                                    <div id="new-company-wrapper" class="hidden" style="position: relative">
                                         <input
                                             type="text"
                                             id="company_new"
@@ -91,7 +91,12 @@
                                             class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
                                             value="{{ old('company_new') }}"
                                         >
-                                        <button type="button" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-[#2563EB]" onclick="resetCompanyField()" aria-label="{{ __('Select Company') }}" title="{{ __('Select Company') }}">&times;</button>
+                                        <button type="button"
+                                            class="text-slate-500 hover:text-[#2563EB]"
+                                            style="position: absolute; inset: 0 0 0 auto; width: 2.75rem; display: grid; place-items: center"
+                                            onclick="resetCompanyField()"
+                                            aria-label="{{ __('Select Company') }}"
+                                            title="{{ __('Select Company') }}">&times;</button>
                                     </div>
                                 </div>
 
