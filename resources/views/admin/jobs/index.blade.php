@@ -326,29 +326,22 @@
             + style + '">' + esc(label) + '</span>';
     }
 
-    function updateKpisFromJobs() {
-    document.getElementById('statTotal').textContent =
-        JOBS.length.toLocaleString();
+    function updateKpisFromJobs(jobs) {
+        let open = 0;
+        let closed = 0;
+        let openings = 0;
 
-    document.getElementById('statOpen').textContent =
-        JOBS.filter(function (j) {
-            return j.status === 'open';
-        }).length.toLocaleString();
+        for (const job of jobs) {
+            if (job.status === 'open') open++;
+            if (job.status === 'closed') closed++;
+            openings += Number(job.openings) || 0;
+        }
 
-    document.getElementById('statInactive').textContent =
-        JOBS.filter(function (j) {
-            return j.status === 'closed';
-        }).length.toLocaleString();
-
-    var openings = 0;
-
-    JOBS.forEach(function (j) {
-        openings += Number(j.openings) || 0;
-    });
-
-    document.getElementById('statOpenings').textContent =
-        openings.toLocaleString();
-}
+        document.getElementById('statTotal').textContent = jobs.length.toLocaleString();
+        document.getElementById('statOpen').textContent = open.toLocaleString();
+        document.getElementById('statInactive').textContent = closed.toLocaleString();
+        document.getElementById('statOpenings').textContent = openings.toLocaleString();
+    }
 
     function renderTable() {
         const data = getFiltered();
@@ -356,7 +349,7 @@
         const empty = document.getElementById('jobsEmptyState');
         document.getElementById('jobsShowCount').textContent = data.length;
         document.getElementById('jobsTotalCount').textContent = JOBS.length;
-        updateKpisFromJobs();
+        updateKpisFromJobs(data);
 
         if (!data.length) {
             tbody.innerHTML = '';
