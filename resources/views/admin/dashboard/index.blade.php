@@ -38,6 +38,15 @@
 
 @push('head-script')
     <link rel="stylesheet" href="{{ asset('assets/plugins/jQueryUI/jquery-ui.min.css') }}">
+    <style>
+        .jobs-overview-body { display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; }
+        .jobs-overview-chart { flex: 0 0 8rem; margin-inline: auto; }
+        .jobs-overview-table { flex: 1 1 14rem; border-collapse: collapse; font-size: 0.8125rem; }
+        .jobs-overview-table th, .jobs-overview-table td { padding: 0.5rem 0.375rem; }
+        .jobs-overview-table th { font-size: 0.75rem; font-weight: 600; color: #64748b; }
+        .jobs-overview-table tbody tr { border-top: 1px solid #e8e6e1; }
+        .jobs-overview-table .jobs-overview-number { width: 4rem; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    </style>
 @endpush
 
 @section('content')
@@ -274,14 +283,17 @@
 
             {{-- ================= ROW 2: Jobs Overview + Quick Actions ================= --}}
             @php
-                $jo = $jobsOverview ?? ['total' => 0, 'active' => 0, 'filled' => 0, 'closed' => 0, 'on_hold' => 0];
+                $jo = $jobsOverview ?? ['total' => 0, 'open' => 0, 'filled' => 0, 'closed' => 0, 'on_hold' => 0, 'other' => 0];
                 $segments = [
-                    ['label' => 'Active Jobs', 'count' => $jo['active'],  'color' => '#2563EB'],
-                    ['label' => 'Filled Jobs', 'count' => $jo['filled'],  'color' => '#10B981'],
-                    ['label' => 'Closed Jobs', 'count' => $jo['closed'],  'color' => '#F43F5E'],
-                    ['label' => 'On Hold',     'count' => $jo['on_hold'], 'color' => '#F59E0B'],
+                    ['label' => __('Open Jobs'), 'count' => $jo['open'], 'color' => '#2563EB'],
+                    ['label' => __('Filled Jobs'), 'count' => $jo['filled'], 'color' => '#10B981'],
+                    ['label' => __('Closed Jobs'), 'count' => $jo['closed'], 'color' => '#F43F5E'],
+                    ['label' => __('On Hold'), 'count' => $jo['on_hold'], 'color' => '#F59E0B'],
                 ];
-                $sum = max(1, collect($segments)->sum('count'));
+                if ($jo['other'] > 0) {
+                    $segments[] = ['label' => __('Other'), 'count' => $jo['other'], 'color' => '#64748B'];
+                }
+                $sum = max(1, $jo['total']);
                 $offset = 0;
             @endphp
             <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -290,33 +302,46 @@
                         <h3 class="text-sm font-bold text-[#1A1E2E]">Jobs Overview</h3>
                         <a href="{{ route('admin.jobs.index') }}" class="text-[11.5px] font-semibold text-[#2563EB]">View All</a>
                     </div>
-                    <div class="flex flex-wrap items-center gap-8">
-                        <div class="relative h-32 w-32">
-                            <svg viewBox="0 0 36 36" class="h-32 w-32 -rotate-90">
+                    <div class="jobs-overview-body">
+                        <div class="jobs-overview-chart relative h-32 w-32">
+                            <svg viewBox="0 0 36 36" class="h-32 w-32 -rotate-90" aria-hidden="true">
                                 <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#F0EEE9" stroke-width="4"/>
                                 @foreach($segments as $s)
+                                    @continue(!$s['count'])
                                     @php $pct = $s['count'] / $sum * 100; @endphp
-                                    <circle cx="18" cy="18" r="15.9155" fill="none" stroke="{{ $s['color'] }}" stroke-width="4"
+                                    <circle cx="18" cy="18" r="15.9155" pathLength="100" fill="none" stroke="{{ $s['color'] }}" stroke-width="4"
                                             stroke-dasharray="{{ $pct }} {{ 100 - $pct }}" stroke-dashoffset="{{ -$offset }}"/>
                                     @php $offset += $pct; @endphp
                                 @endforeach
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <span class="text-2xl font-extrabold text-[#1A1E2E]">{{ $jo['total'] }}</span>
-                                <span class="text-[10px] text-[#8892A0]">Total Jobs</span>
+                                <span class="text-2xl font-extrabold text-[#1A1E2E]">{{ number_format($jo['total']) }}</span>
+                                <span class="text-[10px] text-slate-600">{{ __('Total Jobs') }}</span>
                             </div>
                         </div>
-                        <ul class="min-w-[220px] flex-1 space-y-2 text-[12px]">
-                            @foreach($segments as $s)
-                                <li class="flex items-center justify-between">
-                                    <span class="flex items-center gap-2 text-[#3D4A5C]">
-                                        <span class="h-2.5 w-2.5 rounded-full" style="background:{{ $s['color'] }}"></span>{{ $s['label'] }}
-                                    </span>
-                                    <span class="font-semibold text-[#1A1E2E]">{{ $s['count'] }}
-                                        <span class="ml-3 text-[#8892A0]">{{ round($s['count'] / $sum * 100) }}%</span></span>
-                                </li>
-                            @endforeach
-                        </ul>
+                        <table class="jobs-overview-table" aria-label="{{ __('Jobs by status') }}">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="text-left">{{ __('Status') }}</th>
+                                    <th scope="col" class="jobs-overview-number">{{ __('Jobs') }}</th>
+                                    <th scope="col" class="jobs-overview-number">{{ __('Share') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($segments as $s)
+                                    <tr>
+                                        <td>
+                                            <span class="flex items-center gap-2 text-[#3D4A5C]">
+                                                <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:{{ $s['color'] }}" aria-hidden="true"></span>
+                                                {{ $s['label'] }}
+                                            </span>
+                                        </td>
+                                        <td class="jobs-overview-number font-semibold text-[#1A1E2E]">{{ number_format($s['count']) }}</td>
+                                        <td class="jobs-overview-number text-slate-600">{{ round($s['count'] / $sum * 100) }}%</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

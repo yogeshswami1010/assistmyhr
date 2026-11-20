@@ -78,12 +78,17 @@ class AdminDashboardController extends AdminBaseController
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $this->jobsOverview = [
-            'total'   => (int) $jobStatusCounts->sum(),
-            'active'  => (int) ($jobStatusCounts['active'] ?? 0),
-            'filled'  => (int) ($jobStatusCounts['filled'] ?? 0),
-            'closed'  => (int) ($jobStatusCounts['closed'] ?? 0),
-            'on_hold' => (int) ($jobStatusCounts['on_hold'] ?? 0),
+        $totalJobs = (int) $jobStatusCounts->sum();
+        $jobsByStatus = [
+            'open' => (int) ($jobStatusCounts[Job::STATUS_OPEN] ?? 0) + (int) ($jobStatusCounts['active'] ?? 0),
+            'filled' => (int) ($jobStatusCounts[Job::STATUS_FILLED] ?? 0),
+            'closed' => (int) ($jobStatusCounts[Job::STATUS_CLOSED] ?? 0)
+                + (int) ($jobStatusCounts['inactive'] ?? 0) + (int) ($jobStatusCounts['expired'] ?? 0),
+            'on_hold' => (int) ($jobStatusCounts[Job::STATUS_ON_HOLD] ?? 0),
+        ];
+        $this->jobsOverview = $jobsByStatus + [
+            'total' => $totalJobs,
+            'other' => $totalJobs - array_sum($jobsByStatus),
         ];
 
         return view('admin.dashboard.index', $this->data);
