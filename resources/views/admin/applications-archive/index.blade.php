@@ -7,21 +7,6 @@
     <style>
         .ja-board-scope { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
 
-        .ja-filter-btn-active {
-            border-color: #2563eb !important;
-            background: #eff6ff !important;
-            color: #2563eb !important;
-        }
-        .ja-filter-active-count {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 999px;
-            background: #2563eb;
-            color: #fff;
-            display: none;
-        }
-        .ja-filter-active-count.show { display: inline-flex; }
         .hidden { display: none !important; visibility: hidden !important; }
 
         /* ── Skill tag input ─────────────────────────────────────────── */
@@ -105,31 +90,23 @@
     </style>
 @endpush
 
+@section('create-button')
+    <button type="button" onclick="exportJobApplication()"
+        class="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E2DED8] bg-white px-3.5 py-[7px] text-[12.5px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB]">
+        <i class="fa fa-upload"></i> @lang('menu.export')
+    </button>
+
+    <a href="{{ route('admin.job-applications.create') }}"
+        class="inline-flex items-center gap-1.5 rounded-[9px] bg-[#2563EB] px-3.5 py-2.5 text-[12.5px] font-bold text-white shadow-sm transition hover:bg-[#1d4ed8] focus:outline-none">
+        <i class="fa fa-plus"></i> Create Applicant
+    </a>
+@endsection
+
 @section('content')
 @include('admin.partials.candidate-communications')
 <div class="ja-board-scope -mx-4 -mt-2 flex min-h-[calc(100dvh-9.5rem)] flex-col bg-[#EEF0F5] sm:-mx-6">
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-5 pt-5 sm:px-6">
 
-        {{-- Toolbar --}}
-        <div class="mb-[18px] flex flex-shrink-0 flex-wrap items-center gap-2.5">
-
-            <button type="button" id="toggle-filter"
-                class="toggle-filter inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E2DED8] bg-white px-3.5 py-[7px] text-[12.5px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB] focus:outline-none">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                @lang('app.filterResults')
-                <span class="ja-filter-active-count" id="ja-table-filter-active-count">0</span>
-            </button>
-
-            <button type="button" onclick="exportJobApplication()"
-                class="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E2DED8] bg-white px-3.5 py-[7px] text-[12.5px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB]">
-                <i class="fa fa-upload"></i> @lang('menu.export')
-            </button>
-
-            <a href="{{ route('admin.job-applications.create') }}"
-                class="inline-flex items-center gap-1.5 rounded-[9px] bg-[#2563EB] px-3.5 py-2.5 text-[12.5px] font-bold text-white shadow-sm transition hover:bg-[#1d4ed8] focus:outline-none">
-                <i class="fa fa-plus"></i> Create Applicant
-            </a>
-        </div>
 <!-- Add this button somewhere in your admin panel -->
 <button id="run-bulk-parse" class="btn btn-primary" style="
     display: none;
@@ -263,9 +240,6 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
             <div class="px-5 sm:px-6">
                 <div class="flex items-center justify-between gap-2 pb-3 pt-0.5">
                     <h4 class="text-[13px] font-bold text-[#1A1E2E]">@lang('app.filterBy')</h4>
-                    <button type="button" class="toggle-filter flex h-8 w-8 items-center justify-center rounded-lg text-[#8892A0] transition hover:bg-[#EEF0F5]">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
                 </div>
                 <form id="filter-form" class="flex flex-wrap items-end gap-3.5 pb-3">
 
@@ -332,25 +306,6 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                             @empty
                             @endforelse
                         </select>
-                    </div>
-
-                    {{-- Question --}}
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[240px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('modules.jobApplication.allQuestion')</label>
-                        <select class="select2 w-full" name="question" id="questions">
-                            <option value="all">@lang('modules.jobApplication.allQuestion')</option>
-                            @forelse($questions as $question)
-                                <option value="{{ $question->id }}">{{ ucfirst($question->question) }}</option>
-                            @empty
-                            @endforelse
-                        </select>
-                    </div>
-
-                    {{-- Question value (shown when a question is selected) --}}
-                    <div class="hidden flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]" id="question_value">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('app.filterBy')</label>
-                        <input type="text" class="form-control rounded-[10px] border-[1.5px] border-[#E2DED8] bg-[#F8F7F4] text-[13px]"
-                               name="question_value" id="question-value" placeholder="">
                     </div>
 
                     {{-- Actions --}}
@@ -468,7 +423,6 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
         // ── helpers ──────────────────────────────────────────────────────────
         function syncHidden() {
             $hidden.val(tags.join(','));
-            jaTableSyncFilterBadge();
             if (typeof jaApplyFilters === 'function') jaApplyFilters();
         }
 
@@ -612,43 +566,10 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
     // ── Select2 ───────────────────────────────────────────────────────────────
     $('#filter-form select.select2').select2({ width: '100%' });
 
-    // ── Question value toggle ─────────────────────────────────────────────────
-    $('#question_value').addClass('hidden');
-    $('#questions').on('change', function () {
-        if ($(this).val() === 'all') {
-            $('#question_value').addClass('hidden');
-            $('#question-value').val('');
-        } else {
-            $('#question_value').removeClass('hidden');
-        }
-    });
-
-  
-
-    function jaTableSyncFilterBadge() {
-        var n = 0;
-        if (window.jaGetSkills && window.jaGetSkills())              n++;
-        if (($('#company').val()   || 'all') !== 'all')              n++;
-        if (($('#jobs').val()      || 'all') !== 'all')              n++;
-        if (($('#location').val()  || 'all') !== 'all')              n++;
-        if (($('#status').val()    || 'all') !== 'all')              n++;
-        if (($('#questions').val() || 'all') !== 'all')              n++;
-        var $b = $('#ja-table-filter-active-count');
-        $b.text(n).toggleClass('show', n > 0);
-    }
-
-    // ── Filter toggle bar ─────────────────────────────────────────────────────
-    $('.toggle-filter').on('click', function () {
-        var $bar = $('#ja-table-filter-bar');
-        $bar.toggleClass('ja-filter-open');
-        $('#toggle-filter').toggleClass('ja-filter-btn-active', $bar.hasClass('ja-filter-open'));
-    });
-
     // ── DataTable ─────────────────────────────────────────────────────────────
     var table;
 
     tableLoad();
-    jaTableSyncFilterBadge();
 
     // Auto-apply on any filter change
     var jaFilterDebounce;
@@ -656,15 +577,10 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
         clearTimeout(jaFilterDebounce);
         jaFilterDebounce = setTimeout(function () {
             tableLoad();
-            jaTableSyncFilterBadge();
         }, 250);
     }
 
     $('#filter-form').on('change', 'select', function () {
-        jaApplyFilters();
-    });
-
-    $('#question-value').on('input', function () {
         jaApplyFilters();
     });
 
@@ -678,8 +594,6 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
         var jobs           = $('#jobs').val();
         var location       = $('#location').val();
         var status         = $('#status').val();
-        var questions      = $('#questions').val();
-        var question_value = $('#question-value').val();
 
         // Destroy existing instance
         if ($.fn.DataTable.isDataTable('#myTable')) {
@@ -713,8 +627,6 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                         jobs:           $('#jobs').val()      || 'all',
                         location:       $('#location').val()  || 'all',
                         status:         $('#status').val()    || 'all',
-                        questions:      $('#questions').val() || 'all',
-                        question_value: $('#question-value').val() || ''
                     });
                 }
             },
