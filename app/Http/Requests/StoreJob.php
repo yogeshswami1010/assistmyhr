@@ -27,6 +27,7 @@ class StoreJob extends CoreRequest
     {
         $rules = [
             'title'              => 'required',
+            'save_as_draft'      => 'sometimes|boolean',
             'job_code'           => 'nullable|string|max:100',
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
@@ -36,7 +37,7 @@ class StoreJob extends CoreRequest
             'whatjobs.jobEmploymentSubType' => 'nullable|integer|between:1,8',
             'whatjobs.jobSector' => [
                 'sometimes',
-                Rule::requiredIf($this->boolean('publish_on_whatjobs')),
+                Rule::requiredIf($this->boolean('publish_on_whatjobs') && !$this->boolean('save_as_draft')),
                 'nullable',
                 Rule::in(WhatJobsJobDetails::SECTORS),
             ],
@@ -73,7 +74,14 @@ class StoreJob extends CoreRequest
             'company_location'     => 'nullable|string|max:191',
         ];
 
-        if (request('pay_type') == 'Range') {
+        if ($this->boolean('save_as_draft')) {
+            $rules['title'] = 'required|string';
+            $rules['job_description'] = 'nullable|string';
+            $rules['job_requirement'] = 'nullable|string';
+            $rules['total_positions'] = 'nullable|numeric';
+            $rules['starting_salary'] = 'nullable|numeric';
+            $rules['maximum_salary'] = 'nullable|numeric';
+        } elseif (request('pay_type') == 'Range') {
             $rules['maximum_salary'] = 'required|gt:starting_salary';
         }
 
@@ -82,6 +90,10 @@ class StoreJob extends CoreRequest
 
     public function withValidator($validator)
     {
+        if ($this->boolean('save_as_draft')) {
+            return;
+        }
+
         $validator->after(function ($validator) {
             if (empty(trim((string) $this->company_new)) && empty($this->company)) {
                 $validator->errors()->add('company', __('app.company').' '.__('errors.fieldRequired'));

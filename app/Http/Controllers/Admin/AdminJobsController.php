@@ -91,7 +91,8 @@ class AdminJobsController extends AdminBaseController
 
     $jobsQuery = Job::query()
         ->with(['jobLocation.country', 'company', 'category', 'jobType'])
-        ->join('job_job_locations', 'job_job_locations.job_id', 'jobs.id')
+        ->leftJoin('job_job_locations', 'job_job_locations.job_id', 'jobs.id')
+        ->where(fn ($query) => $query->whereNotNull('job_job_locations.job_id')->orWhere('jobs.status', Job::STATUS_DRAFT))
         ->select('jobs.id as jobs_id', 'job_job_locations.location_id as locations_id', 'jobs.*')
         ->where('jobs.id', '>', 0)
         ->groupBy('jobs_id');
@@ -131,6 +132,9 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
 
+        if ($job->status === Job::STATUS_DRAFT) {
+            return Reply::error(__('Open the draft in the job editor to publish it.'));
+        }
         if ($job->status === 'expired') {
             return Reply::error(__('errors.expiredJobNoToggle'));
         }
@@ -201,6 +205,14 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('add_jobs'), 403);
 
+        return $request->boolean('save_as_draft')
+            ? DB::transaction(fn () => $this->createJob($request, true))
+            : $this->createJob($request, false);
+    }
+
+    private function createJob(StoreJob $request, bool $saveDraft): array
+    {
+
         $required_columns = [
             'gender' => false,
             'dob' => false,
@@ -242,9 +254,12 @@ class AdminJobsController extends AdminBaseController
         $job->company_location = $request->company_location;
         $job->title = $request->title;
         $job->job_code = $request->job_code;
-        $job->job_description = $request->job_description;
+        $job->job_description = $request->job_description ?? '';
+        if ($saveDraft) {
+            $job->job_requirement = $request->input('job_requirement') ?? '';
+        }
         $this->saveJobBoardSelections($job, $request);
-        $job->total_positions = $request->total_positions;
+        $job->total_positions = $request->total_positions ?? 1;
         // Handle manual category entry
         if ($request->filled('category_new')) {
             $category = JobCategory::firstOrCreate(
@@ -255,7 +270,7 @@ class AdminJobsController extends AdminBaseController
             $job->category_id = $request->category_id;
         }
         $job->start_date = now()->toDateString();  
-        $job->status = $request->status ?: 'open';
+        $job->status = $saveDraft ? Job::STATUS_DRAFT : ($request->status ?: Job::STATUS_OPEN);
         $job->job_type_id = $request->job_type_id;
         $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
         $this->setJobPay($job, $request);
@@ -263,7 +278,7 @@ class AdminJobsController extends AdminBaseController
         $job->section_visibility = $section_visibility;
         $job->meta_details = [
             'title' => $request->meta_title ?: $request->title,
-            'description' => $request->meta_description ?: strip_tags(Str::substr(html_entity_decode($request->job_description), 0, 150)),
+            'description' => $request->meta_description ?: strip_tags(Str::substr(html_entity_decode($job->job_description), 0, 150)),
         ];
 
         if ($request->show_job_type == 'yes') {
@@ -306,6 +321,10 @@ class AdminJobsController extends AdminBaseController
         }
 
         $this->syncJobStatuses($job->id, $request);
+
+        if ($job->status === Job::STATUS_DRAFT) {
+            return Reply::redirect(tenant_route('admin.jobs.index', [], false), __('Job saved as draft.'));
+        }
 
         event(new JobAlertEvent($job));
 
@@ -367,7 +386,34 @@ class AdminJobsController extends AdminBaseController
     public function update(StoreJob $request, $id)
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
+        $job = Job::findOrFail($id);
+        $wasDraft = $job->status === Job::STATUS_DRAFT;
+        $saveDraft = $request->boolean('save_as_draft');
+        abort_if($saveDraft && !$wasDraft, 422, __('Only unpublished drafts can be saved as drafts.'));
 
+        if ($wasDraft) {
+            $job = DB::transaction(function () use ($request, $job, $saveDraft) {
+                $lockedJob = $job->newQuery()->lockForUpdate()->findOrFail($job->id);
+                abort_unless($lockedJob->status === Job::STATUS_DRAFT, 409, __('This draft was already saved as a job. Reopen it to continue editing.'));
+                $this->saveJobChanges($request, $lockedJob, $saveDraft);
+
+                return $lockedJob;
+            });
+            if ($job->status === Job::STATUS_DRAFT) {
+                return Reply::redirect(tenant_route('admin.jobs.index', [], false), __('Job saved as draft.'));
+            }
+            if ($job->status === Job::STATUS_OPEN) {
+                event(new JobAlertEvent($job));
+            }
+        } else {
+            $this->saveJobChanges($request, $job, false);
+        }
+
+        return Reply::redirect(tenant_route('admin.jobs.index', [], false), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.updatedSuccessfully')));
+    }
+
+    private function saveJobChanges(StoreJob $request, Job $job, bool $saveDraft): void
+    {
         $required_columns = [
             'gender' => false,
             'dob' => false,
@@ -394,7 +440,6 @@ class AdminJobsController extends AdminBaseController
             }
         }
 
-        $job = Job::find($id);
         // Handle manual company entry
         if ($request->filled('company_new')) {
             $company = Company::firstOrCreate(
@@ -407,10 +452,10 @@ class AdminJobsController extends AdminBaseController
         $job->company_location = $request->company_location;
         $job->title = $request->title;
         $job->job_code = $request->job_code;
-        $job->job_description = $request->job_description;
+        $job->job_description = $request->job_description ?? '';
         $this->saveJobBoardSelections($job, $request);
 
-        $job->total_positions = $request->total_positions;
+        $job->total_positions = $request->total_positions ?? 1;
         // Handle manual category entry
         if ($request->filled('category_new')) {
             $category = JobCategory::firstOrCreate(
@@ -421,8 +466,12 @@ class AdminJobsController extends AdminBaseController
             $job->category_id = $request->category_id;
         }
         $job->start_date = $request->filled('start_date') ? $request->start_date : ($job->publicationDate() ?? now()->toDateString());
-        if ($request->filled('status')) {
+        if (!$saveDraft && $request->filled('status')) {
+            $wasDraft = $job->status === Job::STATUS_DRAFT;
             $job->setPostingStatus($request->input('status'));
+            if ($wasDraft && $job->status === Job::STATUS_OPEN) {
+                $job->start_date = now()->toDateString();
+            }
         }
         $job->job_type_id = $request->job_type_id;
         $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
@@ -482,9 +531,7 @@ class AdminJobsController extends AdminBaseController
             });
         }
 
-        $this->syncJobStatuses($id, $request);
-
-        return Reply::redirect(tenant_route('admin.jobs.index', [], false), $this->syncWhatJobs($job, __('menu.jobs').' '.__('messages.updatedSuccessfully')));
+        $this->syncJobStatuses($job->id, $request);
     }
 
     private function setJobPay(Job $job, StoreJob $request): void
@@ -920,7 +967,10 @@ class AdminJobsController extends AdminBaseController
     // Refresh Expire Date
     public function refreshDate(UpdateJob $request)
     {
-        $job = Job::find($request->id);
+        $job = Job::findOrFail($request->id);
+        if ($job->status === Job::STATUS_DRAFT) {
+            return Reply::error(__('Open the draft in the job editor to publish it.'));
+        }
         $job->start_date = $request->start_date;
 
         $job->status = Job::STATUS_OPEN;

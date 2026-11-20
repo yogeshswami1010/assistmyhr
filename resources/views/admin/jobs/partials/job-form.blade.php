@@ -354,7 +354,7 @@
                                         value="{{ old('location_new', $job?->jobLocation->first()?->location) }}">
                                     <input type="hidden" id="location_country_code" name="location_country_code" value="{{ old('location_country_code') }}">
                                 </div>
-                               @php $currentStatus = $job->status ?? 'open'; @endphp
+                               @php $currentStatus = $job?->status === \App\Job::STATUS_DRAFT ? \App\Job::STATUS_OPEN : ($job->status ?? 'open'); @endphp
 <div class="form-group mb-0">
     <label for="status" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
         @lang('app.status') <span class="text-red-500">*</span>
@@ -887,6 +887,11 @@
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         @lang('app.save')
                     </button>
+                    @if(!$isEdit || $job?->status === \App\Job::STATUS_DRAFT)
+                        <button type="button" id="save-draft" class="inline-flex w-full items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-6 py-3 text-[13.5px] font-semibold text-[#0F1F3D] hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-500">
+                            {{ __('Save as Draft') }}
+                        </button>
+                    @endif
                     <a href="{{ tenant_route('admin.jobs.index', [], false) }}" class="inline-flex w-full items-center justify-center rounded-xl border border-[#E2DED8] bg-white px-6 py-3 text-[13.5px] font-semibold text-[#8892A0] transition hover:bg-gray-100 hover:text-slate-700">@lang('app.cancel')</a>
                 </div>
 
@@ -1140,7 +1145,7 @@ $(document).ready(function () {
     // Use capture phase so this fires BEFORE jQuery's bubble-phase click handler
     // that calls $('#createForm').serialize() inside the $.easyAjax call.
     document.addEventListener('click', function (e) {
-        var btn = e.target && e.target.closest ? e.target.closest('#save-form') : null;
+        var btn = e.target && e.target.closest ? e.target.closest('#save-form, #save-draft') : null;
         if (btn) { injectStatusInputs(); }
     }, true); // true = capture phase
 

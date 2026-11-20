@@ -31,7 +31,8 @@ class FrontJobApplication extends CoreRequest
     public function rules()
     {
         $google_captcha = GoogleCaptchaSetting::first();
-        $job = Job::select('id', 'required_columns', 'section_visibility')->where('id', $this->job_id)->first();
+        $job = Job::select('id', 'status', 'required_columns', 'section_visibility')->where('id', $this->job_id)->firstOrFail();
+        abort_if($job->status === Job::STATUS_DRAFT, 404);
         $applicationMail = JobApplication::with('status')->where('email', request()->email)->where('job_id', $this->job_id)->first();
         $requiredColumns = $job->required_columns;
         $sectionVisibility = $job->section_visibility;

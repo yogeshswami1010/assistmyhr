@@ -317,34 +317,31 @@
                 });
             });
 
-            $('#save-form').click(function () {
+            let savingJob = false;
+            $('#save-form, #save-draft').click(function () {
+                if (savingJob) {
+                    return;
+                }
+                const saveDraft = this.id === 'save-draft';
                 if (document.getElementById('location_new')?.dataset.locationLookupPending) {
                     return;
                 }
-                if (document.getElementById('whatjobs_jobSector')?.reportValidity() === false) {
+                if (!saveDraft && document.getElementById('whatjobs_jobSector')?.reportValidity() === false) {
                     return;
                 }
                 jobRichSyncAll();
-                var serialized = $('#createForm').serializeArray();
-                var requestPayload = {};
-                serialized.forEach(function (item) {
-                    if (Object.prototype.hasOwnProperty.call(requestPayload, item.name)) {
-                        if (!Array.isArray(requestPayload[item.name])) {
-                            requestPayload[item.name] = [requestPayload[item.name]];
-                        }
-                        requestPayload[item.name].push(item.value);
-                    } else {
-                        requestPayload[item.name] = item.value;
-                    }
-                });
-                console.log('save-form request payload:', requestPayload);
+                savingJob = true;
                 $.easyAjax({
                     url: jobFormSaveUrl,
                     sessionExpiredMessage: @json(__('Your session could not be verified. Copy any unsaved changes, then sign in again and reopen this job.')),
                     container: '#createForm',
                     type: 'POST',
                     redirect: true,
-                    data: $('#createForm').serialize(),
+                    data: $('#createForm').serialize() + (saveDraft ? '&save_as_draft=1' : ''),
+                    complete: function () {
+                        savingJob = false;
+                        $.easyUnblockUI('#createForm');
+                    },
                 });
             });
 

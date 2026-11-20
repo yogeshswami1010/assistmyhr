@@ -13,12 +13,14 @@ class Job extends Model
 
     // Allowed status values (single source of truth)
     public const STATUS_OPEN    = 'open';
+    public const STATUS_DRAFT   = 'draft';
     public const STATUS_CLOSED  = 'closed';
     public const STATUS_FILLED  = 'filled';
     public const STATUS_ON_HOLD = 'on_hold';
 
     public const STATUSES = [
         self::STATUS_OPEN    => 'Open',
+        self::STATUS_DRAFT   => 'Draft',
         self::STATUS_CLOSED  => 'Closed',
         self::STATUS_FILLED  => 'Filled',
         self::STATUS_ON_HOLD => 'On Hold',

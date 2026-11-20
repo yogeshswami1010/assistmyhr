@@ -129,6 +129,7 @@
             <option value="closed">Closed</option>
             <option value="filled">Filled</option>
             <option value="on_hold">On Hold</option>
+            <option value="draft">{{ __('Draft') }}</option>
             <option value="expired">Expired</option>
         </select>
             <select id="jobsFilterLocation" class="rounded-lg border-[1.5px] border-[#E2DED8] bg-white py-2 pl-3 pr-9 text-[12.5px] font-[inherit] text-[#5A6478] outline-none focus:border-[#2563EB]" style="background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%277%27 fill=%27none%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%239CA3AF%27 stroke-width=%271.6%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;appearance:none;cursor:pointer;">
@@ -304,6 +305,7 @@
             closed: 'bg-[#F1F3F7] text-[#8892A0]',
             filled: 'bg-[#EFF6FF] text-[#2563EB]',
             on_hold: 'bg-[#FFF7ED] text-[#EA580C]',
+            draft: 'bg-slate-100 text-slate-700',
             expired: 'bg-[#FEF2F2] text-[#DC2626]'
         };
 
@@ -312,6 +314,7 @@
             closed: I18N.closed,
             filled: I18N.filled,
             on_hold: I18N.onHold,
+            draft: @json(__('Draft')),
             expired: I18N.expired
         };
 
