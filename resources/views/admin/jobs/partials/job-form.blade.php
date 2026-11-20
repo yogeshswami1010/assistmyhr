@@ -138,12 +138,8 @@
                                     name="category_id"
                                     id="category_id"
                                     class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
-                                    onchange="toggleNewCategoryField(this)"
                                 >
                                     <option value="">@lang('Choose job Categories')</option>
-
-                                    {{-- Add New Category FIRST --}}
-                                    <option value="new" @selected(count($categories) === 0)>@lang('Add New Category')</option>
 
                                     {{-- Existing categories --}}
                                     @foreach ($categories as $category)
@@ -156,48 +152,7 @@
                                     @endforeach
                                 </select>
 
-                                {{-- New Category Field --}}
-                                <div id="new-category-wrapper" class="relative hidden">
-                                    <input
-                                        type="text"
-                                        id="category_new"
-                                        name="category_new"
-                                        aria-label="{{ __('Add New Category') }}"
-                                        style="padding-right: 2.75rem"
-                                        placeholder="{{ __('Add New Category') }}"
-                                        class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
-                                        value="{{ old('category_new') }}"
-                                    >
-                                    <button type="button" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-[#2563EB]" onclick="resetCategoryField()" aria-label="{{ __('Choose job Categories') }}" title="{{ __('Choose job Categories') }}">&times;</button>
-                                </div>
                             </div>
-
-                           <script>
-    function toggleNewCategoryField(select) {
-        const wrapper = document.getElementById('new-category-wrapper');
-        const input = document.getElementById('category_new');
-        const isNew = select.value === 'new';
-
-        select.style.display = isNew ? 'none' : '';
-        select.disabled = isNew;
-        wrapper.classList.toggle('hidden', !isNew);
-        input.disabled = !isNew;
-        if (isNew) input.focus();
-    }
-
-    function resetCategoryField() {
-        const select = document.getElementById('category_id');
-        document.getElementById('category_new').value = '';
-        select.disabled = false;
-        select.value = '';
-        toggleNewCategoryField(select);
-        select.focus();
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        toggleNewCategoryField(document.getElementById('category_id'));
-    });
-</script>
                             </div>
                  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div class="form-group mb-0">
@@ -999,25 +954,6 @@ $(document).ready(function () {
     });
 
 });
-function handleCategorySelect(selEl) {
-    const inputEl = document.getElementById('category_new');
-    if (!inputEl) return;
-
-    const hasSelection = Array.from(selEl.options).some(o => o.selected && o.value && o.value !== 'new');
-    inputEl.style.opacity = hasSelection ? '0.4' : '1';
-    inputEl.disabled = hasSelection;
-    if (hasSelection) inputEl.value = '';
-}
-
-// Wire up Select2 changes (since Select2 bypasses native onchange for multi-selects)
-$(document).ready(function () {
-    $('#category_id').on('change', function () {
-        handleCategorySelect(this); toggleNewCategoryField(this);
-    });
-});
-
-
-
     function updateSalarySymbol() {
         var sel = document.getElementById('salary_currency_id');
         if (!sel) return;

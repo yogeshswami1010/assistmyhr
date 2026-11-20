@@ -100,6 +100,9 @@ class TenantProvisioner
             if (!$source->getSchemaBuilder()->hasTable($table)) { continue; }
             foreach ($source->table($table)->cursor() as $row) { $target->table($table)->insert((array) $row); }
         }
+        if ($target->getSchemaBuilder()->hasTable('job_categories')) {
+            \App\JobCategory::addDefaults($target);
+        }
         foreach (['company_settings', 'theme_settings', 'application_settings', 'google_captcha_settings', 'sms_settings', 'smtp_settings', 'linked_in_settings', 'zoom_settings', 'message_settings'] as $table) {
             if ($target->getSchemaBuilder()->hasTable($table)) { $this->insertDefaults($target, $table, []); }
         }
