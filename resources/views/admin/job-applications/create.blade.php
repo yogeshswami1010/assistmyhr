@@ -254,19 +254,21 @@
                                 </div>
 
                                 {{-- Navigation & save --}}
-                                <div class="flex items-center gap-2 ml-auto flex-shrink-0">
-                                    <button type="button" class="bulk-nav-btn" onclick="bulkStep(-1)">
+                                <div id="bulk-review-actions" class="flex items-center gap-2 ml-auto flex-shrink-0">
+                                    <button type="button" class="bulk-nav-btn bulk-multiple-only" onclick="bulkStep(-1)">
                                         <i class="fa fa-arrow-left"></i> Prev
                                     </button>
-                                    <span class="text-xs text-gray-400 whitespace-nowrap" id="bulk-counter">0 of 0</span>
-                                    <button type="button" class="bulk-nav-btn" onclick="bulkStep(1)">
+                                    <span class="bulk-multiple-only text-xs text-gray-400 whitespace-nowrap" id="bulk-counter">0 of 0</span>
+                                    <button type="button" class="bulk-nav-btn bulk-multiple-only" onclick="bulkStep(1)">
                                         Next <i class="fa fa-arrow-right"></i>
                                     </button>
                                     <button type="button" id="bulk-save-btn" onclick="bulkSaveCurrent()"
                                         class="bulk-save-btn">
-                                        <i class="fa fa-check mr-1"></i> Save &amp; next
+                                        <i class="fa fa-check mr-1" aria-hidden="true"></i>
+                                        <span class="bulk-single-only">{{ __('Save') }}</span>
+                                        <span class="bulk-multiple-only">{{ __('Save & next') }}</span>
                                     </button>
-                                    <button type="button" id="bulk-save-all-job" onclick="bulkSaveAllToJob()" class="bulk-save-btn" style="background:#2563eb">Save All</button>
+                                    <button type="button" id="bulk-save-all-job" onclick="bulkSaveAllToJob()" class="bulk-save-btn bulk-multiple-only" style="background:#2563eb">Save All</button>
                                 </div>
                             </div>
                             <p id="bulk-save-all-status" role="status" aria-live="polite" class="text-xs" style="color:#b91c1c;margin:0;padding:0 16px 12px;overflow-wrap:anywhere"></p>
@@ -753,6 +755,8 @@
         }
         .bulk-save-btn:hover  { background: #047857; }
         .bulk-save-btn:disabled { opacity: .5; cursor: not-allowed; }
+        #bulk-review-actions:not(.has-multiple-cvs) .bulk-multiple-only,
+        #bulk-review-actions.has-multiple-cvs .bulk-single-only { display: none; }
 
         /* spinner */
         @keyframes bulk-spin { to { transform: rotate(360deg); } }
@@ -844,6 +848,7 @@
            Queue render
         ───────────────────────────────────────────── */
         function bulkRenderQueue() {
+            document.getElementById('bulk-review-actions').classList.toggle('has-multiple-cvs', bulkQueue.length > 1);
             var list  = document.getElementById('bulk-q-list');
             var empty = document.getElementById('bulk-q-empty');
 
@@ -881,12 +886,14 @@
         }
 
         function bulkRemoveItem(i) {
+            if (bulkSavingAll || bulkSavingCurrent) return;
+            if (bulkActive >= 0 && bulkActive !== i) bulkSnapshotForm(bulkActive);
+            var nextActive = bulkActive > i ? bulkActive - 1 : bulkActive;
             bulkQueue.splice(i, 1);
-            if (bulkActive >= bulkQueue.length) bulkActive = bulkQueue.length - 1;
-            if (bulkActive === i) bulkActive = -1;
+            bulkActive = -1;
             bulkRenderQueue();
             bulkUpdateBatchBar();
-            if (bulkActive >= 0) bulkSelectItem(bulkActive);
+            if (bulkQueue.length) bulkSelectItem(Math.max(0, Math.min(nextActive, bulkQueue.length - 1)));
             else bulkShowEmptyState();
         }
 
