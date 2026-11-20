@@ -35,6 +35,24 @@
         box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
         outline: none !important;
     }
+    .job-company-field { position: relative; }
+    .job-form-page #createForm select#company { padding-right: 4.75rem !important; }
+    .job-company-add {
+        position: absolute;
+        right: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        color: #2563eb;
+        background: #eff6ff;
+        font-size: 1.125rem;
+        line-height: 1;
+    }
+    .job-company-add:hover { background: #dbeafe; }
 
     /* Date inputs — same footprint as selects */
     .job-form-page #createForm #date-start.form-control,

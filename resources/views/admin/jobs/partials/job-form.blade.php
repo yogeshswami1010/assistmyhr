@@ -51,80 +51,69 @@
                         <div class="flex flex-col gap-4 p-5">
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                <div class="form-group mb-0">
-                                    <label class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
+                                    <label for="company" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
                                         @lang('Company') <span class="text-red-500">*</span>
                                     </label>
 
-                                    {{-- Existing Company Dropdown --}}
-                                    <select
-                                        name="company"
-                                        id="company"
-                                        class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D] outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
-                                        onchange="toggleNewCompanyField(this)"
-                                    >
-                                        <option value="">@lang('Select Company')</option>
+                                    <div id="company-select-wrapper" class="job-company-field" @if(filled(old('company_new'))) hidden @endif>
+                                        <select name="company" id="company"
+                                            class="job-form-sel form-control w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
+                                            @disabled(filled(old('company_new')))>
+                                            <option value="">@lang('Select Company')</option>
+                                            @foreach ($companies as $comp)
+                                                <option value="{{ $comp->id }}" @selected(old('company', $job?->company_id) == $comp->id)>
+                                                    {{ ucwords($comp->company_name) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" id="add-new-company" class="job-company-add"
+                                            aria-controls="new-company-wrapper" aria-label="{{ __('Add New Company') }}"
+                                            title="{{ __('Add New Company') }}">+</button>
+                                    </div>
 
-                                        {{-- Add New Option FIRST --}}
-                                        <option value="new">@lang('Add New Company')</option>
-
-                                        {{-- Existing companies --}}
-                                        @foreach ($companies as $comp)
-                                            <option 
-                                                value="{{ $comp->id }}"
-                                                @if ($job && $job->company_id == $comp->id) selected @endif
-                                            >
-                                                {{ ucwords($comp->company_name) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-
-                                    {{-- New Company Text Field --}}
-                                    <div id="new-company-wrapper" class="hidden" style="position: relative">
+                                    <div id="new-company-wrapper" class="job-company-field" @unless(filled(old('company_new'))) hidden @endunless>
                                         <input
                                             type="text"
                                             id="company_new"
                                             name="company_new"
+                                            maxlength="191"
                                             aria-label="{{ __('Add New Company') }}"
                                             style="padding-right: 2.75rem"
                                             placeholder="{{ __('Add New Company') }}"
                                             class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D] placeholder:text-gray-300 outline-none transition-all focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/10"
                                             value="{{ old('company_new') }}"
+                                            @disabled(blank(old('company_new')))
                                         >
-                                        <button type="button"
+                                        <button type="button" id="cancel-new-company"
                                             class="text-slate-500 hover:text-[#2563EB]"
                                             style="position: absolute; inset: 0 0 0 auto; width: 2.75rem; display: grid; place-items: center"
-                                            onclick="resetCompanyField()"
-                                            aria-label="{{ __('Select Company') }}"
-                                            title="{{ __('Select Company') }}">&times;</button>
+                                            aria-label="{{ __('Cancel adding a company') }}"
+                                            title="{{ __('Cancel adding a company') }}">&times;</button>
                                     </div>
                                 </div>
 
-                              <script>
-    function toggleNewCompanyField(select) {
-        const wrapper = document.getElementById('new-company-wrapper');
-        const input = document.getElementById('company_new');
-        const isNew = select.value === 'new';
+                                <script>
+                                    (() => {
+                                        const company = document.getElementById('company');
+                                        const companyPicker = document.getElementById('company-select-wrapper');
+                                        const newCompany = document.getElementById('company_new');
+                                        const newCompanyEditor = document.getElementById('new-company-wrapper');
+                                        const addCompany = document.getElementById('add-new-company');
 
-        select.style.display = isNew ? 'none' : '';
-        select.disabled = isNew;              // "new" is never submitted as company
-        wrapper.classList.toggle('hidden', !isNew);
-        input.disabled = !isNew;
-        if (isNew) input.focus();
-    }
+                                        addCompany.addEventListener('click', () => {
+                                            companyPicker.hidden = company.disabled = true;
+                                            newCompanyEditor.hidden = newCompany.disabled = false;
+                                            newCompany.focus();
+                                        });
 
-    function resetCompanyField() {
-        const select = document.getElementById('company');
-        document.getElementById('company_new').value = '';
-        select.disabled = false;              // enable before changing it
-        select.value = '';
-        toggleNewCompanyField(select);
-        select.focus();
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        toggleNewCompanyField(document.getElementById('company'));
-    });
-</script>
+                                        document.getElementById('cancel-new-company').addEventListener('click', () => {
+                                            newCompany.value = '';
+                                            newCompanyEditor.hidden = newCompany.disabled = true;
+                                            companyPicker.hidden = company.disabled = false;
+                                            addCompany.focus();
+                                        });
+                                    })();
+                                </script>
 
                                 <div class="form-group mb-0">
                                     <label class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">
@@ -1012,10 +1001,8 @@ $(document).ready(function () {
     });
 
 });
-function handleDualSelect(selEl, key) {
-    const inputEl = document.getElementById(
-        key === 'category' ? 'category_new' : 'company_new'
-    );
+function handleCategorySelect(selEl) {
+    const inputEl = document.getElementById('category_new');
     if (!inputEl) return;
 
     const hasSelection = Array.from(selEl.options).some(o => o.selected && o.value && o.value !== 'new');
@@ -1027,11 +1014,7 @@ function handleDualSelect(selEl, key) {
 // Wire up Select2 changes (since Select2 bypasses native onchange for multi-selects)
 $(document).ready(function () {
     $('#category_id').on('change', function () {
-        handleDualSelect(this, 'category'); toggleNewCategoryField(this);
-    });
-    $('#company').on('change', function () {
-        handleDualSelect(this, 'company');
-        toggleNewCompanyField(this);
+        handleCategorySelect(this); toggleNewCategoryField(this);
     });
 });
 
