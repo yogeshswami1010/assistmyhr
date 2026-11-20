@@ -238,10 +238,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
         {{-- Filter Bar --}}
         <div id="ja-table-filter-bar" class="border-b border-[#E8E6E1] bg-white">
             <div class="px-5 sm:px-6">
-                <div class="flex items-center justify-between gap-2 pb-3 pt-0.5">
-                    <h4 class="text-[13px] font-bold text-[#1A1E2E]">@lang('app.filterBy')</h4>
-                </div>
-                <form id="filter-form" class="flex flex-wrap items-end gap-3.5 pb-3">
+                <form id="filter-form" class="flex flex-wrap items-end gap-3.5 py-3">
 
                     {{-- ── Skill tag input ── --}}
                     <!-- <div class="flex min-w-[200px] flex-1 flex-col gap-1 sm:max-w-[300px]">
@@ -308,14 +305,11 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                         </select>
                     </div>
 
-                    {{-- Actions --}}
-                    <div class="flex w-full flex-wrap items-center gap-2.5 pt-1">
-                        
-                        <button type="button" id="reset-filters"
-                            class="inline-flex items-center gap-2 rounded-[9px] border-[1.5px] border-[#E2DED8] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#8892A0] transition hover:border-[#EF4444] hover:text-[#EF4444] focus:outline-none">
-                            <i class="fa fa-refresh"></i> @lang('app.reset')
-                        </button>
-                    </div>
+                    <button type="button" id="reset-filters"
+                        class="inline-flex shrink-0 items-center gap-2 rounded-[10px] border-[1.5px] border-[#E2DED8] bg-white px-4 text-[13px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:text-[#2563EB] focus-visible:ring-2 focus-visible:ring-blue-500"
+                        style="height: 38px">
+                        <i class="fa fa-refresh" aria-hidden="true"></i> @lang('app.reset')
+                    </button>
                 </form>
             </div>
         </div>
