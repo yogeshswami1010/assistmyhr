@@ -354,8 +354,8 @@
                         </a>
                         @endif
                         @if($user->cans('view_schedule'))
-                        <a href="{{ route('admin.interview-schedule.create') }}" class="flex flex-col items-center gap-2 rounded-xl bg-[#F5F3FF] px-3 py-4 text-center text-[12px] font-semibold text-[#7C3AED]">
-                            <span class="text-lg">📅</span>Schedule Interview
+                        <a href="{{ tenant_route('admin.interview-schedule.index', [], false) }}" class="flex flex-col items-center gap-2 rounded-xl bg-[#F5F3FF] px-3 py-4 text-center text-[12px] font-semibold text-[#7C3AED]">
+                            <span class="text-lg" aria-hidden="true">📅</span>{{ __('Interview Schedule') }}
                         </a>
                         @endif
                         <a href="{{ route('admin.report.index') }}" class="flex flex-col items-center gap-2 rounded-xl bg-emerald-50 px-3 py-4 text-center text-[12px] font-semibold text-emerald-600">
