@@ -138,6 +138,10 @@
                     <option value="{{ $location->id }}">{{ ucwords($location->location) }}</option>
                 @endforeach
             </select>
+            <button id="jobsResetFilters" type="button"
+                class="whitespace-nowrap rounded-lg border border-[#E2DED8] bg-white px-3 py-2 text-[12.5px] font-semibold text-[#5A6478] transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-500">
+                {{ __('Reset Filters') }}
+            </button>
             <div class="ml-auto flex items-center gap-1 text-[12px] text-[#8892A0]">
                 @lang('modules.jobCategoriesPage.showing')
                 <span class="mx-1 font-semibold text-[#1A1E2E]" id="jobsShowCount">0</span>
@@ -445,6 +449,19 @@ if (canCopy) {
     document.getElementById('jobsFilterCompany')?.addEventListener('change', renderTable);
     document.getElementById('jobsFilterStatus')?.addEventListener('change', renderTable);
     document.getElementById('jobsFilterLocation')?.addEventListener('change', renderTable);
+
+    document.getElementById('jobsResetFilters')?.addEventListener('click', function () {
+        for (const id of ['jobsTableSearch', 'jobsFilterCompany', 'jobsFilterStatus', 'jobsFilterLocation']) {
+            document.getElementById(id).value = '';
+        }
+
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('company')) {
+            url.searchParams.delete('company');
+            window.history.replaceState(window.history.state, '', url);
+        }
+        renderTable();
+    });
 
     document.getElementById('jobsMasterCb')?.addEventListener('change', function () {
         const data = getFiltered();
