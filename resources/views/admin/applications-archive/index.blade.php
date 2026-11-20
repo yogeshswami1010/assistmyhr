@@ -663,18 +663,13 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
 
     // ── Export ────────────────────────────────────────────────────────────────
     function exportJobApplication() {
-        var skill    = window.jaGetSkills ? window.jaGetSkills() : 'all';
-        var company  = $('#company').val()  || 'all';
-        var jobs     = $('#jobs').val()     || 'all';
-        var location = $('#location').val() || 'all';
-        var status   = $('#status').val()   || 'all';
-
-        var url = '{{ route('admin.applications-archive.export', ':skill') }}';
-        url = url.replace(':skill', skill || 'all');
-        url += '?company=' + company + '&jobs=' + jobs
-             + '&location=' + location + '&status=' + status;
-
-        window.location.href = url;
+        const url = new URL(@json(tenant_route('admin.applications-archive.export', ['skill' => 'all'], false)), window.location.href);
+        url.searchParams.set('skill', window.jaGetSkills ? window.jaGetSkills() : '');
+        url.searchParams.set('company', $('#company').val() || 'all');
+        url.searchParams.set('jobs', $('#jobs').val() || 'all');
+        url.searchParams.set('location', $('#location').val() || 'all');
+        url.searchParams.set('status', $('#status').val() || 'all');
+        window.location.href = url.href;
     }
 
     // ── Company → Jobs cascade ────────────────────────────────────────────────

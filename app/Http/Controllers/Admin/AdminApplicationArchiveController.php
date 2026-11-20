@@ -11,6 +11,7 @@ use App\Job;
 use App\JobLocation;
 use App\Company;
 use App\Question;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Maatwebsite\Excel\Excel as ExcelExcel;
@@ -41,10 +42,8 @@ class AdminApplicationArchiveController extends AdminBaseController
         return view('admin.applications-archive.index', $this->data);
     }
 
-    public function data(Request $request)
+    private function candidateQuery(Request $request, ?string $legacySkill = null): Builder
     {
-        abort_if(! $this->user->cans('view_job_applications'), 403);
-
         $jobApplications = JobApplication::withTrashed()
             ->whereNull('moved_to_trash_at')
             ->with([
@@ -54,9 +53,10 @@ class AdminApplicationArchiveController extends AdminBaseController
             ])
             ->orderBy('created_at', 'desc');  
         // ── Skill filter ───────────────────────────────────────────────
-        if ($request->filled('skill')) {
+        $skillFilter = trim((string) $request->input('skill', $legacySkill));
+        if ($skillFilter !== '' && !in_array($skillFilter, ['all', 'undefined'], true)) {
             $skill = Skill::select('id', 'name')
-                ->where('name', 'LIKE', '%' . strtolower($request->skill) . '%')
+                ->where('name', 'LIKE', '%' . strtolower($skillFilter) . '%')
                 ->first();
 
             if ($skill) {
@@ -84,6 +84,10 @@ class AdminApplicationArchiveController extends AdminBaseController
             $jobApplications->where('location_id', $request->location);
         }
 
+        if ($request->filled('status') && $request->status !== 'all') {
+            $jobApplications->where('status_id', $request->status);
+        }
+
         // ── Question / answer filter ──────────────────────────────────
         if ($request->filled('questions') && $request->questions !== 'all') {
             $jobApplications->whereHas('answers', function ($q) use ($request) {
@@ -103,7 +107,14 @@ class AdminApplicationArchiveController extends AdminBaseController
             $jobApplications->whereDate('created_at', '<=', $request->end_date);
         }
 
-        return DataTables::of($jobApplications)
+        return $jobApplications;
+    }
+
+    public function data(Request $request)
+    {
+        abort_if(! $this->user->cans('view_job_applications'), 403);
+
+        return DataTables::of($this->candidateQuery($request))
 
         ->addColumn('select_orders', function ($row) {
             return '<input type="checkbox" name="check[]" class="checkBoxClass" value="'.$row->id.'">';
@@ -228,13 +239,12 @@ class AdminApplicationArchiveController extends AdminBaseController
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
     }
 
-    public function export($skill)
+    public function export(Request $request, string $skill)
     {
-        $filters = ['skill' => $skill];
-        $data    = ['company' => $this->companyName];
+        abort_if(! $this->user->cans('view_job_applications'), 403);
 
         return Excel::download(
-            new JobApplicationArchiveExport($filters, $data),
+            new JobApplicationArchiveExport($this->candidateQuery($request, $skill), $this->companyName),
             __('modules.applicationArchive.exportFileName') . '.xlsx',
             ExcelExcel::XLSX
         );
