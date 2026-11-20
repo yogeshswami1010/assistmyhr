@@ -8,9 +8,6 @@
     $logoPreviewUrl = $global->logo
         ? asset_url_local_s3('app-logo/' . $global->logo)
         : asset('app-logo.png');
-    $faviconPreviewUrl = $global->favicon
-        ? asset_url_local_s3('favicon/' . $global->favicon)
-        : asset('app-logo.png');
 @endphp
 
 @section('page-title-html')
@@ -115,7 +112,7 @@
                         <p class="text-[12px] text-[#8892A0]">@lang('modules.accountSettings.uploadLogo')</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+                <div class="p-6">
                     <div>
                         <p class="mb-1.5 text-[11.5px] font-bold text-[#5A6478]">@lang('modules.accountSettings.companyLogo')</p>
                         <label class="bs-upload-zone" for="logo_input">
@@ -127,19 +124,6 @@
                                 <p class="text-[11.5px] text-[#B0B8C4]">@lang('modules.accountSettings.logoFileHint')</p>
                             </div>
                             <input type="file" id="logo_input" name="logo" class="hidden" accept="image/*">
-                        </label>
-                    </div>
-                    <div>
-                        <p class="mb-1.5 text-[11.5px] font-bold text-[#5A6478]">@lang('modules.accountSettings.companyFavIcon')</p>
-                        <label class="bs-upload-zone" for="favicon_input">
-                            <div class="bs-upload-preview">
-                                <img id="favicon_preview_img" src="{{ $faviconPreviewUrl }}" alt="">
-                            </div>
-                            <div>
-                                <p class="text-[13px] font-semibold text-[#2563EB]">@lang('app.upload')</p>
-                                <p class="text-[11.5px] text-[#B0B8C4]">.ico, PNG</p>
-                            </div>
-                            <input type="file" id="favicon_input" name="favicon" class="hidden" accept="image/*,.ico">
                         </label>
                     </div>
                 </div>
@@ -271,12 +255,6 @@
             if (!this.files?.[0]) return;
             var r = new FileReader();
             r.onload = function (e) { document.getElementById('logo_preview_img').src = e.target.result; };
-            r.readAsDataURL(this.files[0]);
-        });
-        document.getElementById('favicon_input')?.addEventListener('change', function () {
-            if (!this.files?.[0]) return;
-            var r = new FileReader();
-            r.onload = function (e) { document.getElementById('favicon_preview_img').src = e.target.result; };
             r.readAsDataURL(this.files[0]);
         });
 
