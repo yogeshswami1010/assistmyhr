@@ -1,17 +1,120 @@
 @extends('layouts.app')
-@section('page-title-html') Consortium <em>Registrations</em> @endsection
-@section('page-subtitle') Review candidate registrations @endsection
-@section('create-button')
-    <a href="{{ tenant_route('consortium-registration.create') }}" target="_blank" rel="noopener" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white">Open Registration Form</a>
-@endsection
+
+@section('page-title-html') {{ __('Consortium Registrations') }} @endsection
+
+@push('head-script')
+    @include('admin.job-applications.partials.application-list-style')
+    <style>
+        .cr-list { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
+        .cr-list .ja-filter-form { width: 100%; }
+        .cr-list .registration-multi-filter { flex: 1 1 130px; min-width: 0; }
+        .cr-list .registration-filter-menu { width: min(280px, calc(100vw - 64px)); }
+        .cr-list .ja-act-btn { display: inline-flex; align-items: center; border: 1px solid var(--ja-line); background: #fff; color: #475569; }
+        .cr-list .ja-act-btn:hover { background: #eff6ff; color: var(--ja-blue); }
+        .cr-list .ja-act-btn.cr-delete:hover { background: #fef2f2; color: #b91c1c; }
+    </style>
+@endpush
+
 @section('content')
 @include('admin.partials.candidate-communications')
+
 @if(session('success'))
-<div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[12px] font-semibold text-emerald-700">{{ session('success') }}</div>
+    <div role="status" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        {{ session('success') }}
+    </div>
 @endif
-<div class="rounded-2xl border border-[#E8E6E1] bg-white shadow-sm overflow-hidden"><div class="flex items-center justify-between border-b border-[#EEECE8] px-5 py-4"><div><h2 class="text-[15px] font-bold text-[#1A1E2E]">Registration Submissions</h2><p class="text-[11px] text-[#8892A0]">{{ $unreviewedCount }} awaiting review</p></div><div class="flex items-center gap-2">@if(request()->hasAny(['month','year','gender','city','job_type','available_weekends','night_shifts']))<a href="{{ route('admin.consortium-registrations.index') }}" class="rounded-lg border border-[#DDE2EA] bg-white px-3 py-1.5 text-[10.5px] font-bold text-[#5A6478] hover:bg-[#F1F3F7]">Reset Filters</a>@endif<span class="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-600">{{ $registrations->total() }} total</span></div></div>
-@include('admin.consortium-registrations.partials.filters')<div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-[#F8F9FB] text-[10px] uppercase tracking-wider text-[#8892A0]"><tr><th class="px-5 py-3"><input type="checkbox" class="cc-all" aria-label="Select all candidates on this page">Candidate</th><th class="px-5 py-3">Contact</th><th class="px-5 py-3">City</th><th class="px-5 py-3">Eligibility</th><th class="px-5 py-3">Submitted</th><th class="px-5 py-3 text-right">Action</th></tr></thead><tbody>
-@forelse($registrations as $registration)<tr class="border-t border-[#F0EEE9] hover:bg-[#FBFCFE]"><td class="px-5 py-4"><div class="flex items-center gap-3"><input type="checkbox" class="cc-select" data-type="registration" value="{{ $registration->id }}" aria-label="Select {{ $registration->first_name }} {{ $registration->last_name }}"><span class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-[12px] font-bold text-blue-600">{{ strtoupper(substr($registration->first_name,0,1).substr($registration->last_name,0,1)) }}</span><div><a href="{{ route('admin.consortium-registrations.show', array_merge(['registration' => $registration->id], request()->query())) }}" class="text-[13px] font-semibold text-[#1A1E2E] transition hover:text-[#2563EB] hover:underline">{{ $registration->first_name }} {{ $registration->last_name }}</a>@if(!$registration->reviewed_at)<span class="text-[9px] font-bold uppercase text-orange-500">New</span>@endif</div></div></td><td class="px-5 py-4 text-[12px] text-[#5A6478]">{{ $registration->email }}<br>{{ $registration->phone }}</td><td class="px-5 py-4 text-[12px] text-[#5A6478]">{{ $registration->city }}</td><td class="px-5 py-4"><span class="rounded-full px-2 py-1 text-[10px] font-bold {{ $registration->eligible_to_work_canada ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600' }}">{{ $registration->eligible_to_work_canada ? 'Eligible' : 'Not eligible' }}</span></td><td class="px-5 py-4 text-[11px] text-[#8892A0]">{{ $registration->created_at->timezone($global->timezone)->format('M j, Y g:i A') }}</td><td class="px-5 py-4"><div class="flex items-center justify-end gap-2"><a href="{{ route('admin.consortium-registrations.show', array_merge(['registration' => $registration->id], request()->query())) }}" class="rounded-lg bg-blue-50 px-3 py-2 text-[11px] font-bold text-blue-600 hover:bg-blue-100">View Details</a>@if(auth()->user()->hasRole('admin'))<form method="POST" action="{{ route('admin.consortium-registrations.destroy',$registration) }}" onsubmit="return confirm('Move this registration to Trash?')">@csrf @method('DELETE')<button type="submit" class="rounded-lg border border-red-200 bg-white px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50"><i class="fa fa-trash-o"></i> Delete</button></form>@endif</div></td></tr>
-@empty<tr><td colspan="6" class="px-5 py-16 text-center text-sm text-[#8892A0]">No registrations received yet.</td></tr>@endforelse
-</tbody></table></div><div class="border-t border-[#EEECE8] px-5 py-4">{{ $registrations->links() }}</div></div>
+
+<div class="ja-applications cr-list">
+    <div class="ja-app-toolbar">
+        <span class="inline-flex items-center gap-2 text-[13px] font-semibold">
+            {{ __('Registrations') }}
+            <span class="ja-status-pill ja-status-blue">{{ number_format($registrations->total()) }}</span>
+        </span>
+        <span class="text-[13px] text-slate-600">{{ __(':count awaiting review', ['count' => $unreviewedCount]) }}</span>
+        <a href="{{ tenant_route('consortium-registration.create') }}" target="_blank" rel="noopener"
+            class="ml-auto inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">
+            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            {{ __('Open Registration Form') }}
+        </a>
+    </div>
+
+    <div class="ja-filters">
+        @include('admin.consortium-registrations.partials.filters')
+    </div>
+
+    <div class="ja-table-overflow">
+        <table id="myTable" class="w-full text-left">
+            <thead>
+                <tr>
+                    <th class="w-12"><input type="checkbox" class="cc-all" aria-label="{{ __('Select all candidates on this page') }}"></th>
+                    <th>{{ __('Candidate name') }}</th>
+                    <th>{{ __('Contact') }}</th>
+                    <th>{{ __('City') }}</th>
+                    <th>{{ __('Eligibility') }}</th>
+                    <th>{{ __('Submitted') }}</th>
+                    <th class="text-right">{{ __('Actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($registrations as $registration)
+                    @php
+                        $name = trim($registration->first_name.' '.$registration->last_name);
+                        $initials = mb_strtoupper(mb_substr($registration->first_name ?? '', 0, 1).mb_substr($registration->last_name ?? '', 0, 1));
+                        $profileUrl = route('admin.consortium-registrations.show', ['registration' => $registration->id] + request()->query());
+                    @endphp
+                    <tr>
+                        <td><input type="checkbox" class="cc-select" data-type="registration" value="{{ $registration->id }}" aria-label="{{ __('Select :name', ['name' => $name]) }}"></td>
+                        <td>
+                            <div class="ja-applicant">
+                                <span class="ja-applicant-avatar" aria-hidden="true">{{ $initials }}</span>
+                                <div>
+                                    <a href="{{ $profileUrl }}" class="ja-applicant-name">{{ $name }}</a>
+                                    @if(!$registration->reviewed_at)
+                                        <span class="ml-1 text-[11px] font-semibold text-amber-700">{{ __('New') }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                        <td class="break-words">{{ $registration->email }}<br>{{ $registration->phone }}</td>
+                        <td>{{ $registration->city }}</td>
+                        <td>
+                            <span class="ja-status-pill {{ $registration->eligible_to_work_canada ? 'ja-status-green' : 'ja-status-red' }}">
+                                {{ $registration->eligible_to_work_canada ? __('Eligible') : __('Not eligible') }}
+                            </span>
+                        </td>
+                        <td>{{ $registration->created_at->timezone($global->timezone)->format('M j, Y g:i A') }}</td>
+                        <td>
+                            <div class="ja-row-actions flex items-center justify-end">
+                                <a href="{{ $profileUrl }}" class="ja-act-btn" title="{{ __('View details') }}" aria-label="{{ __('View details') }}">
+                                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                </a>
+                                @if(auth()->user()->hasRole('admin'))
+                                    <form method="POST" action="{{ route('admin.consortium-registrations.destroy', $registration) }}" onsubmit="return confirm('Move this registration to Trash?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="ja-act-btn cr-delete" title="{{ __('Delete') }}" aria-label="{{ __('Delete') }}">
+                                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="7" class="text-center">{{ __('No registrations match the current view.') }}</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    @if($registrations->hasPages())
+        <div class="ja-table-footer">
+            <div class="w-full">{{ $registrations->links() }}</div>
+        </div>
+    @elseif($registrations->count())
+        <div class="ja-table-footer">
+            <span>{{ __(':first–:last of :total', ['first' => $registrations->firstItem(), 'last' => $registrations->lastItem(), 'total' => $registrations->total()]) }}</span>
+        </div>
+    @endif
+</div>
 @endsection

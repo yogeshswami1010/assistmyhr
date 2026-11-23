@@ -2,54 +2,45 @@
     $registrationFilters = [
         'month' => [
             'label' => 'Submitted Month',
-            'all' => 'All Months',
             'options' => collect($filterMonths)->mapWithKeys(fn ($month) => [(string) $month => \Carbon\Carbon::create()->month($month)->format('F')]),
         ],
         'year' => [
             'label' => 'Submitted Year',
-            'all' => 'All Years',
             'options' => collect($filterYears)->mapWithKeys(fn ($year) => [(string) $year => (string) $year]),
         ],
         'gender' => [
             'label' => 'Gender',
-            'all' => 'All Genders',
             'options' => collect($filterGenders)->mapWithKeys(fn ($gender) => [(string) $gender => (string) $gender]),
         ],
         'city' => [
             'label' => 'City',
-            'all' => 'All Cities',
             'options' => collect($filterCities)->mapWithKeys(fn ($city) => [(string) $city => (string) $city]),
         ],
         'job_type' => [
             'label' => 'Job Type',
-            'all' => 'All Job Types',
             'options' => collect($filterJobTypes)->mapWithKeys(fn ($jobType) => [(string) $jobType => (string) $jobType]),
         ],
         'available_weekends' => [
             'label' => 'Available Weekends',
-            'all' => 'All',
             'options' => collect(['1' => 'Yes', '0' => 'No']),
         ],
         'night_shifts' => [
             'label' => 'Night Shifts',
-            'all' => 'All',
             'options' => collect(['1' => 'Yes', '0' => 'No']),
         ],
     ];
-    $filterAllLabels = collect($registrationFilters)->mapWithKeys(fn ($definition, $name) => [$name => $definition['all']]);
+    $filterAllLabels = collect($registrationFilters)->mapWithKeys(fn ($definition, $name) => [$name => $definition['label']]);
 @endphp
 
-<form id="consortium-registration-filters" method="GET" action="{{ route('admin.consortium-registrations.index') }}" class="border-b border-[#EEECE8] bg-[#FBFCFE] px-5 py-4">
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+<form id="consortium-registration-filters" method="GET" action="{{ route('admin.consortium-registrations.index') }}" class="ja-filter-form">
         @foreach($registrationFilters as $filterName => $definition)
             @php
                 $selectedValues = array_values(array_filter(array_map('strval', (array) request($filterName, [])), fn ($value) => $value !== ''));
                 $selectedLabels = collect($selectedValues)->map(fn ($value) => $definition['options']->get($value, $value))->values();
-                $summary = $selectedLabels->isNotEmpty() ? $selectedLabels->implode(', ') : $definition['all'];
+                $summary = $selectedLabels->isNotEmpty() ? $selectedLabels->implode(', ') : $definition['label'];
             @endphp
             <div class="registration-multi-filter relative" data-filter-name="{{ $filterName }}">
-                <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#8892A0]">{{ $definition['label'] }}</label>
-                <button type="button" class="registration-filter-toggle flex w-full items-center justify-between rounded-xl border bg-white px-3 py-2.5 text-left text-[12px] outline-none transition hover:border-[#BFC7D3] focus:border-blue-500 {{ $selectedLabels->isNotEmpty() ? 'border-blue-300 text-blue-700 ring-1 ring-blue-100' : 'border-[#DDE2EA] text-[#3D4A5C]' }}">
+                <button type="button" aria-label="{{ $definition['label'] }}" aria-expanded="false" class="registration-filter-toggle flex h-[38px] w-full items-center justify-between rounded-lg border bg-white px-3 text-left text-[13px] outline-none transition hover:border-[#BFC7D3] focus:border-blue-500 {{ $selectedLabels->isNotEmpty() ? 'border-blue-300 text-blue-700 ring-1 ring-blue-100' : 'border-[#DDE2EA] text-[#3D4A5C]' }}">
                     <span class="registration-filter-summary truncate" title="{{ $summary }}">{{ $summary }}</span>
                     <span class="ml-2 flex shrink-0 items-center gap-1.5">
                         <span class="registration-filter-count {{ $selectedLabels->isEmpty() ? 'hidden' : '' }} rounded-full bg-blue-600 px-1.5 py-0.5 text-[9px] font-bold text-white">{{ $selectedLabels->count() }}</span>
@@ -76,11 +67,13 @@
                 </div>
             </div>
         @endforeach
-    </div>
-    <div class="mt-4 flex justify-end border-t border-[#E7EAF0] pt-4">
-        <button type="submit" id="registration-filters-apply" class="inline-flex items-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-            <i class="fa fa-filter"></i> Apply Filters
+    <div class="flex shrink-0 items-center gap-2">
+        <button type="submit" id="registration-filters-apply" class="inline-flex h-[38px] items-center gap-2 rounded-lg bg-[#2563EB] px-3 text-[13px] font-semibold text-white hover:bg-[#1D4ED8] focus-visible:ring-2 focus-visible:ring-blue-500">
+            <i class="fa fa-filter" aria-hidden="true"></i> {{ __('Apply filters') }}
         </button>
+        <a href="{{ route('admin.consortium-registrations.index') }}" id="reset-filters" class="inline-flex h-[38px] items-center gap-2 px-3 text-[13px] font-semibold text-slate-600 hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500">
+            <i class="fa fa-refresh" aria-hidden="true"></i> @lang('app.reset')
+        </a>
     </div>
 </form>
 
@@ -115,6 +108,7 @@
 
     function closeFilterMenus() {
         $('.registration-filter-menu').addClass('hidden');
+        $('.registration-filter-toggle').attr('aria-expanded', 'false');
         unlockFilterPage();
     }
 
@@ -147,6 +141,10 @@
         if (opening) {
             lockFilterPage();
             $menu.removeClass('hidden');
+            $(this).attr('aria-expanded', 'true');
+            $menu.css('left', '');
+            var overflow = $menu[0].getBoundingClientRect().right - document.documentElement.clientWidth + 12;
+            if (overflow > 0) $menu.css('left', -overflow + 'px');
             var search = $filter.find('.registration-filter-search').get(0);
             if (search) search.focus({ preventScroll: true });
         }
@@ -154,6 +152,13 @@
 
     $('.registration-filter-menu').on('click', function (event) { event.stopPropagation(); });
     $(document).on('click', closeFilterMenus);
+    $('#consortium-registration-filters').on('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        var toggle = this.querySelector('.registration-filter-toggle[aria-expanded="true"]');
+        if (!toggle) return;
+        closeFilterMenus();
+        toggle.focus();
+    });
 
     $('.registration-filter-search').on('input', function () {
         var $filter = $(this).closest('.registration-multi-filter');
