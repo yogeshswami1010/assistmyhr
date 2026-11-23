@@ -28,11 +28,7 @@
     .ja-candidate-profile .ja-nav-btn,
     .ja-candidate-profile .ja-close-btn { width: 36px; height: 36px; color: #fff; }
     .ja-candidate-profile .ja-nav-counter { color: #fff; font-size: 12px; }
-    .ja-profile-header { flex: 0 0 auto; }
     .ja-candidate-profile .ja-profile-toolbar { position: relative; z-index: 4; overflow: visible; flex-wrap: wrap; padding: 8px clamp(12px, 2vw, 32px); border-color: var(--profile-line); }
-    .ja-header-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding-inline-end: 8px; border-inline-end: 1px solid var(--profile-line); }
-    .ja-profile-toolbar .ja-header-tabs .ja-tab { height: 34px; padding: 0 8px; }
-    .ja-profile-toolbar .ja-header-tabs .ja-tab.active { background: #eff6ff; }
     .ja-candidate-profile .ja-profile-toolbar .ja-profile-tags,
     .ja-candidate-profile .ja-profile-toolbar .ja-pdf-toolbar-tabs { flex-wrap: wrap; flex-shrink: 1; }
     .ja-candidate-profile .ja-profile-toolbar .ja-pdf-btn,
@@ -67,7 +63,9 @@
     .ja-resume-pages { display: flex; flex-direction: column; align-items: center; gap: 16px; width: max-content; min-width: 100%; padding: 24px; }
     .ja-candidate-profile .ja-pdf-page { box-shadow: 0 3px 18px #243d6526 !important; }
     .ja-candidate-profile .ja-right-panel { min-width: 0; min-height: 0; background: transparent; }
-    .ja-candidate-profile .ja-right-scroll { padding: 0 1px 1px; scrollbar-width: thin; scrollbar-color: #a9b8cc transparent; }
+    .ja-candidate-profile .ja-tabs { justify-content: space-between; overflow-x: auto; padding: 0 5px; background: transparent; border-color: var(--profile-line); }
+    .ja-candidate-profile .ja-tabs .ja-tab { padding: 10px 8px; font-size: 13px; }
+    .ja-candidate-profile .ja-right-scroll { padding: 12px 1px 1px; scrollbar-width: thin; scrollbar-color: #a9b8cc transparent; }
     .ja-candidate-profile .ja-card { border-color: var(--profile-line); padding: 15px 17px; margin-bottom: 13px; box-shadow: 0 2px 8px #12254b0a; }
     .ja-candidate-profile .ja-card-title { color: var(--profile-ink); font-size: 16px; font-weight: 750; text-transform: none; letter-spacing: normal; }
     .ja-candidate-profile .ja-info-row { gap: 12px; border-color: var(--profile-line); }
@@ -85,7 +83,6 @@
     .ja-client-actions .ja-pdf-btn { justify-content: center; width: 100%; min-height: 36px; color: var(--profile-blue); border-color: var(--profile-blue); }
     .ja-client-actions .ja-btn-blue { background: var(--profile-blue); color: #fff; }
     @media (max-width: 840px) {
-        .ja-header-tabs { flex-basis: 100%; border-inline-end: 0; }
         .ja-candidate-profile .ja-header-pills { display: none; }
         .ja-candidate-profile .ja-body { display: flex; flex-direction: column; overflow-y: auto; }
         .ja-candidate-profile .ja-pdf-panel { flex: 0 0 55dvh; min-height: 260px; }
