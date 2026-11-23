@@ -410,14 +410,20 @@ class AdminJobApplicationController extends AdminBaseController
             });
         }
 
-        // Filter by status
-        if ($request->filled('status_name')) {
-            $statusName = mb_strtolower(trim($request->status_name));
+        // Global stages can have a different ID in every job pipeline.
+        $statusId = filter_var($request->input('status'), FILTER_VALIDATE_INT);
+        $statusName = mb_strtolower(trim($request->string('status_name')->toString()));
+        if ($statusName === '' && $statusId > 0) {
+            $globalStatus = ApplicationStatus::global()->whereKey($statusId)->value('status');
+            $statusName = mb_strtolower(trim($globalStatus ?? ''));
+        }
+
+        if ($statusName !== '') {
             $jobApplications->whereHas('status', function ($query) use ($statusName) {
                 $query->whereRaw('LOWER(TRIM(status)) = ?', [$statusName]);
             });
-        } elseif ($request->status != 'all' && $request->status != '') {
-            $jobApplications = $jobApplications->where('status_id', $request->status);
+        } elseif ($statusId > 0) {
+            $jobApplications->where('job_applications.status_id', $statusId);
         }
 
         // Filter By jobs
