@@ -177,6 +177,7 @@
 <div class="ja-two-col-wrap ja-candidate-profile" data-ats-application-id="{{ $application->id }}" data-ats-sync-url="{{ route('admin.job-applications.show', $application->id) }}">
 
     {{-- ── HEADER ── --}}
+    <header class="ja-profile-header">
     <div class="ja-header">
         <img src="{{ $application->photo_url }}" alt=""
              class="ja-header-avatar"
@@ -230,6 +231,17 @@
     </div>
 
     <div class="ja-pdf-toolbar ja-profile-toolbar">
+        <div class="ja-header-tabs" role="group" aria-label="{{ __('Candidate details') }}">
+                <button type="button" class="ja-tab active" data-tab="details">
+                    <i class="fa fa-user" style="font-size:11px"></i> @lang('app.details')
+                </button>
+                <button type="button" class="ja-tab" data-tab="notes">
+                    <i class="fa fa-sticky-note-o" style="font-size:11px"></i> @lang('modules.jobApplication.applicantNotes')
+                </button>
+                <button type="button" class="ja-tab" data-tab="client-notes">
+                    <i class="fa fa-building" style="font-size:11px"></i> Client Notes
+                </button>
+            </div>
                 
 
                 <div class="ja-profile-tags">
@@ -353,6 +365,8 @@ function jaSaveMarketingLabel(appId) {
                 </div>
     </div>
 
+    </header>
+
     <div class="ja-body">
         <section class="ja-pdf-panel" aria-label="{{ __('Résumé') }}">
             <div class="ja-pdf-toolbar ja-resume-toolbar">
@@ -389,18 +403,6 @@ function jaSaveMarketingLabel(appId) {
 
         {{-- ── RIGHT: TABS ── --}}
         <div class="ja-right-panel">
-            <div class="ja-tabs">
-                <div class="ja-tab active" data-tab="details">
-                    <i class="fa fa-user" style="font-size:11px"></i> @lang('app.details')
-                </div>
-                <div class="ja-tab" data-tab="notes">
-                    <i class="fa fa-sticky-note-o" style="font-size:11px"></i> @lang('modules.jobApplication.applicantNotes')
-                </div>
-                <div class="ja-tab" data-tab="client-notes">
-                    <i class="fa fa-building" style="font-size:11px"></i> Client Notes
-                </div>
-            </div>
-
             <div class="ja-right-scroll">
                 <div id="ja-tab-client-reviews" class="ja-tab-pane" style="display:none">
                     @include('admin.job-applications.partials.client-review-panel')
