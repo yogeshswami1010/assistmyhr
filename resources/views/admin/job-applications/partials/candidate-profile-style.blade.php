@@ -8,21 +8,21 @@
     }
     .ja-candidate-profile .ja-header {
         gap: clamp(10px, 2vw, 26px);
-        padding: 16px clamp(14px, 2.6vw, 40px);
+        padding: 9px clamp(14px, 2.6vw, 40px);
         background: radial-gradient(ellipse at 42% 0%, #303477, transparent 58%), linear-gradient(105deg, #101938, #111d48 62%, #0a142d);
     }
     .ja-candidate-profile .ja-header-avatar,
     .ja-candidate-profile .ja-header-avatar-initials {
-        width: clamp(44px, 5vw, 76px);
-        height: clamp(44px, 5vw, 76px);
+        width: clamp(40px, 4vw, 56px);
+        height: clamp(40px, 4vw, 56px);
         background: #dbe3ff;
         color: #13234a;
         font-size: clamp(16px, 2vw, 27px);
     }
     .ja-candidate-profile .ja-header-meta { padding-inline-start: clamp(10px, 2vw, 28px); border-inline-start: 1px solid #ffffff45; }
-    .ja-candidate-profile .ja-header-meta h2 { font-size: clamp(20px, 2.6vw, 40px); line-height: 1.12; }
-    .ja-candidate-profile .ja-header-meta p { color: #d3ddfa; font-size: 12px; }
-    .ja-candidate-profile .ja-header-meta .ja-header-job { color: #fff; font-size: clamp(13px, 1.35vw, 21px); }
+    .ja-candidate-profile .ja-header-meta h2 { font-size: clamp(20px, 2vw, 28px); line-height: 1.12; }
+    .ja-candidate-profile .ja-header-meta p { color: #d3ddfa; font-size: 12px; line-height: 1.3; }
+    .ja-candidate-profile .ja-header-meta .ja-header-job { color: #fff; font-size: clamp(13px, 1.2vw, 16px); }
     .ja-header-meta-separator { margin-inline: 5px; }
     .ja-candidate-profile .ja-nav-arrows { background: none; border: 0; gap: 9px; }
     .ja-candidate-profile .ja-nav-btn,
