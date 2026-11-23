@@ -4,6 +4,8 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\Storage;
 
 class ConsortiumRegistration extends Model
 {
@@ -23,6 +25,42 @@ class ConsortiumRegistration extends Model
         'is_temp_staffing' => 'boolean',
         'temp_staffing_at' => 'datetime',
     ];
+
+    public function resumeStoragePath(): ?string
+    {
+        $file = $this->resume_file;
+
+        return is_string($file) && preg_match('/\A[^\/\\\\]+\.(pdf|doc|docx|rtf|png|jpe?g)\z/i', $file)
+            ? 'registration-resumes/'.$file
+            : null;
+    }
+
+    public function resumeDisk(): ?FilesystemAdapter
+    {
+        $path = $this->resumeStoragePath();
+        if ($path === null) {
+            return null;
+        }
+
+        $disk = Storage::disk();
+        if ($disk->exists($path)) {
+            return $disk;
+        }
+
+        // Older workspace uploads may be on that workspace's public disk.
+        // Outside SaaS, the registration uploader uses S3 for non-local uploads.
+        $fallback = config('saas.enabled')
+            ? (app(\App\Saas\TenantContext::class)->current() ? 'public' : null)
+            : (config('filesystems.default') === 'local' ? null : 's3');
+        if ($fallback !== null && $fallback !== config('filesystems.default')) {
+            $disk = Storage::disk($fallback);
+            if ($disk->exists($path)) {
+                return $disk;
+            }
+        }
+
+        return null;
+    }
 
     public function tempStaffingHistories()
     {

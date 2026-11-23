@@ -37,9 +37,13 @@
 
     // Resolve resume URL
     $currentResumeDocument = $application->documents->firstWhere('name', 'Resume');
-    $resumeUrl = $currentResumeDocument ? route('admin.job-applications.resume.view', $application->id).'?v='.($currentResumeDocument->updated_at?->timestamp ?? time()) : null;
+    $resumeUrl = $currentResumeDocument ? tenant_route('admin.job-applications.resume.view', ['id' => $application->id, 'v' => $currentResumeDocument->updated_at?->timestamp ?? time()]) : null;
     $resumeUrl = $registrationResumeUrl ?? $resumeUrl;
-    if (!$resumeUrl && !empty($answers)) {
+    $registrationResumeMissing = $registrationResumeMissing ?? false;
+    if ($registrationResumeMissing) {
+        $resumeUrl = null;
+    }
+    if (!$resumeUrl && !$registrationResumeMissing && !empty($answers)) {
         foreach ($answers as $answer) {
             if (!empty($answer->file)) {
                 $resumeUrl = !empty($answer->file_url) ? $answer->file_url : asset_url_local_s3('documents/' . basename($answer->file));
@@ -383,7 +387,7 @@ function jaSaveMarketingLabel(appId) {
             @else
                 <div class="ja-pdf-no-resume">
                     <i class="fa fa-file-pdf-o"></i>
-                    <p>No resume uploaded.</p>
+                    <p>{{ $registrationResumeMissing ? __('The uploaded résumé could not be found. Use Upload CV to replace it.') : __('No resume uploaded.') }}</p>
                 </div>
             @endif
         </section>
@@ -1399,10 +1403,20 @@ window.jaUnloadPdf();
             }, { root: scroll, rootMargin: '400px 0px' });
             Array.prototype.forEach.call(pages.children, function (holder) { window._jaPdfObserver.observe(holder); });
             renderPage(pages.firstElementChild);
-        }).catch(function() {
+        }).catch(function (failure) {
+            if (!isCurrentPdf()) return;
+            if (failure?.status === 404 || failure?.name === 'MissingPDFException') {
+                if (loading) loading.style.display = 'none';
+                if (error) {
+                    error.querySelector('span').textContent = 'The résumé file could not be found.';
+                    error.querySelector('button').hidden = true;
+                    error.style.display = 'flex';
+                }
+                return;
+            }
             // Some protected or external file URLs cannot be fetched by
             // PDF.js. Let the browser's PDF viewer handle those files.
-            if (isCurrentPdf()) window.jaShowNativeApplicantPdf();
+            window.jaShowNativeApplicantPdf();
         });
     };
 

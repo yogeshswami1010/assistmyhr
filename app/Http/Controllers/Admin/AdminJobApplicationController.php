@@ -1337,6 +1337,7 @@ class AdminJobApplicationController extends AdminBaseController
             ->first();
 
         $this->registrationResumeUrl = null;
+        $this->registrationResumeMissing = false;
         $registrationId = $request->integer('registration_profile');
         if ($registrationId > 0 && $this->user->cans('view_job_applications')
             && app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration')) {
@@ -1346,10 +1347,14 @@ class AdminJobApplicationController extends AdminBaseController
                 ->first();
             $resume = $this->application->documents->firstWhere('name', 'Resume');
             if ($registration?->resume_file && (!$resume || !Storage::exists('documents/'.$this->application->id.'/'.$resume->hashname))) {
-                $this->registrationResumeUrl = tenant_route('admin.consortium-registrations.resume', [
-                    'registration' => $registration->id,
-                    'inline' => 1,
-                ]);
+                if ($registration->resumeDisk()) {
+                    $this->registrationResumeUrl = tenant_route('admin.consortium-registrations.resume', [
+                        'registration' => $registration->id,
+                        'inline' => 1,
+                    ]);
+                } else {
+                    $this->registrationResumeMissing = true;
+                }
             }
         }
 

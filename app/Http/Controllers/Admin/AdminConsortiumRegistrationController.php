@@ -147,12 +147,12 @@ class AdminConsortiumRegistrationController extends AdminBaseController
     public function resume(Request $request, ConsortiumRegistration $registration)
     {
         abort_unless($this->user->cans('view_job_applications'), 403);
-        abort_unless($registration->resume_file, 404);
-        $path = 'registration-resumes/'.$registration->resume_file;
-        abort_unless(Storage::exists($path), 404, 'The registration résumé could not be found in storage.');
+        $path = $registration->resumeStoragePath();
+        $disk = $registration->resumeDisk();
+        abort_unless($disk && $path, 404, 'The registration résumé could not be found in storage.');
         $name = $registration->resume_original_name ?: $registration->resume_file;
 
-        return Storage::response($path, $name, [
+        return $disk->response($path, $name, [
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
         ], $request->boolean('inline') ? 'inline' : 'attachment');
