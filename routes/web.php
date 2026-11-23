@@ -371,6 +371,8 @@ Route::middleware('auth')->group(function () {
             // Archive / Candidate Database cascade routes
             Route::get('applications-archive/get-locations', [AdminApplicationArchiveController::class, 'getLocations'])
                 ->name('applications-archive.get-locations');
+            Route::get('applications-archive/get-jobs', [AdminApplicationArchiveController::class, 'getJobs'])
+                ->name('applications-archive.get-jobs');
 
             // Applications Archive
             Route::get('applications-archive/data',            [AdminApplicationArchiveController::class, 'data'])->name('applications-archive.data');

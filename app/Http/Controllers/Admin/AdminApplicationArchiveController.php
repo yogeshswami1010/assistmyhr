@@ -34,7 +34,8 @@ class AdminApplicationArchiveController extends AdminBaseController
         $this->companies = Company::select('id', 'company_name')->orderBy('company_name')->get();
         $this->jobs      = Job::select('id', 'title')->orderBy('title')->get();
         $this->locations = JobLocation::select('id', 'location')->orderBy('location')->get();
-        $this->statuses = ApplicationStatus::whereNotNull('job_id')->select('id', 'job_id', 'status')->orderBy('position')->get();
+        $this->statuses = ApplicationStatus::select('id', 'status')->orderBy('position')->orderBy('id')->get()
+            ->unique(fn ($status) => mb_strtolower(trim($status->status)));
 
 
         $this->questions = Question::select('id', 'question')->orderBy('question')->get();
@@ -84,7 +85,10 @@ class AdminApplicationArchiveController extends AdminBaseController
             $jobApplications->where('location_id', $request->location);
         }
 
-        if ($request->filled('status') && $request->status !== 'all') {
+        $statusName = mb_strtolower(trim($request->string('status_name')->toString()));
+        if ($statusName !== '') {
+            $jobApplications->whereHas('status', fn ($query) => $query->whereRaw('LOWER(TRIM(status)) = ?', [$statusName]));
+        } elseif ($request->filled('status') && $request->status !== 'all') {
             $jobApplications->where('status_id', $request->status);
         }
 
@@ -259,31 +263,23 @@ class AdminApplicationArchiveController extends AdminBaseController
 
         return Reply::success(__('messages.recordDeleted'));
     }
-        public function getLocations(Request $request)
+    public function getLocations(Request $request)
     {
-        $companyId = $request->input('companyId');
+        abort_unless($this->user->cans('view_job_applications'), 403);
 
-        // If specific company selected, only get locations linked to that company's jobs
-        if ($companyId && $companyId !== 'all' && $companyId !== '') {
-            $locationIds = \DB::table('job_job_locations')
-                ->join('jobs', 'jobs.id', '=', 'job_job_locations.job_id')
-                ->where('jobs.company_id', $companyId)
-                ->distinct()
-                ->pluck('job_job_locations.location_id');
+        $candidates = $this->candidateQuery($request)->reorder()->select('location_id');
+        $locations = JobLocation::whereIn('id', $candidates)->orderBy('location')->get(['id', 'location']);
 
-            $locations = JobLocation::whereIn('id', $locationIds)
-                ->orderBy('location')
-                ->get();
-        } else {
-            // No company filter - show all locations
-            $locations = JobLocation::orderBy('location')->get();
-        }
+        return response()->json(['locations' => $locations]);
+    }
 
-        $html = '<option value="all">' . __('modules.jobApplication.allLocation') . '</option>';
-        foreach ($locations as $location) {
-            $html .= '<option value="' . $location->id . '">' . ucfirst($location->location) . '</option>';
-        }
+    public function getJobs(Request $request)
+    {
+        abort_unless($this->user->cans('view_job_applications'), 403);
 
-        return response()->json(['locations' => $html]);
+        $candidates = $this->candidateQuery($request)->reorder()->select('job_id');
+        $jobs = Job::whereIn('id', $candidates)->orderBy('title')->get(['id', 'title']);
+
+        return response()->json(['jobs' => $jobs]);
     }
 }

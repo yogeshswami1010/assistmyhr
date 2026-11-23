@@ -299,7 +299,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                         <select class="select2 w-full" name="status" id="status" aria-label="{{ __('Status') }}">
                             <option value="all">{{ __('Status') }}</option>
                             @forelse($statuses as $s)
-                                <option value="{{ $s->id }}">{{ ucfirst($s->status) }}</option>
+                                <option value="{{ $s->id }}" data-status-name="{{ trim($s->status) }}">{{ ucfirst(trim($s->status)) }}</option>
                             @empty
                             @endforelse
                         </select>
@@ -340,72 +340,44 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
     <script>
             // ── Company → Location → Jobs cascade ───────────────────────────────────────
 
-    function jaRefreshArchiveLocations(companyId, callback) {
-        $.ajax({
-            url: "{{ route('admin.applications-archive.get-locations') }}",
-            type: 'GET',
-            data: { companyId: companyId },
-            dataType: 'json',
-            success: function(data) {
-                if ($('#company').val() !== companyId) return;
-                try {
-                    if ($('#location').data('select2')) {
-                        $('#location').select2('destroy');
-                    }
-                } catch(e) {}
+    function archiveSetOptions($select, label, rows, field) {
+        $select.empty().append(new Option(label, 'all'));
+        rows.forEach(function (row) {
+            $select.append(new Option(row[field], row.id));
+        });
+        $select.val('all').trigger('change.select2');
+    }
 
-                $('#location').html(data.locations);
-                $('#location option[value="all"]').text(@json(__('Location')));
-                $('#location').select2({ width: '100%' });
-                $('#location').val('all').trigger('change.select2');
+    var locationRequest;
+    var jobRequest;
+    var locationLabel = @json(__('Location'));
+    var jobLabel = @json(__('Job'));
 
-                if (typeof callback === 'function') callback();
-            },
-            error: function(xhr) {
-                console.error('jaRefreshArchiveLocations failed:', xhr.status, xhr.responseText);
-            }
+    function archiveRefreshJobs() {
+        jobRequest?.abort();
+        archiveSetOptions($('#jobs'), jobLabel, [], 'title');
+        jobRequest = $.getJSON(@json(route('admin.applications-archive.get-jobs')), {
+            company: $('#company').val(),
+            location: $('#location').val(),
+        }).done(function (data) {
+            archiveSetOptions($('#jobs'), jobLabel, data.jobs, 'title');
         });
     }
 
-    function jaRefreshArchiveJobs(companyId, locationId) {
-        $.ajax({
-            url: "{{ route('admin.job-applications.get-jobs') }}",
-            type: 'GET',
-            data: { companyId: companyId, locationId: locationId },
-            dataType: 'json',
-            success: function(data) {
-                if ($('#company').val() !== companyId || $('#location').val() !== locationId) return;
-                try {
-                    if ($('#jobs').data('select2')) {
-                        $('#jobs').select2('destroy');
-                    }
-                } catch(e) {}
+    $('#company').on('change', function () {
+        locationRequest?.abort();
+        archiveSetOptions($('#location'), locationLabel, [], 'location');
+        archiveRefreshJobs();
 
-                $('#jobs').html(data.jobs);
-                $('#jobs option[value="all"]').text(@json(__('Job')));
-                $('#jobs').select2({ width: '100%' });
-                $('#jobs').val('all').trigger('change');
-            },
-            error: function(xhr) {
-                console.error('jaRefreshArchiveJobs failed:', xhr.status, xhr.responseText);
-            }
-        });
-    }
-
-    // Company changes → filter locations, then filter jobs
-    $('#company').on('change', function() {
-        var company_id = $(this).val();
-        jaRefreshArchiveLocations(company_id, function() {
-            jaRefreshArchiveJobs(company_id, $('#location').val());
+        locationRequest = $.getJSON(@json(route('admin.applications-archive.get-locations')), {
+            company: this.value,
+        }).done(function (data) {
+            archiveSetOptions($('#location'), locationLabel, data.locations, 'location');
         });
     });
 
-    // Location changes → filter jobs
-    $('#location').on('change', function() {
-        var company_id  = $('#company').val();
-        var location_id = $(this).val();
-        jaRefreshArchiveJobs(company_id, location_id);
-    });
+    $('#location').on('change', archiveRefreshJobs);
+
     // ── Skill tag input ────────────────────────────────────────────────────────
     (function () {
         // All available skills from Laravel (for autocomplete suggestions)
@@ -611,6 +583,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                         jobs:           $('#jobs').val()      || 'all',
                         location:       $('#location').val()  || 'all',
                         status:         $('#status').val()    || 'all',
+                        status_name:    $('#status option:selected').attr('data-status-name') || '',
                     });
                 }
             },
@@ -667,6 +640,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
         url.searchParams.set('jobs', $('#jobs').val() || 'all');
         url.searchParams.set('location', $('#location').val() || 'all');
         url.searchParams.set('status', $('#status').val() || 'all');
+        url.searchParams.set('status_name', $('#status option:selected').attr('data-status-name') || '');
         window.location.href = url.href;
     }
 
