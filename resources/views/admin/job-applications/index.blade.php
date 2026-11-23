@@ -290,14 +290,6 @@
                     </select>
                 </div>
 
-                <div class="ja-filter-field ja-filter-question">
-                    <select class="select2 w-full" id="questions" name="questions" aria-label="{{ __('Custom questions') }}">
-                        <option value="all">{{ __('Custom questions') }}</option>
-                        @foreach($questions as $question)
-                            <option value="{{ $question->id }}">{{ $question->question }}</option>
-                        @endforeach
-                    </select>
-                </div>
                 <button type="button" id="reset-filters"
                     class="inline-flex h-[38px] shrink-0 items-center gap-2 rounded-[10px] border-[1.5px] border-[#E2DED8] bg-white px-4 text-[13px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:text-[#2563EB] focus-visible:ring-2 focus-visible:ring-blue-500"
                     style="height: 38px">
@@ -418,7 +410,6 @@
                 company: $('#company').val() || 'all',
                 location: $('#location').val() || 'all',
                 jobs: $('#jobs').val() || 'all',
-                questions: $('#questions').val() || 'all',
                 knockout: !!jaShowKO
             }));
         } catch (e) {}
@@ -773,7 +764,6 @@
                 company:        company,
                 jobs:           jobs,
                 location:       location,
-                questions:      $('#questions').val() || 'all',
             },
             success: function(res) {
                 console.log('stage-counts response:', res);
@@ -845,7 +835,6 @@
                     location:       location,
                     jobs:           jobs,
                     company:        company,
-                    questions:      $('#questions').val() || 'all',
                     knockout:       knockout
                 });
             }
@@ -1188,7 +1177,6 @@ if (jobFromUrl) {
     savedFilters.location = 'all';
     savedFilters.jobs = jobFromUrl;
     savedFilters.knockout = false;
-    savedFilters.questions = 'all';
     savedFilters.status = statusFromUrl || 'all';
 }
 const restoredStatus = statusFromUrl || savedFilters.status || 'all';
@@ -1207,7 +1195,6 @@ function jaRestoreSelect(selector, value) {
 jaRestoreSelect('#company', savedFilters.company);
 jaRestoreSelect('#location', savedFilters.location);
 jaRestoreSelect('#jobs', savedFilters.jobs);
-jaRestoreSelect('#questions', savedFilters.questions);
 jaShowKO = !statusFromUrl && savedFilters.knockout === true;
 jaActiveStageId = restoredStatus;
 jaRestoreSelect('#status', restoredStatus);

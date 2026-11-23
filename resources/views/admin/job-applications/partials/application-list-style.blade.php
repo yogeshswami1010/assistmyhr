@@ -52,7 +52,6 @@
         border-bottom: 1px solid var(--ja-line);
     }
     .ja-filter-field { flex: 0 1 130px; min-width: 104px; }
-    .ja-filter-question { flex-basis: 184px; min-width: 145px; }
     .ja-applications #ja-table-filter-bar .select2-selection--single {
         background: #fff;
         border: 1px solid #d6dce5;
