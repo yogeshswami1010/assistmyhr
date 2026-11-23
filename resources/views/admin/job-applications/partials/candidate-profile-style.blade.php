@@ -33,7 +33,8 @@
     .ja-candidate-profile .ja-profile-toolbar .ja-pdf-toolbar-tabs,
     .ja-candidate-profile .ja-profile-toolbar .ja-profile-doc-actions { display: contents; }
     .ja-candidate-profile .ja-profile-toolbar .ja-pdf-btn,
-    .ja-candidate-profile .ja-profile-toolbar .ja-tab { border-radius: 7px; color: var(--profile-ink); font-size: 12px; }
+    .ja-candidate-profile .ja-profile-toolbar .ja-tab { border-radius: 7px; color: var(--profile-ink); font-size: 13px; gap: 6px; }
+    .ja-candidate-profile .ja-profile-toolbar :is(.ja-pdf-btn, .ja-tab) > i { font-size: 13px; }
     .ja-candidate-profile .ja-profile-toolbar .ja-pdf-btn { border-color: transparent; }
     .ja-candidate-profile .ja-profile-toolbar .ja-tab.active { color: var(--profile-blue); }
     .ja-conversations { position: relative; }

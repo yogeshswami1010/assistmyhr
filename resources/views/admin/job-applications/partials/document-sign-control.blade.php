@@ -2,7 +2,7 @@
     <form method="POST" action="{{ tenant_route('admin.document-sign.candidates.add', ['id' => $application->id]) }}" class="m-0 shrink-0">
         @csrf
         <button type="submit" class="ja-pdf-btn">
-            <i class="fa fa-pencil-square-o" aria-hidden="true"></i> {{ $documentSignLabel ?? __('Add Sign Document') }}
+            <i class="fa-solid fa-file-signature" aria-hidden="true"></i> {{ $documentSignLabel ?? __('Add Sign Document') }}
         </button>
     </form>
 @endif

@@ -319,35 +319,35 @@ function jaSaveMarketingLabel(appId) {
 </script>
                     @if(count($answers) > 0)
                     <div class="ja-tab" data-tab="qa">
-                        <i class="fa fa-question-circle-o" style="font-size:11px"></i> @lang('modules.front.additionalDetails')
+                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i> @lang('modules.front.additionalDetails')
                     </div>
                     @endif
                     <details class="ja-conversations">
-                        <summary class="ja-pdf-btn"><i class="fa fa-comment-o" aria-hidden="true"></i> {{ __('Conversations') }} <i class="fa fa-angle-down" aria-hidden="true"></i></summary>
+                        <summary class="ja-pdf-btn"><i class="fa-solid fa-comments" aria-hidden="true"></i> {{ __('Conversations') }} <i class="fa fa-angle-down" aria-hidden="true"></i></summary>
                         <div class="ja-conversation-menu">
-                            <button type="button" class="ja-tab" data-tab="sms">{{ __('SMS conversation') }}</button>
+                            <button type="button" class="ja-tab" data-tab="sms"><i class="fa-solid fa-comment-sms" aria-hidden="true"></i> {{ __('SMS conversation') }}</button>
                             <button type="button" class="ja-tab" data-tab="email-conversation" id="ja-email-tab-{{ $application->id }}">
-                                {{ __('Email conversation') }}
+                                <i class="fa-solid fa-envelope" aria-hidden="true"></i> {{ __('Email conversation') }}
                                 <span id="ja-email-unread-{{ $application->id }}" class="ja-tab-badge" style="display:none">0</span>
                             </button>
                         </div>
                     </details>
                     <div class="ja-tab" data-tab="history">
-                        <i class="fa fa-history"></i> History
+                        <i class="fa fa-history" aria-hidden="true"></i> History
                     </div>
                     <div class="ja-tab" data-tab="client-reviews">
-                        <i class="fa fa-user-o"></i> Client Reviews
+                        <i class="fa-solid fa-star" aria-hidden="true"></i> Client Reviews
                         <span id="ja-client-review-unread" class="ja-tab-badge" style="display:none">0</span>
                     </div>
                       @if(!is_null($application->schedule))
                         <div class="ja-tab" data-tab="schedule">
-                            <i class="fa fa-calendar" stylfe="font-size:11px"></i> @lang('modules.interviewSchedule.scheduleDetail')
+                            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i> @lang('modules.interviewSchedule.scheduleDetail')
                         </div>
                     @endif
                 </div>
                 <div class="ja-profile-doc-actions">
                     <button type="button" class="ja-pdf-btn" onclick="jaShowJobDesc()">
-                        <i class="fa fa-file-text-o"></i> Job Description
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i> Job Description
                     </button>
                     @include('admin.job-applications.partials.resume-update-control')
                     @include('admin.job-applications.partials.document-sign-control', ['documentSignLabel' => __('Document Sign')])
