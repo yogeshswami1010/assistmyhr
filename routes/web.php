@@ -87,6 +87,10 @@ Route::middleware(RequireTenantFeature::class.':consortium_registration')->group
     Route::post('/consortium-registration', [ConsortiumRegistrationController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('consortium-registration.store');
+    Route::post('/consortium-registration/embed', [ConsortiumRegistrationController::class, 'storeEmbed'])
+        ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+        ->middleware(['signed:relative', 'throttle:10,1'])
+        ->name('consortium-registration.embed');
 });
 
 Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetController::class)->middleware('throttle:60,1')->name('jobs.widget');

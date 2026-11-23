@@ -8,18 +8,35 @@ use App\Http\Controllers\Controller;
 use App\Services\ResumePdfConverter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 
 class ConsortiumRegistrationController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
-        return response()->view('front.consortium-registration')->header('Cache-Control', 'private, no-store');
+        $embedAction = $request->boolean('embed') ? $this->embedAction() : null;
+        $response = response()->view('front.consortium-registration', compact('embedAction'))
+            ->header('Cache-Control', 'private, no-store');
+
+        if ($embedAction) {
+            $response->header('Content-Security-Policy', "frame-ancestors 'self' https://consortiumstaffing.ca https://www.consortiumstaffing.ca");
+            $response->header('Referrer-Policy', 'no-referrer');
+        }
+
+        return $response;
+    }
+
+    private function embedAction(): string
+    {
+        return URL::temporarySignedRoute('consortium-registration.embed', now()->addHours(4), tenant_parameters(), false);
     }
 
     public function token(Request $request): JsonResponse
     {
-        return response()->json(['token' => $request->session()->token()])
+        return response()->json($request->boolean('embed')
+            ? ['action' => $this->embedAction()]
+            : ['token' => $request->session()->token()])
             ->header('Cache-Control', 'private, no-store');
     }
 
@@ -52,6 +69,13 @@ class ConsortiumRegistrationController extends Controller
             'message' => 'Registration submitted successfully.',
             'registration_id' => $registration->id,
         ]), $request);
+    }
+
+    public function storeEmbed(Request $request): JsonResponse
+    {
+        $this->persist($request);
+
+        return response()->json(['submitted' => true]);
     }
 
     private function persist(Request $request): ConsortiumRegistration

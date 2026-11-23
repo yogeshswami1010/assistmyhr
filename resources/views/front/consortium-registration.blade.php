@@ -4,7 +4,9 @@
 @else<div class="head"><h1>Candidate Registration</h1><p>Register with AssistMyHR</p></div><div class="body">
 @if($errors->any())<div class="errors"><b>Please correct the highlighted information.</b><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 <div id="registration-feedback" class="errors" role="alert" hidden></div>
-<form id="consortium-registration-form" method="POST" action="{{ tenant_route('consortium-registration.store', [], false) }}" data-token-url="{{ tenant_route('consortium-registration.token', [], false) }}" enctype="multipart/form-data">@csrf<input class="hp" name="website" tabindex="-1" autocomplete="off">
+<form id="consortium-registration-form" method="POST" action="{{ $embedAction ?? tenant_route('consortium-registration.store', [], false) }}" data-token-url="{{ tenant_route('consortium-registration.token', $embedAction ? ['embed' => 1] : [], false) }}" enctype="multipart/form-data">
+@if(!$embedAction) @csrf @endif
+<input class="hp" name="website" tabindex="-1" autocomplete="off">
 <section class="section"><h2>Basic Information</h2><p>Please provide your contact details.</p><div class="grid">
 <div><label>First Name *</label><input name="first_name" value="{{ old('first_name') }}" required></div><div><label>Last Name *</label><input name="last_name" value="{{ old('last_name') }}" required></div>
 <div><label>Email *</label><input type="email" name="email" value="{{ old('email') }}" required></div><div><label>Phone Number *</label><input name="phone" value="{{ old('phone') }}" required></div>
@@ -18,10 +20,17 @@
 <div class="check"><label><input type="checkbox" name="information_certified" value="1" @checked((string) old('information_certified') === '1') required> I certify that the submitted information is true and correct.</label><label><input type="checkbox" name="agreement_accepted" value="1" @checked((string) old('agreement_accepted') === '1') required> I have read and understood the Applicant Agreement. <a href="https://consortiumstaffing.ca/terms-and-condition/" target="_blank" rel="noopener noreferrer" style="color:#079b73;font-weight:700;text-decoration:underline;">(Click Here to read)</a></label><label><input type="checkbox" name="sms_consent" value="1" @checked((string) old('sms_consent') === '1')> I agree to receive SMS and calls from AssistMyHR and can opt out by replying STOP.</label></div></section>
 <div class="actions"><button class="submit" type="submit">Submit Registration</button></div>
 </form></div>
+@if($embedAction)
+<div id="registration-embedded-success" class="success" role="status" hidden>
+    <b>Registration submitted successfully</b>
+    <p>Thank you. The AssistMyHR team will review your information and contact you.</p>
+</div>
+@endif
 <script>
     const form = document.getElementById('consortium-registration-form');
     const submit = form.querySelector('[type="submit"]');
     const feedback = document.getElementById('registration-feedback');
+    const embedSuccess = document.getElementById('registration-embedded-success');
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -31,12 +40,19 @@
         feedback.textContent = '';
         const data = new FormData(form);
         const tokenField = form.elements.namedItem('_token');
-        const options = {headers: {Accept: 'application/json'}, credentials: 'same-origin', cache: 'no-store'};
+        const options = {headers: {Accept: 'application/json'}, credentials: embedSuccess ? 'omit' : 'same-origin', cache: 'no-store'};
         let submitted = false;
 
         try {
             let response = await fetch(form.action, {...options, method: 'POST', body: data});
-            if (response.status === 419) {
+            if (embedSuccess && response.status === 403) {
+                const refresh = await fetch(form.dataset.tokenUrl, options);
+                const action = refresh.ok ? (await refresh.json()).action : null;
+                if (action) {
+                    form.action = action;
+                    response = await fetch(form.action, {...options, method: 'POST', body: data});
+                }
+            } else if (!embedSuccess && response.status === 419) {
                 const session = await fetch(form.dataset.tokenUrl, options);
                 const token = session.ok ? (await session.json()).token : null;
                 if (token) {
@@ -47,6 +63,13 @@
             }
 
             const result = await response.json().catch(() => ({}));
+            if (embedSuccess && response.ok && result.submitted) {
+                submitted = true;
+                form.closest('.body').hidden = true;
+                embedSuccess.hidden = false;
+                embedSuccess.scrollIntoView({block: 'nearest'});
+                return;
+            }
             if (response.ok && result.redirect) {
                 submitted = true;
                 window.location.assign(result.redirect);
