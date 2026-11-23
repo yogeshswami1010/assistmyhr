@@ -251,7 +251,7 @@
            value="{{ $application->marketing_label }}"
            placeholder="Marketing label…"
            onchange="jaSaveMarketingLabel({{ $application->id }})"
-           style="display:{{ $application->is_marketing ? 'inline-block' : 'none' }};width:140px;padding:5px 9px;border-radius:8px;border:1px solid #E2DED8;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;">
+           style="display:{{ $application->is_marketing ? 'inline-block' : 'none' }};width:clamp(140px, 30vw, 280px);padding:5px 9px;border-radius:8px;border:1px solid #E2DED8;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;">
 </div>
 @endif
 
