@@ -350,7 +350,6 @@ function jaSaveMarketingLabel(appId) {
                         <i class="fa-solid fa-file-lines" aria-hidden="true"></i> Job Description
                     </button>
                     @include('admin.job-applications.partials.resume-update-control')
-                    @include('admin.job-applications.partials.document-sign-control', ['documentSignLabel' => __('Document Sign')])
                 </div>
     </div>
 
@@ -702,6 +701,7 @@ function jaSaveMarketingLabel(appId) {
                                     <i class="fa fa-paper-plane-o" aria-hidden="true"></i> {{ __('Submit to client') }}
                                 </button>
                             @endif
+                            @include('admin.job-applications.partials.document-sign-control', ['documentSignLabel' => __('Request signature')])
                         </div>
                     </div>
 

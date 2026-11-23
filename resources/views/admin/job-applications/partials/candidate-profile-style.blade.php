@@ -83,7 +83,7 @@
     .ja-stage-section label { color: var(--profile-ink); font-size: 12px; font-weight: 700; }
     .ja-stage-section select { min-width: 125px; width: auto; }
     .ja-client-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-    .ja-client-actions form { flex: 1 1 150px; }
+    .ja-client-actions > :is(form, button) { flex: 1 1 150px; }
     .ja-client-actions .ja-pdf-btn { justify-content: center; width: 100%; min-height: 36px; color: var(--profile-blue); border-color: var(--profile-blue); }
     .ja-client-actions .ja-btn-blue { background: var(--profile-blue); color: #fff; }
     @media (max-width: 840px) {
