@@ -78,25 +78,37 @@ class AdminCandidateMarketingController extends AdminBaseController
         return DataTables::of($applications)
             ->editColumn('full_name', function ($row) {
                 $name = ucwords($row->full_name);
-                return '<a href="javascript:;" class="show-detail font-semibold text-[13.5px] text-[#1A1E2E] hover:text-blue-600" data-row-id="' . $row->id . '">' . $name . '</a>
-                        <div class="text-[11.5px] text-[#8892A0]">' . $row->email . '</div>';
+                $initial = mb_strtoupper(mb_substr(trim($name), 0, 1));
+
+                return '<div class="ja-applicant">'
+                    . '<span class="ja-applicant-avatar" aria-hidden="true">' . e($initial) . '</span>'
+                    . '<div class="min-w-0"><button type="button" class="show-detail ja-applicant-name" data-row-id="' . $row->id . '">' . e($name) . '</button>'
+                    . '<div class="break-all text-[11.5px] text-slate-500">' . e($row->email) . '</div></div></div>';
             })
             ->editColumn('title', function ($row) {
                 return \App\Support\CandidateJobLabel::html($row->job);
             })
             ->editColumn('marketing_label', function ($row) {
                 return $row->marketing_label
-                    ? '<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;background:#FFF7ED;color:#C2410C">' . e($row->marketing_label) . '</span>'
+                    ? '<span class="ja-status-pill ja-status-neutral whitespace-normal break-all">' . e($row->marketing_label) . '</span>'
                     : '<span style="color:#B0B8C4;font-size:12px">—</span>';
             })
             ->editColumn('status', function ($row) {
                 if (!$row->status_id || !$row->status) {
-                    return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold text-white" style="background:#6366F1">Internal</span>';
+                    return '<span class="ja-status-pill ja-status-neutral">' . e(__('Internal')) . '</span>';
                 }
 
-                $color = $row->status->color ?? '#6B7280';
-                $label = ucwords(str_replace('_', ' ', $row->status->status ?? ''));
-                return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold text-white" style="background:' . $color . '">' . $label . '</span>';
+                $stage = $row->status->status;
+                $tone = match (mb_strtolower(trim($stage))) {
+                    'applied' => 'blue',
+                    'interview' => 'amber',
+                    'hired' => 'green',
+                    'rejected' => 'red',
+                    default => 'neutral',
+                };
+                $label = ucwords(str_replace('_', ' ', $stage));
+
+                return '<span class="ja-status-pill ja-status-' . $tone . '">' . e($label) . '</span>';
             })
             ->editColumn('marketing_added_at', function ($row) {
                 if (empty($row->marketing_added_at)) {
@@ -113,8 +125,8 @@ class AdminCandidateMarketingController extends AdminBaseController
             })
             ->addColumn('action', function ($row) {
                 return '<div class="ja-row-actions">
-                    <a href="javascript:;" class="show-detail ja-act-btn" data-row-id="' . $row->id . '" title="View profile"><i class="fa fa-eye"></i></a>
-                    <button type="button" onclick="cmRemoveFromMarketing(' . $row->id . ')" class="ja-act-btn reject" title="Remove from Candidate Marketing"><i class="fa fa-times"></i></button>
+                    <button type="button" class="show-detail ja-act-btn" data-row-id="' . $row->id . '" title="View profile" aria-label="View profile"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                    <button type="button" onclick="cmRemoveFromMarketing(' . $row->id . ')" class="ja-act-btn reject" title="Remove from Candidate Marketing" aria-label="Remove from Candidate Marketing"><i class="fa fa-times" aria-hidden="true"></i></button>
                 </div>';
             })
             ->rawColumns(['full_name', 'marketing_label', 'status', 'action', 'title'])
