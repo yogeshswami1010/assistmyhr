@@ -26,6 +26,17 @@
                     return json;
                 });
             }).then(function (response) {
+                if (!button.isConnected) return;
+                var profile = button.closest('.ja-candidate-profile');
+                var resumeActions = profile?.querySelector('.ja-resume-toolbar .ja-pdf-toolbar-actions');
+                if (profile) {
+                    var pdfContainer = profile.querySelector('#ja-pdf-container');
+                    if (pdfContainer) pdfContainer.dataset.resumeReplaced = 'true';
+                    window.jaUnloadPdf?.();
+                    profile.querySelectorAll('#ja-resume-pages, #ja-resume-zoom').forEach(function (control) {
+                        control.hidden = true;
+                    });
+                }
                 document.querySelectorAll('.ja-current-resume-link').forEach(function (link) {
                     link.href = response.resume_url;
                 });
@@ -33,6 +44,7 @@
                     var viewLink = document.createElement('a');
                     viewLink.href = response.resume_url;
                     viewLink.target = '_blank';
+                    viewLink.rel = 'noopener';
                     viewLink.className = 'ja-pdf-btn ja-current-resume-link';
                     viewLink.innerHTML = '<i class="fa fa-external-link"></i> View';
 
@@ -42,8 +54,12 @@
                     downloadLink.className = 'ja-pdf-btn ja-current-resume-link';
                     downloadLink.innerHTML = '<i class="fa fa-download"></i> Download';
 
-                    button.parentNode.insertBefore(viewLink, button.nextSibling);
-                    button.parentNode.insertBefore(downloadLink, viewLink.nextSibling);
+                    if (resumeActions) {
+                        resumeActions.append(downloadLink, viewLink);
+                    } else {
+                        button.parentNode.insertBefore(viewLink, button.nextSibling);
+                        button.parentNode.insertBefore(downloadLink, viewLink.nextSibling);
+                    }
                 }
                 var frame = document.getElementById('ja-pdf-frame');
                 if (frame) {

@@ -172,8 +172,9 @@
 .ja-small-badge { font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px; }
 .ja-nav-loading { opacity:.5;pointer-events:none;transition:opacity .2s; }
 </style>
+@include('admin.job-applications.partials.candidate-profile-style')
 
-<div class="ja-two-col-wrap" data-ats-application-id="{{ $application->id }}" data-ats-sync-url="{{ route('admin.job-applications.show', $application->id) }}">
+<div class="ja-two-col-wrap ja-candidate-profile" data-ats-application-id="{{ $application->id }}" data-ats-sync-url="{{ route('admin.job-applications.show', $application->id) }}">
 
     {{-- ── HEADER ── --}}
     <div class="ja-header">
@@ -184,9 +185,16 @@
 
         <div class="ja-header-meta">
             <h2>{{ ucwords($application->full_name) }}</h2>
+            @if($application->job)
+                <p class="ja-header-job">{{ $application->job->title }}</p>
+            @endif
             <p>
                 @if($application->job)
-                    {{ $application->job->title }} · Applied {{ $application->created_at->timezone($global->timezone)->format('d M Y, h:i A') }}
+                    {{ implode(' · ', array_filter([$application->job->company?->company_name, $application->location?->location])) }}
+                    @if($application->job->company?->company_name || $application->location?->location)
+                        <span class="ja-header-meta-separator" aria-hidden="true">|</span>
+                    @endif
+                    {{ __('Applied') }} {{ $application->created_at->timezone($global->timezone)->format('M j, Y') }}
                 @else
                     @if($application->origin_label)
                         {{ $application->origin_label }} ·
@@ -221,11 +229,7 @@
         </button>
     </div>
 
-    <div class="ja-body">
-
-        {{-- ── LEFT: PDF ── --}}
-        <div class="ja-pdf-panel">
-            <div class="ja-pdf-toolbar ja-profile-toolbar">
+    <div class="ja-pdf-toolbar ja-profile-toolbar">
                 
 
                 <div class="ja-profile-tags">
@@ -318,13 +322,16 @@ function jaSaveMarketingLabel(appId) {
                         <i class="fa fa-question-circle-o" style="font-size:11px"></i> @lang('modules.front.additionalDetails')
                     </div>
                     @endif
-                    <div class="ja-tab" data-tab="sms">
-                        <i class="fa fa-comments-o" style="font-size:11px"></i> SMS Conversation
-                    </div>
-                    <div class="ja-tab" data-tab="email-conversation" id="ja-email-tab-{{ $application->id }}">
-                        <i class="fa fa-envelope-o" style="font-size:11px"></i> Email Conversation
-                        <span id="ja-email-unread-{{ $application->id }}" class="ja-tab-badge" style="display:none">0</span>
-                    </div>
+                    <details class="ja-conversations">
+                        <summary class="ja-pdf-btn"><i class="fa fa-comment-o" aria-hidden="true"></i> {{ __('Conversations') }} <i class="fa fa-angle-down" aria-hidden="true"></i></summary>
+                        <div class="ja-conversation-menu">
+                            <button type="button" class="ja-tab" data-tab="sms">{{ __('SMS conversation') }}</button>
+                            <button type="button" class="ja-tab" data-tab="email-conversation" id="ja-email-tab-{{ $application->id }}">
+                                {{ __('Email conversation') }}
+                                <span id="ja-email-unread-{{ $application->id }}" class="ja-tab-badge" style="display:none">0</span>
+                            </button>
+                        </div>
+                    </details>
                     <div class="ja-tab" data-tab="history">
                         <i class="fa fa-history"></i> History
                     </div>
@@ -343,20 +350,33 @@ function jaSaveMarketingLabel(appId) {
                         <i class="fa fa-file-text-o"></i> Job Description
                     </button>
                     @include('admin.job-applications.partials.resume-update-control')
-                    @include('admin.job-applications.partials.document-sign-control')
-                    @if($resumeUrl)
-                        <a href="{{ $resumeUrl }}" target="_blank" class="ja-pdf-btn ja-current-resume-link"><i class="fa fa-external-link"></i> View</a>
-                        <a href="{{ $resumeUrl }}" download class="ja-pdf-btn ja-current-resume-link"><i class="fa fa-download"></i> Download</a>
-                    @endif
                 </div>
+    </div>
+
+    <div class="ja-body">
+        <section class="ja-pdf-panel" aria-label="{{ __('Résumé') }}">
+            <div class="ja-pdf-toolbar ja-resume-toolbar">
+                <h3 class="ja-pdf-toolbar-label"><i class="fa fa-file-text-o" aria-hidden="true"></i> {{ __('Résumé') }}</h3>
+                    <div class="ja-pdf-toolbar-actions">
+                        @if($resumeUrl)
+                        <span id="ja-resume-pages" hidden></span>
+                        <div id="ja-resume-zoom" class="ja-resume-zoom" hidden>
+                            <button type="button" class="ja-pdf-btn" data-zoom-step="-10" aria-label="{{ __('Zoom out') }}">−</button>
+                            <output id="ja-resume-zoom-value">100%</output>
+                            <button type="button" class="ja-pdf-btn" data-zoom-step="10" aria-label="{{ __('Zoom in') }}">+</button>
+                        </div>
+                        <a href="{{ $resumeUrl }}" download class="ja-pdf-btn ja-current-resume-link" aria-label="{{ __('Download résumé') }}" title="{{ __('Download résumé') }}"><i class="fa fa-download" aria-hidden="true"></i></a>
+                        <a href="{{ $resumeUrl }}" target="_blank" rel="noopener" class="ja-pdf-btn ja-current-resume-link" aria-label="{{ __('Open résumé') }}" title="{{ __('Open résumé') }}"><i class="fa fa-expand" aria-hidden="true"></i></a>
+                        @endif
+                    </div>
             </div>
             @if($resumeUrl)
                 <div id="ja-pdf-container" style="flex:1;min-height:0;position:relative;overflow:hidden;background:#525659;">
                     <div id="ja-pdf-loading" class="ja-pdf-loading"><i class="fa fa-spinner fa-spin" style="font-size:22px;"></i><span>Loading CV...</span></div>
                     <div id="ja-pdf-error" style="display:none;position:absolute;inset:0;z-index:3;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#d1d5db;background:#525659;"><i class="fa fa-exclamation-triangle" style="font-size:28px"></i><span style="font-size:13px">Couldn't render this PDF.</span><button type="button" class="ja-pdf-btn ja-pdf-btn-primary" onclick="jaShowNativeApplicantPdf()">Show PDF</button></div>
                     <iframe id="ja-pdf-frame" class="ja-pdf-frame" title="Applicant CV" style="display:none"></iframe>
-                    <div id="ja-pdf-scroll" style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;padding:16px;scrollbar-width:auto;scrollbar-color:#111 #D1D5DB;">
-                        <div id="ja-pdf-pages" style="display:flex;flex-direction:column;align-items:center;gap:16px;"></div>
+                    <div id="ja-pdf-scroll" style="position:absolute;inset:0;overflow-y:auto;overflow-x:auto;display:none;">
+                        <div id="ja-pdf-pages" class="ja-resume-pages"></div>
                     </div>
                 </div>
             @else
@@ -365,7 +385,7 @@ function jaSaveMarketingLabel(appId) {
                     <p>No resume uploaded.</p>
                 </div>
             @endif
-        </div>
+        </section>
 
         {{-- ── RIGHT: TABS ── --}}
         <div class="ja-right-panel">
@@ -536,7 +556,7 @@ function jaSaveMarketingLabel(appId) {
                 {{-- ── DETAILS TAB ── --}}
                 <div id="ja-tab-details" class="ja-tab-pane">
                     {{-- Quick actions --}}
-                    <div class="ja-card">
+                    <div class="ja-card ja-quick-actions">
                         <div class="ja-action-btns">
                             @if($user->cans('add_schedule') && is_null($application->schedule))
                             @php
@@ -557,12 +577,12 @@ function jaSaveMarketingLabel(appId) {
                             @endif
                             @if($user->cans('view_job_applications') && $user->cans('edit_job_applications'))
                             <button type="button" onclick="ccOpen('email', [{type: 'application', id: {{ (int) $application->id }}}])" class="ja-btn ja-btn-blue">
-                                <i class="fa fa-envelope-o"></i> Send Email
+                                <i class="fa fa-envelope-o" aria-hidden="true"></i><span class="sr-only">Send email</span>
                             </button>
                             @endif
                             @if($user->cans('edit_job_applications') && $application->phone)
                             <button type="button" onclick="jaOpenSmsModal({{ $application->id }})" class="ja-btn ja-btn-blue">
-                                <i class="fa fa-commenting-o"></i> Send SMS
+                                <i class="fa fa-commenting-o" aria-hidden="true"></i><span class="sr-only">Send SMS</span>
                             </button>
                             <button type="button" onclick="jaOpenCallModal({{ $application->id }})" class="ja-btn ja-btn-blue" aria-label="Call candidate" title="Call candidate">
                                 <i class="fa fa-phone" aria-hidden="true"></i>
@@ -570,7 +590,7 @@ function jaSaveMarketingLabel(appId) {
                             @endif
                             @if(auth()->user()->hasRole('admin'))
                             <button type="button" onclick="deleteApplication({{ $application->id }})" class="ja-btn ja-btn-red">
-                                <i class="fa fa-trash-o"></i> @lang('app.delete')
+                                <i class="fa fa-trash-o" aria-hidden="true"></i><span class="sr-only">Delete</span>
                             </button>
                             @endif
                         </div>
@@ -636,19 +656,11 @@ function jaSaveMarketingLabel(appId) {
                         </div>
                         @endif
 
-                        @if($user->cans('edit_job_applications'))
-                        <button type="button" class="ja-btn ja-btn-blue" style="width:100%;margin:0 0 14px" data-client-review-open aria-haspopup="dialog" aria-controls="ja-client-review-modal">
-                            <i class="fa fa-share-square-o"></i> Send profile to client
-                        </button>
-                        @endif
-
                         {{-- Stage mover --}}
                         @if($user->cans('edit_job_applications'))
-                        <div style="margin-bottom:14px">
-                            <div class="ja-card-title" style="margin-bottom:8px">
-                                <i class="fa fa-exchange" style="font-size:11px"></i> Move to Stage
-                            </div>
+                        <div class="ja-stage-section">
                             <div class="ja-stage-row">
+                                <label for="stage-mover-select-{{ $application->id }}">{{ __('Move to stage') }}</label>
                                 <span class="ja-current-badge" style="background: {{ $currentStatus?->color ?? '#6B7280' }};">
                                     <i class="fa fa-check" style="font-size:9px"></i>
                                     {{ ucwords(str_replace('_', ' ', $currentStatus?->status ?? '')) }}
@@ -683,12 +695,20 @@ function jaSaveMarketingLabel(appId) {
                             @endif
                         </div>
                         @endif
+                        <div class="ja-client-actions">
+                            @if($user->cans('edit_job_applications'))
+                                <button type="button" class="ja-btn ja-btn-blue" data-client-review-open aria-haspopup="dialog" aria-controls="ja-client-review-modal">
+                                    <i class="fa fa-paper-plane-o" aria-hidden="true"></i> {{ __('Submit to client') }}
+                                </button>
+                            @endif
+                            @include('admin.job-applications.partials.document-sign-control')
+                        </div>
                     </div>
 
                     {{-- ── PERSONAL INFO CARD ── --}}
                     <div class="ja-card" id="ja-info-card-{{ $application->id }}">
                         <div class="ja-card-title" style="justify-content:space-between;">
-                            <span><i class="fa fa-user" style="font-size:11px"></i> @lang('Personal Information')</span>
+                            <span>{{ __('Personal information') }}</span>
                             @if($user->cans('edit_job_applications'))
                             <button type="button" onclick="jaToggleInfoEdit({{ $application->id }})"
                                     id="ja-info-edit-btn-{{ $application->id }}"
@@ -865,7 +885,7 @@ function jaSaveMarketingLabel(appId) {
                     {{-- Skills --}}
                     @if ($user->cans('edit_job_applications'))
                     <div class="ja-card" id="skills-container">
-                        <div class="ja-card-title"><i class="fa fa-star" style="font-size:11px"></i> @lang('modules.jobApplication.skills')</div>
+                        <div class="ja-card-title">@lang('modules.jobApplication.skills')</div>
                         <div class="mb-3">
                             <select name="skills[]" id="skills" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm select2" multiple>
                                 @forelse ($skills as $skill)
@@ -1235,7 +1255,21 @@ window.jaUnloadPdf();
     var pages = document.getElementById('ja-pdf-pages');
     var error = document.getElementById('ja-pdf-error');
     var frame = document.getElementById('ja-pdf-frame');
-    if (!container || !pages || !window.pdfjsLib) return;
+    if (!container || !pages) return;
+    var panel = container.closest('.ja-pdf-panel');
+    var expand = panel.querySelector('.ja-current-resume-link[target="_blank"]');
+    if (panel.requestFullscreen && document.fullscreenEnabled) {
+        expand.setAttribute('aria-label', @json(__('Toggle résumé fullscreen')));
+        expand.title = @json(__('Toggle résumé fullscreen'));
+        expand.addEventListener('click', function (event) {
+            event.preventDefault();
+            if (document.fullscreenElement === panel) {
+                document.exitFullscreen().catch(function () {});
+            } else {
+                panel.requestFullscreen().catch(function () {});
+            }
+        });
+    }
     var started = false;
 
     window.jaShowNativeApplicantPdf = function () {
@@ -1248,7 +1282,17 @@ window.jaUnloadPdf();
         if (!frame.src || frame.src === 'about:blank') frame.src = @json($resumeUrl) + '#view=FitH';
     };
 
+    if (!window.pdfjsLib) {
+        window.jaShowNativeApplicantPdf();
+        return;
+    }
+
+    function isCurrentPdf() {
+        return document.getElementById('ja-pdf-container') === container && !container.dataset.resumeReplaced;
+    }
+
     var loadPdf = function () {
+        var pdf;
         pdfjsLib.getDocument({
             url: @json($resumeUrl),
             withCredentials: true,
@@ -1256,14 +1300,15 @@ window.jaUnloadPdf();
             // renderer while a recruiter is browsing profiles.
             maxImageSize: 4096 * 4096,
             stopAtErrors: true
-        }).promise.then(function(pdf) {
-            if (document.getElementById('ja-pdf-container') !== container) { pdf.destroy(); return; }
+        }).promise.then(function(documentPdf) {
+            if (!isCurrentPdf()) { documentPdf.destroy(); return; }
+            pdf = documentPdf;
             window._jaPdfDoc = pdf;
             return pdf.getPage(1);
         }).then(function(page) {
-            if (!page || document.getElementById('ja-pdf-container') !== container) return;
+            if (!page || !isCurrentPdf()) return;
             var base = page.getViewport({scale:1});
-            var scale = Math.max(.7, Math.min(1.15, (container.clientWidth - 32) / base.width));
+            var scale = Math.max(.25, Math.min(1.6, (container.clientWidth - 48) / base.width));
             var pageHeight = Math.ceil(base.height * scale);
             var pageWidth = Math.ceil(base.width * scale);
 
@@ -1282,7 +1327,7 @@ window.jaUnloadPdf();
             var renderingPage = false;
             var pendingPages = [];
             var renderPage = function (holder) {
-                if (holder.dataset.rendered || holder.dataset.rendering || document.getElementById('ja-pdf-container') !== container) return;
+                if (holder.dataset.rendered || holder.dataset.rendering || !isCurrentPdf()) return;
                 if (renderingPage) {
                     if (pendingPages.indexOf(holder) === -1) pendingPages.push(holder);
                     return;
@@ -1291,7 +1336,7 @@ window.jaUnloadPdf();
                 holder.dataset.rendering = '1';
                 var pageNumber = Number(holder.dataset.page);
                 pdf.getPage(pageNumber).then(function (pdfPage) {
-                    if (document.getElementById('ja-pdf-container') !== container) return;
+                    if (!isCurrentPdf()) return;
                     var viewport = pdfPage.getViewport({scale:scale});
                     var canvas = document.createElement('canvas');
                     canvas.width = Math.floor(viewport.width);
@@ -1319,6 +1364,31 @@ window.jaUnloadPdf();
 
             if (loading) loading.style.display = 'none';
             scroll.style.display = 'block';
+            var pageCount = document.getElementById('ja-resume-pages');
+            var zoomControls = document.getElementById('ja-resume-zoom');
+            var zoomValue = document.getElementById('ja-resume-zoom-value');
+            var zoom = 100;
+
+            function updatePageCount() {
+                var top = scroll.getBoundingClientRect().top + 24;
+                var current = Array.from(pages.children).find(function (holder) {
+                    return holder.getBoundingClientRect().bottom > top;
+                });
+                pageCount.textContent = (current ? current.dataset.page : pdf.numPages) + ' / ' + pdf.numPages;
+            }
+
+            scroll.addEventListener('scroll', updatePageCount, {passive: true});
+            pageCount.hidden = false;
+            updatePageCount();
+            zoomControls.hidden = false;
+            zoomControls.addEventListener('click', function (event) {
+                var button = event.target.closest('[data-zoom-step]');
+                if (!button) return;
+                zoom = Math.min(200, Math.max(50, zoom + Number(button.dataset.zoomStep)));
+                pages.style.zoom = zoom / 100;
+                zoomValue.textContent = zoom + '%';
+                updatePageCount();
+            });
             window._jaPdfObserver = new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
                     if (entry.isIntersecting) renderPage(entry.target);
@@ -1329,7 +1399,7 @@ window.jaUnloadPdf();
         }).catch(function() {
             // Some protected or external file URLs cannot be fetched by
             // PDF.js. Let the browser's PDF viewer handle those files.
-            window.jaShowNativeApplicantPdf();
+            if (isCurrentPdf()) window.jaShowNativeApplicantPdf();
         });
     };
 
@@ -1348,6 +1418,7 @@ window.jaUnloadPdf();
 document.querySelectorAll('.ja-tab').forEach(function(tab) {
     tab.addEventListener('click', function() {
         var target = this.dataset.tab;
+        this.closest('.ja-conversations')?.removeAttribute('open');
         document.querySelectorAll('.ja-tab').forEach(function(t) { t.classList.remove('active'); });
         document.querySelectorAll('.ja-tab-pane').forEach(function(p) { p.style.display = 'none'; });
         this.classList.add('active');
