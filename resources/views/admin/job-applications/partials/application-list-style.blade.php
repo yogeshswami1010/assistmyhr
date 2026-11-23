@@ -49,8 +49,9 @@
         flex-wrap: wrap;
         gap: 10px 16px;
         padding: 14px 16px;
-        border-bottom: 1px solid var(--ja-line);
+        width: 75%;
     }
+    .ja-filters { border-bottom: 1px solid var(--ja-line); }
     .ja-filter-field { flex: 1 1 150px; min-width: 104px; }
     .ja-applications #ja-table-filter-bar .select2-selection--single {
         background: #fff;
@@ -123,6 +124,9 @@
     .ja-table-footer .dataTables_paginate .paginate_button.current:hover { color: #fff !important; background: #1755d7; border-color: #1755d7; }
     .ja-table-footer .dataTables_paginate .paginate_button.previous,
     .ja-table-footer .dataTables_paginate .paginate_button.next { border-color: var(--ja-line); }
+    @media (max-width: 1024px) {
+        .ja-filter-form { width: 100%; }
+    }
     @media (max-width: 700px) {
         .ja-app-search { flex: 1 0 100%; margin-inline-start: 0; }
         .ja-filter-field { flex: 1 1 125px; }
