@@ -578,12 +578,12 @@ function jaSaveMarketingLabel(appId) {
                             @endif
                             @if($user->cans('view_job_applications') && $user->cans('edit_job_applications'))
                             <button type="button" onclick="ccOpen('email', [{type: 'application', id: {{ (int) $application->id }}}])" class="ja-btn ja-btn-blue">
-                                <i class="fa fa-envelope-o" aria-hidden="true"></i><span class="sr-only">Send email</span>
+                                <i class="fa-solid fa-envelope" aria-hidden="true"></i><span class="sr-only">Send email</span>
                             </button>
                             @endif
                             @if($user->cans('edit_job_applications') && $application->phone)
                             <button type="button" onclick="jaOpenSmsModal({{ $application->id }})" class="ja-btn ja-btn-blue">
-                                <i class="fa fa-commenting-o" aria-hidden="true"></i><span class="sr-only">Send SMS</span>
+                                <i class="fa-solid fa-comment-sms" aria-hidden="true"></i><span class="sr-only">Send SMS</span>
                             </button>
                             <button type="button" onclick="jaOpenCallModal({{ $application->id }})" class="ja-btn ja-btn-blue" aria-label="Call candidate" title="Call candidate">
                                 <i class="fa fa-phone" aria-hidden="true"></i>
@@ -591,7 +591,7 @@ function jaSaveMarketingLabel(appId) {
                             @endif
                             @if(auth()->user()->hasRole('admin'))
                             <button type="button" onclick="deleteApplication({{ $application->id }})" class="ja-btn ja-btn-red">
-                                <i class="fa fa-trash-o" aria-hidden="true"></i><span class="sr-only">Delete</span>
+                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i><span class="sr-only">Delete</span>
                             </button>
                             @endif
                         </div>
