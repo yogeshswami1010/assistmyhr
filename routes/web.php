@@ -81,6 +81,9 @@ require __DIR__.'/website.php';
 Route::middleware(RequireTenantFeature::class.':consortium_registration')->group(function () {
     Route::get('/consortium-registration', [ConsortiumRegistrationController::class, 'create'])
         ->name('consortium-registration.create');
+    Route::get('/consortium-registration/token', [ConsortiumRegistrationController::class, 'token'])
+        ->middleware('throttle:30,1')
+        ->name('consortium-registration.token');
     Route::post('/consortium-registration', [ConsortiumRegistrationController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('consortium-registration.store');

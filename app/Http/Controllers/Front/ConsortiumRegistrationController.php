@@ -14,12 +14,24 @@ class ConsortiumRegistrationController extends Controller
 {
     public function create()
     {
-        return view('front.consortium-registration');
+        return response()->view('front.consortium-registration')->header('Cache-Control', 'private, no-store');
+    }
+
+    public function token(Request $request): JsonResponse
+    {
+        return response()->json(['token' => $request->session()->token()])
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function store(Request $request)
     {
         $this->persist($request);
+        if ($request->expectsJson()) {
+            $request->session()->flash('registration_success', true);
+
+            return response()->json(['redirect' => tenant_route('consortium-registration.create', [], false)]);
+        }
+
         return back()->with('registration_success', true);
     }
 

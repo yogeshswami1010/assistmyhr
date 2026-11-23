@@ -3,7 +3,8 @@
 @if(session('registration_success'))<div class="success"><b>Registration submitted successfully</b><p>Thank you. The AssistMyHR team will review your information and contact you.</p></div>
 @else<div class="head"><h1>Candidate Registration</h1><p>Register with AssistMyHR</p></div><div class="body">
 @if($errors->any())<div class="errors"><b>Please correct the highlighted information.</b><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-<form id="consortium-registration-form" method="POST" action="{{ tenant_route('consortium-registration.store') }}" enctype="multipart/form-data">@csrf<input class="hp" name="website" tabindex="-1" autocomplete="off">
+<div id="registration-feedback" class="errors" role="alert" hidden></div>
+<form id="consortium-registration-form" method="POST" action="{{ tenant_route('consortium-registration.store', [], false) }}" data-token-url="{{ tenant_route('consortium-registration.token', [], false) }}" enctype="multipart/form-data">@csrf<input class="hp" name="website" tabindex="-1" autocomplete="off">
 <section class="section"><h2>Basic Information</h2><p>Please provide your contact details.</p><div class="grid">
 <div><label>First Name *</label><input name="first_name" value="{{ old('first_name') }}" required></div><div><label>Last Name *</label><input name="last_name" value="{{ old('last_name') }}" required></div>
 <div><label>Email *</label><input type="email" name="email" value="{{ old('email') }}" required></div><div><label>Phone Number *</label><input name="phone" value="{{ old('phone') }}" required></div>
@@ -16,5 +17,58 @@
 <section class="section"><h2>Additional Information</h2><div class="grid"><div><label>How did you hear about us?</label><select name="referral_source"><option value="">Select</option>@foreach(['Google','Indeed','LinkedIn','Facebook','Friend or Referral','Other'] as $v)<option @selected(old('referral_source')===$v)>{{ $v }}</option>@endforeach</select></div><div class="full"><label>Additional Information</label><textarea name="additional_information" rows="4">{{ old('additional_information') }}</textarea></div></div>
 <div class="check"><label><input type="checkbox" name="information_certified" value="1" @checked((string) old('information_certified') === '1') required> I certify that the submitted information is true and correct.</label><label><input type="checkbox" name="agreement_accepted" value="1" @checked((string) old('agreement_accepted') === '1') required> I have read and understood the Applicant Agreement. <a href="https://consortiumstaffing.ca/terms-and-condition/" target="_blank" rel="noopener noreferrer" style="color:#079b73;font-weight:700;text-decoration:underline;">(Click Here to read)</a></label><label><input type="checkbox" name="sms_consent" value="1" @checked((string) old('sms_consent') === '1')> I agree to receive SMS and calls from AssistMyHR and can opt out by replying STOP.</label></div></section>
 <div class="actions"><button class="submit" type="submit">Submit Registration</button></div>
-</form></div>@endif
+</form></div>
+<script>
+    const form = document.getElementById('consortium-registration-form');
+    const submit = form.querySelector('[type="submit"]');
+    const feedback = document.getElementById('registration-feedback');
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        if (submit.disabled) return;
+        submit.disabled = true;
+        feedback.hidden = true;
+        feedback.textContent = '';
+        const data = new FormData(form);
+        const tokenField = form.elements.namedItem('_token');
+        const options = {headers: {Accept: 'application/json'}, credentials: 'same-origin', cache: 'no-store'};
+        let submitted = false;
+
+        try {
+            let response = await fetch(form.action, {...options, method: 'POST', body: data});
+            if (response.status === 419) {
+                const session = await fetch(form.dataset.tokenUrl, options);
+                const token = session.ok ? (await session.json()).token : null;
+                if (token) {
+                    tokenField.value = token;
+                    data.set('_token', token);
+                    response = await fetch(form.action, {...options, method: 'POST', body: data});
+                }
+            }
+
+            const result = await response.json().catch(() => ({}));
+            if (response.ok && result.redirect) {
+                submitted = true;
+                window.location.assign(result.redirect);
+                return;
+            }
+
+            const messages = response.status === 422 ? Object.values(result.errors || {}).flat() : [];
+            feedback.textContent = messages.length ? messages.join(' ') :
+                response.status === 419 ? 'Your session could not be verified. If this form is embedded, open the AssistMyHR registration page directly.' :
+                response.status === 413 ? 'The résumé file is too large. Please choose a file under 10 MB.' :
+                response.status === 429 ? 'Too many submission attempts. Please wait a moment and try again.' :
+                'Registration could not be submitted. Please try again.';
+        } catch {
+            feedback.textContent = 'Registration could not be submitted. Check your connection and try again.';
+        } finally {
+            if (feedback.textContent) {
+                feedback.hidden = false;
+                feedback.scrollIntoView({block: 'nearest'});
+            }
+            if (!submitted) submit.disabled = false;
+        }
+    });
+</script>
+@endif
 </div></div></body></html>
