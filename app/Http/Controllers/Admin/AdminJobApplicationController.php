@@ -1347,7 +1347,7 @@ class AdminJobApplicationController extends AdminBaseController
                 ->first();
             $resume = $this->application->documents->firstWhere('name', 'Resume');
             if ($registration?->resume_file && (!$resume || !Storage::exists('documents/'.$this->application->id.'/'.$resume->hashname))) {
-                if ($registration->resumeDisk()) {
+                if ($registration->locateResume()) {
                     $this->registrationResumeUrl = tenant_route('admin.consortium-registrations.resume', [
                         'registration' => $registration->id,
                         'inline' => 1,

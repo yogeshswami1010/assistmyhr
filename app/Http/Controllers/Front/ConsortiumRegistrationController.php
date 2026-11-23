@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Services\ResumePdfConverter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 
@@ -121,11 +122,24 @@ class ConsortiumRegistrationController extends Controller
                 // Converted Word files expose a .pdf client name, ensuring the
                 // stored hash, download name, and ATS preview all use PDF.
                 $data['resume_original_name'] = $resume->getClientOriginalName();
-                $data['resume_file'] = Files::uploadLocalOrS3($resume, 'registration-resumes');
             } catch (\Throwable $exception) {
                 report($exception);
                 throw ValidationException::withMessages([
                     'resume' => 'The Word resume could not be converted to PDF. Please upload a valid DOC, DOCX, or PDF file.',
+                ]);
+            }
+
+            try {
+                $data['resume_file'] = Files::uploadLocalOrS3($resume, 'registration-resumes');
+                $disk = Storage::disk(config('filesystems.default') === 'local' ? 'local' : 's3');
+                $path = 'registration-resumes/'.$data['resume_file'];
+                if (!$disk->exists($path) || $disk->size($path) === 0) {
+                    throw new \RuntimeException('The registration résumé was not written to storage.');
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+                throw ValidationException::withMessages([
+                    'resume' => 'The résumé could not be saved. Please try uploading it again.',
                 ]);
             } finally {
                 $converter->cleanup($resume);

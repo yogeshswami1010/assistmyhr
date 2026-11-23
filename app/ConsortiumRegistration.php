@@ -35,7 +35,8 @@ class ConsortiumRegistration extends Model
             : null;
     }
 
-    public function resumeDisk(): ?FilesystemAdapter
+    /** @return array{disk: FilesystemAdapter, path: string}|null */
+    public function locateResume(): ?array
     {
         $path = $this->resumeStoragePath();
         if ($path === null) {
@@ -44,7 +45,7 @@ class ConsortiumRegistration extends Model
 
         $disk = Storage::disk();
         if ($disk->exists($path)) {
-            return $disk;
+            return ['disk' => $disk, 'path' => $path];
         }
 
         // Older workspace uploads may be on that workspace's public disk.
@@ -55,7 +56,22 @@ class ConsortiumRegistration extends Model
         if ($fallback !== null && $fallback !== config('filesystems.default')) {
             $disk = Storage::disk($fallback);
             if ($disk->exists($path)) {
-                return $disk;
+                return ['disk' => $disk, 'path' => $path];
+            }
+        }
+
+        // Recover an exact copy made when this registration was linked to a
+        // candidate profile. Never substitute another résumé by filename or email alone.
+        $disk = Storage::disk();
+        $applicationIds = JobApplication::withTrashed()
+            ->whereRaw('LOWER(TRIM(email)) = ?', [mb_strtolower(trim((string) $this->email))])
+            ->whereHas('documents', fn ($query) => $query->where('name', 'Resume')->where('hashname', $this->resume_file))
+            ->pluck('id');
+
+        foreach ($applicationIds as $id) {
+            $copy = 'documents/'.$id.'/'.$this->resume_file;
+            if ($disk->exists($copy)) {
+                return ['disk' => $disk, 'path' => $copy];
             }
         }
 
