@@ -201,8 +201,8 @@
                     @endif
                     Added {{ $application->created_at->timezone($global->timezone)->format('d M Y, h:i A') }}
                 @endif
-                @if($application->originUser)
-                    · Added by {{ $application->originUser->name }}
+                @if($application->candidate_origin !== 'registration' && $application->originUser)
+                    <span class="ja-origin-attribution">· Added by {{ $application->originUser->name }}</span>
                 @endif
             </p>
         </div>

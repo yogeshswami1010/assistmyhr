@@ -42,6 +42,7 @@ body.consortium-profile-fullscreen .ra-main { width:100vw !important; max-width:
 body.consortium-profile-fullscreen .ra-scroll { padding:0 !important; overflow:hidden !important; }
 body.consortium-profile-fullscreen #consortium-job-application-profile,
 body.consortium-profile-fullscreen #consortium-job-application-profile > .ja-two-col-wrap { width:100% !important; height:100vh !important; max-width:none !important; border-radius:0 !important; }
+#consortium-job-application-profile .ja-origin-attribution { display: none; }
 </style>
 <script>document.body.classList.add('consortium-profile-fullscreen');</script>
 @if($assignedApplicationId)

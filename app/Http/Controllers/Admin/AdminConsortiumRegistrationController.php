@@ -117,7 +117,6 @@ class AdminConsortiumRegistrationController extends AdminBaseController
         if (!$profileApplication) {
             $profileApplication = new JobApplication;
             $profileApplication->candidate_origin = 'registration';
-            $profileApplication->origin_user_id = auth()->id();
             $profileApplication->full_name = trim($registration->first_name.' '.$registration->last_name);
             $profileApplication->email = $registration->email;
             $profileApplication->phone = $registration->phone;
