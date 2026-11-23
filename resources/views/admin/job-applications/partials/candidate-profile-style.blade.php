@@ -28,9 +28,10 @@
     .ja-candidate-profile .ja-nav-btn,
     .ja-candidate-profile .ja-close-btn { width: 36px; height: 36px; color: #fff; }
     .ja-candidate-profile .ja-nav-counter { color: #fff; font-size: 12px; }
-    .ja-candidate-profile .ja-profile-toolbar { position: relative; z-index: 4; overflow: visible; flex-wrap: wrap; padding: 8px clamp(12px, 2vw, 32px); border-color: var(--profile-line); }
+    .ja-candidate-profile .ja-profile-toolbar { position: relative; z-index: 4; overflow: visible; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 8px clamp(12px, 2vw, 32px); border-color: var(--profile-line); }
     .ja-candidate-profile .ja-profile-toolbar .ja-profile-tags,
-    .ja-candidate-profile .ja-profile-toolbar .ja-pdf-toolbar-tabs { flex-wrap: wrap; flex-shrink: 1; }
+    .ja-candidate-profile .ja-profile-toolbar .ja-pdf-toolbar-tabs,
+    .ja-candidate-profile .ja-profile-toolbar .ja-profile-doc-actions { display: contents; }
     .ja-candidate-profile .ja-profile-toolbar .ja-pdf-btn,
     .ja-candidate-profile .ja-profile-toolbar .ja-tab { border-radius: 7px; color: var(--profile-ink); font-size: 12px; }
     .ja-candidate-profile .ja-profile-toolbar .ja-pdf-btn { border-color: transparent; }
@@ -88,7 +89,7 @@
         .ja-candidate-profile .ja-pdf-panel { flex: 0 0 55dvh; min-height: 260px; }
         .ja-candidate-profile .ja-right-panel,
         .ja-candidate-profile .ja-right-scroll { overflow: visible; flex: none; }
-        .ja-candidate-profile .ja-profile-toolbar .ja-profile-doc-actions { margin-inline-start: 0; }
+        .ja-candidate-profile .ja-profile-toolbar { justify-content: flex-start; }
     }
     @media (max-width: 480px) {
         .ja-candidate-profile .ja-header { flex-wrap: wrap; }
