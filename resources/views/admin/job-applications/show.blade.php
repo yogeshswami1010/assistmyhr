@@ -335,7 +335,8 @@ function jaSaveMarketingLabel(appId) {
                     <div class="ja-tab" data-tab="history">
                         <i class="fa fa-history" aria-hidden="true"></i> History
                     </div>
-                    <div class="ja-tab" data-tab="client-reviews">
+                    {{-- Review notifications and submission callbacks still open this panel. --}}
+                    <div class="ja-tab" data-tab="client-reviews" hidden style="display:none">
                         <i class="fa-solid fa-star" aria-hidden="true"></i> Client Reviews
                         <span id="ja-client-review-unread" class="ja-tab-badge" style="display:none">0</span>
                     </div>
