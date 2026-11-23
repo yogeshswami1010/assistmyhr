@@ -373,6 +373,7 @@ class AdminJobApplicationController extends AdminBaseController
             ->with([
                 'location',
                 'job.skills',
+                'job.statuses',
                 'status:id,status,color',
             ]);
 
@@ -495,68 +496,51 @@ class AdminJobApplicationController extends AdminBaseController
         $appliedStatus  = $actionStatuses->first();
 
         $canEdit   = $this->user->cans('edit_job_applications');
-        $canView   = $this->user->cans('view_job_applications');
-        $canDelete = $this->user->role_id === 1; // admin only
-
         return DataTables::of($jobApplications)
-                ->addColumn('action', function ($row) use ($nextMap, $rejectedStatus, $appliedStatus, $canEdit, $canView, $canDelete) {
-                $parts = [];
+            ->addColumn('action', function ($row) use ($nextMap, $rejectedStatus, $appliedStatus, $canEdit) {
+                $actions = collect();
                 $statusSlug = strtolower($row->status?->status ?? '');
 
                 if ($canEdit) {
+                    if (isset($nextMap[$statusSlug]) && $statusSlug !== 'rejected') {
+                        $next = $nextMap[$statusSlug];
+                        $actions->push(['id' => $next['id'], 'label' => __('Move to :stage', ['stage' => $next['label']])]);
+                    }
 
-                // "Next stage" quick button — derived from the job's pipeline order
-                if (isset($nextMap[$statusSlug]) && $statusSlug !== 'rejected') {
-                    $nextLabel = $nextMap[$statusSlug]['label'];
-                    $nextId    = $nextMap[$statusSlug]['id'];
-                    $parts[] = '<button type="button" onclick="jaMoveOne(' . $row->id . ',' . $nextId . ')" class="ja-act-btn move" title="Move to ' . $nextLabel . '">' . $nextLabel . ' <i class="fa fa-arrow-right" style="font-size:10px;margin-left:2px;"></i></button>';
+                    if (!in_array($statusSlug, ['rejected', 'hired'])) {
+                        foreach ($row->job?->statuses ?? [] as $stage) {
+                            if ($stage->id != $row->status_id) {
+                                $actions->push(['id' => $stage->id, 'label' => ucfirst($stage->status), 'color' => $stage->color]);
+                            }
+                        }
+                        if ($rejectedStatus) {
+                            $actions->push(['id' => $rejectedStatus->id, 'label' => __('Reject'), 'color' => '#dc2626']);
+                        }
+                    } elseif ($statusSlug === 'rejected' && $appliedStatus) {
+                        $actions->push(['id' => $appliedStatus->id, 'label' => __('Restore to Applied')]);
+                    }
                 }
 
-                // "Move to any stage" dropdown — content is populated client-side
-                // from jaStages so it always reflects the currently-selected job's pipeline.
-                if (!in_array($statusSlug, ['rejected', 'hired'])) {
-                    $dropdownId   = 'ja-move-drop-' . $row->id;
-                    $dropdownHtml = '<div class="ja-move-wrap" style="position:relative;display:inline-flex;">';
-                    $dropdownHtml .= '<button type="button" class="ja-act-btn" onclick="jaToggleDrop(\'' . $dropdownId . '\', this)" title="Move to stage" style="padding:5px 8px;border-radius:8px;"><i class="fa fa-chevron-down" style="font-size:10px;"></i></button>';
-                    // Empty container — jaToggleDrop fills it from jaStages on open
-                    $dropdownHtml .= '<div id="' . $dropdownId . '" class="ja-move-drop"'
-                        . ' data-app-id="' . $row->id . '"'
-                        . ' data-current-status="' . e($statusSlug) . '"'
-                        . ' style="display:none;position:fixed;background:#fff;border:1.5px solid #E2DED8;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.13);z-index:99999;min-width:160px;max-height:220px;overflow-y:auto;">'
-                        . '</div></div>';
-                    $parts[] = $dropdownHtml;
+                $profile = '<button type="button" class="show-detail ja-act-btn" data-row-id="' . $row->id . '"'
+                    . ' aria-label="' . e(__('View profile')) . '" title="' . e(__('View profile')) . '"><i class="fa fa-eye" aria-hidden="true"></i></button>';
+                $menu = '';
+                if ($actions->isNotEmpty()) {
+                    $id = 'ja-move-drop-' . $row->id;
+                    $menu = '<div class="ja-move-wrap">'
+                        . '<button type="button" class="ja-act-btn" aria-controls="' . $id . '" aria-expanded="false"'
+                        . ' aria-label="' . e(__('More actions')) . '" title="' . e(__('More actions')) . '"><i class="fa fa-ellipsis-h" aria-hidden="true"></i></button>'
+                        . '<div id="' . $id . '" class="ja-move-drop" data-app-id="' . $row->id . '"'
+                        . ' data-stages="' . e($actions->unique('id')->values()->toJson()) . '" style="display:none"></div></div>';
                 }
 
-                // Reject button
-                if (!in_array($statusSlug, ['rejected', 'hired']) && $rejectedStatus) {
-                    $parts[] = '<button type="button" onclick="jaMoveOne(' . $row->id . ',' . $rejectedStatus->id . ')" class="ja-act-btn reject" title="Reject"><i class="fa fa-times"></i></button>';
-                }
-
-                // Restore button for rejected
-                if ($statusSlug === 'rejected' && $appliedStatus) {
-                    $parts[] = '<button type="button" onclick="jaMoveOne(' . $row->id . ',' . $appliedStatus->id . ')" class="ja-act-btn restore" title="Restore to Applied"><i class="fa fa-undo"></i></button>';
-                }
-                }
-
-                // View detail (sidebar) — always shown
-                $parts[] = '<a href="javascript:;" class="show-detail ja-act-btn" data-row-id="' . $row->id . '" title="View profile"><i class="fa fa-eye"></i></a>';
-
-                return '<div class="ja-row-actions">' . implode('', $parts) . '</div>';
+                return '<div class="ja-row-actions">' . $profile . $menu . '</div>';
             })
             ->editColumn('full_name', function ($row) {
                 $name = ucwords($row->full_name);
-                $job  = \App\Support\CandidateJobLabel::html($row->job);
-                $loc  = ucwords($row->location?->location ?? '—');
-                return '
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-[13px] flex-shrink-0">'
-                            . strtoupper(substr($row->full_name, 0, 1)) .
-                        '</div>
-                        <div>
-                            <a href="javascript:;" class="show-detail block text-[13.5px] font-semibold text-[#1A1E2E] hover:text-blue-600" data-row-id="' . $row->id . '">' . $name . '</a>
-                            <span class="text-[11.5px] text-[#8892A0]">' . $job . ' &middot; ' . $loc . '</span>
-                        </div>
-                    </div>';
+                return '<div class="ja-applicant">'
+                    . '<span class="ja-applicant-avatar" aria-hidden="true">' . e(mb_strtoupper(mb_substr($name, 0, 1))) . '</span>'
+                    . '<button type="button" class="show-detail ja-applicant-name" data-row-id="' . $row->id . '">' . e($name) . '</button>'
+                    . '</div>';
             })
             ->editColumn('title', function ($row) {
                 return \App\Support\CandidateJobLabel::html($row->job);
@@ -568,9 +552,20 @@ class AdminJobApplicationController extends AdminBaseController
                 if ((bool) $row->is_knockout) {
                     return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold text-white" style="background:#dc2626"><i class="fa fa-user-times" style="font-size:10px"></i> Knockout</span>';
                 }
-                $color = $row->status?->color ?? '#6B7280';
-                $label = ucwords(str_replace('_', ' ', $row->status?->status ?? ''));
-                return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold text-white" style="background:' . $color . '">' . $label . '</span>';
+                $status = $row->status?->status ?? '';
+                $tone = match (strtolower($status)) {
+                    'applied' => 'blue',
+                    'interview' => 'amber',
+                    'hired' => 'green',
+                    'rejected' => 'red',
+                    default => 'neutral',
+                };
+                $label = ucwords(str_replace('_', ' ', $status));
+                $color = $row->status?->color ?? '';
+                $accent = $tone === 'neutral' && preg_match('/^#[0-9a-f]{6}$/i', $color)
+                    ? ' style="--ja-stage-accent:' . $color . '"'
+                    : '';
+                return '<span class="ja-status-pill ja-status-' . $tone . '"' . $accent . '>' . e($label) . '</span>';
             })
             ->orderColumn('created_at', 'job_applications.created_at $1')  // ← add this
             ->rawColumns(['action', 'full_name', 'status', 'title'])

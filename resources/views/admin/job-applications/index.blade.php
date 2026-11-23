@@ -88,22 +88,6 @@
         #myTable {
             table-layout: fixed;
         }
-        #myTable th:nth-child(1),
-        #myTable td:nth-child(1) { width: 6% !important; }
-        #myTable th:nth-child(2),
-        #myTable td:nth-child(2) { width: 29% !important; }
-        #myTable th:nth-child(3),
-        #myTable td:nth-child(3) { width: 19% !important; }
-        #myTable th:nth-child(4),
-        #myTable td:nth-child(4) { width: 18% !important; }
-        #myTable th:nth-child(5),
-        #myTable td:nth-child(5) {
-            width: 12% !important;
-            white-space: nowrap;
-        }
-        #myTable th:nth-child(6),
-        #myTable td:nth-child(6) { width: 16% !important; }
-
         .ja-row-actions { display: flex; gap: 5px; justify-content: flex-end; align-items: center; }
         .ja-act-btn {
             display: inline-flex;
@@ -225,107 +209,105 @@
             border-bottom-color: #2563eb !important;
             box-shadow: inset 3px 0 0 #2563eb;
         }
-        #ja-stage-tabs-draggable { display: contents; }
+        #ja-stage-tabs-draggable { display: flex; }
     </style>
+    @include('admin.job-applications.partials.application-list-style')
 @endpush
-
-@if(in_array("add_job_applications", $userPermissions))
-@section('create-button')
-    <a href="{{ route('admin.job-applications.create') }}" class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-        @lang('app.createNew')
-    </a>
-@endsection
-@endif
 
 @section('content')
 @include('admin.partials.candidate-communications')
-<div class="ja-board-scope -mx-4 -mt-2 flex min-h-[calc(100dvh-9.5rem)] flex-col bg-[#EEF0F5] sm:-mx-6">
-    <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-5 pt-5 sm:px-6">
-
-        {{-- ── Filter bar (collapsible) ── --}}
-        <div id="ja-table-filter-bar" class="border-b border-[#E8E6E1] bg-white mt-3">
-            <div class="px-5 sm:px-6">
-                <form id="filter-form" class="flex flex-wrap items-end gap-3.5 py-3">
-
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('app.status')</label>
-                        <select class="select2 w-full" name="status" id="status">
-                            <option value="all">@lang('modules.jobApplication.allStatus')</option>
-                            @forelse($boardColumns as $col)
-                                <option value="{{ $col->id }}">{{ ucfirst($col->status) }}</option>
-                            @empty
-                            @endforelse
-                        </select>
-                    </div>
-
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('app.company')</label>
-                        <select class="select2 w-full" name="company" id="company">
-                            <option value="all">@lang('modules.jobApplication.allCompany')</option>
-                            @forelse($companies as $company)
-                                <option title="{{ ucfirst($company->company_name) }}" value="{{ $company->id }}">{{ ucfirst($company->company_name) }}</option>
-                            @empty
-                            @endforelse
-                        </select>
-                    </div>
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('menu.locations')</label>
-                        <select class="select2 w-full" name="location" id="location">
-                            <option value="all">@lang('modules.jobApplication.allLocation')</option>
-                            @forelse($locations as $location)
-                                <option value="{{ $location->id }}">{{ ucfirst($location->location) }}</option>
-                            @empty
-                            @endforelse
-                        </select>
-                    </div>
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('menu.jobs')</label>
-                        <select class="select2 w-full" name="jobs" id="jobs">
-                            <option value="all">@lang('modules.jobApplication.allJobs')</option>
-                            @forelse($jobs as $job)
-                                <option title="{{ ucfirst($job->title) }}" value="{{ $job->id }}">{{ ucfirst($job->title) }}</option>
-                            @empty
-                            @endforelse
-                        </select>
-                    </div>
-
-                    <button type="button" id="reset-filters"
-                        class="inline-flex h-[38px] shrink-0 items-center gap-2 rounded-[10px] border-[1.5px] border-[#E2DED8] bg-white px-4 text-[13px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:text-[#2563EB] focus-visible:ring-2 focus-visible:ring-blue-500"
-                        style="height: 38px">
-                        <i class="fa fa-refresh" aria-hidden="true"></i> @lang('app.reset')
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        {{-- ── Stage tabs ── --}}
-        <div class="flex bg-white border-b border-[#E8E6E1] overflow-x-auto mt-3" id="ja-stage-tabs-row" style="border-radius: 0">
-
-            {{-- All Applicants tab --}}
+<div class="ja-board-scope ja-applications">
+    <div class="ja-list-layout">
+        <div class="ja-app-toolbar">
             <button
-                class="ja-stage-tab active"
-                id="ja-tab-all"
+                class="ja-stage-tab"
+                id="ja-tab-all" type="button"
                 data-stage-id="all"
                 onclick="jaStageTabAll()"
                 style="--tab-color:#2563eb;">
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
-                All Applicants
+                {{ __('All applicants') }}
                 <span class="ja-stage-badge" id="ja-tab-count-all">0</span>
             </button>
 
-            <span id="ja-stage-tabs-draggable">
-            {{-- pipeline stage tabs injected here by JS when a job is selected --}}
-            </span>
+            @if(in_array("add_job_applications", $userPermissions))
+                <a href="{{ route('admin.job-applications.create') }}" class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    {{ __('New applicant') }}
+                </a>
+            @endif
 
-            {{-- Knockouts tab --}}
             <div class="ja-ko-tab flex items-center">
-                <button class="ja-stage-tab" id="ja-ko-tab-btn" onclick="jaKOTab()">
-                    <i class="fa fa-user-times"></i>
-                    Knockouts
+                <button class="ja-stage-tab" id="ja-ko-tab-btn" type="button" onclick="jaKOTab()">
+                    {{ __('Knockouts') }}
                     <span class="ja-stage-badge" id="ja-ko-tab-count">0</span>
                 </button>
             </div>
+
+            <div class="ja-app-search">
+                <i class="fa fa-search" aria-hidden="true"></i>
+                <input type="search" id="ja-applicant-search" aria-label="{{ __('Search applicants') }}"
+                    placeholder="{{ __('Search applicants') }}" autocomplete="off">
+            </div>
+        </div>
+        <div id="ja-table-filter-bar" class="ja-filters">
+            <form id="filter-form" class="ja-filter-form">
+
+                <div class="ja-filter-field">
+                    <select class="select2 w-full" name="status" id="status" aria-label="{{ __('Status') }}">
+                        <option value="all">{{ __('Status') }}</option>
+                        @forelse($boardColumns as $col)
+                            <option value="{{ $col->id }}">{{ ucfirst($col->status) }}</option>
+                        @empty
+                        @endforelse
+                    </select>
+                </div>
+
+                <div class="ja-filter-field">
+                    <select class="select2 w-full" name="company" id="company" aria-label="{{ __('Company') }}">
+                        <option value="all">{{ __('Company') }}</option>
+                        @forelse($companies as $company)
+                            <option title="{{ ucfirst($company->company_name) }}" value="{{ $company->id }}">{{ ucfirst($company->company_name) }}</option>
+                        @empty
+                        @endforelse
+                    </select>
+                </div>
+                <div class="ja-filter-field">
+                    <select class="select2 w-full" name="location" id="location" aria-label="{{ __('Location') }}">
+                        <option value="all">{{ __('Location') }}</option>
+                        @forelse($locations as $location)
+                            <option value="{{ $location->id }}">{{ ucfirst($location->location) }}</option>
+                        @empty
+                        @endforelse
+                    </select>
+                </div>
+                <div class="ja-filter-field">
+                    <select class="select2 w-full" name="jobs" id="jobs" aria-label="{{ __('Job') }}">
+                        <option value="all">{{ __('Job') }}</option>
+                        @forelse($jobs as $job)
+                            <option title="{{ ucfirst($job->title) }}" value="{{ $job->id }}">{{ ucfirst($job->title) }}</option>
+                        @empty
+                        @endforelse
+                    </select>
+                </div>
+
+                <div class="ja-filter-field ja-filter-question">
+                    <select class="select2 w-full" id="questions" name="questions" aria-label="{{ __('Custom questions') }}">
+                        <option value="all">{{ __('Custom questions') }}</option>
+                        @foreach($questions as $question)
+                            <option value="{{ $question->id }}">{{ $question->question }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="button" id="reset-filters"
+                    class="inline-flex h-[38px] shrink-0 items-center gap-2 rounded-[10px] border-[1.5px] border-[#E2DED8] bg-white px-4 text-[13px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:text-[#2563EB] focus-visible:ring-2 focus-visible:ring-blue-500"
+                    style="height: 38px">
+                    <i class="fa fa-refresh" aria-hidden="true"></i> @lang('app.reset')
+                </button>
+            </form>
+        </div>
+
+        <div id="ja-stage-tabs-row" class="ja-pipeline-tabs">
+            <div id="ja-stage-tabs-draggable"></div>
         </div>
 
         {{-- KO banner --}}
@@ -335,16 +317,16 @@
         </div>
 
         {{-- ── Table ── --}}
-        <div class="jc-table-card table-wrapper ra-dt-wrap w-full overflow-hidden border border-t-0 border-[#E8E6E1] bg-white shadow-sm" style="border-radius: 0">
+        <div class="ja-results ra-dt-wrap">
             <table id="myTable" class="jc-cat-table display w-full" style="width:100%">
              <thead>
                 <tr>
                     <th style="width:40px;"><div class="ja-chk" id="ja-chk-all" onclick="jaToggleAll()" title="Select all"></div></th>
                     <th>@lang('modules.jobApplication.applicantName')</th>
-                    <th>@lang('menu.jobs')</th>
-                    <th>@lang('menu.locations')</th>
+                    <th>{{ __('Job') }}</th>
+                    <th>{{ __('Location') }}</th>
                     <th>@lang('app.status')</th>
-                    <th class="jc-th-right" style="padding-right:16px;">@lang('app.action')</th>
+                    <th class="jc-th-right" style="padding-right:16px;">{{ __('Actions') }}</th>
                     <th style="display:none;"></th>  {{-- hidden created_at column --}}
                 </tr>
                 </thead>
@@ -414,6 +396,14 @@
     var jaSelectedIds    = new Set();
     window.ccSelection = function () { return Array.from(jaSelectedIds).map(function(id) { return {type:'application', id:Number(id)}; }); };
     var table;
+    var searchTimer;
+    $('#ja-applicant-search').on('input', function () {
+        var value = this.value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+            if (table && table.search() !== value) table.search(value).draw();
+        }, 250);
+    });
     var jaFilterStorageKey = 'job-application-filters-v1-{{ auth()->id() }}';
 
     function jaReadSavedFilters() {
@@ -428,6 +418,7 @@
                 company: $('#company').val() || 'all',
                 location: $('#location').val() || 'all',
                 jobs: $('#jobs').val() || 'all',
+                questions: $('#questions').val() || 'all',
                 knockout: !!jaShowKO
             }));
         } catch (e) {}
@@ -675,7 +666,7 @@
 
     function jaToggleDrop(id, btnEl) {
         document.querySelectorAll('.ja-move-drop').forEach(function(el) {
-            if (el.id !== id) el.style.display = 'none';
+            if (el.id !== id) jaCloseDrop(el.id);
         });
         var el = document.getElementById(id);
         if (!el) return;
@@ -683,47 +674,65 @@
         var isHidden = el.style.display === 'none';
 
         if (isHidden) {
-            // Populate dropdown from jaStages (reflects the current job's pipeline)
-            var appId         = el.getAttribute('data-app-id');
-            var currentStatus = el.getAttribute('data-current-status') || '';
-            var html = '';
-            jaStages.forEach(function(s) {
-                if (s.slug === currentStatus) return;
-                var dot   = s.color || '#6B7280';
-                var label = s.label || s.slug;
-                html += '<button type="button"'
-                    + ' onclick="jaMoveOne(' + appId + ',' + s.id + ');jaCloseDrop(\'' + id + '\')"'
-                    + ' style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:13px;font-weight:500;color:#1A1E2E;cursor:pointer;font-family:inherit;text-align:left;"'
-                    + ' onmouseover="this.style.background=\'#F1F3F7\'" onmouseout="this.style.background=\'none\'">'
-                    + '<span style="width:8px;height:8px;border-radius:50%;background:' + dot + ';flex-shrink:0;display:inline-block;"></span>'
-                    + label
-                    + '</button>';
+            var appId = Number(el.dataset.appId);
+            var stages = JSON.parse(el.dataset.stages || '[]');
+            el.replaceChildren();
+            stages.forEach(function(stage) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.style.cssText = 'display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;border:none;background:none;font-size:13px;font-weight:500;color:#1A1E2E;cursor:pointer;font-family:inherit;text-align:left;';
+                button.addEventListener('mouseenter', function() { button.style.background = '#F1F3F7'; });
+                button.addEventListener('mouseleave', function() { button.style.background = 'none'; });
+                button.addEventListener('click', function() {
+                    jaMoveOne(appId, stage.id);
+                    jaCloseDrop(id);
+                });
+                var dot = document.createElement('span');
+                dot.style.cssText = 'width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;';
+                dot.style.backgroundColor = stage.color || '#6B7280';
+                button.append(dot, stage.label);
+                el.appendChild(button);
             });
-            el.innerHTML = html || '<div style="padding:10px 14px;color:#8892A0;font-size:12px;">No stages available</div>';
+            if (!stages.length) {
+                el.innerHTML = '<div style="padding:10px 14px;color:#8892A0;font-size:12px;">No other stages available</div>';
+            }
 
             el.style.display = 'block';
 
             if (btnEl) {
+                btnEl.setAttribute('aria-expanded', 'true');
                 var rect = btnEl.getBoundingClientRect();
-                el.style.top   = (rect.bottom + 4) + 'px';
-                el.style.left  = Math.max(0, rect.right - 160) + 'px';
+                var below = rect.bottom + el.offsetHeight + 4 <= window.innerHeight;
+                el.style.top  = Math.max(4, below ? rect.bottom + 4 : rect.top - el.offsetHeight - 4) + 'px';
+                el.style.left = Math.max(4, rect.right - el.offsetWidth) + 'px';
                 el.style.right = 'auto';
             }
         } else {
-            el.style.display = 'none';
+            jaCloseDrop(id);
         }
     }
 
     function jaCloseDrop(id) {
         var el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+        if (el) {
+            el.style.display = 'none';
+            el.previousElementSibling.setAttribute('aria-expanded', 'false');
+        }
     }
 
+    $('#myTable').on('click', '.ja-move-wrap > button', function () {
+        jaToggleDrop(this.getAttribute('aria-controls'), this);
+    });
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.ja-move-wrap')) {
-            document.querySelectorAll('.ja-move-drop').forEach(function(el) {
-                el.style.display = 'none';
-            });
+            document.querySelectorAll('.ja-move-drop').forEach(function(el) { jaCloseDrop(el.id); });
+        }
+    });
+    $('#myTable').on('keydown', '.ja-move-wrap', function (event) {
+        var trigger = this.querySelector('button');
+        if (event.key === 'Escape' && trigger.getAttribute('aria-expanded') === 'true') {
+            jaCloseDrop(trigger.getAttribute('aria-controls'));
+            trigger.focus();
         }
     });
 
@@ -764,6 +773,7 @@
                 company:        company,
                 jobs:           jobs,
                 location:       location,
+                questions:      $('#questions').val() || 'all',
             },
             success: function(res) {
                 console.log('stage-counts response:', res);
@@ -812,10 +822,10 @@
         '<thead><tr>' +
             '<th style="width:40px;"><div class="ja-chk" id="ja-chk-all" onclick="jaToggleAll()" title="Select all"></div></th>' +
             '<th>{{ __("modules.jobApplication.applicantName") }}</th>' +
-            '<th>{{ __("menu.jobs") }}</th>' +
-            '<th>{{ __("menu.locations") }}</th>' +
+            '<th>{{ __("Job") }}</th>' +
+            '<th>{{ __("Location") }}</th>' +
             '<th>{{ __("app.status") }}</th>' +
-            '<th style="padding-right:16px;">{{ __("app.action") }}</th>' +
+            '<th style="padding-right:16px;">{{ __("Actions") }}</th>' +
             '<th style="display:none;"></th>' +
         '</tr></thead>' +
         '<tbody></tbody>'
@@ -835,13 +845,22 @@
                     location:       location,
                     jobs:           jobs,
                     company:        company,
+                    questions:      $('#questions').val() || 'all',
                     knockout:       knockout
                 });
             }
         },
-        language: languageOptions(),
+        language: $.extend(true, languageOptions(), {
+            lengthMenu: @json(__('Rows per page')) + ' _MENU_',
+            paginate: {previous: '‹', next: '›'},
+            aria: {paginate: {previous: @json(__('Previous page')), next: @json(__('Next page'))}}
+        }),
         stripeClasses: [],
-        dom: '<"jc-table-toolbar"lf>rt<"jc-table-toolbar jc-table-toolbar--footer"ip>',
+        search: {search: $('#ja-applicant-search').val() || ''},
+        dom: '<"ja-table-overflow"rt><"ja-table-footer"lip>',
+        infoCallback: function (settings, start, end, max, total) {
+            return total ? start + '–' + end + ' ' + @json(__('of')) + ' ' + total : @json(__('0 results'));
+        },
         drawCallback: function() {
             if (typeof $.fn.tooltip === 'function') {
                 $('[data-toggle="tooltip"]').tooltip();
@@ -861,9 +880,9 @@
                     return '<div class="ja-chk ja-row-chk" data-id="' + row.id + '" onclick="jaToggleRow(' + row.id + ', this)"></div>';
                 }
             },
-            { data: 'full_name',   name: 'full_name',  width: '29%' },
-            { data: 'title',       name: 'job_id',     width: '19%' },
-            { data: 'location_id', name: 'location_id', width: '18%' },
+            { data: 'full_name',   name: 'full_name',  width: '27%' },
+            { data: 'title',       name: 'job_id',     width: '33%' },
+            { data: 'location_id', name: 'location_id', width: '15%' },
             {
                 data: 'status',
                 name: 'status_id',
@@ -877,7 +896,7 @@
                     return data;
                 }
             },
-            { data: 'action',     name: 'action',     width: '16%', searchable: false, className: 'jc-td-right' },
+            { data: 'action',     name: 'action',     width: '100px', searchable: false, className: 'jc-td-right' },
             { data: 'created_at', name: 'created_at',  visible: false, searchable: false, orderable: true, defaultContent: '' }
         ]
     });
@@ -1079,6 +1098,7 @@
 
                 // Update HTML
                 $('#location').html(data.locations);
+                $('#location option[value="all"]').text(@json(__('Location')));
 
                 // Re-init Select2
                 $('#location').select2({ width: '100%' });
@@ -1117,6 +1137,7 @@
                 } catch(e) {}
 
                 $('#jobs').html(data.jobs);
+                $('#jobs option[value="all"]').text(@json(__('Job')));
                 $('#jobs').select2({ width: '100%' });
                 // Do not lose the saved job when rebuilding its options for
                 // the restored location. Invalid combinations fall back to All.
@@ -1167,6 +1188,7 @@ if (jobFromUrl) {
     savedFilters.location = 'all';
     savedFilters.jobs = jobFromUrl;
     savedFilters.knockout = false;
+    savedFilters.questions = 'all';
     savedFilters.status = statusFromUrl || 'all';
 }
 const restoredStatus = statusFromUrl || savedFilters.status || 'all';
@@ -1185,6 +1207,7 @@ function jaRestoreSelect(selector, value) {
 jaRestoreSelect('#company', savedFilters.company);
 jaRestoreSelect('#location', savedFilters.location);
 jaRestoreSelect('#jobs', savedFilters.jobs);
+jaRestoreSelect('#questions', savedFilters.questions);
 jaShowKO = !statusFromUrl && savedFilters.knockout === true;
 jaActiveStageId = restoredStatus;
 jaRestoreSelect('#status', restoredStatus);
@@ -1384,7 +1407,7 @@ if ((savedFilters.company || 'all') !== 'all') {
             jaRebuildStageTabs([]);
             jaStageTabAll();
             // Restore default status options
-            var defaultHtml = '<option value="all">@lang("modules.jobApplication.allStatus")</option>';
+            var defaultHtml = '<option value="all">{{ __("Status") }}</option>';
             @foreach($boardColumns as $col)
             defaultHtml += '<option value="{{ $col->id }}">{{ ucfirst($col->status) }}</option>';
             @endforeach
@@ -1405,7 +1428,7 @@ if ((savedFilters.company || 'all') !== 'all') {
                 var statuses = payload.statuses || [];
 
                 // Rebuild status filter dropdown
-                var html = '<option value="all">@lang("modules.jobApplication.allStatus")</option>';
+                var html = '<option value="all">{{ __("Status") }}</option>';
                 statuses.forEach(function (s) {
                     html += '<option value="' + s.id + '">' + s.label + '</option>';
                 });
