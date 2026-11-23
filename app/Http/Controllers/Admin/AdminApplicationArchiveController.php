@@ -125,9 +125,12 @@ class AdminApplicationArchiveController extends AdminBaseController
                 ->map(fn($word) => ucfirst(strtolower($word)))
                 ->join(' ');
 
-            return '<a href="javascript:;" class="show-detail" data-row-id="'.$row->id.'">'
-                . $name .
-                '</a>';
+            $initial = mb_strtoupper(mb_substr($name, 0, 1));
+
+            return '<div class="ja-applicant">'
+                . '<span class="ja-applicant-avatar" aria-hidden="true">'.e($initial).'</span>'
+                . '<button type="button" class="show-detail ja-applicant-name" data-row-id="'.$row->id.'">'.e($name).'</button>'
+                . '</div>';
         })
 
         ->addColumn('title', function ($row) {
@@ -141,41 +144,39 @@ class AdminApplicationArchiveController extends AdminBaseController
         ->addColumn('status', function ($row) {
 
             if ($row->trashed()) {
-                return '<span class="label label-danger">Archived</span>';
+                return '<span class="ja-status-pill ja-status-red">'.e(__('Archived')).'</span>';
             }
 
             // Show actual status if assigned
             if ($row->status_id && $row->status) {
-                return '<span class="label label-success">'
-                    . e(ucfirst($row->status->status))
-                    . '</span>';
+                $stage = $row->status->status;
+                $tone = match (strtolower($stage)) {
+                    'applied' => 'blue',
+                    'interview' => 'amber',
+                    'hired' => 'green',
+                    'rejected' => 'red',
+                    default => 'neutral',
+                };
+
+                return '<span class="ja-status-pill ja-status-'.$tone.'">'.e(ucfirst($stage)).'</span>';
             }
 
             // Candidate with no status assigned
             if ($row->is_candidate) {
-                return '<span class="label">Internal</span>';
+                return '<span class="ja-status-pill ja-status-neutral">'.e(__('Internal')).'</span>';
             }
 
-            return '<span class="label label-default">No Status</span>';
+            return '<span class="ja-status-pill ja-status-neutral">'.e(__('No Status')).'</span>';
         })
 
         ->addColumn('action', function ($row) {
-
-            $buttons = '';
-
-            if ($this->user->cans('view_job_applications')) {
-                $buttons .= '
-                    <a href="javascript:;"
-                    class="btn btn-info btn-circle show-detail"
-                    data-row-id="'.$row->id.'">
-                        <i class="fa fa-search"></i>
-                    </a>';
+            if (! $this->user->cans('view_job_applications')) {
+                return '';
             }
 
-            return '
-                <div class="btn-group">
-                    '.$buttons.'
-                </div>';
+            return '<div class="flex justify-end"><button type="button" class="show-detail ja-act-btn inline-flex items-center rounded-lg border border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-700"'
+                . ' data-row-id="'.$row->id.'" aria-label="'.e(__('View profile')).'" title="'.e(__('View profile')).'">'
+                . '<i class="fa fa-eye" aria-hidden="true"></i></button></div>';
         })
 
         ->rawColumns([

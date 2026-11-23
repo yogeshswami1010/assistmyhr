@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="{{ asset('assets/node_modules_files/multiselect/css/multi-select.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     @include('admin.job-applications.partials.select2-filter-skin')
+    @include('admin.job-applications.partials.application-list-style')
     <style>
         .ja-board-scope { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
 
@@ -90,22 +91,26 @@
     </style>
 @endpush
 
-@section('create-button')
-    <button type="button" onclick="exportJobApplication()"
-        class="inline-flex items-center gap-1.5 rounded-[9px] border-[1.5px] border-[#E2DED8] bg-white px-3.5 py-[7px] text-[12.5px] font-semibold text-[#5A6478] transition hover:border-[#2563EB] hover:bg-[#EFF6FF] hover:text-[#2563EB]">
-        <i class="fa fa-upload"></i> @lang('menu.export')
-    </button>
-
-    <a href="{{ route('admin.job-applications.create') }}"
-        class="inline-flex items-center gap-1.5 rounded-[9px] bg-[#2563EB] px-3.5 py-2.5 text-[12.5px] font-bold text-white shadow-sm transition hover:bg-[#1d4ed8] focus:outline-none">
-        <i class="fa fa-plus"></i> Create Applicant
-    </a>
-@endsection
-
 @section('content')
 @include('admin.partials.candidate-communications')
-<div class="ja-board-scope -mx-4 -mt-2 flex min-h-[calc(100dvh-9.5rem)] flex-col bg-[#EEF0F5] sm:-mx-6">
-    <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-5 pt-5 sm:px-6">
+<div class="ja-board-scope ja-applications">
+    <div class="ja-list-layout">
+        <div class="ja-app-toolbar">
+            <button type="button" onclick="exportJobApplication()"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:border-blue-500 hover:bg-blue-50">
+                <i class="fa fa-file-excel" aria-hidden="true"></i> @lang('menu.export')
+            </button>
+
+            <a href="{{ route('admin.job-applications.create') }}"
+                class="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#1d4ed8] focus-visible:ring-2 focus-visible:ring-blue-500">
+                <i class="fa fa-plus" aria-hidden="true"></i> {{ __('New applicant') }}
+            </a>
+            <div class="ja-app-search">
+                <i class="fa fa-search" aria-hidden="true"></i>
+                <input type="search" id="archive-candidate-search" aria-label="{{ __('Search candidates') }}"
+                    placeholder="{{ __('Search candidates') }}" autocomplete="off">
+            </div>
+        </div>
 
 <!-- Add this button somewhere in your admin panel -->
 <button id="run-bulk-parse" class="btn btn-primary" style="
@@ -236,9 +241,8 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
 </script>
 
         {{-- Filter Bar --}}
-        <div id="ja-table-filter-bar" class="border-b border-[#E8E6E1] bg-white">
-            <div class="px-5 sm:px-6">
-                <form id="filter-form" class="flex flex-wrap items-end gap-3.5 py-3">
+        <div id="ja-table-filter-bar" class="ja-filters">
+                <form id="filter-form" class="ja-filter-form">
 
                     {{-- ── Skill tag input ── --}}
                     <!-- <div class="flex min-w-[200px] flex-1 flex-col gap-1 sm:max-w-[300px]">
@@ -258,10 +262,9 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                     </div> -->
 
                     {{-- Company --}}
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('app.company')</label>
-                        <select class="select2 w-full" name="company" id="company">
-                            <option value="all">@lang('modules.jobApplication.allCompany')</option>
+                    <div class="ja-filter-field">
+                        <select class="select2 w-full" name="company" id="company" aria-label="{{ __('Company') }}">
+                            <option value="all">{{ __('Company') }}</option>
                             @forelse($companies as $company)
                                 <option value="{{ $company->id }}">{{ ucfirst($company->company_name) }}</option>
                             @empty
@@ -269,10 +272,9 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                         </select>
                     </div>
                     {{-- Location --}}
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('menu.locations')</label>
-                        <select class="select2 w-full" name="location" id="location">
-                            <option value="all">@lang('modules.jobApplication.allLocation')</option>
+                    <div class="ja-filter-field">
+                        <select class="select2 w-full" name="location" id="location" aria-label="{{ __('Location') }}">
+                            <option value="all">{{ __('Location') }}</option>
                             @forelse($locations as $location)
                                 <option value="{{ $location->id }}">{{ ucfirst($location->location) }}</option>
                             @empty
@@ -280,10 +282,9 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                         </select>
                     </div>
                     {{-- Jobs --}}
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('menu.jobs')</label>
-                        <select class="select2 w-full" name="jobs" id="jobs">
-                            <option value="all">@lang('modules.jobApplication.allJobs')</option>
+                    <div class="ja-filter-field">
+                        <select class="select2 w-full" name="jobs" id="jobs" aria-label="{{ __('Job') }}">
+                            <option value="all">{{ __('Job') }}</option>
                             @forelse($jobs as $job)
                                 <option value="{{ $job->id }}">{{ ucfirst($job->title) }}</option>
                             @empty
@@ -294,10 +295,9 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                    
 
                     {{-- Status --}}
-                    <div class="flex min-w-[160px] flex-1 flex-col gap-1 sm:max-w-[220px]">
-                        <label class="text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#8892A0]">@lang('app.status')</label>
-                        <select class="select2 w-full" name="status" id="status">
-                            <option value="all">@lang('modules.jobApplication.allStatus')</option>
+                    <div class="ja-filter-field">
+                        <select class="select2 w-full" name="status" id="status" aria-label="{{ __('Status') }}">
+                            <option value="all">{{ __('Status') }}</option>
                             @forelse($statuses as $s)
                                 <option value="{{ $s->id }}">{{ ucfirst($s->status) }}</option>
                             @empty
@@ -311,19 +311,20 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                         <i class="fa fa-refresh" aria-hidden="true"></i> @lang('app.reset')
                     </button>
                 </form>
-            </div>
         </div>
 
         {{-- Table --}}
-        <div class="jc-table-card table-wrapper ra-dt-wrap mt-4 w-full overflow-hidden rounded-[12px] border border-[#E8E6E1] bg-white shadow-sm">
+        <div class="ja-results ra-dt-wrap">
             <table id="myTable" class="jc-cat-table display w-full" style="width:100%">
                 <thead>
                     <tr>
                         <th><input type="checkbox" class="cc-all" aria-label="Select all candidates on this page"></th>
                         <th>@lang('modules.jobApplication.applicantName')</th>
-                        <th>@lang('menu.jobs')</th>
-                        <th>@lang('menu.locations')</th>
+                        <th>{{ __('Job') }}</th>
+                        <th>{{ __('Location') }}</th>
                         <th>@lang('app.status')</th>
+                        <th>{{ __('Actions') }}</th>
+                        <th></th>
                     </tr>
                 </thead>
             </table>
@@ -346,6 +347,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
             data: { companyId: companyId },
             dataType: 'json',
             success: function(data) {
+                if ($('#company').val() !== companyId) return;
                 try {
                     if ($('#location').data('select2')) {
                         $('#location').select2('destroy');
@@ -353,6 +355,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                 } catch(e) {}
 
                 $('#location').html(data.locations);
+                $('#location option[value="all"]').text(@json(__('Location')));
                 $('#location').select2({ width: '100%' });
                 $('#location').val('all').trigger('change.select2');
 
@@ -371,6 +374,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
             data: { companyId: companyId, locationId: locationId },
             dataType: 'json',
             success: function(data) {
+                if ($('#company').val() !== companyId || $('#location').val() !== locationId) return;
                 try {
                     if ($('#jobs').data('select2')) {
                         $('#jobs').select2('destroy');
@@ -378,6 +382,7 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                 } catch(e) {}
 
                 $('#jobs').html(data.jobs);
+                $('#jobs option[value="all"]').text(@json(__('Job')));
                 $('#jobs').select2({ width: '100%' });
                 $('#jobs').val('all').trigger('change');
             },
@@ -565,12 +570,21 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
 
     tableLoad();
 
+    var searchTimer;
+    $('#archive-candidate-search').on('input', function () {
+        var value = this.value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+            if (table.search() !== value) table.search(value).draw();
+        }, 250);
+    });
+
     // Auto-apply on any filter change
     var jaFilterDebounce;
     function jaApplyFilters() {
         clearTimeout(jaFilterDebounce);
         jaFilterDebounce = setTimeout(function () {
-            tableLoad();
+            table.ajax.reload();
         }, 250);
     }
 
@@ -583,36 +597,12 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
     });
 
     function tableLoad() {
-        var skill          = window.jaGetSkills ? window.jaGetSkills() : '';
-        var company        = $('#company').val();
-        var jobs           = $('#jobs').val();
-        var location       = $('#location').val();
-        var status         = $('#status').val();
-
-        // Destroy existing instance
-        if ($.fn.DataTable.isDataTable('#myTable')) {
-            $('#myTable').DataTable().destroy();
-        }
-
-        // Rebuild thead so DataTables has correct columns to measure
-        $('#myTable').html(
-            '<thead><tr>' +
-                '<th><input type="checkbox" class="cc-all" aria-label="Select all candidates on this page"></th>' +
-                '<th>{{ __('modules.jobApplication.applicantName') }}</th>' +
-                '<th>{{ __('menu.jobs') }}</th>' +
-                '<th>{{ __('menu.locations') }}</th>' +
-                '<th>{{ __('app.status') }}</th>' +
-                '<th></th>' +
-            '</tr></thead>' +
-            '<tbody></tbody>'
-        );
-
         table = $('#myTable').DataTable({
             responsive: false,
             serverSide: true,
             autoWidth: false,
-            order: [[5, 'desc']],
-                      ajax: {
+            order: [[6, 'desc']],
+            ajax: {
                 url: "{!! route('admin.applications-archive.data') !!}",
                 data: function (d) {
                     return $.extend({}, d, {
@@ -624,20 +614,28 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
                     });
                 }
             },
-            language: languageOptions(),
+            language: $.extend(true, languageOptions(), {
+                lengthMenu: @json(__('Rows per page')) + ' _MENU_',
+                paginate: {previous: '‹', next: '›'},
+                aria: {paginate: {previous: @json(__('Previous page')), next: @json(__('Next page'))}}
+            }),
+            infoCallback: function (settings, start, end, max, total) {
+                return total ? start + '–' + end + ' ' + @json(__('of')) + ' ' + total : @json(__('0 results'));
+            },
             stripeClasses: [],
-            dom: '<"jc-table-toolbar"lf>rt<"jc-table-toolbar jc-table-toolbar--footer"ip>',
+            dom: '<"ja-table-overflow"rt><"ja-table-footer"lip>',
             drawCallback: function () {
                 if ($.fn.tooltip) {
                     $('[data-toggle="tooltip"]').tooltip();
                 }
             },
             columns: [
-                { data: null, orderable: false, searchable: false, render: function(data, type, row) { return '<input type="checkbox" class="cc-select" data-type="application" value="' + Number(row.id) + '" aria-label="Select candidate">'; } },
+                { data: null, width: '40px', orderable: false, searchable: false, render: function(data, type, row) { return '<input type="checkbox" class="cc-select" data-type="application" value="' + Number(row.id) + '" aria-label="Select candidate">'; } },
                 { data: 'full_name',    name: 'full_name' },
                 { data: 'title',        name: 'job_id' },
                 { data: 'location',     name: 'location_id' },
                 { data: 'status',       name: 'status_id',  orderable: false },
+                { data: 'action', name: 'action', width: '90px', orderable: false, searchable: false },
                 { data: 'created_at',   name: 'created_at', visible: false, searchable: false }
             ]
         });
@@ -672,20 +670,5 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
         window.location.href = url.href;
     }
 
-    // ── Company → Jobs cascade ────────────────────────────────────────────────
-    $('#company').on('change', function () {
-        var company_id = $(this).val();
-        $.ajax({
-            url: "{{ route('admin.job-applications.get-jobs') }}",
-            type: 'GET',
-            data: { companyId: company_id },
-            success: function (data) {
-                var was = $('#jobs').val();
-                $('#jobs').select2('destroy').html(data.jobs).select2({ width: '100%' });
-                var val = $('#jobs option[value="' + was + '"]').length ? was : 'all';
-                $('#jobs').val(val).trigger('change');
-            }
-        });
-    });
     </script>
 @endpush
