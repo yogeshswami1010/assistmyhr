@@ -38,6 +38,7 @@
     // Resolve resume URL
     $currentResumeDocument = $application->documents->firstWhere('name', 'Resume');
     $resumeUrl = $currentResumeDocument ? route('admin.job-applications.resume.view', $application->id).'?v='.($currentResumeDocument->updated_at?->timestamp ?? time()) : null;
+    $resumeUrl = $registrationResumeUrl ?? $resumeUrl;
     if (!$resumeUrl && !empty($answers)) {
         foreach ($answers as $answer) {
             if (!empty($answer->file)) {

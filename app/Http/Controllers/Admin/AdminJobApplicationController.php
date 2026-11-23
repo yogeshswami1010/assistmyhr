@@ -1293,7 +1293,7 @@ class AdminJobApplicationController extends AdminBaseController
         return Reply::success(__('messages.recordDeleted'));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $this->application = JobApplication::withTrashed()
             // Do not hydrate CV search/index payloads for the profile drawer.
@@ -1335,6 +1335,23 @@ class AdminJobApplicationController extends AdminBaseController
                 $query->where('job_application_id', $this->application->id);
             })
             ->first();
+
+        $this->registrationResumeUrl = null;
+        $registrationId = $request->integer('registration_profile');
+        if ($registrationId > 0 && $this->user->cans('view_job_applications')
+            && app(\App\Saas\TenantContext::class)->featureEnabled('consortium_registration')) {
+            $registration = ConsortiumRegistration::query()
+                ->whereKey($registrationId)
+                ->whereRaw('LOWER(TRIM(email)) = ?', [mb_strtolower(trim((string) $this->application->email))])
+                ->first();
+            $resume = $this->application->documents->firstWhere('name', 'Resume');
+            if ($registration?->resume_file && (!$resume || !Storage::exists('documents/'.$this->application->id.'/'.$resume->hashname))) {
+                $this->registrationResumeUrl = tenant_route('admin.consortium-registrations.resume', [
+                    'registration' => $registration->id,
+                    'inline' => 1,
+                ]);
+            }
+        }
 
         // Rendering every skill as an <option> and initializing Select2 on it
         // blocks the browser when the skills catalogue is large. The profile

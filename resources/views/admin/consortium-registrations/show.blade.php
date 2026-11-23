@@ -162,7 +162,7 @@ body.consortium-profile-fullscreen #consortium-job-application-profile > .ja-two
 @push('footer-script')
 <script>
 (function () {
-    var profileUrl = @json(route('admin.job-applications.show', $assignedApplicationId));
+    var profileUrl = @json(tenant_route('admin.job-applications.show', ['job_application' => $assignedApplicationId, 'registration_profile' => $registration->id]));
     $.ajax({url: profileUrl, type: 'GET', cache: false}).done(function (response) {
         if (!response || response.status !== 'success' || !response.view) {
             $('#consortium-job-application-profile').html('<div>Candidate profile could not be loaded.</div>');
@@ -178,8 +178,8 @@ body.consortium-profile-fullscreen #consortium-job-application-profile > .ja-two
         $host.find('[id^="ja-job-view-"]').closest('.ja-info-row').remove();
         var $details = $host.find('#ja-tab-details');
         if ($details.length) $details.append($('#consortium-personal-information').html());
-        var $toolbar = $host.find('.ja-pdf-toolbar-actions').first();
-        if ($toolbar.length) $('#consortium-temp-staffing-toolbar').css('display', 'flex').prependTo($toolbar);
+        var $toolbar = $host.find('.ja-profile-toolbar .ja-profile-tags').first();
+        if ($toolbar.length) $('#consortium-temp-staffing-toolbar').css('display', 'flex').appendTo($toolbar);
         var appendTempStaffingHistory = function () {
             var $historyPane = $host.find('#ja-tab-history');
             if (!$historyPane.length || $historyPane.find('[data-consortium-temp-history-card]').length) return;
