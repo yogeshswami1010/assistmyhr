@@ -6,8 +6,12 @@
     @include('admin.job-applications.partials.application-list-style')
     <style>
         .cr-list { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
-        .cr-list .ja-filter-form { width: 100%; }
-        .cr-list .registration-multi-filter { flex: 1 1 130px; min-width: 0; }
+        .cr-list .ja-filter-form { width: 100%; gap: 10px; }
+        .cr-list .registration-multi-filter { flex: 1 1 116px; min-width: 116px; }
+        .cr-list .registration-multi-filter[data-filter-name="available_weekends"] { flex-basis: 142px; min-width: 142px; }
+        .cr-list .registration-filter-toggle,
+        .cr-list #registration-filters-apply,
+        .cr-list #reset-filters { min-height: 38px; white-space: nowrap; }
         .cr-list .registration-filter-menu { width: min(280px, calc(100vw - 64px)); }
         .cr-list .ja-act-btn { display: inline-flex; align-items: center; border: 1px solid var(--ja-line); background: #fff; color: #475569; }
         .cr-list .ja-act-btn:hover { background: #eff6ff; color: var(--ja-blue); }
