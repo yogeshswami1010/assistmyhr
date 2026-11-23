@@ -666,6 +666,7 @@ function jaSaveMarketingLabel(appId) {
                                     {{ ucwords(str_replace('_', ' ', $currentStatus?->status ?? '')) }}
                                 </span>
                                 <i class="fa fa-long-arrow-right" style="color:#B0B8C4;font-size:14px;flex-shrink:0"></i>
+                                <div class="ja-stage-picker">
                                 <select class="ja-stage-select" id="stage-mover-select-{{ $application->id }}"
                                     onchange="jaMoveFromDetail({{ $application->id }}, this.value, this.options[this.selectedIndex].text, {{ $currentStatusId }})">
                                     <option value="">Select stage…</option>
@@ -678,6 +679,7 @@ function jaSaveMarketingLabel(appId) {
                                         <option value="__add_stage__">+ Add new stage…</option>
                                     @endif
                                 </select>
+                                </div>
                             </div>
                             @if($application->job_id && $user->cans('edit_jobs'))
                             <form id="ja-stage-form-{{ $application->id }}" style="display:none;margin-top:12px;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px" onsubmit="event.preventDefault();jaSaveProfileStage({{ $application->id }});">
@@ -1564,6 +1566,7 @@ function jaSaveProfileStage(appId) {
             option.textContent = stage.label;
             option.setAttribute('data-color', stage.color);
             select.value = '';
+            $(select).trigger('change.select2');
             form.reset();
             form.style.display = 'none';
             showMessage('Stage added. Select it above to move this candidate.', false);
@@ -1585,7 +1588,10 @@ function jaSaveProfileStage(appId) {
 function jaMoveFromDetail(appId, toStatusId, toStatusLabel, currentStatusId) {
     if (toStatusId === '__add_stage__') {
         var select = document.getElementById('stage-mover-select-' + appId);
-        if (select) select.value = '';
+        if (select) {
+            select.value = '';
+            $(select).trigger('change.select2');
+        }
         jaToggleProfileStage(appId, true);
         return;
     }
@@ -1619,6 +1625,7 @@ function jaMoveFromDetail(appId, toStatusId, toStatusLabel, currentStatusId) {
                     Array.prototype.slice.call(select.options).forEach(function (stage) {
                         if (stage.value === String(toStatusId)) stage.remove();
                     });
+                    $(select).trigger('change.select2');
                 }
                 if (typeof table !== 'undefined') table.draw(false);
                 if (typeof jaLoadTabCounts === 'function') jaLoadTabCounts();
@@ -1632,9 +1639,9 @@ function jaMoveFromDetail(appId, toStatusId, toStatusLabel, currentStatusId) {
 // the select element, so it must be explicitly destroyed before a swap.
 window.jaDisposeApplicantProfile = function () {
     if (typeof window.jaUnloadPdf === 'function') window.jaUnloadPdf();
-    var $skills = $('#right-sidebar-content #skills');
-    if ($skills.length && $.fn.select2 && $skills.data('select2')) {
-        $skills.select2('destroy');
+    var $selects = $('#right-sidebar-content').find('#skills, .ja-stage-picker select');
+    if ($.fn.select2) {
+        $selects.filter('.select2-hidden-accessible').select2('destroy');
     }
 };
 
@@ -1644,6 +1651,28 @@ window.jaRenderApplicantProfile = function (html) {
 };
 
 var $profileSkills = $('#right-sidebar-content #skills');
+var $profileStage = $('#right-sidebar-content .ja-stage-picker select');
+if ($profileStage.length && $.fn.select2) {
+    $profileStage.select2({
+        width: '100%',
+        placeholder: $profileStage.find('option[value=""]').text(),
+        minimumResultsForSearch: 8,
+        dropdownParent: $('#right-sidebar'),
+        dropdownCssClass: 'ja-stage-options',
+        templateResult: function (stage) {
+            if (!stage.id) return stage.text;
+            var row = $('<span>', {class: 'ja-stage-option'});
+            if (stage.id === '__add_stage__') {
+                row.addClass('ja-stage-option-add');
+                row.text(stage.text.replace(/^\+\s*/, '')).prepend($('<i>', {class: 'fa-solid fa-plus', 'aria-hidden': 'true'}));
+            } else {
+                var color = stage.element?.dataset.color || '#64748b';
+                row.text(stage.text).prepend($('<span>', {class: 'ja-stage-option-dot', 'aria-hidden': 'true'}).css('background-color', color));
+            }
+            return row;
+        }
+    });
+}
 if ($profileSkills.length && $.fn.select2) {
     if ($profileSkills.data('select2')) $profileSkills.select2('destroy');
     $profileSkills.select2({
