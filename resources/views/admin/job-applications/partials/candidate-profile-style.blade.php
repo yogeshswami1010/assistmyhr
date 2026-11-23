@@ -65,8 +65,9 @@
     .ja-resume-pages { display: flex; flex-direction: column; align-items: center; gap: 16px; width: max-content; min-width: 100%; padding: 24px; }
     .ja-candidate-profile .ja-pdf-page { box-shadow: 0 3px 18px #243d6526 !important; }
     .ja-candidate-profile .ja-right-panel { min-width: 0; min-height: 0; background: transparent; }
-    .ja-candidate-profile .ja-tabs { justify-content: space-between; overflow-x: auto; padding: 0 5px; background: transparent; border-color: var(--profile-line); }
-    .ja-candidate-profile .ja-tabs .ja-tab { padding: 10px 8px; font-size: 13px; }
+    .ja-candidate-profile .ja-tabs { justify-content: flex-start; gap: 8px; overflow-x: auto; padding: 0 5px; background: transparent; border-color: var(--profile-line); }
+    .ja-candidate-profile .ja-tabs .ja-tab { padding: 10px 8px; font-size: 13px; gap: 6px; }
+    .ja-candidate-profile .ja-tabs .ja-tab > i { width: 1em; text-align: center; }
     .ja-candidate-profile .ja-right-scroll { padding: 12px 1px 1px; scrollbar-width: thin; scrollbar-color: #a9b8cc transparent; }
     .ja-candidate-profile .ja-card { border-color: var(--profile-line); padding: 15px 17px; margin-bottom: 13px; box-shadow: 0 2px 8px #12254b0a; }
     .ja-candidate-profile .ja-card-title { color: var(--profile-ink); font-size: 16px; font-weight: 750; text-transform: none; letter-spacing: normal; }

@@ -392,13 +392,13 @@ function jaSaveMarketingLabel(appId) {
         <div class="ja-right-panel">
             <div class="ja-tabs">
                 <div class="ja-tab active" data-tab="details">
-                    <i class="fa fa-user" style="font-size:11px"></i> @lang('app.details')
+                    <i class="fa-solid fa-user" aria-hidden="true"></i> @lang('app.details')
                 </div>
                 <div class="ja-tab" data-tab="notes">
-                    <i class="fa fa-sticky-note-o" style="font-size:11px"></i> @lang('modules.jobApplication.applicantNotes')
+                    <i class="fa-solid fa-note-sticky" aria-hidden="true"></i> @lang('modules.jobApplication.applicantNotes')
                 </div>
                 <div class="ja-tab" data-tab="client-notes">
-                    <i class="fa fa-building" style="font-size:11px"></i> Client Notes
+                    <i class="fa-solid fa-building" aria-hidden="true"></i> Client Notes
                 </div>
             </div>
 
