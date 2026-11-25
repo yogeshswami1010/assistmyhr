@@ -8,6 +8,8 @@
                 const unavailableMessage = @json(__('Google Maps search is unavailable. Enter the location manually.'));
                 const fieldStatuses = [];
                 const jobCountry = document.getElementById('location_country_code');
+                const streetAddress = document.getElementById('location_street_address');
+                const postalCode = document.getElementById('location_postal_code');
 
                 function setupLocationSearch(field, AutocompleteSuggestion, AutocompleteSessionToken) {
                     const countryInput = field.id === 'location_new' ? jobCountry : null;
@@ -76,6 +78,8 @@
 
                     async function fillAddress(prediction, request) {
                         const selectedValue = field.value;
+                        const previousStreet = streetAddress?.value;
+                        const previousPostal = postalCode?.value;
                         if (countryInput) {
                             field.dataset.locationLookupPending = '1';
                             status.textContent = 'Reading location from Google Maps…';
@@ -85,14 +89,27 @@
                             await place.fetchFields({ fields: countryInput ? ['formattedAddress', 'addressComponents'] : ['formattedAddress'] });
                             if (request !== revision || field.value !== selectedValue) return;
                             if (countryInput) {
-                                const code = place.addressComponents?.find(component => component.types.includes('country'))?.shortText;
+                                const component = type => place.addressComponents?.find(item => item.types.includes(type));
+                                const code = component('country')?.shortText;
+                                const route = component('route')?.longText;
+                                const number = component('street_number')?.longText;
+                                const street = route && number ? number + ' ' + route : '';
+                                const postal = component('postal_code')?.longText ?? '';
+                                const suffix = component('postal_code_suffix')?.longText;
+                                const fullPostal = postal && suffix && code === 'US' ? postal + '-' + suffix : postal;
+                                if (streetAddress && streetAddress.value === previousStreet && street.length <= streetAddress.maxLength) {
+                                    streetAddress.value = street;
+                                }
+                                if (postalCode && postalCode.value === previousPostal && fullPostal.length <= postalCode.maxLength) {
+                                    postalCode.value = fullPostal;
+                                }
                                 countryInput.value = /^[A-Z]{2}$/.test(code ?? '') ? code : '';
                                 status.textContent = countryInput.value ? 'Country code: ' + countryInput.value : '';
                             }
                             if (place.formattedAddress && place.formattedAddress.length <= field.maxLength) {
                                 field.value = place.formattedAddress;
-                                field.dispatchEvent(new Event('change', { bubbles: true }));
                             }
+                            field.dispatchEvent(new Event('change', { bubbles: true }));
                         } catch {
                             if (request === revision) showError();
                         } finally {

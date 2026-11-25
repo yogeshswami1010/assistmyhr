@@ -104,7 +104,7 @@
         const publish = document.getElementById('publish_on_whatjobs');
         const form = publish.form;
         const status = document.getElementById('whatjobs-live-check');
-        const fields = ['_token', 'title', 'category_id', 'job_type_id', 'location_new', 'location_country_code', 'whatjobs[jobWorkFrom]'];
+        const fields = ['_token', 'title', 'category_id', 'job_type_id', 'location_new', 'location_country_code', 'location_street_address', 'location_postal_code', 'whatjobs[jobWorkFrom]'];
         const jobId = @json($isEdit ? $job?->id : null);
         let timer;
         let pending;

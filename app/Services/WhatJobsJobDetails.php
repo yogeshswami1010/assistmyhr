@@ -101,7 +101,12 @@ class WhatJobsJobDetails
         ]);
         unset($saved['jobSector']);
 
-        return array_replace($saved, $addressFromDescription, $this->locationFields($locationParts), array_filter([
+        $explicitAddress = array_filter([
+            'jobLocationAddress' => trim((string) $job->location_street_address),
+            'zip' => strtoupper(trim((string) $job->location_postal_code)),
+        ], fn ($value) => $value !== '');
+
+        return array_replace($saved, $addressFromDescription, $this->locationFields($locationParts), $explicitAddress, array_filter([
             'countryCode' => $postedCountry ?? $locationCountry
                 ?? $countrySuffix
                 ?? $this->countryCode($this->descriptionField($description, 'country'))
