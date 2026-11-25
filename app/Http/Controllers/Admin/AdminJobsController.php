@@ -93,10 +93,13 @@ class AdminJobsController extends AdminBaseController
             return;
         }
 
-        foreach (['publish_on_jooble', 'publish_on_assistmyhr', 'publish_on_postjobfree'] as $field) {
+        foreach (['publish_on_jooble', 'publish_on_assistmyhr', 'publish_on_postjobfree', 'publish_on_jobillico'] as $field) {
             if ($request->has($field)) {
                 $job->{$field} = $request->boolean($field);
             }
+        }
+        if ($request->has('jobillico_location_id')) {
+            $job->jobillico_location_id = $request->validated('jobillico_location_id');
         }
         if ($request->has('publish_on_whatjobs')) {
             $job->publish_on_whatjobs = $request->boolean('publish_on_whatjobs');

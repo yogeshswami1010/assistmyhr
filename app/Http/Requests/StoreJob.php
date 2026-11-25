@@ -31,6 +31,8 @@ class StoreJob extends CoreRequest
             'job_code'           => 'nullable|string|max:100',
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
+            'publish_on_jobillico' => 'sometimes|boolean',
+            'jobillico_location_id' => ['nullable', 'integer', 'min:1', Rule::requiredIf($this->boolean('publish_on_jobillico') && !$this->boolean('save_as_draft'))],
             'publish_on_whatjobs' => 'sometimes|boolean',
             'whatjobs' => 'sometimes|array:jobWorkFrom,jobEmploymentSubType,jobSector,jobLength,jobPeriod',
             'whatjobs.jobWorkFrom' => 'nullable|integer|between:1,5',

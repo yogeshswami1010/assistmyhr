@@ -432,6 +432,19 @@
                                 <select class="form-control select2 select2-multiple w-full" id="job_skills" multiple="multiple" data-placeholder="@lang('app.add') @lang('menu.skills')" name="skill_id[]" style="width: 100%;">
                                     @if ($job)
                                         @foreach ($skills as $skill)
+                                <div class="mt-3">
+                                    <input type="hidden" name="publish_on_jobillico" value="0">
+                                    <label class="flex items-center gap-2 text-sm text-slate-700">
+                                        <input type="checkbox" name="publish_on_jobillico" value="1"
+                                            @checked(old('publish_on_jobillico', $isEdit && $job?->publish_on_jobillico))>
+                                        Include this job in the Jobillico XML export
+                                    </label>
+                                    <label for="jobillico_location_id" class="mt-2 block text-xs font-semibold text-slate-700">Jobillico location ID</label>
+                                    <input type="number" min="1" step="1" id="jobillico_location_id" name="jobillico_location_id"
+                                        class="form-control" value="{{ old('jobillico_location_id', $job?->jobillico_location_id) }}">
+                                    <a class="mt-1 inline-block text-xs text-blue-700 underline" href="{{ tenant_route('jobs.feeds.jobillico') }}"
+                                        target="_blank" rel="noopener">Open Jobillico XML</a>
+                                </div>
                                             <option
                                                 @foreach ($job->skills as $jskill)
                                                     @if ($skill->id == $jskill->skill_id) selected @endif

@@ -7,6 +7,7 @@ use App\Job;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use XMLWriter;
@@ -30,15 +31,31 @@ class JobBoardFeedController
         return $this->feed('publish_on_postjobfree');
     }
 
-    private function feed(string $selection): Response
+    public function jobillico(Request $request): Response
+    {
+        $workspace = $request->query('workspace');
+        abort_if(config('saas.enabled') && (!is_string($workspace) || $workspace === ''), 404);
+
+        return $this->feed('publish_on_jobillico', is_string($workspace) ? $workspace : null);
+    }
+
+    private function feed(string $selection, ?string $workspace = null): Response
     {
         $xml = new XMLWriter;
         $xml->openMemory();
         $xml->startDocument('1.0', 'UTF-8');
-        $xml->startElement($selection === 'publish_on_jooble' ? 'jobs' : 'source');
+        $xml->startElement(match ($selection) {
+            'publish_on_jooble' => 'jobs',
+            'publish_on_jobillico' => 'request',
+            default => 'source',
+        });
 
         if (config('saas.enabled')) {
-            foreach (Tenant::where('status', 'active')->withEnabledFeature('job_board_publishing')->with('subscription')->lazyById() as $tenant) {
+            $tenants = Tenant::where('status', 'active')->withEnabledFeature('job_board_publishing')->with('subscription');
+            if ($workspace !== null) {
+                $tenants->where('slug', $workspace);
+            }
+            foreach ($tenants->lazyById() as $tenant) {
                 if ($tenant->hasAccess()) {
                     $this->writeWorkspaceJobs($xml, $tenant, $selection);
                 }
@@ -71,6 +88,7 @@ class JobBoardFeedController
     {
         $assistMyHr = $selection === 'publish_on_assistmyhr';
         $postJobFree = $selection === 'publish_on_postjobfree';
+        $jobillico = $selection === 'publish_on_jobillico';
         $companyName = trim((string) CompanySetting::on($query->getModel()->getConnectionName())->value('company_name'));
         $jobs = $query->publicJobPage()->where($selection, true)
             ->with([$assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])->lazyById();
@@ -84,12 +102,19 @@ class JobBoardFeedController
             $jobRouteParameters['job_board'] = match ($selection) {
                 'publish_on_assistmyhr' => 'jobxoom',
                 'publish_on_postjobfree' => 'postjobfree',
+                'publish_on_jobillico' => 'jobillico',
                 default => 'jooble',
             };
             if ($tenant) {
                 $jobRouteParameters['workspace'] = $tenant->slug;
             }
             $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
+            if ($jobillico) {
+                if ($job->jobillico_location_id > 0) {
+                    $this->writeJobillicoJob($xml, $job, $jobRouteParameters);
+                }
+                continue;
+            }
             $fields = match ($selection) {
                 'publish_on_assistmyhr' => $this->assistMyHrFields($job, $jobRouteParameters, $reference, $companyName),
                 'publish_on_postjobfree' => $this->postJobFreeFields($job, $jobRouteParameters, $reference, $companyName),
@@ -109,6 +134,45 @@ class JobBoardFeedController
             }
             $xml->endElement();
         }
+    }
+
+    private function writeJobillicoJob(XMLWriter $xml, Job $job, array $routeParameters): void
+    {
+        $xml->startElement('job');
+        $xml->writeElement('elang', 'en');
+        $this->writeCdata($xml, 'stitle_en', $job->title);
+        $this->writeCdata($xml, 'srefnumber', $job->job_code ?: 'ATS-'.$job->id);
+        $xml->startElement('olocations');
+        $xml->writeElement('ilocation', (string) $job->jobillico_location_id);
+        $xml->endElement();
+        $xml->writeElement('iavailability', (string) $job->total_positions);
+        $xml->writeElement('dbegin', $job->publicationDate()->format('Y-m-d'));
+        $this->writeCdata($xml, 'sdescription_en', $job->job_description);
+
+        $status = match ((int) $job->employment_subtype) {
+            1 => 'bcontract',
+            2 => 'bseasonal',
+            4 => 'bpermanent',
+            default => null,
+        };
+        if ($status) {
+            $xml->startElement('ostatus');
+            $xml->writeElement($status, '1');
+            $xml->endElement();
+        }
+        $schedule = match (strtolower(trim((string) $job->jobType?->job_type))) {
+            'full time', 'full-time' => 'bfulltime',
+            'part time', 'part-time' => 'bparttime',
+            default => null,
+        };
+        if ($schedule) {
+            $xml->startElement('oschedule');
+            $xml->writeElement($schedule, '1');
+            $xml->endElement();
+        }
+
+        $this->writeCdata($xml, 'surl_en', route('jobs.jobApply', $routeParameters));
+        $xml->endElement();
     }
 
     private function assistMyHrFields(Job $job, array $routeParameters, string $reference, string $companyName): array

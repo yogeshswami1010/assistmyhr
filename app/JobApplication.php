@@ -38,6 +38,7 @@ class JobApplication extends Model
         'jobxoom' => 'Jobxoom',
         'postjobfree' => 'PostJobFree',
         'whatjobs' => 'WhatJobs',
+        'jobillico' => 'Jobillico',
     ];
 
     public static function jobBoardSource(mixed $source): ?string
