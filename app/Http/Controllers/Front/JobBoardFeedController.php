@@ -90,6 +90,7 @@ class JobBoardFeedController
         $locations = $jobillico ? app(JobillicoLocations::class) : null;
         $jobs = $query->publicJobPage()->where($selection, true)
             ->with([$assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])
+            ->when($selection === 'publish_on_jooble', fn (Builder $jobs) => $jobs->with('skills.skill'))
             ->when($jobillico, fn (Builder $jobs) => $jobs->with(['location', 'category']))->lazyById();
 
         foreach ($jobs as $job) {
@@ -249,18 +250,24 @@ class JobBoardFeedController
 
     private function joobleFields(Job $job, array $routeParameters, string $companyName): array
     {
+        $skills = $job->skills->pluck('skill.name')->filter();
+        $description = $job->job_description;
+        if ($skills->isNotEmpty()) {
+            $description = '<p>Skills</p><ul>'.$skills->map(fn ($skill) => '<li>'.e($skill).'</li>')->implode('').'</ul>'.$description;
+        }
+
         return [
             'link' => route('jobs.jobDetail', $routeParameters),
             'apply_url' => route('jobs.jobApply', $routeParameters),
             'name' => $job->title,
             'region' => $job->joobleRegion(),
-            'description' => $job->job_description,
+            'description' => $description,
             'pubdate' => $job->publicationDate()->format('d.m.Y'),
             'updated' => $job->updated_at?->format('d.m.Y'),
             'expire' => $job->publicationEndDate()?->format('d.m.Y'),
             'company' => $companyName,
-            'jobtype' => $job->jobType?->job_type,
-            'salary' => $this->salary($job),
+            'jobtype' => $job->show_job_type ? $job->jobType?->job_type : null,
+            'salary' => $job->show_salary ? $this->salary($job) : null,
         ];
     }
 
