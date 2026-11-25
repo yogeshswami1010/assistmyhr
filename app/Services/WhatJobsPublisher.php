@@ -67,8 +67,9 @@ class WhatJobsPublisher
             $location = $job->jobLocation()->with('country')->orderBy('job_locations.id')->first()
                 ?? $job->location()->with('country')->first();
             $settings = app(WhatJobsJobDetails::class)->forJob($job, $location, $state['country'] ?? null);
-            if (!isset($settings['jobSector'])) {
-                return $this->recordResult($job, $state, $remoteId ? 'update' : 'add', 'Select a Job Category that matches a WhatJobs sector.');
+            $issues = WhatJobsJobDetails::publishingIssues($settings, !$remoteId);
+            if ($issues) {
+                return $this->recordResult($job, $state, $remoteId ? 'update' : 'add', implode(' ', $issues));
             }
 
             $identity = [
@@ -82,13 +83,6 @@ class WhatJobsPublisher
             $employmentSubtype = $settings['jobEmploymentSubType'] ?? null;
             $scheduleType = $settings['jobScheduleType'] ?? null;
             $workFrom = $settings['jobWorkFrom'] ?? null;
-            if (!$remoteId && in_array((int) $workFrom, [1, 2, 3, 5], true)) {
-                $requiredLocation = ['jobLocationAddress' => 'street address', 'city' => 'city', 'state' => 'state or province', 'zip' => 'postal or ZIP code'];
-                $missingLocation = array_filter($requiredLocation, fn ($label, $key) => blank($settings[$key] ?? null), ARRAY_FILTER_USE_BOTH);
-                if ($missingLocation) {
-                    return $this->recordResult($job, $state, 'add', 'Add the missing details to the job location: '.implode(', ', $missingLocation).'.');
-                }
-            }
             $companyName = trim((string) CompanySetting::on($job->getConnectionName())->value('company_name'));
             $content = array_filter([
                 'companyName' => $companyName,

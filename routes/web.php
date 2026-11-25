@@ -314,6 +314,7 @@ Route::middleware('auth')->group(function () {
             Route::post('jobs/send-emails',            [AdminJobsController::class, 'sendEmails'])->name('jobs.sendEmails');
             Route::get('jobs/send-email',              [AdminJobsController::class, 'sendEmail'])->name('jobs.sendEmail');
             Route::post('jobs/update-visibility',      [AdminJobsController::class, 'updateVisibility'])->name('jobs.updateVisibility');
+            Route::post('jobs/whatjobs-preview', [AdminJobsController::class, 'whatJobsPreview'])->name('jobs.whatjobs-preview');
             Route::resource('jobs', AdminJobsController::class);
 
             // Job Applications — SPECIFIC routes FIRST (no wildcards)

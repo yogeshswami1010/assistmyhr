@@ -118,6 +118,23 @@ class WhatJobsJobDetails
         ], fn ($value) => $value !== null && $value !== ''));
     }
 
+    public static function publishingIssues(array $settings, bool $newPosting): array
+    {
+        $issues = [];
+        if (blank($settings['jobSector'] ?? null)) {
+            $issues[] = 'Select a Job Category that matches a WhatJobs sector.';
+        }
+        if ($newPosting && in_array((int) ($settings['jobWorkFrom'] ?? 0), [1, 2, 3, 5], true)) {
+            $requiredLocation = ['jobLocationAddress' => 'street address', 'city' => 'city', 'state' => 'state or province', 'zip' => 'postal or ZIP code'];
+            $missing = array_filter($requiredLocation, fn ($label, $key) => blank($settings[$key] ?? null), ARRAY_FILTER_USE_BOTH);
+            if ($missing) {
+                $issues[] = 'Add the missing details to the job location: '.implode(', ', $missing).'.';
+            }
+        }
+
+        return $issues;
+    }
+
     public static function canonicalSector(mixed $sector): ?string
     {
         if (!is_string($sector)) {

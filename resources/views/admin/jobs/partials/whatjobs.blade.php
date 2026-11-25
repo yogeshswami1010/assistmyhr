@@ -22,6 +22,7 @@
         <input type="checkbox" id="publish_on_whatjobs" name="publish_on_whatjobs" value="1" @checked($whatJobsSelected)>
         Publish this job on WhatJobs
     </label>
+    <p id="whatjobs-live-check" class="mt-1 text-xs font-semibold text-amber-800" role="status" hidden></p>
     @if(!empty($whatJobsSync['id']))
         <p class="mt-1 text-xs font-semibold {{ !empty($whatJobsSync['active']) ? 'text-emerald-700' : 'text-slate-600' }}">
             {{ !empty($whatJobsSync['active']) ? 'Accepted by WhatJobs.' : 'Paused on WhatJobs.' }}
@@ -97,3 +98,60 @@
         </script>
     @endif
 </div>
+@push('footer-script')
+<script>
+    (() => {
+        const publish = document.getElementById('publish_on_whatjobs');
+        const form = publish.form;
+        const status = document.getElementById('whatjobs-live-check');
+        const fields = ['_token', 'title', 'category_id', 'job_type_id', 'location_new', 'location_country_code', 'whatjobs[jobWorkFrom]'];
+        const jobId = @json($isEdit ? $job?->id : null);
+        let timer;
+        let pending;
+
+        async function check() {
+            const request = new AbortController();
+            pending = request;
+            const data = new FormData();
+            for (const field of fields) {
+                const input = form.elements.namedItem(field);
+                if (input) data.set(field, input.value);
+            }
+            const editor = document.getElementById('job_description_editor');
+            data.set('job_description', editor?.innerHTML ?? form.elements.namedItem('job_description')?.value ?? '');
+            if (jobId) data.set('job_id', jobId);
+
+            try {
+                const result = await fetch(@json(tenant_route('admin.jobs.whatjobs-preview', [], false)), {
+                    method: 'POST',
+                    headers: {Accept: 'application/json'},
+                    body: data,
+                    signal: request.signal,
+                });
+                if (!result.ok) throw new Error();
+                const {issues} = await result.json();
+                if (request.signal.aborted) return;
+                status.textContent = issues.join(' ');
+                status.hidden = issues.length === 0;
+            } catch {
+                if (request.signal.aborted) return;
+                status.textContent = @json(__('Live WhatJobs checks are unavailable.'));
+                status.hidden = false;
+            }
+        }
+
+        function queue() {
+            clearTimeout(timer);
+            pending?.abort();
+            status.hidden = true;
+            if (publish.checked) timer = setTimeout(check, 350);
+        }
+
+        $(form).on('input change', function (event) {
+            if (event.target === publish || fields.includes(event.target.name) ||
+                event.target.closest('#job_description_editor') || event.target.name === 'job_description') queue();
+        });
+        queue();
+    })();
+</script>
+@endpush

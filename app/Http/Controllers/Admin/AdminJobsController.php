@@ -19,6 +19,7 @@ use App\JobSkill;
 use App\JobType;
 use App\Notifications\NewJobOpening;
 use App\Question;
+use App\Services\WhatJobsJobDetails;
 use App\Services\WhatJobsPublisher;
 use App\Skill;
 use App\Support\RaDataTableHtml;
@@ -39,6 +40,41 @@ class AdminJobsController extends AdminBaseController
         parent::__construct();
         $this->pageTitle = __('menu.jobs');
         $this->pageIcon = 'icon-badge';
+    }
+
+    public function whatJobsPreview(Request $request, WhatJobsJobDetails $mapper): \Illuminate\Http\JsonResponse
+    {
+        $editing = $request->filled('job_id');
+        abort_unless($this->user->cans($editing ? 'edit_jobs' : 'add_jobs'), 403);
+        abort_if(config('saas.enabled') && empty($this->tenantFeatures['job_board_publishing']), 403);
+        $data = $request->validate([
+            'job_id' => 'nullable|integer',
+            'title' => 'nullable|string|max:1000',
+            'category_id' => 'nullable|integer',
+            'job_type_id' => 'nullable|integer',
+            'job_description' => 'nullable|string|max:250000',
+            'location_new' => 'nullable|string|max:191',
+            'location_country_code' => 'nullable|regex:/^[A-Z]{2}$/D',
+            'whatjobs' => 'sometimes|array:jobWorkFrom',
+            'whatjobs.jobWorkFrom' => 'nullable|integer|between:1,5',
+        ]);
+
+        $job = $editing ? Job::findOrFail($data['job_id']) : new Job;
+        $state = $job->whatjobs_sync ?? [];
+        $location = $editing ? ($job->jobLocation()->with('country')->orderBy('job_locations.id')->first() ?? $job->location) : null;
+        if (filled($data['location_new'] ?? null) && $data['location_new'] !== $location?->location) {
+            $location = new JobLocation;
+            $location->location = $data['location_new'];
+        }
+        $job->title = $data['title'] ?? '';
+        $job->job_description = $data['job_description'] ?? '';
+        $job->setRelation('category', isset($data['category_id']) ? JobCategory::find($data['category_id']) : null);
+        $job->setRelation('jobType', isset($data['job_type_id']) ? JobType::find($data['job_type_id']) : null);
+        $job->whatjobs_settings = array_replace($job->whatjobs_settings ?? [], array_filter($data['whatjobs'] ?? [], fn ($value) => filled($value)));
+
+        $settings = $mapper->forJob($job, $location, $data['location_country_code'] ?? $state['country'] ?? null);
+
+        return response()->json(['issues' => WhatJobsJobDetails::publishingIssues($settings, empty($state['id']))]);
     }
 
     private function saveJobBoardSelections(Job $job, StoreJob $request): void
