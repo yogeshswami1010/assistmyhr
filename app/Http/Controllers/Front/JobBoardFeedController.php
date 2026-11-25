@@ -251,7 +251,7 @@ class JobBoardFeedController
     private function joobleFields(Job $job, array $routeParameters, string $companyName): array
     {
         $skills = $job->skills->pluck('skill.name')->filter();
-        $description = $job->job_description;
+        $description = $this->joobleDescriptionHtml($job->job_description);
         if ($skills->isNotEmpty()) {
             $description = '<p>Skills</p><ul>'.$skills->map(fn ($skill) => '<li>'.e($skill).'</li>')->implode('').'</ul>'.$description;
         }
@@ -269,6 +269,27 @@ class JobBoardFeedController
             'jobtype' => $job->show_job_type ? $job->jobType?->job_type : null,
             'salary' => $job->show_salary ? $this->salary($job) : null,
         ];
+    }
+
+    private function joobleDescriptionHtml(string $description): string
+    {
+        $document = new \DOMDocument('1.0', 'UTF-8');
+        $document->loadHTML('<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
+            .$description.'</body></html>', LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xpath = new \DOMXPath($document);
+        foreach ($xpath->query('//style') as $style) {
+            $style->parentNode->removeChild($style);
+        }
+        foreach ($xpath->query('//*[@style]') as $element) {
+            $element->removeAttribute('style');
+        }
+
+        $html = '';
+        foreach ($document->getElementsByTagName('body')->item(0)->childNodes as $node) {
+            $html .= $document->saveHTML($node);
+        }
+
+        return $html;
     }
 
     private function postJobFreeFields(Job $job, array $routeParameters, string $reference, string $companyName): array
