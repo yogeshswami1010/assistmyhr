@@ -360,6 +360,16 @@
                                                 autocomplete="address-line1" maxlength="191" value="{{ old('location_street_address', $job?->location_street_address) }}">
                                         </div>
                                         <div>
+                                            <label for="location_city" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('City') }}</label>
+                                            <input type="text" id="location_city" name="location_city" class="form-control w-full"
+                                                autocomplete="address-level2" maxlength="191" value="{{ old('location_city', $job?->location_city) }}">
+                                        </div>
+                                        <div>
+                                            <label for="location_state" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('State or province') }}</label>
+                                            <input type="text" id="location_state" name="location_state" class="form-control w-full"
+                                                autocomplete="address-level1" maxlength="191" value="{{ old('location_state', $job?->location_state) }}">
+                                        </div>
+                                        <div>
                                             <label for="location_postal_code" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('Postal or ZIP code') }}</label>
                                             <input type="text" id="location_postal_code" name="location_postal_code" class="form-control w-full"
                                                 autocomplete="postal-code" maxlength="32" value="{{ old('location_postal_code', $job?->location_postal_code) }}">

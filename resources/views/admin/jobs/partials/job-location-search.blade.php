@@ -9,6 +9,8 @@
                 const fieldStatuses = [];
                 const jobCountry = document.getElementById('location_country_code');
                 const streetAddress = document.getElementById('location_street_address');
+                const cityInput = document.getElementById('location_city');
+                const stateInput = document.getElementById('location_state');
                 const postalCode = document.getElementById('location_postal_code');
 
                 function setupLocationSearch(field, AutocompleteSuggestion, AutocompleteSessionToken) {
@@ -79,6 +81,8 @@
                     async function fillAddress(prediction, request) {
                         const selectedValue = field.value;
                         const previousStreet = streetAddress?.value;
+                        const previousCity = cityInput?.value;
+                        const previousState = stateInput?.value;
                         const previousPostal = postalCode?.value;
                         if (countryInput) {
                             field.dataset.locationLookupPending = '1';
@@ -94,11 +98,19 @@
                                 const route = component('route')?.longText;
                                 const number = component('street_number')?.longText;
                                 const street = route && number ? number + ' ' + route : '';
+                                const city = (component('locality') ?? component('postal_town') ?? component('sublocality_level_1'))?.longText ?? '';
+                                const state = component('administrative_area_level_1')?.longText ?? '';
                                 const postal = component('postal_code')?.longText ?? '';
                                 const suffix = component('postal_code_suffix')?.longText;
                                 const fullPostal = postal && suffix && code === 'US' ? postal + '-' + suffix : postal;
                                 if (streetAddress && streetAddress.value === previousStreet && street.length <= streetAddress.maxLength) {
                                     streetAddress.value = street;
+                                }
+                                if (cityInput && cityInput.value === previousCity && city.length <= cityInput.maxLength) {
+                                    cityInput.value = city;
+                                }
+                                if (stateInput && stateInput.value === previousState && state.length <= stateInput.maxLength) {
+                                    stateInput.value = state;
                                 }
                                 if (postalCode && postalCode.value === previousPostal && fullPostal.length <= postalCode.maxLength) {
                                     postalCode.value = fullPostal;

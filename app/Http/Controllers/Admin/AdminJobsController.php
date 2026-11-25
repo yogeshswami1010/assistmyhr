@@ -55,6 +55,8 @@ class AdminJobsController extends AdminBaseController
             'job_description' => 'nullable|string|max:250000',
             'location_new' => 'nullable|string|max:191',
             'location_street_address' => 'nullable|string|max:191',
+            'location_city' => 'nullable|string|max:191',
+            'location_state' => 'nullable|string|max:191',
             'location_postal_code' => 'nullable|string|max:32',
             'location_country_code' => 'nullable|regex:/^[A-Z]{2}$/D',
             'whatjobs' => 'sometimes|array:jobWorkFrom',
@@ -70,6 +72,8 @@ class AdminJobsController extends AdminBaseController
         }
         $job->title = $data['title'] ?? '';
         $job->location_street_address = $data['location_street_address'] ?? null;
+        $job->location_city = $data['location_city'] ?? null;
+        $job->location_state = $data['location_state'] ?? null;
         $job->location_postal_code = $data['location_postal_code'] ?? null;
         $job->job_description = $data['job_description'] ?? '';
         $job->setRelation('category', isset($data['category_id']) ? JobCategory::find($data['category_id']) : null);
@@ -293,6 +297,8 @@ class AdminJobsController extends AdminBaseController
         }
         $job->company_location = $request->company_location;
         $job->location_street_address = $request->validated('location_street_address');
+        $job->location_city = $request->validated('location_city');
+        $job->location_state = $request->validated('location_state');
         $job->location_postal_code = $request->validated('location_postal_code');
         $job->title = $request->title;
         $job->job_code = $request->job_code;
@@ -493,6 +499,8 @@ class AdminJobsController extends AdminBaseController
         }
         $job->company_location = $request->company_location;
         $job->location_street_address = $request->validated('location_street_address', $job->location_street_address);
+        $job->location_city = $request->validated('location_city', $job->location_city);
+        $job->location_state = $request->validated('location_state', $job->location_state);
         $job->location_postal_code = $request->validated('location_postal_code', $job->location_postal_code);
         $job->title = $request->title;
         $job->job_code = $request->job_code;

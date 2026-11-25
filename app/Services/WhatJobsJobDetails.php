@@ -103,6 +103,8 @@ class WhatJobsJobDetails
 
         $explicitAddress = array_filter([
             'jobLocationAddress' => trim((string) $job->location_street_address),
+            'city' => trim((string) $job->location_city),
+            'state' => trim((string) $job->location_state),
             'zip' => strtoupper(trim((string) $job->location_postal_code)),
         ], fn ($value) => $value !== '');
 
