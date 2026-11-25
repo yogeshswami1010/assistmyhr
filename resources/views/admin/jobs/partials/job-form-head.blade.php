@@ -1,6 +1,9 @@
 <link rel="stylesheet" href="{{ asset('assets/node_modules_files/select2/dist/css/select2.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/node_modules_files/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css') }}">
 <style>
+    @media (min-width: 768px) {
+        .job-type-code-positions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
     #createForm .job-rich-editor-editor ol { list-style-type: decimal; padding-left: 1.5rem; }
     #createForm .job-rich-editor-editor ul { list-style-type: disc; padding-left: 1.5rem; }
     #createForm .job-rich-editor-editor h2 { font-size: 1.5em; font-weight: 700; margin: 0.75em 0 0.4em; }
