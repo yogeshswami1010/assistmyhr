@@ -3,6 +3,10 @@
 <style>
     @media (min-width: 768px) {
         .job-type-code-positions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .job-address-grid { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1200px) {
+        .job-address-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
     }
     #createForm .job-rich-editor-editor ol { list-style-type: decimal; padding-left: 1.5rem; }
     #createForm .job-rich-editor-editor ul { list-style-type: disc; padding-left: 1.5rem; }

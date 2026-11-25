@@ -362,28 +362,6 @@
                                         placeholder="{{ __('Enter job location') }}" maxlength="191"
                                         value="{{ old('location_new', $job?->jobLocation->first()?->location) }}">
                                     <input type="hidden" id="location_country_code" name="location_country_code" value="{{ old('location_country_code') }}">
-                                    <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        <div>
-                                            <label for="location_street_address" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('Street address') }}</label>
-                                            <input type="text" id="location_street_address" name="location_street_address" class="form-control w-full"
-                                                autocomplete="address-line1" maxlength="191" value="{{ old('location_street_address', $job?->location_street_address) }}">
-                                        </div>
-                                        <div>
-                                            <label for="location_city" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('City') }}</label>
-                                            <input type="text" id="location_city" name="location_city" class="form-control w-full"
-                                                autocomplete="address-level2" maxlength="191" value="{{ old('location_city', $job?->location_city) }}">
-                                        </div>
-                                        <div>
-                                            <label for="location_state" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('State or province') }}</label>
-                                            <input type="text" id="location_state" name="location_state" class="form-control w-full"
-                                                autocomplete="address-level1" maxlength="191" value="{{ old('location_state', $job?->location_state) }}">
-                                        </div>
-                                        <div>
-                                            <label for="location_postal_code" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('Postal or ZIP code') }}</label>
-                                            <input type="text" id="location_postal_code" name="location_postal_code" class="form-control w-full"
-                                                autocomplete="postal-code" maxlength="32" value="{{ old('location_postal_code', $job?->location_postal_code) }}">
-                                        </div>
-                                    </div>
                                 </div>
                                @php $currentStatus = $job?->status === \App\Job::STATUS_DRAFT ? \App\Job::STATUS_OPEN : ($job->status ?? 'open'); @endphp
 <div class="form-group mb-0">
@@ -397,6 +375,28 @@
         @endforeach
     </select>
 </div>
+                                <div class="job-address-grid grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label for="location_street_address" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('Street address') }}</label>
+                                        <input type="text" id="location_street_address" name="location_street_address" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
+                                            autocomplete="address-line1" maxlength="191" value="{{ old('location_street_address', $job?->location_street_address) }}">
+                                    </div>
+                                    <div>
+                                        <label for="location_city" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('City') }}</label>
+                                        <input type="text" id="location_city" name="location_city" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
+                                            autocomplete="address-level2" maxlength="191" value="{{ old('location_city', $job?->location_city) }}">
+                                    </div>
+                                    <div>
+                                        <label for="location_state" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('State or province') }}</label>
+                                        <input type="text" id="location_state" name="location_state" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
+                                            autocomplete="address-level1" maxlength="191" value="{{ old('location_state', $job?->location_state) }}">
+                                    </div>
+                                    <div>
+                                        <label for="location_postal_code" class="mb-1 block text-xs font-semibold text-slate-700">{{ __('Postal or ZIP code') }}</label>
+                                        <input type="text" id="location_postal_code" name="location_postal_code" class="form-control w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-[#0F1F3D]"
+                                            autocomplete="postal-code" maxlength="32" value="{{ old('location_postal_code', $job?->location_postal_code) }}">
+                                    </div>
+                                </div>
                             </div>
                             @if(!config('saas.enabled') || !empty($tenantFeatures['job_board_publishing']))
                             <div class="rounded-xl border border-gray-200 p-4">
