@@ -81,6 +81,11 @@ class JobBoardFeedController
             }
 
             $jobRouteParameters = [$job->slug, $job->jobLocation->first()?->id];
+            $jobRouteParameters['job_board'] = match ($selection) {
+                'publish_on_assistmyhr' => 'jobxoom',
+                'publish_on_postjobfree' => 'postjobfree',
+                default => 'jooble',
+            };
             if ($tenant) {
                 $jobRouteParameters['workspace'] = $tenant->slug;
             }

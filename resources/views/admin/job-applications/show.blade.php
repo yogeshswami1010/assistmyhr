@@ -209,6 +209,9 @@
                 @if($application->candidate_origin !== 'registration' && $application->originUser)
                     <span class="ja-origin-attribution">· Added by {{ $application->originUser->name }}</span>
                 @endif
+                @if($application->job_board_source_label)
+                    · {{ __('Source') }} {{ $application->job_board_source_label }}
+                @endif
             </p>
         </div>
 

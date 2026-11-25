@@ -262,6 +262,7 @@ class FrontJobsController extends FrontBaseController
             ->publicJobPage()
             ->firstOrFail();
 
+        $this->jobBoardSource = JobApplication::jobBoardSource(request()->query('job_board'));
         Session::put('lastPageUrl', $slug);
 
         $this->location = JobJobLocation::where('job_id', $this->job->id)
@@ -310,6 +311,7 @@ class FrontJobsController extends FrontBaseController
         $this->job = Job::where('slug', $slug)->publicJobPage()->first();
         abort_if(!$this->job, 404);
 
+        $this->jobBoardSource = JobApplication::jobBoardSource(request()->query('job_board'));
         $this->metaTitle       = $this->job->meta_details['title']       ?? '';
         $this->metaDescription = $this->job->meta_details['description'] ?? '';
         $this->metaImage       = $this->job->company->logo_url;
@@ -373,6 +375,7 @@ class FrontJobsController extends FrontBaseController
 
         $jobApplication           = new JobApplication();
         $jobApplication->candidate_origin = 'job_application';
+        $jobApplication->job_board_source = JobApplication::jobBoardSource($request->input('job_board'));
         $jobApplication->full_name = $request->full_name;
         $jobApplication->job_id   = $request->job_id;
 

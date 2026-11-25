@@ -116,7 +116,7 @@ class WhatJobsPublisher
                     'jobStartType' => $hasFutureStartDate ? 3 : 2,
                     'jobStartByDate' => $hasFutureStartDate ? $startDate : null,
                     $applicationField => 2,
-                    'jobCommunicationURL' => tenant_route('jobs.jobApply', ['slug' => $job->slug, 'location' => $location?->id]),
+                    'jobCommunicationURL' => tenant_route('jobs.jobApply', ['slug' => $job->slug, 'location' => $location?->id, 'job_board' => 'whatjobs']),
                 ];
                 if ((int) $workFrom !== 4) {
                     $add += array_intersect_key($settings, array_flip(['city', 'state', 'zip', 'jobLocationAddress']));

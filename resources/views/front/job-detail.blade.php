@@ -31,7 +31,7 @@
                     </div>
                 @endif
             </div>
-            <a href="{{ tenant_route('jobs.jobApply', [$job->slug, $locations ? $locations->id : null]) }}" class="fr-btn-lg shrink-0 text-center inline-block">@lang('modules.front.applyForJob')</a>
+            <a href="{{ tenant_route('jobs.jobApply', [$job->slug, $locations ? $locations->id : null] + array_filter(['job_board' => $jobBoardSource ?? null])) }}" class="fr-btn-lg shrink-0 text-center inline-block">@lang('modules.front.applyForJob')</a>
         </div>
     </div>
 </section>
@@ -111,11 +111,11 @@
                 <div class="fr-sidebar-card text-center">
                     <p class="fr-sidebar-label mb-4">@lang('modules.jobs.scantopay')</p>
                     <div class="inline-block p-3 rounded-xl border border-[#E8E6E1] bg-white">
-                        {!! QrCode::size(160)->generate(tenant_route('jobs.jobApply', [$job->slug, $locations ? $locations->id : null])); !!}
+                        {!! QrCode::size(160)->generate(tenant_route('jobs.jobApply', [$job->slug, $locations ? $locations->id : null] + array_filter(['job_board' => $jobBoardSource ?? null]))); !!}
                     </div>
                 </div>
 
-                <a href="{{ tenant_route('jobs.jobApply', [$job->slug, $locations ? $locations->id : null]) }}" class="fr-btn-lg w-full text-center block">@lang('modules.front.applyForJob')</a>
+                <a href="{{ tenant_route('jobs.jobApply', [$job->slug, $locations ? $locations->id : null] + array_filter(['job_board' => $jobBoardSource ?? null])) }}" class="fr-btn-lg w-full text-center block">@lang('modules.front.applyForJob')</a>
 
                 <div class="fr-sidebar-card text-center">
                     <p class="fr-sidebar-label mb-3">@lang('modules.front.shareJob')</p>

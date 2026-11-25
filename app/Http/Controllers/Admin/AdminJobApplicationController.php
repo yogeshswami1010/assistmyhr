@@ -365,6 +365,7 @@ class AdminJobApplicationController extends AdminBaseController
             'job_applications.job_id',
             'job_applications.status_id',
             'job_applications.full_name',
+            'job_applications.job_board_source',
             'job_applications.skills',
             'job_applications.location_id',   // ← this was the ambiguous one
             'job_applications.created_at'
@@ -545,8 +546,9 @@ class AdminJobApplicationController extends AdminBaseController
                 $name = ucwords($row->full_name);
                 return '<div class="ja-applicant">'
                     . '<span class="ja-applicant-avatar" aria-hidden="true">' . e(mb_strtoupper(mb_substr($name, 0, 1))) . '</span>'
-                    . '<button type="button" class="show-detail ja-applicant-name" data-row-id="' . $row->id . '">' . e($name) . '</button>'
-                    . '</div>';
+                    . '<div><button type="button" class="show-detail ja-applicant-name" data-row-id="' . $row->id . '">' . e($name) . '</button>'
+                    . ($row->job_board_source_label ? '<span class="block text-xs text-slate-600">' . e($row->job_board_source_label) . '</span>' : '')
+                    . '</div></div>';
             })
             ->editColumn('title', function ($row) {
                 return \App\Support\CandidateJobLabel::html($row->job);
@@ -1302,7 +1304,7 @@ class AdminJobApplicationController extends AdminBaseController
                 'id', 'full_name', 'email', 'phone', 'address', 'gender', 'dob',
                 'country', 'state', 'city', 'photo', 'skills', 'skype_id',
                 'cover_letter', 'job_id', 'status_id', 'location_id',
-                'candidate_origin', 'origin_user_id',
+                'candidate_origin', 'origin_user_id', 'job_board_source',
                 'is_marketing', 'marketing_label', 'is_temp_staffing', 'temp_staffing_at', 'temp_staffing_by',
                 'created_at', 'updated_at', 'deleted_at',
             ])

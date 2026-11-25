@@ -82,6 +82,9 @@
     <form id="createForm" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="job_id"     value="{{ $job->id }}">
+        @if($jobBoardSource ?? null)
+            <input type="hidden" name="job_board" value="{{ $jobBoardSource }}">
+        @endif
         <input type="hidden" name="location_id" @if(isset($location->id)) value="{{ $location->id }}" @else value="" @endif>
 
         <div class="flex flex-col lg:flex-row gap-8">

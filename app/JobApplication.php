@@ -33,6 +33,23 @@ class JobApplication extends Model
 
     protected $appends = ['resume_url', 'photo_url'];
 
+    private const JOB_BOARD_LABELS = [
+        'jooble' => 'Jooble',
+        'jobxoom' => 'Jobxoom',
+        'postjobfree' => 'PostJobFree',
+        'whatjobs' => 'WhatJobs',
+    ];
+
+    public static function jobBoardSource(mixed $source): ?string
+    {
+        return is_string($source) && isset(self::JOB_BOARD_LABELS[$source]) ? $source : null;
+    }
+
+    public function getJobBoardSourceLabelAttribute(): ?string
+    {
+        return self::JOB_BOARD_LABELS[$this->job_board_source] ?? null;
+    }
+
 
     public function originUser() { return $this->belongsTo(User::class, 'origin_user_id'); }
     public function profileActivities() { return $this->hasMany(CandidateProfileActivity::class)->latest('id'); }
