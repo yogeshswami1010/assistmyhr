@@ -7,7 +7,6 @@ use App\Job;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use XMLWriter;
@@ -31,15 +30,12 @@ class JobBoardFeedController
         return $this->feed('publish_on_postjobfree');
     }
 
-    public function jobillico(Request $request): Response
+    public function jobillico(): Response
     {
-        $workspace = $request->query('workspace');
-        abort_if(config('saas.enabled') && (!is_string($workspace) || $workspace === ''), 404);
-
-        return $this->feed('publish_on_jobillico', is_string($workspace) ? $workspace : null);
+        return $this->feed('publish_on_jobillico');
     }
 
-    private function feed(string $selection, ?string $workspace = null): Response
+    private function feed(string $selection): Response
     {
         $xml = new XMLWriter;
         $xml->openMemory();
@@ -52,9 +48,6 @@ class JobBoardFeedController
 
         if (config('saas.enabled')) {
             $tenants = Tenant::where('status', 'active')->withEnabledFeature('job_board_publishing')->with('subscription');
-            if ($workspace !== null) {
-                $tenants->where('slug', $workspace);
-            }
             foreach ($tenants->lazyById() as $tenant) {
                 if ($tenant->hasAccess()) {
                     $this->writeWorkspaceJobs($xml, $tenant, $selection);
@@ -111,7 +104,7 @@ class JobBoardFeedController
             $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
             if ($jobillico) {
                 if ($job->jobillico_location_id > 0) {
-                    $this->writeJobillicoJob($xml, $job, $jobRouteParameters);
+                    $this->writeJobillicoJob($xml, $job, $jobRouteParameters, $reference);
                 }
                 continue;
             }
@@ -136,12 +129,12 @@ class JobBoardFeedController
         }
     }
 
-    private function writeJobillicoJob(XMLWriter $xml, Job $job, array $routeParameters): void
+    private function writeJobillicoJob(XMLWriter $xml, Job $job, array $routeParameters, string $reference): void
     {
         $xml->startElement('job');
         $xml->writeElement('elang', 'en');
         $this->writeCdata($xml, 'stitle_en', $job->title);
-        $this->writeCdata($xml, 'srefnumber', $job->job_code ?: 'ATS-'.$job->id);
+        $this->writeCdata($xml, 'srefnumber', 'ATS-'.$reference);
         $xml->startElement('olocations');
         $xml->writeElement('ilocation', (string) $job->jobillico_location_id);
         $xml->endElement();

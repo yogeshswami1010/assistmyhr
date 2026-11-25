@@ -409,7 +409,7 @@
                                         if ($board === 'jobillico' && blank($job?->jobillico_location_id)) {
                                             $feedIssue ??= __('Enter the Jobillico location ID.');
                                         }
-                                        $feedUrl = $board === 'jobillico' ? tenant_route('jobs.feeds.jobillico') : route('jobs.feeds.'.$board);
+                                        $feedUrl = route('jobs.feeds.'.$board);
                                     @endphp
                                     <div class="mt-3">
                                         <input type="hidden" name="{{ $field }}" value="0">
