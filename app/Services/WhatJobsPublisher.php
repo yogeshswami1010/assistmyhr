@@ -67,6 +67,9 @@ class WhatJobsPublisher
             $location = $job->jobLocation()->with('country')->orderBy('job_locations.id')->first()
                 ?? $job->location()->with('country')->first();
             $settings = app(WhatJobsJobDetails::class)->forJob($job, $location, $state['country'] ?? null);
+            if (!isset($settings['jobSector'])) {
+                return $this->recordResult($job, $state, $remoteId ? 'update' : 'add', 'Select a Job Category that matches a WhatJobs sector.');
+            }
 
             $identity = [
                 'countryCode' => $settings['countryCode'] ?? null,

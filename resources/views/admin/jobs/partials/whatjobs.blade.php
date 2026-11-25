@@ -13,8 +13,6 @@
         || array_key_exists($key, $whatJobsSaved) || str_contains($whatJobsError ?? '', ($errorKey ?? $key).':');
     $workArrangement = empty($whatJobsSync['id']) && $showWhatJobsField('jobWorkFrom');
     $employmentSubtype = $showWhatJobsField('jobEmploymentSubType', 'jobDetailsEmploymentSubType');
-    $sector = $showWhatJobsField('jobSector');
-    $selectedSector = \App\Services\WhatJobsJobDetails::canonicalSector(old('whatjobs.jobSector', $whatJobsDetails['jobSector'] ?? null));
     $contractDuration = $showWhatJobsField('jobLength') || $showWhatJobsField('jobPeriod');
     $selectedSubtype = (string) old('whatjobs.jobEmploymentSubType', $whatJobsDetails['jobEmploymentSubType'] ?? '');
 @endphp
@@ -41,7 +39,7 @@
             {{ $whatJobsError }}
         </p>
     @endif
-    @if($job && ($workArrangement || $employmentSubtype || $sector || ($selectedSubtype === '1' && $contractDuration)))
+    @if($job && ($workArrangement || $employmentSubtype || ($selectedSubtype === '1' && $contractDuration)))
         <div id="whatjobs-required-details" class="mt-3" @if(!$whatJobsSelected) hidden @endif>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 @foreach([
@@ -60,17 +58,6 @@
                         </div>
                     @endif
                 @endforeach
-                @if($sector)
-                    <div class="form-group mb-0">
-                        <label for="whatjobs_jobSector" class="text-xs font-semibold text-slate-700">WhatJobs sector</label>
-                        <select id="whatjobs_jobSector" name="whatjobs[jobSector]" class="form-control">
-                            <option value="">Select a sector</option>
-                            @foreach(\App\Services\WhatJobsJobDetails::SECTORS as $option)
-                                <option value="{{ \Illuminate\Support\Str::slug($option) }}" @selected($selectedSector === $option)>{{ $option }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
             </div>
             @if($contractDuration)
                 <div id="whatjobs-contract-duration" class="mt-3" @if($selectedSubtype !== '1') hidden @endif>
@@ -99,10 +86,8 @@
                 const details = document.getElementById('whatjobs-required-details');
                 const subtype = document.getElementById('whatjobs_jobEmploymentSubType');
                 const duration = document.getElementById('whatjobs-contract-duration');
-                const sector = document.getElementById('whatjobs_jobSector');
                 const refresh = () => {
                     details.hidden = !publish.checked;
-                    if (sector) sector.required = publish.checked;
                     if (duration && subtype) duration.hidden = subtype.value !== '1';
                 };
                 publish.addEventListener('change', refresh);

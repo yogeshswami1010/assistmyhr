@@ -82,16 +82,13 @@ class WhatJobsJobDetails
             ]);
         preg_match('/\b(\d+)\s*[- ]?\s*(days?|months?|years?)\s+(?:fixed-term\s+)?contract\b/i', $employment, $duration);
         $category = trim((string) $job->category?->name);
-        $sectorCategory = preg_match('/\bgraphic[ -]design(?:er)?\b/i', (string) $job->title)
-            ? 'graphic design' : strtolower($category);
-        $categorySector = match ($sectorCategory) {
-            'graphic design', 'graphic designer', 'creative and digital' => 'Creative & Digital',
+        $sector = self::canonicalSector(match (mb_strtolower($category)) {
+            'graphic design', 'graphic designer' => 'Creative & Digital',
             'hr' => 'Human Resources',
             'software', 'information technology', 'it' => 'IT & Software',
             'customer service', 'helpdesk' => 'Customer Service & Helpdesk',
             default => $category,
-        };
-        $sector = self::canonicalSector($saved['jobSector'] ?? null) ?? self::canonicalSector($categorySector);
+        });
 
         if ($countrySuffix && count($locationParts) > 1) {
             array_pop($locationParts);
