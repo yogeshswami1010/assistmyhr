@@ -177,7 +177,7 @@ class WhatJobsJobDetails
 
     private function locationFields(array $parts): array
     {
-        $postalCode = '\d[\d-]{2,8}|[A-Z]\d[A-Z] \d[A-Z]\d|[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}';
+        $postalCode = '\d[\d-]{2,8}|[A-Z]\d[A-Z]\s*\d[A-Z]\d|[A-Z]{1,2}\d[A-Z\d]?\s+\d[A-Z]{2}';
         $regionIndex = count($parts) - 1;
         if (in_array(count($parts), [2, 3], true)
             && preg_match('/^(.+?)\s+('.$postalCode.')$/i', $parts[$regionIndex], $matches)) {
@@ -185,7 +185,7 @@ class WhatJobsJobDetails
             $parts[] = $matches[2];
         }
 
-        return match (count($parts)) {
+        $fields = match (count($parts)) {
             4 => array_combine(['jobLocationAddress', 'city', 'state', 'zip'], $parts),
             3 => preg_match('/^(?:'.$postalCode.')$/i', $parts[2])
                 ? array_combine(['city', 'state', 'zip'], $parts)
@@ -193,5 +193,10 @@ class WhatJobsJobDetails
             2 => array_combine(['city', 'state'], $parts),
             default => [],
         };
+        if (isset($fields['zip']) && preg_match('/^([A-Z]\d[A-Z])\s*(\d[A-Z]\d)$/i', $fields['zip'], $matches)) {
+            $fields['zip'] = strtoupper($matches[1].' '.$matches[2]);
+        }
+
+        return $fields;
     }
 }

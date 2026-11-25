@@ -34,7 +34,7 @@
     @elseif($whatJobsSelected && $whatJobsError === null)
         <p class="mt-1 text-xs text-slate-600">Waiting for submission to WhatJobs.</p>
     @endif
-    @if($whatJobsError !== null)
+    @if($whatJobsError !== null && ($whatJobsSelected || ($whatJobsSync['error_command'] ?? null) === 'pause'))
         <p class="mt-1 text-xs font-semibold text-amber-800">
             {{ $whatJobsError }}
         </p>

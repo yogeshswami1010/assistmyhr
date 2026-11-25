@@ -82,6 +82,13 @@ class WhatJobsPublisher
             $employmentSubtype = $settings['jobEmploymentSubType'] ?? null;
             $scheduleType = $settings['jobScheduleType'] ?? null;
             $workFrom = $settings['jobWorkFrom'] ?? null;
+            if (!$remoteId && in_array((int) $workFrom, [1, 2, 3, 5], true)) {
+                $requiredLocation = ['jobLocationAddress' => 'street address', 'city' => 'city', 'state' => 'state or province', 'zip' => 'postal or ZIP code'];
+                $missingLocation = array_filter($requiredLocation, fn ($label, $key) => blank($settings[$key] ?? null), ARRAY_FILTER_USE_BOTH);
+                if ($missingLocation) {
+                    return $this->recordResult($job, $state, 'add', 'Add the missing details to the job location: '.implode(', ', $missingLocation).'.');
+                }
+            }
             $companyName = trim((string) CompanySetting::on($job->getConnectionName())->value('company_name'));
             $content = array_filter([
                 'companyName' => $companyName,
@@ -91,7 +98,6 @@ class WhatJobsPublisher
                 'jobSector' => $settings['jobSector'] ?? null,
                 'jobDescription' => $this->description($job),
                 'jobOpeningCount' => filled($job->total_positions) ? (string) $job->total_positions : null,
-                'jobReferenceId' => $job->job_code ?: (string) $job->id,
                 'jobSkills' => $job->skills()->with('skill')->get()->pluck('skill.name')->filter()->unique()->values()->all(),
             ], fn ($value) => filled($value));
             if ((int) $employmentSubtype === 1) {
@@ -108,13 +114,13 @@ class WhatJobsPublisher
             $contentHash = hash('sha256', json_encode($content, JSON_THROW_ON_ERROR));
             if (!$remoteId) {
                 $startDate = $job->publicationDate()?->format('Y-m-d');
-                // WhatJobs rejects past dates even when they are formatted correctly.
-                $hasCurrentStartDate = $startDate !== null && $startDate >= today()->toDateString();
+                // Use ASAP for jobs starting today or earlier.
+                $hasFutureStartDate = $startDate !== null && $startDate > today()->toDateString();
                 $add = [
                     'jobTitle' => $job->title,
                     'jobWorkFrom' => $workFrom === null ? null : (int) $workFrom,
-                    'jobStartType' => $hasCurrentStartDate ? 3 : 2,
-                    'jobStartByDate' => $hasCurrentStartDate ? $startDate : null,
+                    'jobStartType' => $hasFutureStartDate ? 3 : 2,
+                    'jobStartByDate' => $hasFutureStartDate ? $startDate : null,
                     $applicationField => 2,
                     'jobCommunicationURL' => tenant_route('jobs.jobApply', ['slug' => $job->slug, 'location' => $location?->id]),
                 ];
