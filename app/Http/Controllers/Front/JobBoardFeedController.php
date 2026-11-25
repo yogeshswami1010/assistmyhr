@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Front;
 
+use App\CompanySetting;
 use App\Job;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
@@ -70,11 +71,12 @@ class JobBoardFeedController
     {
         $assistMyHr = $selection === 'publish_on_assistmyhr';
         $postJobFree = $selection === 'publish_on_postjobfree';
+        $companyName = trim((string) CompanySetting::on($query->getModel()->getConnectionName())->value('company_name'));
         $jobs = $query->publicJobPage()->where($selection, true)
-            ->with(['company', $assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])->lazyById();
+            ->with([$assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])->lazyById();
 
         foreach ($jobs as $job) {
-            if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue() !== null)) {
+            if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue($companyName) !== null)) {
                 continue;
             }
 
@@ -84,9 +86,9 @@ class JobBoardFeedController
             }
             $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
             $fields = match ($selection) {
-                'publish_on_assistmyhr' => $this->assistMyHrFields($job, $jobRouteParameters, $reference),
-                'publish_on_postjobfree' => $this->postJobFreeFields($job, $jobRouteParameters, $reference),
-                default => $this->joobleFields($job, $jobRouteParameters),
+                'publish_on_assistmyhr' => $this->assistMyHrFields($job, $jobRouteParameters, $reference, $companyName),
+                'publish_on_postjobfree' => $this->postJobFreeFields($job, $jobRouteParameters, $reference, $companyName),
+                default => $this->joobleFields($job, $jobRouteParameters, $companyName),
             };
 
             $xml->startElement('job');
@@ -104,12 +106,12 @@ class JobBoardFeedController
         }
     }
 
-    private function assistMyHrFields(Job $job, array $routeParameters, string $reference): array
+    private function assistMyHrFields(Job $job, array $routeParameters, string $reference, string $companyName): array
     {
         return [
             'title' => $job->title,
             'url' => route('jobs.jobDetail', $routeParameters),
-            'company' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
+            'company' => $companyName,
             'location' => $job->joobleRegion(),
             'country' => $job->jobLocation->first()?->country?->country_code,
             'referencenumber' => $reference,
@@ -119,7 +121,7 @@ class JobBoardFeedController
         ];
     }
 
-    private function joobleFields(Job $job, array $routeParameters): array
+    private function joobleFields(Job $job, array $routeParameters, string $companyName): array
     {
         return [
             'link' => route('jobs.jobDetail', $routeParameters),
@@ -130,13 +132,13 @@ class JobBoardFeedController
             'pubdate' => $job->publicationDate()->format('d.m.Y'),
             'updated' => $job->updated_at?->format('d.m.Y'),
             'expire' => $job->publicationEndDate()?->format('d.m.Y'),
-            'company' => $job->company->show_in_frontend === 'true' ? $job->company->company_name : null,
+            'company' => $companyName,
             'jobtype' => $job->jobType?->job_type,
             'salary' => $this->salary($job),
         ];
     }
 
-    private function postJobFreeFields(Job $job, array $routeParameters, string $reference): array
+    private function postJobFreeFields(Job $job, array $routeParameters, string $reference, string $companyName): array
     {
         $date = $job->publicationDate();
         if ($job->created_at?->isSameDay($date)) {
@@ -149,7 +151,7 @@ class JobBoardFeedController
             'date' => $date->format('Y-m-d H:i:s'),
             'referencenumber' => $reference,
             'url' => route('jobs.jobDetail', $routeParameters),
-            'company' => $job->company->company_name,
+            'company' => $companyName,
             'location' => $job->joobleRegion(),
             'description' => trim(html_entity_decode(strip_tags($description), ENT_QUOTES | ENT_HTML5, 'UTF-8')),
             'salary' => $this->salary($job),

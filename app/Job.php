@@ -182,10 +182,11 @@ class Job extends Model
         return null;
     }
 
-    public function postJobFreeCompanyIssue(): ?string
+    public function postJobFreeCompanyIssue(?string $companyName = null): ?string
     {
-        if ($this->company?->show_in_frontend !== 'true' || blank($this->company?->company_name)) {
-            return 'PostJobFree requires a public company name.';
+        $companyName ??= CompanySetting::on($this->getConnectionName())->value('company_name');
+        if (blank($companyName)) {
+            return 'PostJobFree requires a company name in Business Settings.';
         }
 
         return null;
