@@ -27,6 +27,11 @@ class PlatformController extends Controller
             'pageTitle' => $titles[$view] ?? 'Super admin login', 'companyName' => 'AssistMyHR',
             'companySetting' => $brand, 'setting' => $brand, 'frontTheme' => (object) ['primary_color' => '#2563eb']]);
     }
+
+    public function jobBoards()
+    {
+        return $this->platformView('saas.platform-job-boards', ['pageTitle' => 'Job Boards']);
+    }
     public function loginForm() { abort_unless(config('saas.enabled'), 404); return $this->platformView('saas.platform-login'); }
     public function login(Request $request)
     {

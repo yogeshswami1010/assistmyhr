@@ -402,18 +402,20 @@
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
                                 <p class="text-xs text-slate-600">Choose where to publish this job while it is open and publicly available.</p>
-                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'Jobxoom', 'postjobfree' => 'PostJobFree', 'jobillico' => 'Jobillico'] as $board => $label)
+                                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                @foreach(config('job-boards.xml') as $board => $details)
                                     @php
                                         $field = 'publish_on_'.$board;
+                                        $label = $details['name'];
                                         $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
-                                        $feedUrl = route('jobs.feeds.'.$board);
                                     @endphp
-                                    <div class="mt-3">
+                                    <div class="rounded-xl border border-gray-200 bg-white p-3">
                                         <input type="hidden" name="{{ $field }}" value="0">
-                                        <label class="flex items-center gap-2 text-sm text-slate-700">
-                                            <input type="checkbox" name="{{ $field }}" value="1"
+                                        <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
+                                            <x-job-board-icon :board="$details" />
+                                            <span class="min-w-0 flex-1">{{ $label }}</span>
+                                            <input type="checkbox" class="shrink-0 accent-blue-600" name="{{ $field }}" value="1"
                                                 @checked(old($field, $isEdit && $job?->{$field}))>
-                                            {{ $board === 'assistmyhr' ? 'Include this job in Jobxoom' : 'Include this job in the '.$label.' feed' }}
                                         </label>
                                         @if($isEdit && $job?->{$field})
                                             @if($feedIssue)
@@ -422,9 +424,9 @@
                                                 <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
                                             @endif
                                         @endif
-                                        <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ $feedUrl }}" target="_blank" rel="noopener">{{ $feedUrl }}</a>
                                     </div>
                                 @endforeach
+                                </div>
                                 @include('admin.jobs.partials.whatjobs')
                             </div>
                             @endif

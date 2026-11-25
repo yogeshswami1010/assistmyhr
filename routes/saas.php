@@ -34,6 +34,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('exit-client', [PlatformController::class, 'exitClient'])->name('exit-client');
         Route::get('/', [PlatformController::class, 'dashboard'])->name('dashboard');
         Route::get('activity', [PlatformController::class, 'activity'])->name('activity');
+        Route::get('job-boards', [PlatformController::class, 'jobBoards'])->name('job-boards');
         Route::get('requests', [PlatformController::class, 'requests'])->name('requests');
         Route::get('enquiries', [PlatformController::class, 'enquiries'])->name('enquiries');
         Route::get('enquiries/{enquiry}', [PlatformController::class, 'enquiry'])->whereNumber('enquiry')->name('enquiries.show');

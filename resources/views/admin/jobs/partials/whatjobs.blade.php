@@ -15,11 +15,12 @@
     $contractDuration = $showWhatJobsField('jobLength') || $showWhatJobsField('jobPeriod');
     $selectedSubtype = (string) old('employment_subtype', $job?->employment_subtype ?? ($job?->whatjobs_settings['jobEmploymentSubType'] ?? ''));
 @endphp
-<div class="mt-3">
+<div class="mt-3 rounded-xl border border-gray-200 bg-white p-3">
     <input type="hidden" name="publish_on_whatjobs" value="0">
-    <label class="flex items-center gap-2 text-sm text-slate-700">
-        <input type="checkbox" id="publish_on_whatjobs" name="publish_on_whatjobs" value="1" @checked($whatJobsSelected)>
-        Publish this job on WhatJobs
+    <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
+        <x-job-board-icon :board="config('job-boards.whatjobs')" />
+        <span class="min-w-0 flex-1">WhatJobs</span>
+        <input type="checkbox" class="shrink-0 accent-blue-600" id="publish_on_whatjobs" name="publish_on_whatjobs" value="1" @checked($whatJobsSelected)>
     </label>
     <p id="whatjobs-live-check" class="mt-1 text-xs font-semibold text-amber-800" role="status" hidden></p>
     @if(!empty($whatJobsSync['id']))
