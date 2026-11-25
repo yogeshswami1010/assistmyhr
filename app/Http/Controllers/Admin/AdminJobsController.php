@@ -52,6 +52,7 @@ class AdminJobsController extends AdminBaseController
             'title' => 'nullable|string|max:1000',
             'category_id' => 'nullable|integer',
             'job_type_id' => 'nullable|integer',
+            'employment_subtype' => 'nullable|integer|between:1,8',
             'job_description' => 'nullable|string|max:250000',
             'location_new' => 'nullable|string|max:191',
             'location_street_address' => 'nullable|string|max:191',
@@ -71,6 +72,7 @@ class AdminJobsController extends AdminBaseController
             $location->location = $data['location_new'];
         }
         $job->title = $data['title'] ?? '';
+        $job->employment_subtype = $data['employment_subtype'] ?? null;
         $job->location_street_address = $data['location_street_address'] ?? null;
         $job->location_city = $data['location_city'] ?? null;
         $job->location_state = $data['location_state'] ?? null;
@@ -320,6 +322,7 @@ class AdminJobsController extends AdminBaseController
         $job->start_date = now()->toDateString();  
         $job->status = $saveDraft ? Job::STATUS_DRAFT : ($request->status ?: Job::STATUS_OPEN);
         $job->job_type_id = $request->job_type_id;
+        $job->employment_subtype = $request->validated('employment_subtype');
         $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
         $this->setJobPay($job, $request);
         $job->required_columns = $required_columns;
@@ -526,6 +529,7 @@ class AdminJobsController extends AdminBaseController
             }
         }
         $job->job_type_id = $request->job_type_id;
+        $job->employment_subtype = $request->validated('employment_subtype', $job->employment_subtype);
         $this->setWorkExperience($job, $request->validated('work_experience_ids') ?? []);
         $this->setJobPay($job, $request);
         $job->required_columns = $required_columns;

@@ -12,9 +12,8 @@
     $showWhatJobsField = fn ($key, $errorKey = null) => blank($whatJobsDetails[$key] ?? null)
         || array_key_exists($key, $whatJobsSaved) || str_contains($whatJobsError ?? '', ($errorKey ?? $key).':');
     $workArrangement = empty($whatJobsSync['id']) && $showWhatJobsField('jobWorkFrom');
-    $employmentSubtype = $showWhatJobsField('jobEmploymentSubType', 'jobDetailsEmploymentSubType');
     $contractDuration = $showWhatJobsField('jobLength') || $showWhatJobsField('jobPeriod');
-    $selectedSubtype = (string) old('whatjobs.jobEmploymentSubType', $whatJobsDetails['jobEmploymentSubType'] ?? '');
+    $selectedSubtype = (string) old('employment_subtype', $job?->employment_subtype ?? ($job?->whatjobs_settings['jobEmploymentSubType'] ?? ''));
 @endphp
 <div class="mt-3">
     <input type="hidden" name="publish_on_whatjobs" value="0">
@@ -40,12 +39,11 @@
             {{ $whatJobsError }}
         </p>
     @endif
-    @if($job && ($workArrangement || $employmentSubtype || ($selectedSubtype === '1' && $contractDuration)))
+    @if(($job && $workArrangement) || $contractDuration)
         <div id="whatjobs-required-details" class="mt-3" @if(!$whatJobsSelected) hidden @endif>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 @foreach([
                     'jobWorkFrom' => [$workArrangement, 'Work arrangement', \App\Services\WhatJobsJobDetails::WORK_ARRANGEMENTS],
-                    'jobEmploymentSubType' => [$employmentSubtype, 'Employment subtype', \App\Services\WhatJobsJobDetails::EMPLOYMENT_SUBTYPES],
                 ] as $key => [$show, $label, $options])
                     @if($show)
                         <div class="form-group mb-0">
@@ -85,11 +83,13 @@
             (() => {
                 const publish = document.getElementById('publish_on_whatjobs');
                 const details = document.getElementById('whatjobs-required-details');
-                const subtype = document.getElementById('whatjobs_jobEmploymentSubType');
+                const subtype = document.getElementById('employment_subtype');
                 const duration = document.getElementById('whatjobs-contract-duration');
+                const workArrangement = document.getElementById('whatjobs_jobWorkFrom');
                 const refresh = () => {
-                    details.hidden = !publish.checked;
-                    if (duration && subtype) duration.hidden = subtype.value !== '1';
+                    const showDuration = subtype?.value === '1';
+                    details.hidden = !publish.checked || (!workArrangement && !(duration && showDuration));
+                    if (duration) duration.hidden = !showDuration;
                 };
                 publish.addEventListener('change', refresh);
                 subtype?.addEventListener('change', refresh);
@@ -104,7 +104,7 @@
         const publish = document.getElementById('publish_on_whatjobs');
         const form = publish.form;
         const status = document.getElementById('whatjobs-live-check');
-        const fields = ['_token', 'title', 'category_id', 'job_type_id', 'location_new', 'location_country_code', 'location_street_address', 'location_city', 'location_state', 'location_postal_code', 'whatjobs[jobWorkFrom]'];
+        const fields = ['_token', 'title', 'category_id', 'job_type_id', 'employment_subtype', 'location_new', 'location_country_code', 'location_street_address', 'location_city', 'location_state', 'location_postal_code', 'whatjobs[jobWorkFrom]'];
         const jobId = @json($isEdit ? $job?->id : null);
         let timer;
         let pending;

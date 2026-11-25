@@ -74,7 +74,7 @@ class WhatJobsJobDetails
             1 => '(?:on )?contract', 2 => 'seasonal', 3 => 'temporary', 4 => 'permanent',
             5 => 'freelance', 6 => 'apprenticeship', 7 => 'graduate', 8 => 'maternity cover',
         ];
-        $employmentSubtype = $saved['jobEmploymentSubType'] ?? $this->matchCode($jobType, $subtypes)
+        $employmentSubtype = $job->employment_subtype ?? $saved['jobEmploymentSubType'] ?? $this->matchCode($jobType, $subtypes)
             ?? $this->matchCode($this->descriptionField($description, 'employment subtype|employment types?|job types?') ?? '', $subtypes)
             ?? $this->matchCode($description, [
                 1 => '(?:days?|months?|years?)\s+(?:fixed-term\s+)?contract|fixed[ -]term contract',

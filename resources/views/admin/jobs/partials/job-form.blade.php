@@ -190,6 +190,15 @@
                                     </div>
                                 </div>
                                 <div class="form-group mb-0">
+                                    <label for="employment_subtype" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">{{ __('Employment subtype') }}</label>
+                                    <select name="employment_subtype" id="employment_subtype" class="job-form-sel form-control w-full">
+                                        <option value="">{{ __('Select employment subtype') }}</option>
+                                        @foreach(\App\Services\WhatJobsJobDetails::EMPLOYMENT_SUBTYPES as $value => $label)
+                                            <option value="{{ $value }}" @selected((string) old('employment_subtype', $job?->employment_subtype ?? ($job?->whatjobs_settings['jobEmploymentSubType'] ?? null)) === (string) $value)>{{ __($label) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
                                     <label for="total_positions" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('modules.jobs.totalPositions') <span class="text-red-500">*</span></label>
                                     <div class="flex items-center overflow-hidden rounded-xl border border-gray-200 transition-all focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-[#2563EB]/10">
                                         <button type="button" class="job-pos-minus flex h-11 w-10 shrink-0 items-center justify-center border-0 bg-[#F8F7F4] text-xl font-bold text-[#8892A0] transition-colors hover:bg-gray-100 hover:text-[#2563EB]" aria-label="-1">−</button>

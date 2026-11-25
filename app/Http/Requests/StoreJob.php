@@ -60,6 +60,7 @@ class StoreJob extends CoreRequest
             'category_id'          => 'nullable',
             'location_id'          => 'nullable|array',
 
+            'employment_subtype' => 'nullable|integer|between:1,8',
             // Made job_type_id optional
             'job_type_id'          => 'nullable|exists:job_types,id',
             'work_experience_ids' => 'nullable|array|max:30',
