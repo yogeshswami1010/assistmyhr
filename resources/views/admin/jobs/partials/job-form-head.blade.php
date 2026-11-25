@@ -1,7 +1,6 @@
 <link rel="stylesheet" href="{{ asset('assets/node_modules_files/select2/dist/css/select2.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/node_modules_files/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css') }}">
 <style>
-    label:has(input[type="checkbox"][name="publish_on_jobillico"]:not(:checked)) ~ .job-jobillico-location { display: none; }
     @media (min-width: 768px) {
         .job-type-code-positions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .job-address-grid { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }

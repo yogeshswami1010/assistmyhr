@@ -406,8 +406,9 @@
                                     @php
                                         $field = 'publish_on_'.$board;
                                         $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
-                                        if ($board === 'jobillico' && blank($job?->jobillico_location_id)) {
-                                            $feedIssue ??= __('Enter the Jobillico location ID.');
+                                        if ($board === 'jobillico' && $job?->{$field} && !$feedIssue
+                                            && app(\App\Services\JobillicoLocations::class)->forJob($job) === null) {
+                                            $feedIssue = __('The saved job location needs a match in the shared Jobillico location list.');
                                         }
                                         $feedUrl = route('jobs.feeds.'.$board);
                                     @endphp
@@ -424,13 +425,6 @@
                                             @else
                                                 <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
                                             @endif
-                                        @endif
-                                        @if($board === 'jobillico')
-                                            <div class="job-jobillico-location mt-2">
-                                                <label for="jobillico_location_id" class="block text-xs font-semibold text-slate-700">Jobillico location ID</label>
-                                                <input type="number" min="1" step="1" id="jobillico_location_id" name="jobillico_location_id"
-                                                    class="form-control" value="{{ old('jobillico_location_id', $job?->jobillico_location_id) }}">
-                                            </div>
                                         @endif
                                         <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ $feedUrl }}" target="_blank" rel="noopener">{{ $feedUrl }}</a>
                                     </div>

@@ -98,9 +98,6 @@ class AdminJobsController extends AdminBaseController
                 $job->{$field} = $request->boolean($field);
             }
         }
-        if ($request->has('jobillico_location_id')) {
-            $job->jobillico_location_id = $request->validated('jobillico_location_id');
-        }
         if ($request->has('publish_on_whatjobs')) {
             $job->publish_on_whatjobs = $request->boolean('publish_on_whatjobs');
             $details = $request->validated('whatjobs', []);
@@ -408,7 +405,7 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
         $this->job = Job::findOrFail($id);
-        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree) {
+        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree || $this->job->publish_on_jobillico) {
             $this->jobBoardFeedIssue = match (true) {
                 $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
                 $this->job->company?->status !== 'active' => 'Select an active company.',

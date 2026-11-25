@@ -6,6 +6,7 @@ use App\CompanySetting;
 use App\Job;
 use App\Saas\Tenant;
 use App\Saas\TenantContext;
+use App\Services\JobillicoLocations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -82,9 +83,14 @@ class JobBoardFeedController
         $assistMyHr = $selection === 'publish_on_assistmyhr';
         $postJobFree = $selection === 'publish_on_postjobfree';
         $jobillico = $selection === 'publish_on_jobillico';
-        $companyName = trim((string) CompanySetting::on($query->getModel()->getConnectionName())->value('company_name'));
+        if ($jobillico && !$query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('jobs', $selection)) {
+            return;
+        }
+        $companyName = $jobillico ? '' : trim((string) CompanySetting::on($query->getModel()->getConnectionName())->value('company_name'));
+        $locations = $jobillico ? app(JobillicoLocations::class) : null;
         $jobs = $query->publicJobPage()->where($selection, true)
-            ->with([$assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])->lazyById();
+            ->with([$assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])
+            ->when($jobillico, fn (Builder $jobs) => $jobs->with('location'))->lazyById();
 
         foreach ($jobs as $job) {
             if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue($companyName) !== null)) {
@@ -103,8 +109,9 @@ class JobBoardFeedController
             }
             $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
             if ($jobillico) {
-                if ($job->jobillico_location_id > 0) {
-                    $this->writeJobillicoJob($xml, $job, $jobRouteParameters, $reference);
+                $locationId = $locations->forJob($job);
+                if ($locationId !== null) {
+                    $this->writeJobillicoJob($xml, $job, $jobRouteParameters, $reference, $locationId);
                 }
                 continue;
             }
@@ -129,14 +136,14 @@ class JobBoardFeedController
         }
     }
 
-    private function writeJobillicoJob(XMLWriter $xml, Job $job, array $routeParameters, string $reference): void
+    private function writeJobillicoJob(XMLWriter $xml, Job $job, array $routeParameters, string $reference, int $locationId): void
     {
         $xml->startElement('job');
         $xml->writeElement('elang', 'en');
         $this->writeCdata($xml, 'stitle_en', $job->title);
         $this->writeCdata($xml, 'srefnumber', 'ATS-'.$reference);
         $xml->startElement('olocations');
-        $xml->writeElement('ilocation', (string) $job->jobillico_location_id);
+        $xml->writeElement('ilocation', (string) $locationId);
         $xml->endElement();
         $xml->writeElement('iavailability', (string) $job->total_positions);
         $xml->writeElement('dbegin', $job->publicationDate()->format('Y-m-d'));
