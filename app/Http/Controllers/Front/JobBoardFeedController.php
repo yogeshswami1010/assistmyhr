@@ -110,9 +110,7 @@ class JobBoardFeedController
             $reference = ($tenant ? $tenant->uuid.'-' : '').$job->id;
             if ($jobillico) {
                 $locationId = $locations->forJob($job);
-                if ($locationId !== null) {
-                    $this->writeJobillicoJob($xml, $job, $jobRouteParameters, $reference, $locationId);
-                }
+                $this->writeJobillicoJob($xml, $job, $jobRouteParameters, $reference, $locationId);
                 continue;
             }
             $fields = match ($selection) {
@@ -136,18 +134,21 @@ class JobBoardFeedController
         }
     }
 
-    private function writeJobillicoJob(XMLWriter $xml, Job $job, array $routeParameters, string $reference, int $locationId): void
+    private function writeJobillicoJob(XMLWriter $xml, Job $job, array $routeParameters, string $reference, ?int $locationId): void
     {
         $xml->startElement('job');
         $xml->writeElement('elang', 'en');
         $this->writeCdata($xml, 'stitle_en', $job->title);
         $this->writeCdata($xml, 'srefnumber', 'ATS-'.$reference);
-        $xml->startElement('olocations');
-        $xml->writeElement('ilocation', (string) $locationId);
-        $xml->endElement();
+        if ($locationId !== null) {
+            $xml->startElement('olocations');
+            $xml->writeElement('ilocation', (string) $locationId);
+            $xml->endElement();
+        }
         $xml->writeElement('iavailability', (string) $job->total_positions);
         $xml->writeElement('dbegin', $job->publicationDate()->format('Y-m-d'));
-        $this->writeCdata($xml, 'sdescription_en', $job->job_description);
+        $savedLocation = e($job->joobleRegion());
+        $this->writeCdata($xml, 'sdescription_en', '<p>Job location: '.$savedLocation.'</p>'.$job->job_description);
 
         $status = match ((int) $job->employment_subtype) {
             1 => 'bcontract',
