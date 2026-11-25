@@ -398,38 +398,6 @@
                                     </div>
                                 </div>
                             </div>
-                            @if(!config('saas.enabled') || !empty($tenantFeatures['job_board_publishing']))
-                            <div class="rounded-xl border border-gray-200 p-4">
-                                <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
-                                <p class="text-xs text-slate-600">Choose where to publish this job while it is open and publicly available.</p>
-                                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                @foreach(config('job-boards.xml') as $board => $details)
-                                    @php
-                                        $field = 'publish_on_'.$board;
-                                        $label = $details['name'];
-                                        $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
-                                    @endphp
-                                    <div class="rounded-xl border border-gray-200 bg-white p-3">
-                                        <input type="hidden" name="{{ $field }}" value="0">
-                                        <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
-                                            <x-job-board-icon :board="$details" />
-                                            <span class="min-w-0 flex-1">{{ $label }}</span>
-                                            <input type="checkbox" class="shrink-0 accent-blue-600" name="{{ $field }}" value="1"
-                                                @checked(old($field, $isEdit && $job?->{$field}))>
-                                        </label>
-                                        @if($isEdit && $job?->{$field})
-                                            @if($feedIssue)
-                                                <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $feedIssue }}</p>
-                                            @else
-                                                <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
-                                            @endif
-                                        @endif
-                                    </div>
-                                @endforeach
-                                </div>
-                                @include('admin.jobs.partials.whatjobs')
-                            </div>
-                            @endif
                             <div class="form-group mb-0">
                                 <label for="job_skills" class="mb-1.5 block text-[11.5px] font-bold uppercase tracking-wide text-slate-500">@lang('menu.skills')</label>
                                 <select class="form-control select2 select2-multiple w-full" id="job_skills" multiple="multiple" data-placeholder="@lang('app.add') @lang('menu.skills')" name="skill_id[]" style="width: 100%;">
@@ -840,6 +808,39 @@
                             </div>
                         </div>
                     </div> -->
+
+                    @if(!config('saas.enabled') || !empty($tenantFeatures['job_board_publishing']))
+                    <div class="rounded-xl border border-gray-200 p-4">
+                        <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
+                        <p class="text-xs text-slate-600">Choose where to publish this job while it is open and publicly available.</p>
+                        <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        @foreach(config('job-boards.xml') as $board => $details)
+                            @php
+                                $field = 'publish_on_'.$board;
+                                $label = $details['name'];
+                                $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
+                            @endphp
+                            <div class="rounded-xl border border-gray-200 bg-white p-3">
+                                <input type="hidden" name="{{ $field }}" value="0">
+                                <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
+                                    <x-job-board-icon :board="$details" />
+                                    <span class="min-w-0 flex-1">{{ $label }}</span>
+                                    <input type="checkbox" class="shrink-0 accent-blue-600" name="{{ $field }}" value="1"
+                                        @checked(old($field, $isEdit && $job?->{$field}))>
+                                </label>
+                                @if($isEdit && $job?->{$field})
+                                    @if($feedIssue)
+                                        <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $feedIssue }}</p>
+                                    @else
+                                        <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
+                                    @endif
+                                @endif
+                            </div>
+                        @endforeach
+                        </div>
+                        @include('admin.jobs.partials.whatjobs')
+                    </div>
+                    @endif
 
                 </form>
             </div>
