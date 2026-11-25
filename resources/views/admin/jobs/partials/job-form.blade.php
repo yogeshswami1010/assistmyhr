@@ -420,10 +420,7 @@
                                                 <p class="mt-1 text-xs font-semibold text-amber-800">Excluded from the feed. {{ $feedIssue }}</p>
                                             @else
                                                 <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
-                                                @if($board === 'jobillico' && app(\App\Services\JobillicoLocations::class)->forJob($job) === null)
-                                                    <p class="mt-1 text-xs text-amber-800">{{ __('The saved location is in the job description. Jobillico may require a registered location to publish this job.') }}</p>
-                                                @endif
-                                                @endif
+                                            @endif
                                         @endif
                                         <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ $feedUrl }}" target="_blank" rel="noopener">{{ $feedUrl }}</a>
                                     </div>
