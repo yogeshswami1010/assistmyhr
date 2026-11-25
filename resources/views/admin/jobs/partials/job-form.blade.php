@@ -402,10 +402,14 @@
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
                                 <p class="text-xs text-slate-600">Choose where to publish this job while it is open and publicly available.</p>
-                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'Jobxoom', 'postjobfree' => 'PostJobFree'] as $board => $label)
+                                @foreach(['jooble' => 'Jooble', 'assistmyhr' => 'Jobxoom', 'postjobfree' => 'PostJobFree', 'jobillico' => 'Jobillico'] as $board => $label)
                                     @php
                                         $field = 'publish_on_'.$board;
                                         $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
+                                        if ($board === 'jobillico' && blank($job?->jobillico_location_id)) {
+                                            $feedIssue ??= __('Enter the Jobillico location ID.');
+                                        }
+                                        $feedUrl = $board === 'jobillico' ? tenant_route('jobs.feeds.jobillico') : route('jobs.feeds.'.$board);
                                     @endphp
                                     <div class="mt-3">
                                         <input type="hidden" name="{{ $field }}" value="0">
@@ -421,7 +425,14 @@
                                                 <p class="mt-1 text-xs font-semibold text-emerald-700">Included in the {{ $label }} feed.</p>
                                             @endif
                                         @endif
-                                        <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ route('jobs.feeds.'.$board) }}" target="_blank" rel="noopener">{{ route('jobs.feeds.'.$board) }}</a>
+                                        @if($board === 'jobillico')
+                                            <div class="job-jobillico-location mt-2">
+                                                <label for="jobillico_location_id" class="block text-xs font-semibold text-slate-700">Jobillico location ID</label>
+                                                <input type="number" min="1" step="1" id="jobillico_location_id" name="jobillico_location_id"
+                                                    class="form-control" value="{{ old('jobillico_location_id', $job?->jobillico_location_id) }}">
+                                            </div>
+                                        @endif
+                                        <a class="mt-1 block break-all text-xs text-blue-700 underline" href="{{ $feedUrl }}" target="_blank" rel="noopener">{{ $feedUrl }}</a>
                                     </div>
                                 @endforeach
                                 @include('admin.jobs.partials.whatjobs')
