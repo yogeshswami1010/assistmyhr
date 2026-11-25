@@ -239,7 +239,7 @@ class Job extends Model
     {
         $ids = $this->work_experience_ids ?: array_filter([$this->work_experience_id]);
 
-        return WorkExperience::whereIn('id', $ids)->pluck('work_experience')->implode(', ');
+        return WorkExperience::on($this->getConnectionName())->whereIn('id', $ids)->pluck('work_experience')->implode(', ');
     }
 
     public function jobType()

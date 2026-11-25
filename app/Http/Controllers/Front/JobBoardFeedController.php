@@ -90,7 +90,7 @@ class JobBoardFeedController
         $locations = $jobillico ? app(JobillicoLocations::class) : null;
         $jobs = $query->publicJobPage()->where($selection, true)
             ->with([$assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])
-            ->when($jobillico, fn (Builder $jobs) => $jobs->with('location'))->lazyById();
+            ->when($jobillico, fn (Builder $jobs) => $jobs->with(['location', 'category']))->lazyById();
 
         foreach ($jobs as $job) {
             if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue($companyName) !== null)) {
@@ -147,8 +147,20 @@ class JobBoardFeedController
         }
         $xml->writeElement('iavailability', (string) $job->total_positions);
         $xml->writeElement('dbegin', $job->publicationDate()->format('Y-m-d'));
-        $savedLocation = e($job->joobleRegion());
-        $this->writeCdata($xml, 'sdescription_en', '<p>Job location: '.$savedLocation.'</p>'.$job->job_description);
+        $experience = $job->show_work_experience ? $job->work_experience_label : null;
+        $salary = $job->show_salary ? $this->salary($job) : null;
+        $description = '';
+        foreach ([
+            'Job location' => $job->joobleRegion(),
+            'Job category' => $job->category?->name,
+            'Salary' => $salary,
+            'Work experience' => $experience,
+        ] as $label => $value) {
+            if (filled($value)) {
+                $description .= '<p>'.$label.': '.e($value).'</p>';
+            }
+        }
+        $this->writeCdata($xml, 'sdescription_en', $description.$job->job_description);
 
         $status = match ((int) $job->employment_subtype) {
             1 => 'bcontract',
@@ -172,7 +184,51 @@ class JobBoardFeedController
             $xml->endElement();
         }
 
+        if ($salary !== null) {
+            $this->writeJobillicoSalary($xml, $job);
+        }
+        $experienceCode = match (strtolower(trim((string) $experience))) {
+            '0-2 years', '0–2 years' => 'EXP2',
+            '3-5 years', '3–5 years' => 'EXP5',
+            '6-9 years', '6–9 years' => 'EXP9',
+            '10+ years', '10 + years' => 'EXP10',
+            default => null,
+        };
+        if ($experienceCode !== null) {
+            $xml->startElement('oexperiencecriteria');
+            $xml->writeElement('evalue', $experienceCode);
+            $xml->endElement();
+        }
+
         $this->writeCdata($xml, 'surl_en', route('jobs.jobApply', $routeParameters));
+        $xml->endElement();
+    }
+
+    private function writeJobillicoSalary(XMLWriter $xml, Job $job): void
+    {
+        $unit = strtoupper(trim((string) $job->pay_according));
+        if (!in_array($unit, ['HOUR', 'YEAR'], true) || strtoupper($job->currency->currency_code) !== 'CAD') {
+            return;
+        }
+
+        $minimum = $job->pay_type === 'Maximum' ? null : $job->starting_salary;
+        $maximum = match ($job->pay_type) {
+            'Range', 'Maximum' => $job->maximum_salary,
+            'Exact Amount' => $minimum,
+            default => null,
+        };
+        if (!is_numeric($minimum) && !is_numeric($maximum)) {
+            return;
+        }
+
+        $xml->startElement('osalary');
+        if (is_numeric($minimum)) {
+            $xml->writeElement('fmin', (string) $minimum);
+        }
+        if (is_numeric($maximum)) {
+            $xml->writeElement('fmax', (string) $maximum);
+        }
+        $xml->writeElement('eunit', $unit);
         $xml->endElement();
     }
 
