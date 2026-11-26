@@ -173,14 +173,51 @@ class Job extends Model
         return $this->getConnection()->getSchemaBuilder()->hasColumn($this->getTable(), 'publish_on_talent');
     }
 
-    public function talentFeedIssue(string $companyName): ?string
+    public function talentLocationFields(): array
     {
-        $location = $this->jobLocation->first();
+        $location = $this->jobLocation->first() ?? $this->location;
+        $parts = preg_split('/\s*,\s*/', trim((string) ($location?->location ?: $this->company_location)), -1, PREG_SPLIT_NO_EMPTY);
+        $country = trim((string) $location?->country?->country_name);
+        $suffix = (string) end($parts);
+
+        if (count($parts) >= 2 && $suffix !== '') {
+            $countryCode = $location?->country?->country_code;
+            if ($country !== '' && (strcasecmp($suffix, $country) === 0 || strcasecmp($suffix, (string) $countryCode) === 0)) {
+                array_pop($parts);
+            } elseif ($country === '' && (strlen($suffix) > 2 || count($parts) >= 3)) {
+                $country = (string) Country::on($this->getConnectionName())
+                    ->where(fn ($query) => $query->whereRaw('LOWER(country_name) = ?', [mb_strtolower($suffix)])
+                        ->orWhere('country_code', strtoupper($suffix)))
+                    ->value('country_name');
+                if ($country !== '') {
+                    array_pop($parts);
+                }
+            }
+        }
+
+        $postalCode = '(?:[A-Z]\d[A-Z]\s?\d[A-Z]\d|\d{5}(?:-\d{4})?)';
+        if (preg_match('/^'.$postalCode.'$/i', (string) end($parts))) {
+            array_pop($parts);
+        }
+        $state = count($parts) >= 2 ? preg_replace('/\s+'.$postalCode.'$/i', '', array_pop($parts)) : '';
+        $city = $state !== '' || (count($parts) === 1 && filled($this->location_state)) ? (string) end($parts) : '';
+
+        return [
+            'city' => trim((string) $this->location_city) ?: $city,
+            'state' => trim((string) $this->location_state) ?: $state,
+            'country' => $country,
+        ];
+    }
+
+    public function talentFeedIssue(string $companyName, ?array $location = null): ?string
+    {
+        $location ??= $this->talentLocationFields();
         $description = trim(html_entity_decode(strip_tags($this->job_description ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
         return match (true) {
+            blank($this->slug) || blank($this->title) => 'The job needs a title and a public job link.',
             blank($companyName) => 'Add a company name in Business Settings.',
-            blank($this->location_city) || blank($this->location_state) || blank($location?->country?->country_name) =>
+            in_array('', $location, true) =>
                 'Add the city, state or province, and country to the job location.',
             mb_strlen($description) < 50 => 'Add a job description with at least 50 characters.',
             default => null,

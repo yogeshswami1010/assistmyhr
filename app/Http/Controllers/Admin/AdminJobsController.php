@@ -419,7 +419,7 @@ class AdminJobsController extends AdminBaseController
                 $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
                 $this->job->company?->status !== 'active' => 'Select an active company.',
                 !Job::publicJobPage()->whereKey($id)->exists() => 'Check the job’s publication and expiry dates.',
-                default => $this->job->joobleContentIssue(),
+                default => null,
             };
         }
         $this->categories = JobCategory::all();

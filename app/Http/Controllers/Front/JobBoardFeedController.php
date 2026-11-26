@@ -97,16 +97,19 @@ class JobBoardFeedController
         $locations = $jobillico ? app(JobillicoLocations::class) : null;
         $jobs = $query->publicJobPage()->where($selection, true)
             ->with([$assistMyHr || $talent ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])
+            ->when($talent, fn (Builder $jobs) => $jobs->with('location.country'))
             ->when($selection === 'publish_on_jooble', fn (Builder $jobs) => $jobs->with('skills.skill'))
             ->when($jobillico, fn (Builder $jobs) => $jobs->with(['location', 'category']))->lazyById();
 
         foreach ($jobs as $job) {
-            if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue($companyName) !== null)
-                || ($talent && $job->talentFeedIssue($companyName) !== null)) {
+            $talentLocation = $talent ? $job->talentLocationFields() : [];
+            $contentIssue = $talent ? $job->talentFeedIssue($companyName, $talentLocation) : $job->joobleContentIssue();
+            if ($contentIssue !== null || ($postJobFree && $job->postJobFreeCompanyIssue($companyName) !== null)) {
                 continue;
             }
 
-            $jobRouteParameters = [$job->slug, $job->jobLocation->first()?->id];
+            $locationId = $job->jobLocation->first()?->id ?? ($talent ? $job->location?->id : null);
+            $jobRouteParameters = [$job->slug, $locationId];
             $jobRouteParameters['job_board'] = match ($selection) {
                 'publish_on_assistmyhr' => 'jobxoom',
                 'publish_on_postjobfree' => 'postjobfree',
@@ -126,7 +129,7 @@ class JobBoardFeedController
             $fields = match ($selection) {
                 'publish_on_assistmyhr' => $this->assistMyHrFields($job, $jobRouteParameters, $reference, $companyName),
                 'publish_on_postjobfree' => $this->postJobFreeFields($job, $jobRouteParameters, $reference, $companyName),
-                'publish_on_talent' => $this->talentFields($job, $jobRouteParameters, $reference, $companyName),
+                'publish_on_talent' => $this->talentFields($job, $jobRouteParameters, $reference, $companyName, $talentLocation),
                 default => $this->joobleFields($job, $jobRouteParameters, $companyName),
             };
 
@@ -246,15 +249,13 @@ class JobBoardFeedController
         $xml->endElement();
     }
 
-    private function talentFields(Job $job, array $routeParameters, string $reference, string $companyName): array
+    private function talentFields(Job $job, array $routeParameters, string $reference, string $companyName, array $location): array
     {
         return [
             'referencenumber' => $reference,
             'title' => $job->title,
             'company' => $companyName,
-            'city' => trim((string) $job->location_city),
-            'state' => trim((string) $job->location_state),
-            'country' => trim((string) $job->jobLocation->first()?->country?->country_name),
+            ...$location,
             'dateposted' => $job->publicationDate()->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
             'url' => route('jobs.jobDetail', $routeParameters),
             'description' => $this->descriptionWithoutCss($job->job_description),

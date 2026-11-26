@@ -822,9 +822,11 @@
                             @php
                                 $field = 'publish_on_'.$board;
                                 $label = $details['name'];
-                                $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
-                                if ($board === 'talent' && $job?->publish_on_talent) {
-                                    $feedIssue ??= $job->talentFeedIssue(trim((string) \App\CompanySetting::query()->value('company_name')));
+                                $feedIssue = $jobBoardFeedIssue ?? null;
+                                if ($isEdit && $job?->{$field} && $feedIssue === null) {
+                                    $feedIssue = $board === 'talent'
+                                        ? $job->talentFeedIssue(trim((string) \App\CompanySetting::query()->value('company_name')))
+                                        : ($job->joobleContentIssue() ?? ($board === 'postjobfree' ? $job->postJobFreeCompanyIssue() : null));
                                 }
                             @endphp
                             <div class="rounded-xl border border-gray-200 bg-white p-3">
