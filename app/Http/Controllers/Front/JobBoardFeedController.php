@@ -141,6 +141,9 @@ class JobBoardFeedController
                     $this->writeCdata($xml, $name, $value);
                 }
             }
+            if ($talent && $job->show_salary) {
+                $this->writeTalentSalary($xml, $job);
+            }
             $xml->endElement();
         }
     }
@@ -256,6 +259,37 @@ class JobBoardFeedController
             'url' => route('jobs.jobDetail', $routeParameters),
             'description' => $job->job_description,
         ];
+    }
+
+    private function writeTalentSalary(XMLWriter $xml, Job $job): void
+    {
+        $currency = strtoupper(trim((string) $job->currency?->currency_code));
+        $period = strtolower(trim((string) $job->pay_according));
+        if ($currency === '' || !in_array($period, ['year', 'month', 'week', 'day', 'hour'], true)) {
+            return;
+        }
+
+        $minimum = $job->pay_type === 'Maximum' ? null : $job->starting_salary;
+        $maximum = match ($job->pay_type) {
+            'Range', 'Maximum' => $job->maximum_salary,
+            'Exact Amount' => $minimum,
+            default => null,
+        };
+        if (!is_numeric($minimum) && !is_numeric($maximum)) {
+            return;
+        }
+
+        $xml->startElement('salary');
+        if (is_numeric($maximum)) {
+            $this->writeCdata($xml, 'salary_max', (string) $maximum);
+        }
+        if (is_numeric($minimum)) {
+            $this->writeCdata($xml, 'salary_min', (string) $minimum);
+        }
+        $this->writeCdata($xml, 'salary_currency', $currency);
+        $this->writeCdata($xml, 'period', $period);
+        $this->writeCdata($xml, 'type', 'BASE_SALARY');
+        $xml->endElement();
     }
 
     private function assistMyHrFields(Job $job, array $routeParameters, string $reference, string $companyName): array
