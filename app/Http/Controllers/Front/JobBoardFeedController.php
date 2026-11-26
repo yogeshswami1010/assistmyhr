@@ -257,7 +257,7 @@ class JobBoardFeedController
             'country' => trim((string) $job->jobLocation->first()?->country?->country_name),
             'dateposted' => $job->publicationDate()->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
             'url' => route('jobs.jobDetail', $routeParameters),
-            'description' => $job->job_description,
+            'description' => $this->descriptionWithoutCss($job->job_description),
         ];
     }
 
@@ -310,7 +310,7 @@ class JobBoardFeedController
     private function joobleFields(Job $job, array $routeParameters, string $companyName): array
     {
         $skills = $job->skills->pluck('skill.name')->filter();
-        $description = $this->joobleDescriptionHtml($job->job_description);
+        $description = $this->descriptionWithoutCss($job->job_description);
         if ($skills->isNotEmpty()) {
             $description = '<p>Skills</p><ul>'.$skills->map(fn ($skill) => '<li>'.e($skill).'</li>')->implode('').'</ul>'.$description;
         }
@@ -330,7 +330,7 @@ class JobBoardFeedController
         ];
     }
 
-    private function joobleDescriptionHtml(string $description): string
+    private function descriptionWithoutCss(string $description): string
     {
         $document = new \DOMDocument('1.0', 'UTF-8');
         $document->loadHTML('<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
