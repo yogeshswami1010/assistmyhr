@@ -34,6 +34,12 @@ class AdminAtsSyncController extends Controller
             'server_time' => now()->timestamp,
             'unread_notification_count' => $authUser->unreadNotifications()->count(),
             'unread_internal_message_count' => \App\InternalMessage::where('recipient_id', $authUser->id)->whereNull('read_at')->count(),
+            'latest_notification_id' => $authUser->notifications()
+                ->where('type', '!=', \App\Notifications\InternalMessageReceived::class)
+                ->reorder('created_at', 'desc')
+                ->orderByDesc('id')
+                ->value('id'),
+            'latest_incoming_message_id' => (int) \App\InternalMessage::where('recipient_id', $userId)->max('id'),
             'latest_internal_notification' => $latestInternalNotification ? [
                 'id' => $latestInternalNotification->id,
                 'sender_id' => $latestInternalNotification->data['sender_id'] ?? null,

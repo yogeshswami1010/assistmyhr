@@ -770,6 +770,54 @@
     var refreshRunning = false;
     var internalPopupBaselineTime = null;
     var internalPopupLastNotificationId = null;
+    var alertBaseline = null;
+    var alertAudio = null;
+    var presenceHeartbeatRunning = false;
+
+    function unlockAlertAudio() {
+        var Audio = window.AudioContext || window.webkitAudioContext;
+        if (!Audio) return;
+        if (!alertAudio) alertAudio = new Audio();
+        if (alertAudio.state === 'suspended') alertAudio.resume().catch(function () {});
+    }
+
+    document.addEventListener('pointerup', unlockAlertAudio, { passive: true });
+    document.addEventListener('keydown', unlockAlertAudio);
+
+    function playIncomingAlert(isMessage) {
+        if (!alertAudio || alertAudio.state !== 'running') return;
+
+        var start = alertAudio.currentTime;
+        var tone = alertAudio.createOscillator();
+        var volume = alertAudio.createGain();
+        tone.type = 'sine';
+        tone.frequency.setValueAtTime(isMessage ? 660 : 880, start);
+        tone.frequency.setValueAtTime(isMessage ? 880 : 660, start + 0.09);
+        volume.gain.setValueAtTime(0.001, start);
+        volume.gain.exponentialRampToValueAtTime(0.12, start + 0.02);
+        volume.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
+        tone.connect(volume);
+        volume.connect(alertAudio.destination);
+        tone.onended = function () {
+            tone.disconnect();
+            volume.disconnect();
+        };
+        tone.start(start);
+        tone.stop(start + 0.23);
+    }
+
+    function checkIncomingAlerts(response) {
+        var latest = {
+            notification: response.latest_notification_id || null,
+            message: Number(response.latest_incoming_message_id || 0)
+        };
+        if (alertBaseline) {
+            var hasNewMessage = latest.message > alertBaseline.message;
+            var hasNewNotification = latest.notification && latest.notification !== alertBaseline.notification;
+            if (hasNewMessage || hasNewNotification) playIncomingAlert(hasNewMessage);
+        }
+        alertBaseline = latest;
+    }
 
     function updatePresenceDots(onlineUserIds) {
         var online = {};
@@ -848,6 +896,8 @@
         });
     });
     function sendPresenceHeartbeat() {
+        if (presenceHeartbeatRunning) return;
+        presenceHeartbeatRunning = true;
         $.ajax({
             url: presenceHeartbeatUrl,
             type: 'POST',
@@ -855,6 +905,7 @@
             global: false,
             timeout: 5000
         }).done(function (response) {
+            checkIncomingAlerts(response);
             updatePresenceDots(response.online_user_ids || []);
             var notificationCount = Number(response.unread_notification_count || 0);
             $('#top-notification-unread-count')
@@ -890,6 +941,8 @@
                     + '<span style="width:7px;height:7px;border-radius:50%;background:#2563EB;flex-shrink:0;margin-top:4px;"></span></div></a>';
                 $('#top-notification-dropdown .max-h-96').prepend(item);
             }
+        }).always(function () {
+            presenceHeartbeatRunning = false;
         });
     }
     function userIsEditing() {
