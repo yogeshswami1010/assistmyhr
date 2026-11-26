@@ -176,7 +176,8 @@ class Job extends Model
     public function talentLocationFields(): array
     {
         $location = $this->jobLocation->first() ?? $this->location;
-        $parts = preg_split('/\s*,\s*/', trim((string) ($location?->location ?: $this->company_location)), -1, PREG_SPLIT_NO_EMPTY);
+        $address = trim((string) ($location?->location ?: $this->company_location));
+        $parts = preg_split('/\s*,\s*/', $address, -1, PREG_SPLIT_NO_EMPTY);
         $country = trim((string) $location?->country?->country_name);
         $suffix = (string) end($parts);
 
@@ -201,6 +202,13 @@ class Job extends Model
         }
         $state = count($parts) >= 2 ? preg_replace('/\s+'.$postalCode.'$/i', '', array_pop($parts)) : '';
         $city = $state !== '' || (count($parts) === 1 && filled($this->location_state)) ? (string) end($parts) : '';
+
+        if ($country === '') {
+            $postalText = trim((string) $this->location_postal_code) ?: $address;
+            if (preg_match('/\b[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\s?\d[ABCEGHJ-NPRSTV-Z]\d\b/i', $postalText)) {
+                $country = 'Canada';
+            }
+        }
 
         return [
             'city' => trim((string) $this->location_city) ?: $city,
