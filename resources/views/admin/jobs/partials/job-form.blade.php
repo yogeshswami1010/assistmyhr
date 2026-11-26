@@ -810,7 +810,7 @@
                     </div> -->
 
                     @if(!config('saas.enabled') || !empty($tenantFeatures['job_board_publishing']))
-                    <div class="rounded-xl border border-gray-200 p-4">
+                    <div class="rounded-2xl border border-[#E8E6E1] bg-white p-4">
                         <p class="mb-2 text-sm font-semibold text-[#0F1F3D]">Job boards</p>
                         <p class="text-xs text-slate-600">Choose where to publish this job while it is open and publicly available.</p>
                         <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
