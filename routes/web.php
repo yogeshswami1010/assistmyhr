@@ -97,6 +97,7 @@ Route::get('/jobs-widget/{integration}', \App\Http\Controllers\Front\JobsWidgetC
 Route::get('/job-feeds/jooble.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jooble'])->middleware('throttle:60,1')->name('jobs.feeds.jooble');
 Route::get('/job-feeds/assistmyhr.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'assistMyHr'])->middleware('throttle:60,1')->name('jobs.feeds.assistmyhr');
 Route::get('/job-feeds/jobillico.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'jobillico'])->middleware('throttle:60,1')->name('jobs.feeds.jobillico');
+Route::get('/job-feeds/talent.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'talent'])->middleware('throttle:60,1')->name('jobs.feeds.talent');
 Route::get('/job-feeds/postjobfree.xml', [\App\Http\Controllers\Front\JobBoardFeedController::class, 'postJobFree'])->middleware('throttle:60,1')->name('jobs.feeds.postjobfree');
 
 Route::name('jobs.')

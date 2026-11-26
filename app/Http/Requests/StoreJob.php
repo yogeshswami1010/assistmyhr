@@ -32,6 +32,7 @@ class StoreJob extends CoreRequest
             'job_description'    => 'required',
             'publish_on_jooble'  => 'sometimes|boolean',
             'publish_on_jobillico' => 'sometimes|boolean',
+            'publish_on_talent' => 'sometimes|boolean',
             'publish_on_whatjobs' => 'sometimes|boolean',
             'whatjobs' => 'sometimes|array:jobWorkFrom,jobEmploymentSubType,jobSector,jobLength,jobPeriod',
             'whatjobs.jobWorkFrom' => 'nullable|integer|between:1,5',

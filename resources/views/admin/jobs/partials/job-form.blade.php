@@ -815,10 +815,17 @@
                         <p class="text-xs text-slate-600">Choose where to publish this job while it is open and publicly available.</p>
                         <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                         @foreach(config('job-boards.xml') as $board => $details)
+                            @if($board === 'talent' && !($job ?? new \App\Job)->supportsTalentPublishing())
+                                <p class="mt-3 text-xs text-amber-800">{{ __('Talent.com publishing requires a workspace database update.') }}</p>
+                                @continue
+                            @endif
                             @php
                                 $field = 'publish_on_'.$board;
                                 $label = $details['name'];
                                 $feedIssue = $jobBoardFeedIssue ?? ($board === 'postjobfree' ? $job?->postJobFreeCompanyIssue() : null);
+                                if ($board === 'talent' && $job?->publish_on_talent) {
+                                    $feedIssue ??= $job->talentFeedIssue(trim((string) \App\CompanySetting::query()->value('company_name')));
+                                }
                             @endphp
                             <div class="rounded-xl border border-gray-200 bg-white p-3">
                                 <input type="hidden" name="{{ $field }}" value="0">

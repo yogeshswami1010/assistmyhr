@@ -36,6 +36,11 @@ class JobBoardFeedController
         return $this->feed('publish_on_jobillico');
     }
 
+    public function talent(): Response
+    {
+        return $this->feed('publish_on_talent');
+    }
+
     private function feed(string $selection): Response
     {
         $xml = new XMLWriter;
@@ -83,18 +88,21 @@ class JobBoardFeedController
         $assistMyHr = $selection === 'publish_on_assistmyhr';
         $postJobFree = $selection === 'publish_on_postjobfree';
         $jobillico = $selection === 'publish_on_jobillico';
-        if ($jobillico && !$query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('jobs', $selection)) {
+        $talent = $selection === 'publish_on_talent';
+        if (($jobillico && !$query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('jobs', $selection))
+            || ($talent && !$query->getModel()->supportsTalentPublishing())) {
             return;
         }
         $companyName = $jobillico ? '' : trim((string) CompanySetting::on($query->getModel()->getConnectionName())->value('company_name'));
         $locations = $jobillico ? app(JobillicoLocations::class) : null;
         $jobs = $query->publicJobPage()->where($selection, true)
-            ->with([$assistMyHr ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])
+            ->with([$assistMyHr || $talent ? 'jobLocation.country' : 'jobLocation', 'jobType', 'currency'])
             ->when($selection === 'publish_on_jooble', fn (Builder $jobs) => $jobs->with('skills.skill'))
             ->when($jobillico, fn (Builder $jobs) => $jobs->with(['location', 'category']))->lazyById();
 
         foreach ($jobs as $job) {
-            if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue($companyName) !== null)) {
+            if ($job->joobleContentIssue() !== null || ($postJobFree && $job->postJobFreeCompanyIssue($companyName) !== null)
+                || ($talent && $job->talentFeedIssue($companyName) !== null)) {
                 continue;
             }
 
@@ -103,6 +111,7 @@ class JobBoardFeedController
                 'publish_on_assistmyhr' => 'jobxoom',
                 'publish_on_postjobfree' => 'postjobfree',
                 'publish_on_jobillico' => 'jobillico',
+                'publish_on_talent' => 'talent',
                 default => 'jooble',
             };
             if ($tenant) {
@@ -117,11 +126,12 @@ class JobBoardFeedController
             $fields = match ($selection) {
                 'publish_on_assistmyhr' => $this->assistMyHrFields($job, $jobRouteParameters, $reference, $companyName),
                 'publish_on_postjobfree' => $this->postJobFreeFields($job, $jobRouteParameters, $reference, $companyName),
+                'publish_on_talent' => $this->talentFields($job, $jobRouteParameters, $reference, $companyName),
                 default => $this->joobleFields($job, $jobRouteParameters, $companyName),
             };
 
             $xml->startElement('job');
-            if (!$postJobFree && !$assistMyHr) {
+            if ($selection === 'publish_on_jooble') {
                 $xml->writeAttribute('id', $reference);
             }
             foreach ($fields as $name => $value) {
@@ -231,6 +241,21 @@ class JobBoardFeedController
         }
         $xml->writeElement('eunit', $unit);
         $xml->endElement();
+    }
+
+    private function talentFields(Job $job, array $routeParameters, string $reference, string $companyName): array
+    {
+        return [
+            'referencenumber' => $reference,
+            'title' => $job->title,
+            'company' => $companyName,
+            'city' => trim((string) $job->location_city),
+            'state' => trim((string) $job->location_state),
+            'country' => trim((string) $job->jobLocation->first()?->country?->country_name),
+            'dateposted' => $job->publicationDate()->copy()->utc()->format('Y-m-d\TH:i:s\Z'),
+            'url' => route('jobs.jobDetail', $routeParameters),
+            'description' => $job->job_description,
+        ];
     }
 
     private function assistMyHrFields(Job $job, array $routeParameters, string $reference, string $companyName): array

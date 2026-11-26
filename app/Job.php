@@ -47,6 +47,7 @@ class Job extends Model
         'publish_on_assistmyhr' => 'boolean',
         'publish_on_postjobfree' => 'boolean',
         'publish_on_jobillico' => 'boolean',
+        'publish_on_talent' => 'boolean',
         'publish_on_whatjobs' => 'boolean',
         'whatjobs_settings' => 'array',
         'whatjobs_sync' => 'array',
@@ -165,6 +166,25 @@ class Job extends Model
         }, $amounts);
 
         return implode(' - ', $formatted).($this->pay_according ? ' / '.$this->pay_according : '');
+    }
+
+    public function supportsTalentPublishing(): bool
+    {
+        return $this->getConnection()->getSchemaBuilder()->hasColumn($this->getTable(), 'publish_on_talent');
+    }
+
+    public function talentFeedIssue(string $companyName): ?string
+    {
+        $location = $this->jobLocation->first();
+        $description = trim(html_entity_decode(strip_tags($this->job_description ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+        return match (true) {
+            blank($companyName) => 'Add a company name in Business Settings.',
+            blank($this->location_city) || blank($this->location_state) || blank($location?->country?->country_name) =>
+                'Add the city, state or province, and country to the job location.',
+            mb_strlen($description) < 50 => 'Add a job description with at least 50 characters.',
+            default => null,
+        };
     }
 
     public function joobleContentIssue(): ?string

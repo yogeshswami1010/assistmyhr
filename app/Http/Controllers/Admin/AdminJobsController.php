@@ -98,6 +98,15 @@ class AdminJobsController extends AdminBaseController
                 $job->{$field} = $request->boolean($field);
             }
         }
+        if ($request->has('publish_on_talent')) {
+            if ($job->supportsTalentPublishing()) {
+                $job->publish_on_talent = $request->boolean('publish_on_talent');
+            } elseif ($request->boolean('publish_on_talent')) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'publish_on_talent' => __('Talent.com publishing requires a workspace database update. Reload the job form to continue.'),
+                ]);
+            }
+        }
         if ($request->has('publish_on_whatjobs')) {
             $job->publish_on_whatjobs = $request->boolean('publish_on_whatjobs');
             $details = $request->validated('whatjobs', []);
@@ -405,7 +414,7 @@ class AdminJobsController extends AdminBaseController
     {
         abort_if(! $this->user->cans('edit_jobs'), 403);
         $this->job = Job::findOrFail($id);
-        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree || $this->job->publish_on_jobillico) {
+        if ($this->job->publish_on_jooble || $this->job->publish_on_assistmyhr || $this->job->publish_on_postjobfree || $this->job->publish_on_jobillico || $this->job->publish_on_talent) {
             $this->jobBoardFeedIssue = match (true) {
                 $this->job->status !== Job::STATUS_OPEN => 'Set the job status to Open.',
                 $this->job->company?->status !== 'active' => 'Select an active company.',

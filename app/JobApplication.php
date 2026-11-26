@@ -37,6 +37,7 @@ class JobApplication extends Model
         'jooble' => 'Jooble',
         'jobxoom' => 'Jobxoom',
         'postjobfree' => 'PostJobFree',
+        'talent' => 'Talent.com',
         'whatjobs' => 'WhatJobs',
         'jobillico' => 'Jobillico',
     ];
