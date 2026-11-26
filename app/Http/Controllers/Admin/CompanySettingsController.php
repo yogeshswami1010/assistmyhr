@@ -84,17 +84,17 @@ class CompanySettingsController extends AdminBaseController
         $data->job_alert_status = $request->has('job_alert_status') && $request->input('job_alert_status') == '1' ? 1 : 0;
         }
 
-        $data->company_phone = $request->company_phone;
+        $data->company_phone = $request->company_phone ?? '';
 
         $data->company_email = $request->company_email;
 
-        $data->address = $request->address;
+        $data->address = $request->address ?? '';
 
         $data->timezone = $request->timezone;
 
         $data->locale = 'en';
 
-        $data->website = $request->website;
+        $data->website = $request->website ?? '';
 
         if (!config('saas.enabled') && $request->has('candidate_calls_enabled')) {
             $previousConnectionId = trim((string) $data->telnyx_voice_credential_id);
