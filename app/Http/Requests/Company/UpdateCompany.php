@@ -27,6 +27,7 @@ class UpdateCompany extends CoreRequest
         return [
             'company_name' => 'required',
             'company_email' => 'required|email|regex:/(.*)\./i',
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
             'candidate_calls_enabled' => ['sometimes', 'boolean'],
             'telnyx_voice_credential_id' => ['required_if:candidate_calls_enabled,1', 'nullable', 'string', 'max:191', 'regex:/^[A-Za-z0-9_-]+$/'],
             'telnyx_voice_from_number' => ['required_if:candidate_calls_enabled,1', 'nullable', 'string', 'regex:/^\+[1-9][0-9]{7,14}$/'],

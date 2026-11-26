@@ -121,9 +121,12 @@
                             </div>
                             <div>
                                 <p class="text-[13px] font-semibold text-[#2563EB]">@lang('app.upload')</p>
-                                <p class="text-[11.5px] text-[#B0B8C4]">@lang('modules.accountSettings.logoFileHint')</p>
+                                <p id="logo_file_hint" class="text-[12px] text-slate-600">
+                                    {{ __('JPG, JPEG, or PNG. Maximum file size 5 MB. Recommended dimensions 512 × 512 px.') }}
+                                </p>
                             </div>
-                            <input type="file" id="logo_input" name="logo" class="hidden" accept="image/*">
+                            <input type="file" id="logo_input" name="logo" class="hidden"
+                                accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-describedby="logo_file_hint">
                         </label>
                     </div>
                 </div>
