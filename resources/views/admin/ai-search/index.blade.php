@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @push('head-script')
+<link rel="stylesheet" href="{{ asset('assets/node_modules_files/select2/dist/css/select2.css') }}">
 <style>
     .ai-search-page {
         font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
