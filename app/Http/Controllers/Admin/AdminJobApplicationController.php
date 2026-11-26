@@ -3451,6 +3451,11 @@ public function aiSearchResults(Request $request)
     $query = CandidateSearchText::normalize((string) $request->input('query', ''));
     $location = CandidateSearchText::normalize((string) $request->input('location', ''));
     $minExp = (float) $request->input('min_experience', 0);
+    $experienceFilters = $request->validate([
+        'required_experience' => ['nullable', 'numeric', 'min:0', 'max:100'],
+    ]);
+    $requiredExperience = (float) ($experienceFilters['required_experience'] ?? 0);
+    $minExp = $requiredExperience ?: $minExp;
     $requiredCodes = CandidateSearchText::codes($query);
     $searchTerms = CandidateSearchText::terms(array_merge($terms, $roles, [$query]));
     $roleTerms = $roles ?: $searchTerms;
@@ -3491,6 +3496,10 @@ public function aiSearchResults(Request $request)
     if ($onlyApplicants) {
         $applicantsQuery->where('job_applications.is_candidate', 0);
     }
+    if ($requiredExperience > 0) {
+        $applicantsQuery->whereNotNull('job_applications.cv_indexed_at')
+            ->where('job_applications.cv_experience_years', '>=', $requiredExperience);
+    }
 
     // Score in chunks before ranking: literal SQL filters would discard typo/spacing matches.
     $applicants = $applicantsQuery->lazyById(250, 'job_applications.id', 'id');
@@ -3499,16 +3508,34 @@ public function aiSearchResults(Request $request)
     $locLower = $location !== '' ? strtolower($location) : '';
 
     $results = $applicants->map(function ($app) use ($searchTerms, $roleTerms, $allSkillsMap, $locLower, $minExp, $requiredCodes) {
+        $hasStructured = !empty($app->cv_indexed_at);
+        $experienceYears = $hasStructured && $app->cv_experience_years !== null
+            ? (float) $app->cv_experience_years
+            : null;
+        if ($locLower !== '') {
+            $locationText = implode(' ', [
+                $app->cv_location_text, $app->city, $app->state, $app->country, $app->location?->location, $app->address,
+            ]);
+            if (CandidateSearchText::strength($locationText, $locLower) === 0.0) {
+                return null;
+            }
+        }
+
         $score         = 0;
         $matchedSkills = [];
         $allSkills     = [];
+        $roleMatch     = null;
         $cvJobTitles   = array_values(array_filter(array_map('trim', explode(',', (string) $app->cv_job_titles))));
         $cvSkillsList  = array_values(array_filter(array_map('trim', explode(',', (string) $app->cv_skills_text))));
-        $hasStructured = !empty($app->cv_indexed_at);
 
-        $evidence = implode(' ', array_merge([$app->cv_text ?? '', $app->cv_job_titles ?? '', $app->cv_skills_text ?? '', $app->full_name], array_map(fn ($id) => $allSkillsMap[(int) $id] ?? '', (array) $app->skills)));
-        foreach ($requiredCodes as $code) {
-            if (!CandidateSearchText::strength($evidence, $code)) return null;
+        if ($requiredCodes) {
+            $evidence = CandidateSearchText::normalize(implode(' ', array_merge(
+                [$app->cv_text ?? '', $app->cv_job_titles ?? '', $app->cv_skills_text ?? '', $app->full_name],
+                array_map(fn ($id) => $allSkillsMap[(int) $id] ?? '', (array) $app->skills)
+            )));
+            foreach ($requiredCodes as $code) {
+                if (!CandidateSearchText::normalizedStrength($evidence, $code)) return null;
+            }
         }
 
         // ── Role / job title match — strongest signal, up to 45 pts ──
@@ -3518,6 +3545,7 @@ public function aiSearchResults(Request $request)
                 foreach ($cvJobTitles as $title) {
                     if (($strength = CandidateSearchText::strength($title, $term)) > 0) {
                         $score += 45 * $strength;
+                        $roleMatch = $title;
                         $roleMatched = true;
                         break 2;
                     }
@@ -3527,9 +3555,11 @@ public function aiSearchResults(Request $request)
         // Also check the resume headline text even when structured, and always
         // as a fallback when CV hasn't been AI-indexed yet.
         if (!$roleMatched) {
+            $cvText = CandidateSearchText::normalize((string) $app->cv_text);
             foreach ($roleTerms as $term) {
-                if (($strength = CandidateSearchText::strength((string) $app->cv_text, $term)) > 0) {
+                if (($strength = CandidateSearchText::normalizedStrength($cvText, CandidateSearchText::normalize($term))) > 0) {
                     $score += 18 * $strength;
+                    $roleMatch = $term;
                     $roleMatched = true;
                     break;
                 }
@@ -3575,25 +3605,14 @@ public function aiSearchResults(Request $request)
         // Location/experience must not create a match without relevant candidate evidence.
         if ($score <= 0) return null;
 
-        // ── Location — up to 20 pts, ONLY when a location was actually requested ──
         if ($locLower !== '') {
-            $locationHaystack = strtolower(trim(
-                ($app->cv_location_text ?? '') . ' ' . $app->city . ' ' . $app->state . ' ' . $app->country
-                . ' ' . ($app->location?->location ?? '') . ' ' . $app->address
-            ));
-            if (CandidateSearchText::strength($locationHaystack, $locLower) > 0) {
-                $score += 20;
-            } else {
-                // Location was explicitly asked for and this person doesn't match it —
-                // retain the explicit location restriction, with typo-tolerant matching.
-                return null;
-            }
+            $score += 20;
         }
 
         // ── Experience — up to 20 pts, ONLY when a minimum was actually requested ──
         if ($minExp > 0) {
-            if ($hasStructured && $app->cv_experience_years !== null) {
-                $years = (float) $app->cv_experience_years;
+            if ($experienceYears !== null) {
+                $years = $experienceYears;
                 if ($years >= $minExp) {
                     $score += 20;
                 } elseif ($years >= max(0, $minExp - 1)) {
@@ -3632,6 +3651,10 @@ public function aiSearchResults(Request $request)
             'status_color'   => $app->status?->color ?? '#6b7280',
             'score'          => $score,
             'matched_skills' => array_values(array_unique($matchedSkills)),
+            'matched_role'   => $roleMatch,
+            'matched_codes'  => $requiredCodes,
+            'location_matched' => $locLower !== '',
+            'experience_years' => $experienceYears,
             'all_skills'     => array_values(array_unique($allSkills)),
             'has_cv'         => $hasStructured,
             'is_candidate'   => (bool) $app->is_candidate,

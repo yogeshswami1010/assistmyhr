@@ -296,6 +296,13 @@
             </button>
         </div>
 
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+            <label for="ai-required-experience">Required years of experience</label>
+            <input type="number" id="ai-required-experience" min="0" max="100" step="any"
+                class="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1.5" aria-describedby="ai-experience-hint">
+            <span id="ai-experience-hint">Optional. Blank uses experience as a preference.</span>
+        </div>
+
         {{-- Suggestions --}}
         <div class="ai-search-suggestions" id="ai-suggestions">
             <span class="ai-search-suggestion" onclick="aiQuick('Web Developer in Toronto')">Web Developer in Toronto</span>
@@ -552,11 +559,16 @@ function aiDoSearch() {
     var query = document.getElementById('ai-search-input').value.trim();
     if (!query) return;
 
+    var btn = document.getElementById('ai-search-btn');
+    if (btn.disabled) return;
+    var experienceInput = document.getElementById('ai-required-experience');
+    if (!experienceInput.reportValidity()) return;
+    var requiredExperience = Number(experienceInput.value || 0);
+
     aiLastQuery = query;
     document.getElementById('ai-suggestions').style.display = 'none';
     aiShowLoading();
 
-    var btn = document.getElementById('ai-search-btn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Thinking…';
 
@@ -570,21 +582,23 @@ function aiDoSearch() {
             var allTerms = [].concat(parsed.skills || []).concat(parsed.keywords || []).concat(roles);
             aiLastMeta = {
                 location: parsed.location || '',
-                min_experience: parseInt(parsed.min_experience || 0)
+                min_experience: requiredExperience || Number(parsed.min_experience || 0),
+                required_experience: requiredExperience
             };
-            aiSearchServer(query, allTerms, roles, parsed.location || '', parseInt(parsed.min_experience || 0));
+            aiSearchServer(query, allTerms, roles, aiLastMeta.location, aiLastMeta.min_experience, requiredExperience);
         },
         error: function() {
-            aiSearchServer(query, [query], [], '', 0);
+            aiLastMeta = { location: '', min_experience: requiredExperience, required_experience: requiredExperience };
+            aiSearchServer(query, [query], [], '', requiredExperience, requiredExperience);
         }
     });
 }
 
-function aiSearchServer(query, terms, roles, location, minExp) {
+function aiSearchServer(query, terms, roles, location, minExp, requiredExperience) {
     $.ajax({
         url: '{{ route("admin.ai-search.results") }}',
         type: 'GET',
-        data: { query: query, terms: terms, roles: roles, location: location, min_experience: minExp },
+        data: { query: query, terms: terms, roles: roles, location: location, min_experience: minExp, required_experience: requiredExperience },
         success: function(res) {
             var btn = document.getElementById('ai-search-btn');
             btn.disabled = false;
@@ -685,6 +699,16 @@ function aiRenderCards(results) {
             }).join('') + (r.all_skills.length > 8 ? '<span class="ai-result-skill-tag">+' + (r.all_skills.length - 8) + '</span>' : '') + '</div>';
         }
         var cvBadge = r.has_cv ? '<span style="font-size:10px;font-weight:600;color:#059669;background:#d1fae5;padding:2px 7px;border-radius:10px;margin-left:6px;"><i class="fa fa-file-text-o" style="font-size:9px"></i> CV indexed</span>' : '<span style="font-size:10px;color:#b0b8c4;background:#f1f3f7;padding:2px 7px;border-radius:10px;margin-left:6px;">No CV</span>';
+        var evidence = [];
+        if (r.matched_role) evidence.push('Role match: ' + r.matched_role);
+        if (r.matched_codes?.length) evidence.push('Qualification found: ' + r.matched_codes.join(', '));
+        if (r.location_matched) evidence.push('Location matched');
+        if (aiLastMeta.min_experience > 0) {
+            evidence.push(r.experience_years == null ? 'Indexed experience unavailable' : 'Indexed experience: ' + r.experience_years + ' years');
+        }
+        if (evidence.length) {
+            skillsHtml += '<div class="mt-1 text-xs text-slate-600">' + aiEsc(evidence.join(' · ')) + '</div>';
+        }
         var isSelected = aiSelectedApplicantIds.indexOf(r.id) !== -1;
         html += '<div class="ai-result-card' + (isSelected ? ' selected' : '') + '" onclick="aiOpenApplicant(' + r.id + ')"><input type="checkbox" class="ai-result-select" value="' + r.id + '" aria-label="Select ' + aiEsc(r.full_name) + '" title="Select ' + aiEsc(r.full_name) + '" ' + (isSelected ? 'checked' : '') + ' onclick="event.stopPropagation()" onchange="aiToggleApplicant(' + r.id + ', this.checked)"><div class="ai-result-rank ' + (isTop ? 'top' : '') + '">' + (isTop ? '★' : (idx+1)) + '</div><div class="ai-result-avatar" style="background:' + ac[0] + ';color:' + ac[1] + '">' + aiEsc(initial) + '</div><div class="ai-result-body"><div class="ai-result-name">' + aiEsc(r.full_name) + cvBadge + '</div><div class="ai-result-meta">' + aiEsc(r.job_title || '—') + '<span class="ai-result-meta-sep"></span><i class="fa fa-map-marker" style="font-size:10px;color:#8892a0;margin-right:2px"></i>' + aiEsc(r.location || '—') + '<span class="ai-result-meta-sep"></span><span class="ai-result-status" style="background:' + aiEsc(r.status_color || '#6b7280') + '">' + aiEsc(r.status || '—') + '</span></div>' + skillsHtml + '</div><div class="ai-result-score-col"><div class="ai-result-score-pct" style="color:' + scoreColor + '">' + r.score + '%</div><div class="ai-result-score-label">match</div><div class="ai-result-score-bar-wrap"><div class="ai-result-score-bar" style="width:' + r.score + '%;background:' + scoreColor + '"></div></div></div><button class="ai-result-view-btn" onclick="event.stopPropagation();aiOpenApplicant(' + r.id + ')">View <i class="fa fa-arrow-right" style="font-size:10px"></i></button></div>';
     });
@@ -731,6 +755,7 @@ function aiSort(by) {
 
 function aiClear() {
     document.getElementById('ai-search-input').value = '';
+    document.getElementById('ai-required-experience').value = '';
     document.getElementById('ai-suggestions').style.display = 'flex';
     aiLastResults = [];
     aiSelectedApplicantIds = [];

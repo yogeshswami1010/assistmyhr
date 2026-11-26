@@ -32,15 +32,17 @@ class CandidateSearchText
     /** Strength: exact token/phrase = 1, joined words = .9, conservative typo = .7. */
     public static function strength(string $text, string $term): float
     {
-        $text = self::normalize($text);
-        $term = self::normalize($term);
+        return self::normalizedStrength(self::normalize($text), self::normalize($term));
+    }
+
+    public static function normalizedStrength(string $text, string $term): float
+    {
         if ($text === '' || $term === '') return 0;
+        if (str_contains(' '.$text.' ', ' '.$term.' ')) return 1;
+
         $words = explode(' ', $text);
         $needles = explode(' ', $term);
         $size = count($needles);
-        for ($start = 0, $count = count($words); $start < $count; $start++) {
-            if (implode(' ', array_slice($words, $start, $size)) === $term) return 1;
-        }
         // Compare adjacent words only: don't join unrelated parts of a CV.
         $compact = str_replace(' ', '', $term);
         if (mb_strlen($compact) >= 4 && !preg_match('/\d/u', $compact)) {
