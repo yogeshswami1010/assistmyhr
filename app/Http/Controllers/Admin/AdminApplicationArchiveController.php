@@ -248,8 +248,16 @@ class AdminApplicationArchiveController extends AdminBaseController
     {
         abort_if(! $this->user->cans('view_job_applications'), 403);
 
+        $validated = $request->validate([
+            'selected_ids' => ['sometimes', 'required', 'string', 'regex:/\A[1-9][0-9]*(?:,[1-9][0-9]*)*\z/'],
+        ]);
+        $candidates = $this->candidateQuery($request, $skill);
+        if (isset($validated['selected_ids'])) {
+            $candidates->whereIn('job_applications.id', explode(',', $validated['selected_ids']));
+        }
+
         return Excel::download(
-            new JobApplicationArchiveExport($this->candidateQuery($request, $skill), $this->companyName),
+            new JobApplicationArchiveExport($candidates, $this->companyName),
             __('modules.applicationArchive.exportFileName') . '.xlsx',
             ExcelExcel::XLSX
         );

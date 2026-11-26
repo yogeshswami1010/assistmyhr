@@ -635,6 +635,10 @@ document.getElementById('run-bulk-parse').addEventListener('click', function() {
     // ── Export ────────────────────────────────────────────────────────────────
     function exportJobApplication() {
         const url = new URL(@json(tenant_route('admin.applications-archive.export', ['skill' => 'all'], false)), window.location.href);
+        const selectedIds = Array.from(document.querySelectorAll('#myTable tbody .cc-select:checked'), checkbox => checkbox.value);
+        if (selectedIds.length > 0) {
+            url.searchParams.set('selected_ids', selectedIds.join(','));
+        }
         url.searchParams.set('skill', window.jaGetSkills ? window.jaGetSkills() : '');
         url.searchParams.set('company', $('#company').val() || 'all');
         url.searchParams.set('jobs', $('#jobs').val() || 'all');
