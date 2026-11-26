@@ -15,7 +15,7 @@
     $contractDuration = $showWhatJobsField('jobLength') || $showWhatJobsField('jobPeriod');
     $selectedSubtype = (string) old('employment_subtype', $job?->employment_subtype ?? ($job?->whatjobs_settings['jobEmploymentSubType'] ?? ''));
 @endphp
-<div class="mt-3 rounded-xl border border-gray-200 bg-white p-3">
+<div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3">
     <input type="hidden" name="publish_on_whatjobs" value="0">
     <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-slate-800">
         <x-job-board-icon :board="config('job-boards.whatjobs')" />

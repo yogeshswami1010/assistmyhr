@@ -844,8 +844,8 @@
                                 @endif
                             </div>
                         @endforeach
-                        </div>
                         @include('admin.jobs.partials.whatjobs')
+                        </div>
                     </div>
                     @endif
 
